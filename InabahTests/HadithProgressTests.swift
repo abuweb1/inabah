@@ -87,6 +87,25 @@ struct HadithProgressTests {
         #expect(defaults.object(forKey: "h_mem_nawawi_1") == nil)
     }
 
+    @Test("Сброс сборника удаляет все его отметки и не трогает другие сборники")
+    func resetCollection() {
+        let progress = HadithProgress(defaults: defaults)
+        progress.toggleRead(first)
+        progress.toggleMemorized(second)
+        let qudsi = HadithID(collection: .qudsi, number: 1)
+        progress.toggleRead(qudsi)
+
+        progress.reset(.nawawi)
+
+        #expect(progress.status(of: first) == .none)
+        #expect(progress.status(of: second) == .none)
+        #expect(progress.status(of: qudsi) == .read)
+        #expect(defaults.object(forKey: "h_mem_nawawi_2") == nil)
+        let restored = HadithProgress(defaults: defaults)
+        #expect(restored.progress(in: .nawawi, total: 50).read == 0)
+        #expect(restored.status(of: qudsi) == .read)
+    }
+
     @Test("Номер 0 (адресация прототипа) и номера за пределами сборника в прогресс не попадают")
     func outOfRangeNumbersIgnored() {
         defaults.set("1", forKey: "h_read_nawawi_0")

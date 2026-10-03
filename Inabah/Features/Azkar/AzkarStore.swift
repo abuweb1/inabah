@@ -82,6 +82,18 @@ final class AzkarStore {
         return SectionProgress(completed: sessions.count(where: \.isCompleted), total: sessions.count)
     }
 
+    /// Ручной сброс раздела из настроек: счётчики — в 0, флаг «مَا شَاءَ اللَّهُ» — сброшен.
+    /// Не загруженный ещё раздел — просто забыть сохранённый прогресс.
+    func resetProgress(of section: AzkarSection) {
+        if periods[section] != nil {
+            sessions(in: section).forEach { $0.reset() }
+            save(section)
+        } else {
+            defaults.removeObject(forKey: Self.key(for: section))
+        }
+        resetCompletionAcknowledgement(of: section)
+    }
+
     // MARK: - Обнуление по времени
 
     /// Время обнуления изменили в настройках: текущий прогресс сохраняется и относится к периоду

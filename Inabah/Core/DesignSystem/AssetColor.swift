@@ -24,6 +24,7 @@ nonisolated enum AssetColor: String, CaseIterable, Sendable {
     case morningCardStart, morningCardMid, morningCardEnd
     case eveningCardStart, eveningCardMid, eveningCardEnd
     case hadithBackgroundTop, hadithBackgroundMid, hadithBackgroundBottom
+    case settingsBackgroundTop, settingsBackgroundMid, settingsBackgroundBottom
     case nawawiCardStart, nawawiCardMid, nawawiCardEnd
     case qudsiCardStart, qudsiCardMid, qudsiCardEnd
     case ajurriCardStart, ajurriCardMid, ajurriCardEnd

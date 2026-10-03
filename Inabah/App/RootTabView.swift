@@ -34,8 +34,14 @@ struct RootTabView: View {
                 }
             }
             Tab("tab.settings", systemImage: "gearshape.fill", value: AppTab.settings) {
-                NavigationStack {
+                NavigationStack(path: $router.settingsPath) {
                     SettingsView()
+                        .navigationDestination(for: SettingsRoute.self) { route in
+                            switch route {
+                            case .azkar: AzkarSettingsView()
+                            case .hadith: HadithSettingsView()
+                            }
+                        }
                 }
             }
         }

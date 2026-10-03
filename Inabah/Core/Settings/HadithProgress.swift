@@ -49,6 +49,17 @@ final class HadithProgress {
         set(status(of: id).isMemorized ? .read : .memorized, for: id)
     }
 
+    /// Сброс всех отметок сборника («прочитан» и «выучен»); другие сборники не затрагиваются.
+    func reset(_ collection: HadithCollection) {
+        guard let numbers = statuses[collection]?.keys, !numbers.isEmpty else { return }
+        for number in numbers {
+            let id = HadithID(collection: collection, number: number)
+            defaults.removeObject(forKey: Self.readKey(id))
+            defaults.removeObject(forKey: Self.memorizedKey(id))
+        }
+        statuses[collection] = [:]
+    }
+
     func progress(in collection: HadithCollection, total: Int) -> HadithCollectionProgress {
         let values = statuses[collection, default: [:]].filter { (1...max(total, 1)).contains($0.key) }.values
         return HadithCollectionProgress(

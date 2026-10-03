@@ -18,7 +18,8 @@ struct HadithHomeView: View {
     private static let verse = FeaturedVerse(
         arabic: "مَنْ يُرِدِ اللَّهُ بِهِ خَيْرًا يُفَقِّهْهُ فِي الدِّينِ",
         translation: "hadith.home.verse.translation",
-        reference: "hadith.home.verse.reference"
+        reference: "hadith.home.verse.reference",
+        isFramed: false
     )
 
     var body: some View {

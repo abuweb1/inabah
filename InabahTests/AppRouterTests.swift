@@ -47,6 +47,17 @@ struct AppRouterTests {
         #expect(router.hadithPath == [.list(.qudsi), .detail(id)])
     }
 
+    @Test("Повторный выбор вкладки «Настройки» возвращает к списку разделов")
+    func reselectSettingsPopsToRoot() {
+        let router = AppRouter()
+        router.select(.settings)
+        router.settingsPath = [.hadith]
+
+        router.select(.settings)
+
+        #expect(router.settingsPath.isEmpty)
+    }
+
     @Test("Повторный выбор вкладки «Хадисы» возвращает к главной хадисов")
     func reselectHadithPopsToRoot() {
         let router = AppRouter()

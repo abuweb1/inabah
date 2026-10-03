@@ -150,6 +150,32 @@ struct AzkarProgressPersistenceTests {
         #expect(reopened.sessions(in: .morning).map(\.count) == [0, 0])
     }
 
+    @Test("Ручной сброс из настроек обнуляет раздел и сохраняется")
+    func manualReset() async {
+        let store = await makeStore()
+        store.sessions(in: .morning).forEach { session in (0..<3).forEach { _ in session.increment() } }
+        store.acknowledgeCompletion(of: .morning)
+
+        store.resetProgress(of: .morning)
+
+        #expect(store.sessions(in: .morning).allSatisfy { $0.count == 0 })
+        #expect(!store.shouldPresentCompletion(of: .morning))
+        let reopened = await makeStore()
+        #expect(reopened.sessions(in: .morning).map(\.count) == [0, 0])
+    }
+
+    @Test("Ручной сброс не загруженного раздела забывает сохранённый прогресс")
+    func manualResetOfUnloadedSection() async {
+        let store = await makeStore()
+        store.sessions(in: .morning)[0].increment()
+
+        let fresh = AzkarStore(repository: Self.repository, defaults: defaults, now: { [clock] in clock.now }, calendar: berlin)
+        fresh.resetProgress(of: .morning)
+        await fresh.load(.morning)
+
+        #expect(fresh.sessions(in: .morning).map(\.count) == [0, 0])
+    }
+
     @Test("В том же периоде пересчёт ничего не сбрасывает")
     func refreshWithinPeriodKeepsProgress() async {
         let store = await makeStore()
