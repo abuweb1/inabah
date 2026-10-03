@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// Общий каркас главных экранов разделов («Азкары», «Хадисы»):
-/// градиентный фон, звезда-орнамент, бренд-блок, аят и навигационные карточки.
+/// градиентный фон, бренд-блок, аят и навигационные карточки.
 struct SectionHomeLayout<Cards: View>: View {
     let background: ThemeGradient
     let brand: SectionBrand
@@ -36,18 +36,7 @@ struct SectionHomeLayout<Cards: View>: View {
             }
             .scrollBounceBehavior(.basedOnSize)
         }
-        .background { backgroundLayer }
-    }
-
-    private var backgroundLayer: some View {
-        background.linear
-            .overlay(alignment: .topTrailing) {
-                DecorativeStar()
-                    .foregroundStyle(theme.palette.subtleFill)
-                    .frame(width: Layout.starSize, height: Layout.starSize)
-                    .offset(Layout.starOffset)
-            }
-            .ignoresSafeArea()
+        .background { background.linear.ignoresSafeArea() }
     }
 
     private var brandBlock: some View {
@@ -123,8 +112,6 @@ struct SectionHomeLayout<Cards: View>: View {
 
 /// Размеры главного экрана раздела (вне дженерика: хранимые статические свойства в нём запрещены).
 private enum SectionHomeLayoutMetrics {
-    static let starSize: CGFloat = 200
-    static let starOffset = CGSize(width: 30, height: -20)
     static let brandArabicSize: Double = 60
     static let brandLatinSize: Double = 28
 }
@@ -175,8 +162,6 @@ struct SectionNavCard: View {
 
     private enum Layout {
         static let iconSize: CGFloat = 30
-        static let decorationSize: CGFloat = 110
-        static let decorationOffset = CGSize(width: 30, height: -30)
         static let verticalPadding: CGFloat = 18
         static let statGlyphSize: CGFloat = 18
     }
@@ -232,17 +217,6 @@ struct SectionNavCard: View {
         .padding(.horizontal, Spacing.xlPlus)
         .frame(maxWidth: .infinity, minHeight: Size.navCardMinHeight, alignment: .leading)
         .surface(gradient.linear, cornerRadius: Radius.navCard, border: theme.palette.divider, shadow: shadow)
-        .overlay(alignment: .topTrailing) {
-            // Декоративный круг в углу, обрезается скруглением карточки.
-            Circle()
-                .fill(theme.palette.subtleFill)
-                .frame(width: Layout.decorationSize, height: Layout.decorationSize)
-                .offset(Layout.decorationOffset)
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
-                .clipShape(.rect(cornerRadius: Radius.navCard))
-                .allowsHitTesting(false)
-                .accessibilityHidden(true)
-        }
         .contentShape(.rect(cornerRadius: Radius.navCard))
         .accessibilityElement(children: .combine)
     }
