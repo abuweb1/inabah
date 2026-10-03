@@ -1269,6 +1269,17 @@
         }
       }
     },
+    "settings.appIcon.unsupported" : {
+      "comment" : "Выбор иконки: подпись, если устройство не поддерживает смену иконки",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Смена иконки недоступна на этом устройстве."
+          }
+        }
+      }
+    },
     "settings.appearance.header" : {
       "comment" : "Корень настроек: заголовок секции оформления",
       "localizations" : {

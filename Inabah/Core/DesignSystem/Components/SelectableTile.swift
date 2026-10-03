@@ -51,6 +51,15 @@ struct SelectableTile<Preview: View>: View {
     }
 }
 
+/// Колонки сетки плиток выбора: две, а при размерах шрифта для доступности — одна,
+/// чтобы подписи не переносились по слогам в узкой колонке.
+enum SelectionGrid {
+    static func columns(for dynamicTypeSize: DynamicTypeSize) -> [GridItem] {
+        let count = dynamicTypeSize.isAccessibilitySize ? 1 : 2
+        return Array(repeating: GridItem(.flexible(), spacing: Spacing.l), count: count)
+    }
+}
+
 /// Размеры плитки выбора (вне дженерика: хранимые статические свойства в нём запрещены).
 private enum SelectableTileMetrics {
     /// Зазор между превью и рамкой выбора.

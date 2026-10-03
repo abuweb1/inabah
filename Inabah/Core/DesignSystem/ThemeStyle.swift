@@ -63,12 +63,14 @@ nonisolated extension Theme {
         func color(_ token: ThemeColorToken) -> Color {
             Color(token.assetName(for: style), bundle: .main)
         }
-        func gradient(_ stops: [ThemeColorToken], cssAngle: Double) -> ThemeGradient {
-            let locations: [Double] = stops.count == 3 ? [0, 0.55, 1] : [0, 1]
-            return ThemeGradient(
-                zip(stops, locations).map { Gradient.Stop(color: color($0), location: $1) },
-                cssAngle: cssAngle
-            )
+        /// Цвета стиля в форме исходного градиента: те же точки (у утренних и ан-Навави
+        /// середина на 0.6, у остальных — 0.55) и направление.
+        func gradient(_ stops: [ThemeColorToken], like base: ThemeGradient) -> ThemeGradient {
+            var result = base
+            result.gradient = Gradient(stops: zip(stops, base.gradient.stops).map {
+                Gradient.Stop(color: color($0), location: $1.location)
+            })
+            return result
         }
 
         var palette = Palette.inabah
@@ -106,11 +108,11 @@ nonisolated extension Theme {
         gradients.hadithBackground = background
         gradients.makharijBackground = background
         gradients.settingsBackground = background
-        gradients.morningCard = gradient([.morningCardStart, .morningCardMid, .morningCardEnd], cssAngle: ThemeGradients.cardAngle)
-        gradients.eveningCard = gradient([.eveningCardStart, .eveningCardMid, .eveningCardEnd], cssAngle: ThemeGradients.cardAngle)
-        gradients.nawawiCard = gradient([.nawawiCardStart, .nawawiCardMid, .nawawiCardEnd], cssAngle: ThemeGradients.cardAngle)
-        gradients.qudsiCard = gradient([.qudsiCardStart, .qudsiCardMid, .qudsiCardEnd], cssAngle: ThemeGradients.cardAngle)
-        gradients.ajurriCard = gradient([.ajurriCardStart, .ajurriCardMid, .ajurriCardEnd], cssAngle: ThemeGradients.cardAngle)
+        gradients.morningCard = gradient([.morningCardStart, .morningCardMid, .morningCardEnd], like: gradients.morningCard)
+        gradients.eveningCard = gradient([.eveningCardStart, .eveningCardMid, .eveningCardEnd], like: gradients.eveningCard)
+        gradients.nawawiCard = gradient([.nawawiCardStart, .nawawiCardMid, .nawawiCardEnd], like: gradients.nawawiCard)
+        gradients.qudsiCard = gradient([.qudsiCardStart, .qudsiCardMid, .qudsiCardEnd], like: gradients.qudsiCard)
+        gradients.ajurriCard = gradient([.ajurriCardStart, .ajurriCardMid, .ajurriCardEnd], like: gradients.ajurriCard)
 
         return Theme(palette: palette, gradients: gradients)
     }

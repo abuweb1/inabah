@@ -1,7 +1,19 @@
 import Foundation
+import Synchronization
 import Testing
 import UIKit
 @testable import Inabah
+
+/// Флаг «наблюдатель уведомлён»: `onChange` у `withObservationTracking` — `@Sendable`.
+private final class NotificationFlag: Sendable {
+    private let state = Mutex(false)
+
+    var value: Bool { state.withLock { $0 } }
+
+    func set() {
+        state.withLock { $0 = true }
+    }
+}
 
 /// Относительная яркость и контраст по WCAG 2.x — по значениям ассета в sRGB.
 private enum Contrast {
@@ -112,9 +124,27 @@ struct AppearanceSettingsTests {
 
     @Test("Выбор сохраняется между запусками")
     func persists() {
-        AppearanceSettings(defaults: defaults).style = .amber
+        AppearanceSettings(defaults: defaults).select(.amber)
 
         #expect(AppearanceSettings(defaults: defaults).style == .amber)
+    }
+
+    @Test("Повторный выбор той же палитры не уведомляет наблюдателей")
+    func selectingCurrentIsNoOp() {
+        let settings = AppearanceSettings(defaults: defaults)
+        settings.select(.emerald)
+        let notified = NotificationFlag()
+        withObservationTracking {
+            _ = settings.style
+        } onChange: {
+            notified.set()
+        }
+
+        settings.select(.emerald)
+
+        #expect(!notified.value)
+        settings.select(.graphite)
+        #expect(notified.value)
     }
 
     @Test("Повреждённое значение — палитра по умолчанию")

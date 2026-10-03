@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Генерирует цвета единых стилей оформления (ThemeStyle) в Assets.xcassets/Palette/Themes.
 
-    python3 scripts/generate-theme-palettes.py
+    python3 scripts/generate-theme-palettes.py          # записать ассеты
+    python3 scripts/generate-theme-palettes.py --check  # сверить ассеты с расчётом (код 1 — расходятся)
 
 Опорные цвета берутся из нынешних ассетов разделов:
   violet   — азкары (фон, шапка, поверхности, акцент, карточки утро/вечер);
@@ -147,7 +148,8 @@ def transform(src_hex, src_style_mid, dst_style_mid, token, lightness_shift=0.0)
     return oklch_to_hex(L, C * k, (dst_h + offset) % 360)
 
 
-def main():
+def compute():
+    """Цвета всех стилей: {стиль: {токен: HEX}}."""
     violet_mid = read_asset('azkarBackgroundMid')
     emerald_mid = read_asset('hadithBackgroundMid')
     result = {}
@@ -171,7 +173,37 @@ def main():
                 L, C, H = hex_to_oklch(colors[source + stop])
                 colors[target + stop] = oklch_to_hex(L + delta, C, H)
         result[style] = colors
+    return result
 
+
+def asset_name(style, token):
+    return style + token[0].upper() + token[1:]
+
+
+def stored_hex(style, token):
+    path = os.path.join(OUT, style.capitalize(), f'{asset_name(style, token)}.colorset', 'Contents.json')
+    if not os.path.exists(path):
+        return None
+    comp = json.load(open(path))['colors'][0]['color']['components']
+    return ''.join(comp[k][2:] for k in ('red', 'green', 'blue')).upper()
+
+
+def check(result):
+    """Ассеты совпадают с расчётом? Цвет раздела поправили, а скрипт не перезапустили — расхождение."""
+    mismatches = [
+        f'{asset_name(style, token)}: в ассетах {stored_hex(style, token) or "нет"}, по расчёту {h}'
+        for style, colors in result.items() for token, h in colors.items()
+        if stored_hex(style, token) != h
+    ]
+    if mismatches:
+        print('Ассеты палитр расходятся с расчётом — запустите скрипт без --check:')
+        print('\n'.join(f'  {m}' for m in mismatches))
+        return 1
+    print(f'✔ Ассеты палитр совпадают с расчётом, цветов: {sum(len(c) for c in result.values())}')
+    return 0
+
+
+def write(result):
     if os.path.isdir(OUT):
         shutil.rmtree(OUT)
     os.makedirs(OUT)
@@ -182,7 +214,7 @@ def main():
         os.makedirs(folder)
         json.dump(info, open(os.path.join(folder, 'Contents.json'), 'w'), indent=2)
         for token, h in colors.items():
-            name = style + token[0].upper() + token[1:]
+            name = asset_name(style, token)
             d = os.path.join(folder, f'{name}.colorset')
             os.makedirs(d)
             json.dump({'colors': [{'color': {'color-space': 'srgb', 'components': {
@@ -193,4 +225,8 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    import sys
+    palettes = compute()
+    if '--check' in sys.argv[1:]:
+        sys.exit(check(palettes))
+    write(palettes)

@@ -7,7 +7,10 @@ private final class FakeAppIconSwitcher: AppIconSwitching {
     var alternateIconName: String?
     var supportsAlternateIcons = true
     var fails = false
+    /// Удерживать ответ системы до `release()` — запрос «в полёте».
+    var holds = false
     private(set) var requested: [String?] = []
+    private var held: CheckedContinuation<Void, Never>?
 
     struct Refused: Error {}
 
@@ -17,8 +20,14 @@ private final class FakeAppIconSwitcher: AppIconSwitching {
 
     func setAlternateIconName(_ alternateIconName: String?) async throws {
         requested.append(alternateIconName)
+        if holds { await withCheckedContinuation { held = $0 } }
         if fails { throw Refused() }
         self.alternateIconName = alternateIconName
+    }
+
+    func release() {
+        held?.resume()
+        held = nil
     }
 }
 
@@ -82,6 +91,23 @@ struct AppIconSettingsTests {
 
         #expect(settings.current == .classic)
         #expect(settings.failedToChange)
+    }
+
+    @Test("Пока иконка меняется, новые выборы игнорируются")
+    func ignoresSelectionWhileChanging() async {
+        let switcher = FakeAppIconSwitcher()
+        switcher.holds = true
+        let settings = AppIconSettings(switcher: switcher)
+
+        let first = Task { await settings.select(.dawn) }
+        while !settings.isChanging { await Task.yield() }
+        await settings.select(.beads)
+        switcher.release()
+        await first.value
+
+        #expect(switcher.requested == ["AppIcon-Dawn"])
+        #expect(settings.current == .dawn)
+        #expect(!settings.isChanging)
     }
 
     @Test("Повторный выбор текущей систему не вызывает")

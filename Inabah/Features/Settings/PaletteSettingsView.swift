@@ -5,16 +5,16 @@ import SwiftUI
 struct PaletteSettingsView: View {
     @Environment(AppearanceSettings.self) private var settings
     @Environment(\.theme) private var theme
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     private static let unifiedStyles: [ThemeStyle] = [.violet, .emerald, .amber, .graphite]
-    private static let columns = [GridItem(.flexible(), spacing: Spacing.l), GridItem(.flexible(), spacing: Spacing.l)]
 
     var body: some View {
         Form {
             Section {
                 VStack(spacing: Spacing.xlPlus) {
                     tile(.sections)
-                    LazyVGrid(columns: Self.columns, spacing: Spacing.xlPlus) {
+                    LazyVGrid(columns: SelectionGrid.columns(for: dynamicTypeSize), spacing: Spacing.xlPlus) {
                         ForEach(Self.unifiedStyles) { tile($0) }
                     }
                 }
@@ -38,7 +38,7 @@ struct PaletteSettingsView: View {
             isSelected: settings.style == style,
             cornerRadius: Radius.box
         ) {
-            withAnimation(Motion.highlight) { settings.style = style }
+            withAnimation(Motion.highlight) { settings.select(style) }
         } preview: {
             PalettePreview(style: style)
         }
