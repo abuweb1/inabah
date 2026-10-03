@@ -11,6 +11,8 @@ nonisolated struct Palette: Hashable, Sendable {
     var card: Color
     var actionBackground: Color
     var header: Color
+    /// Навбар и шапка вечерних азкаров — тёмный край карточки «Вечерние азкары».
+    var eveningHeader: Color
     /// Навбар и шапки раздела «Хадисы».
     var hadithHeader: Color
 
@@ -94,6 +96,7 @@ nonisolated extension Palette {
             card: Color(asset: .cardBackground),
             actionBackground: Color(asset: .actionBackground),
             header: Color(asset: .headerBackground),
+            eveningHeader: Color(asset: .eveningCardStart),
             hadithHeader: Color(asset: .hadithHeaderBackground),
             textPrimary: Color(asset: .textPrimary),
             textSecondary: Color(asset: .textSecondary),

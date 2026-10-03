@@ -19,7 +19,7 @@ struct AzkarListView: View {
         content
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .audioPlayerInset()
-            .background { theme.gradients.azkarBackground.linear.ignoresSafeArea() }
+            .background { section.background(in: theme).linear.ignoresSafeArea() }
             .overlay {
                 if showsCompletion {
                     AzkarCompletionView(section: section) { router.popToRoot(.azkar) }
@@ -29,7 +29,7 @@ struct AzkarListView: View {
             .animation(Motion.overlay, value: showsCompletion)
             .background { AzkarCompletionWatcher(section: section, showsCompletion: $showsCompletion) }
             .navigationBarTitleDisplayMode(.inline)
-            .toolbarBackground(theme.palette.header, for: .navigationBar)
+            .toolbarBackground(section.headerColor(in: theme), for: .navigationBar)
             .toolbarBackgroundVisibility(.visible, for: .navigationBar)
             .toolbarColorScheme(.dark, for: .navigationBar)
             .toolbar {
@@ -185,7 +185,7 @@ private struct AzkarProgressHeader: View {
         .padding(.horizontal, Spacing.xl)
         .padding(.top, Spacing.xs)
         .padding(.bottom, Spacing.m)
-        .background(theme.palette.header)
+        .background(section.headerColor(in: theme))
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(Text("azkar.progress \(progress.completed) \(progress.total)"))
     }

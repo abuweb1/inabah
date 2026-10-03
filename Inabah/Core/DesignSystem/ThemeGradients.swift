@@ -41,6 +41,8 @@ nonisolated struct ThemeGradient: Hashable, Sendable {
 /// Градиенты темы: фоны разделов и карточки навигации.
 nonisolated struct ThemeGradients: Hashable, Sendable {
     var azkarBackground: ThemeGradient
+    /// Фон вечерних азкаров — в цветах карточки «Вечерние азкары» главной.
+    var eveningBackground: ThemeGradient
     var hadithBackground: ThemeGradient
     var morningCard: ThemeGradient
     var eveningCard: ThemeGradient
@@ -59,6 +61,11 @@ nonisolated extension ThemeGradients {
             (.azkarBackgroundTop, 0),
             (.azkarBackgroundMid, 0.5),
             (.azkarBackgroundBottom, 1),
+        ], cssAngle: 168),
+        eveningBackground: ThemeGradient.css(stops: [
+            (.eveningCardStart, 0),
+            (.eveningCardMid, 0.55),
+            (.eveningCardEnd, 1),
         ], cssAngle: 168),
         hadithBackground: ThemeGradient.css(stops: [
             (.hadithBackgroundTop, 0),

@@ -52,6 +52,22 @@ extension AzkarSection {
         }
     }
 
+    /// Фон экрана раздела: вечерние — в цветах своей карточки, чтобы разделы различались не только названием.
+    func background(in theme: Theme) -> ThemeGradient {
+        switch self {
+        case .morning: theme.gradients.azkarBackground
+        case .evening: theme.gradients.eveningBackground
+        }
+    }
+
+    /// Цвет навбара и шапки прогресса раздела.
+    func headerColor(in theme: Theme) -> Color {
+        switch self {
+        case .morning: theme.palette.header
+        case .evening: theme.palette.eveningHeader
+        }
+    }
+
     /// Кольцо прогресса на карточке: утро — солнечное на светлой карточке, вечер — золотое на тёмной.
     func ringStyle(in theme: Theme) -> NavCardRingStyle {
         switch self {
