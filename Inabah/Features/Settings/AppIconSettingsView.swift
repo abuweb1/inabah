@@ -5,15 +5,14 @@ import SwiftUI
 struct AppIconSettingsView: View {
     @Environment(AppIconSettings.self) private var settings
     @Environment(\.theme) private var theme
-
-    private static let columns = [GridItem(.flexible(), spacing: Spacing.l), GridItem(.flexible(), spacing: Spacing.l)]
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     var body: some View {
         @Bindable var settings = settings
 
         Form {
             Section {
-                LazyVGrid(columns: Self.columns, spacing: Spacing.xlPlus) {
+                LazyVGrid(columns: SelectionGrid.columns(for: dynamicTypeSize), spacing: Spacing.xlPlus) {
                     ForEach(AppIconOption.allCases) { option in
                         AppIconTile(option: option, isSelected: option == settings.current) {
                             Task { await settings.select(option) }
@@ -21,10 +20,10 @@ struct AppIconSettingsView: View {
                     }
                 }
                 .padding(.vertical, Spacing.m)
-                .disabled(!settings.isSupported)
+                .disabled(!settings.isSupported || settings.isChanging)
                 .settingsRow()
             } footer: {
-                Text("settings.appIcon.footer")
+                Text(settings.isSupported ? "settings.appIcon.footer" : "settings.appIcon.unsupported")
                     .foregroundStyle(theme.palette.onAccentSecondary)
             }
         }

@@ -62,9 +62,8 @@ nonisolated struct ThemeGradients: Hashable, Sendable {
 }
 
 nonisolated extension ThemeGradients {
-    /// Направление фонов разделов и карточек навигации (градусы CSS, как в прототипе).
+    /// Направление фонов разделов (градусы CSS, как в прототипе).
     static let backgroundAngle: Double = 168
-    static let cardAngle: Double = 135
 
     static let inabah = ThemeGradients(
         azkarBackground: ThemeGradient.css(stops: [

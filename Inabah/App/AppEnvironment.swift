@@ -43,6 +43,7 @@ struct AppEnvironment {
 
     /// Превью: контент в памяти, отметки — в отдельном наборе `UserDefaults`; плеер без
     /// аудиосессии и экрана блокировки, иконка не меняется — превью не трогают систему.
+    /// Блоки `#Preview` компилируются и в релизной сборке, поэтому не под `#if DEBUG`.
     static var preview: AppEnvironment {
         AppEnvironment(
             repository: InMemoryContentRepository.preview,
@@ -65,6 +66,16 @@ struct AppEnvironment {
     }
 }
 
+/// Смена иконки для превью: выбор только запоминается, иконка процесса не меняется.
+private final class PreviewAppIconSwitcher: AppIconSwitching {
+    private(set) var alternateIconName: String?
+    var supportsAlternateIcons: Bool { true }
+
+    func setAlternateIconName(_ alternateIconName: String?) async throws {
+        self.alternateIconName = alternateIconName
+    }
+}
+
 extension View {
     func appEnvironment(_ environment: AppEnvironment) -> some View {
         self
@@ -84,11 +95,16 @@ extension View {
 }
 
 /// Тема в окружении — из выбранной палитры. Только этот модификатор следит за выбором:
-/// смена палитры один раз перерисовывает дерево с новой темой.
+/// смена палитры один раз перерисовывает дерево с новой темой. Окнам — акцент палитры,
+/// чтобы системные диалоги тоже были в её цвет.
 private struct ThemedModifier: ViewModifier {
     let settings: AppearanceSettings
 
     func body(content: Content) -> some View {
-        content.environment(\.theme, settings.style.theme)
+        content
+            .environment(\.theme, settings.style.theme)
+            .onChange(of: settings.style, initial: true) { _, style in
+                WindowTint.apply(style.theme.palette.accentLight)
+            }
     }
 }

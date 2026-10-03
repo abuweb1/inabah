@@ -55,6 +55,9 @@ final class AppIconSettings {
 
     private(set) var current: AppIconOption = .classic
     private(set) var isSupported = true
+    /// Запрос к системе в полёте — новые выборы игнорируются, сетка неактивна: иначе быстрые
+    /// тапы шли бы параллельно, и отметка могла бы разойтись с итоговой иконкой.
+    private(set) var isChanging = false
     /// Система не смогла сменить иконку — для алерта.
     var failedToChange = false
 
@@ -71,22 +74,14 @@ final class AppIconSettings {
     }
 
     func select(_ option: AppIconOption) async {
-        guard option != current else { return }
+        guard option != current, !isChanging else { return }
+        isChanging = true
+        defer { isChanging = false }
         do {
             try await switcher.setAlternateIconName(option.alternateIconName)
             current = option
         } catch {
             failedToChange = true
         }
-    }
-}
-
-/// Без смены иконки процесса — для превью: выбор только запоминается.
-final class PreviewAppIconSwitcher: AppIconSwitching {
-    private(set) var alternateIconName: String?
-    var supportsAlternateIcons: Bool { true }
-
-    func setAlternateIconName(_ alternateIconName: String?) async throws {
-        self.alternateIconName = alternateIconName
     }
 }
