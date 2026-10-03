@@ -19,8 +19,7 @@ final class AzkarResetSettings {
     }
 
     @ObservationIgnored private let defaults: UserDefaults
-    /// Вызывается после смены времени (подписчик — `AzkarStore`, пересчитывает периоды).
-    @ObservationIgnored var onChange: (() -> Void)?
+    @ObservationIgnored private var onChange: (() -> Void)?
 
     private var times: [AzkarSection: DayTime] = [:]
 
@@ -30,6 +29,13 @@ final class AzkarResetSettings {
             let stored = defaults.object(forKey: Self.key(for: section)) as? Int
             times[section] = stored.map(DayTime.init(minutesSinceMidnight:)) ?? Self.defaultTime(for: section)
         }
+    }
+
+    /// Подписка на смену времени. Подписчик один — `AzkarStore`, который пересчитывает периоды;
+    /// вторая подписка заменила бы первую молча, поэтому запрещена.
+    func onResetTimeChange(_ action: @escaping () -> Void) {
+        assert(onChange == nil, "У AzkarResetSettings уже есть подписчик")
+        onChange = action
     }
 
     func resetTime(for section: AzkarSection) -> DayTime {
