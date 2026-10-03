@@ -1,6 +1,10 @@
 #!/usr/bin/env node
 // Проверяет данные в data/*.json — единственном источнике данных приложения.
 //
+// Сначала проверяется структура записи (translations.<язык>), затем содержимое:
+// тексты базового языка (ru) разворачиваются в плоскую форму и проверяются по полям
+// russian / translit / rawi / source — так в сообщениях называются translations.ru.text и др.
+//
 //   node scripts/check-data.mjs            — проверка, первые 5 предупреждений каждого типа
 //   node scripts/check-data.mjs --verbose  — все предупреждения
 //
@@ -9,24 +13,19 @@
 
 import { readFileSync, existsSync } from 'node:fs';
 import { createHash } from 'node:crypto';
-import { dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { join } from 'node:path';
+import { ROOT, BASE_LANGUAGE, loadAll, legacyZikr, legacyHadith } from './lib/content.mjs';
 
-const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
-const DATA_DIR = join(ROOT, 'data');
 const AUDIO_DIR = join(ROOT, 'audio');
 
 const VERBOSE = process.argv.includes('--verbose');
 
 const EXPECTED = { morning: 16, evening: 16, nawawi: 50, qudsi: 40, ajurri: 40 };
 
-function loadData() {
-  const read = name => JSON.parse(readFileSync(join(DATA_DIR, name), 'utf8'));
-  return {
-    AZKAR: read('azkar.json'),
-    HADITH_DATA: { nawawi: read('nawawi.json'), qudsi: read('qudsi.json'), ajurri: read('ajurri.json') },
-  };
-}
+const AZKAR_KEYS = ['id', 'arabic', 'max', 'audio', 'translations'];
+const HADITH_KEYS = ['id', 'arabic', 'translations'];
+const AZKAR_TRANSLATION_KEYS = ['translit', 'text', 'source'];
+const HADITH_TRANSLATION_KEYS = ['rawi', 'text', 'source'];
 
 // ── Проверки ─────────────────────────────────────────────────
 
@@ -176,9 +175,45 @@ function checkHadith(HADITH_DATA) {
   }
 }
 
+// Структура: известные ключи, id первым, translations с базовым языком и кодами ISO 639-1.
+function checkStructure(where, item, keys, translationKeys) {
+  const actual = Object.keys(item);
+  if (actual[0] !== 'id') error(where, 'id должен быть первым полем');
+  for (const k of actual) if (!keys.includes(k)) error(where, `неизвестное поле «${k}»`);
+  const translations = item.translations;
+  if (!translations || typeof translations !== 'object' || Array.isArray(translations)) {
+    error(where, 'нет объекта translations');
+    return;
+  }
+  if (!translations[BASE_LANGUAGE]) error(where, `нет перевода translations.${BASE_LANGUAGE}`);
+  for (const [lang, t] of Object.entries(translations)) {
+    if (!/^[a-z]{2}$/.test(lang)) error(where, `код языка «${lang}» — ожидается ISO 639-1 (ru, en…)`);
+    for (const k of Object.keys(t ?? {})) {
+      if (!translationKeys.includes(k)) error(where, `неизвестное поле translations.${lang}.${k}`);
+    }
+  }
+}
+
 // ── Запуск ───────────────────────────────────────────────────
 
-const { HADITH_DATA, AZKAR } = loadData();
+const data = loadAll();
+for (const type of ['morning', 'evening']) {
+  for (const item of data.azkar[type] ?? []) {
+    checkStructure(`${type} id ${item.id ?? '?'}`, item, AZKAR_KEYS, AZKAR_TRANSLATION_KEYS);
+  }
+}
+for (const [type, list] of Object.entries(data.hadith)) {
+  for (const item of list ?? []) {
+    checkStructure(`${type} id ${item.id ?? '?'}`, item, HADITH_KEYS, HADITH_TRANSLATION_KEYS);
+  }
+}
+
+const AZKAR = {
+  morning: data.azkar.morning?.map(z => legacyZikr(z)),
+  evening: data.azkar.evening?.map(z => legacyZikr(z)),
+};
+const HADITH_DATA = Object.fromEntries(
+  Object.entries(data.hadith).map(([type, list]) => [type, list?.map(h => legacyHadith(h))]));
 checkAzkar(AZKAR);
 checkHadith(HADITH_DATA);
 

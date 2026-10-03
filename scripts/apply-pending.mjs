@@ -7,10 +7,9 @@
 // После — node scripts/check-data.mjs и node scripts/sync-prototype.mjs.
 
 import { readFileSync, writeFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { join } from 'node:path';
+import { ROOT, BASE_LANGUAGE } from './lib/content.mjs';
 
-const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const PENDING = join(ROOT, 'data', 'pending', 'missing-texts.json');
 
 const cache = new Map();
@@ -23,7 +22,8 @@ const itemOf = e => {
   const list = e.section ? data[e.section] : data;
   const item = list?.find(x => x.id === e.id);
   if (!item) throw new Error(`${e.file} ${e.section ?? ''} id ${e.id}: запись не найдена`);
-  return item;
+  // Пропуски найдены в русском переводе — правки идут в translations.ru.
+  return item.translations[BASE_LANGUAGE];
 };
 
 const pending = JSON.parse(readFileSync(PENDING, 'utf8'));
@@ -33,11 +33,11 @@ pending.texts = pending.texts.filter(e => {
   if (!e.text.trim()) return true;
   const item = itemOf(e);
   const anchor = e.before + e.gap + e.after;
-  if (item.russian.split(anchor).length !== 2) {
+  if (item.text.split(anchor).length !== 2) {
     throw new Error(`${e.file} id ${e.id}: текст вокруг пропуска изменился — якорь не найден`);
   }
   const joined = [e.before.trimEnd(), e.text.trim(), e.after.trimStart()].filter(Boolean).join(' ');
-  item.russian = item.russian.replace(anchor, joined);
+  item.text = item.text.replace(anchor, joined);
   applied.push(`${e.file} id ${e.id}: текст вставлен`);
   return false;
 });
