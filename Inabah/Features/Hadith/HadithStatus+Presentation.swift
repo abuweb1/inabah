@@ -32,12 +32,13 @@ extension HadithStatus {
         }
     }
 
-    /// Значок справа в строке списка: «›» / «✓» / «★».
-    var rowSymbolName: String {
+    /// Значок статуса (`StatusGlyph`) — единый для карточек главной, строк списка и кнопок
+    /// экрана хадиса: открытая книга — прочитан, сердце со звездой — выучен. Без статуса — нет.
+    var glyph: StatusGlyph.Kind? {
         switch self {
-        case .none: "chevron.forward"
-        case .read: "checkmark"
-        case .memorized: "star.fill"
+        case .none: nil
+        case .read: .read
+        case .memorized: .memorized
         }
     }
 

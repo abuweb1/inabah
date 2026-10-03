@@ -39,8 +39,7 @@ struct HadithHomeView: View {
                         iconColor: collection.iconColor(in: theme),
                         gradient: collection.cardGradient(in: theme),
                         shadow: collection.cardShadow(in: theme),
-                        progress: progressLine(for: collection),
-                        secondaryProgress: memorizedLine(for: collection)
+                        stats: stats(for: collection)
                     )
                 }
                 .buttonStyle(PressScaleButtonStyle())
@@ -56,20 +55,26 @@ struct HadithHomeView: View {
         return count > 0 ? collection.cardMeta(count: count) : nil
     }
 
-    /// «Прочитано 3 из 50» — только когда что-то уже прочитано.
-    private func progressLine(for collection: HadithCollection) -> LocalizedStringResource? {
+    /// Книга «3/50» слева (если что-то прочитано) и сердце «2/50» справа (если что-то выучено).
+    private func stats(for collection: HadithCollection) -> [NavCardStat] {
         let total = store.hadiths(in: collection).count
         let collectionProgress = progress.progress(in: collection, total: total)
-        guard collectionProgress.read > 0 else { return nil }
-        return "hadith.progress.card \(collectionProgress.read) \(total)"
-    }
-
-    /// «Выучено 2 из 50» — справа на той же строке, только когда что-то уже выучено.
-    private func memorizedLine(for collection: HadithCollection) -> LocalizedStringResource? {
-        let total = store.hadiths(in: collection).count
-        let collectionProgress = progress.progress(in: collection, total: total)
-        guard collectionProgress.memorized > 0 else { return nil }
-        return "hadith.progress.card.memorized \(collectionProgress.memorized) \(total)"
+        var stats: [NavCardStat] = []
+        if collectionProgress.read > 0 {
+            stats.append(NavCardStat(
+                glyph: .read,
+                value: "progress.fraction \(collectionProgress.read) \(total)",
+                accessibilityLabel: "hadith.progress.card \(collectionProgress.read) \(total)"
+            ))
+        }
+        if collectionProgress.memorized > 0 {
+            stats.append(NavCardStat(
+                glyph: .memorized,
+                value: "progress.fraction \(collectionProgress.memorized) \(total)",
+                accessibilityLabel: "hadith.progress.card.memorized \(collectionProgress.memorized) \(total)"
+            ))
+        }
+        return stats
     }
 }
 

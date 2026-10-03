@@ -161,10 +161,9 @@ struct SectionNavCard: View {
     let iconColor: Color
     let gradient: ThemeGradient
     let shadow: ShadowToken
-    /// Дополнительная строка под подписью (например, прогресс чтения сборника).
-    var progress: LocalizedStringResource?
-    /// Второй показатель на той же строке, у правого края (например, сколько выучено).
-    var secondaryProgress: LocalizedStringResource?
+    /// Показатели под подписью: первый — у левого края, второй — у правого (например,
+    /// «прочитано» и «выучено» сборника).
+    var stats: [NavCardStat] = []
     /// Кольцо прогресса справа от иконки (например, выполнение азкаров за сегодня).
     var ring: (fraction: Double, style: NavCardRingStyle)?
 
@@ -175,6 +174,7 @@ struct SectionNavCard: View {
         static let decorationSize: CGFloat = 110
         static let decorationOffset = CGSize(width: 30, height: -30)
         static let verticalPadding: CGFloat = 18
+        static let statGlyphSize: CGFloat = 18
     }
 
     var body: some View {
@@ -194,20 +194,17 @@ struct SectionNavCard: View {
                         .font(.footnote)
                         .foregroundStyle(theme.palette.onAccentSecondary)
                 }
-                if progress != nil || secondaryProgress != nil {
+                if !stats.isEmpty {
                     HStack(spacing: Spacing.s) {
-                        if let progress {
-                            progressLabel(progress, symbolName: "checkmark.circle.fill")
-                        }
-                        Spacer(minLength: 0)
-                        if let secondaryProgress {
-                            progressLabel(secondaryProgress, symbolName: "star.fill")
+                        ForEach(Array(stats.enumerated()), id: \.offset) { index, stat in
+                            if index > 0 { Spacer(minLength: 0) }
+                            statLabel(stat)
                         }
                     }
-                    .font(.caption.weight(.semibold))
+                    .font(.subheadline.weight(.semibold))
+                    .monospacedDigit()
                     .foregroundStyle(theme.palette.onAccent)
                     .lineLimit(1)
-                    .minimumScaleFactor(0.8)
                     .padding(.top, Spacing.xxs)
                 }
             }
@@ -243,12 +240,19 @@ struct SectionNavCard: View {
         .accessibilityElement(children: .combine)
     }
 
-    private func progressLabel(_ text: LocalizedStringResource, symbolName: String) -> some View {
-        Label {
-            Text(text)
-        } icon: {
-            Image(systemName: symbolName)
-                .accessibilityHidden(true)
+    private func statLabel(_ stat: NavCardStat) -> some View {
+        HStack(spacing: Spacing.xs) {
+            StatusGlyph(stat.glyph, size: Layout.statGlyphSize, relativeTo: .subheadline)
+            Text(stat.value)
         }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Text(stat.accessibilityLabel))
     }
+}
+
+/// Показатель на карточке раздела: значок и короткое значение («3/50»); для VoiceOver — полная фраза.
+struct NavCardStat {
+    let glyph: StatusGlyph.Kind
+    let value: LocalizedStringResource
+    let accessibilityLabel: LocalizedStringResource
 }

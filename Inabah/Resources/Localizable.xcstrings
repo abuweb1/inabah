@@ -584,17 +584,6 @@
         }
       }
     },
-    "hadith.detail.counter.short %lld %lld" : {
-      "comment" : "Навбар экрана хадиса, если полная подпись не помещается: номер/всего",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$lld/%2$lld"
-          }
-        }
-      }
-    },
     "hadith.detail.narrator %@" : {
       "comment" : "Передатчик хадиса над переводом",
       "localizations" : {
@@ -926,6 +915,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Скоро"
+          }
+        }
+      }
+    },
+    "progress.fraction %lld %lld" : {
+      "comment" : "Короткий прогресс рядом со значком: сделано/всего («3/50»)",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld/%2$lld"
           }
         }
       }

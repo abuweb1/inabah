@@ -126,13 +126,13 @@ private struct HadithPager: View {
         }
     }
 
-    /// Полная подпись, а если в навбаре тесно (узкий экран, крупный шрифт) — «3/50».
+    /// «3 из 50». Если в навбаре тесно (узкий экран, крупный шрифт) — шрифт немного ужимается.
+    /// `ViewThatFits` здесь не годится: навбар предлагает ширину нестабильно, и подпись
+    /// переключалась на короткую форму даже там, где полная помещается.
     private func counter(_ current: Int) -> some View {
-        ViewThatFits(in: .horizontal) {
-            Text("hadith.detail.counter \(current) \(count)")
-            Text("hadith.detail.counter.short \(current) \(count)")
-        }
-        .font(.footnote.weight(.semibold))
+        Text("hadith.detail.counter \(current) \(count)")
+            .minimumScaleFactor(0.75)
+            .font(.footnote.weight(.semibold))
         .monospacedDigit()
         .lineLimit(1)
         .foregroundStyle(theme.palette.onAccent)

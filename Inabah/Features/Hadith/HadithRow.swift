@@ -13,6 +13,7 @@ struct HadithRow: View {
         static let badgeSize: CGFloat = 34
         static let badgeNumberSize: Double = 21
         static let previewLines = 2
+        static let statusGlyphSize: CGFloat = 20
     }
 
     var body: some View {
@@ -38,10 +39,16 @@ struct HadithRow: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
 
-            Image(systemName: status.rowSymbolName)
-                .font(.footnote.weight(.semibold))
-                .foregroundStyle(status == .none ? theme.palette.onAccentTertiary : status.tint(in: theme))
-                .accessibilityHidden(true)
+            Group {
+                if let glyph = status.glyph {
+                    StatusGlyph(glyph, size: Layout.statusGlyphSize, relativeTo: .footnote)
+                } else {
+                    Image(systemName: "chevron.forward")
+                        .font(.footnote.weight(.semibold))
+                }
+            }
+            .foregroundStyle(status == .none ? theme.palette.onAccentTertiary : status.tint(in: theme))
+            .accessibilityHidden(true)
         }
         .padding(.vertical, Spacing.m)
         .contentShape(.rect)
