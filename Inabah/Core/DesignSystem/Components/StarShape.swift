@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Многолучевая звезда — декоративный орнамент на главных экранах разделов.
+/// Восьмиконечная звезда — орнамент в значке «выучен» (`StatusGlyph`).
 /// `nonisolated`: `Shape` вычисляет путь вне главного актора; тип — чистая геометрия без состояния.
 nonisolated struct StarShape: Shape {
     private let points = 8
@@ -21,16 +21,5 @@ nonisolated struct StarShape: Shape {
         }
         path.closeSubpath()
         return path
-    }
-}
-
-/// Звезда с кругом в центре, как в шапке прототипа.
-struct DecorativeStar: View {
-    var body: some View {
-        ZStack {
-            StarShape()
-            Circle().scale(0.16)
-        }
-        .accessibilityHidden(true)
     }
 }
