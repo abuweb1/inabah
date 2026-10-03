@@ -9,6 +9,8 @@ struct AppEnvironment {
     let readingSettings: ReadingSettings
     let playlistSettings: PlaylistSettings
     let azkarStore: AzkarStore
+    let hadithStore: HadithStore
+    let hadithProgress: HadithProgress
     let audioPlayer: AudioPlayerController
     let theme: Theme
 
@@ -22,6 +24,8 @@ struct AppEnvironment {
         readingSettings = ReadingSettings(defaults: defaults)
         playlistSettings = PlaylistSettings(defaults: defaults)
         azkarStore = AzkarStore(repository: repository)
+        hadithStore = HadithStore(repository: repository)
+        hadithProgress = HadithProgress(defaults: defaults)
         self.audioPlayer = audioPlayer ?? AudioPlayerController(
             engine: AVAudioEngineAdapter(),
             session: AudioSessionController(),
@@ -30,11 +34,12 @@ struct AppEnvironment {
         self.theme = theme
     }
 
-    /// Превью: контент в памяти; плеер без аудиосессии и экрана блокировки —
-    /// превью не трогают аудиосистему процесса.
+    /// Превью: контент в памяти, отметки — в отдельном наборе `UserDefaults`; плеер без
+    /// аудиосессии и экрана блокировки — превью не трогают аудиосистему процесса.
     static var preview: AppEnvironment {
         AppEnvironment(
             repository: InMemoryContentRepository.preview,
+            defaults: UserDefaults(suiteName: "preview") ?? .standard,
             audioPlayer: AudioPlayerController(engine: AVAudioEngineAdapter())
         )
     }
@@ -47,6 +52,8 @@ extension View {
             .environment(environment.readingSettings)
             .environment(environment.playlistSettings)
             .environment(environment.azkarStore)
+            .environment(environment.hadithStore)
+            .environment(environment.hadithProgress)
             .environment(environment.audioPlayer)
             .environment(\.theme, environment.theme)
     }

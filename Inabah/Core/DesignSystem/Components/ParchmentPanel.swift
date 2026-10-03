@@ -4,14 +4,22 @@ import SwiftUI
 /// орнаменты ✦ по углам. Цвета не зависят от темы интерфейса — текст одинаково читается в любой теме.
 struct ParchmentPanel<Content: View>: View {
     /// Скругление верхних углов: совпадает с карточкой, когда пергамент — её первый блок,
-    /// и 0, когда над ним заголовок выполненной карточки. Нижние углы всегда прямые.
+    /// и 0, когда над ним заголовок выполненной карточки.
     var topCornerRadius: CGFloat = Radius.card
+    /// Нижние углы: прямые, когда под пергаментом продолжается карточка (зикр), скруглённые —
+    /// когда пергамент отдельный блок (экран хадиса).
+    var bottomCornerRadius: CGFloat = 0
     @ViewBuilder let content: Content
 
     @Environment(\.theme) private var theme
 
     private var shape: UnevenRoundedRectangle {
-        UnevenRoundedRectangle(topLeadingRadius: topCornerRadius, topTrailingRadius: topCornerRadius)
+        UnevenRoundedRectangle(
+            topLeadingRadius: topCornerRadius,
+            bottomLeadingRadius: bottomCornerRadius,
+            bottomTrailingRadius: bottomCornerRadius,
+            topTrailingRadius: topCornerRadius
+        )
     }
 
     var body: some View {

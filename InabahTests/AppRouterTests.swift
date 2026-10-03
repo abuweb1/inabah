@@ -35,4 +35,25 @@ struct AppRouterTests {
         #expect(router.selectedTab == .azkar)
         #expect(router.azkarPath == [.list(.morning)])
     }
+
+    @Test("Хадис открывается поверх списка своего сборника")
+    func openHadithDetail() {
+        let router = AppRouter()
+        let id = HadithID(collection: .qudsi, number: 5)
+
+        router.open(HadithRoute.detail(id))
+
+        #expect(router.selectedTab == .hadith)
+        #expect(router.hadithPath == [.list(.qudsi), .detail(id)])
+    }
+
+    @Test("Повторный выбор вкладки «Хадисы» возвращает к главной хадисов")
+    func reselectHadithPopsToRoot() {
+        let router = AppRouter()
+        router.open(HadithRoute.list(.nawawi))
+
+        router.select(.hadith)
+
+        #expect(router.hadithPath.isEmpty)
+    }
 }

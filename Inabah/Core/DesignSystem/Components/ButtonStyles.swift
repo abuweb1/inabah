@@ -11,6 +11,56 @@ struct PressScaleButtonStyle: ButtonStyle {
     }
 }
 
+/// Плитка-переключатель «значок над подписью» (отметки хадиса): выключенная — цветной текст
+/// на лёгкой подложке, включённая — белый текст на плотной подложке.
+struct ToggleTileButtonStyle: ButtonStyle {
+    let isOn: Bool
+    let tint: Color
+    let fill: Color
+    let activeFill: Color
+
+    @Environment(\.theme) private var theme
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .labelStyle(.verticalTile)
+            .foregroundStyle(isOn ? theme.palette.onAccent : tint)
+            .frame(maxWidth: .infinity, minHeight: Size.primaryButtonHeight)
+            .padding(.vertical, Spacing.m)
+            .surface(isOn ? activeFill : fill, cornerRadius: Radius.control)
+            .scaleEffect(configuration.isPressed ? 0.97 : 1)
+            .animation(Motion.press, value: configuration.isPressed)
+            .animation(Motion.highlight, value: isOn)
+    }
+}
+
+/// Значок над подписью.
+struct VerticalTileLabelStyle: LabelStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        VStack(spacing: Spacing.xxs) {
+            configuration.icon
+                .font(.title3)
+            configuration.title
+                .font(.footnote.weight(.semibold))
+        }
+    }
+}
+
+extension LabelStyle where Self == VerticalTileLabelStyle {
+    static var verticalTile: VerticalTileLabelStyle { VerticalTileLabelStyle() }
+}
+
+/// Строки списков: нажатая строка приглушается (`opacity .65` в прототипе).
+struct PressDimButtonStyle: ButtonStyle {
+    var pressedOpacity = 0.65
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .opacity(configuration.isPressed ? pressedOpacity : 1)
+            .animation(Motion.press, value: configuration.isPressed)
+    }
+}
+
 /// Иконка-кнопка с подложкой и рамкой: круглая (действия карточки) или скруглённый квадрат (плеер).
 /// Неактивная — приглушена.
 struct IconButtonStyle: ButtonStyle {

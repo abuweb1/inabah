@@ -372,7 +372,9 @@ final class AudioPlayerController {
         case .outputLost:
             pause()
         case .mediaServicesReset:
-            // Плееры недействительны: текущая запись загружается заново с сохранением намерения.
+            // Плееры недействительны: подготовленная запись забывается, текущая загружается
+            // заново с сохранением намерения.
+            engine.discardPreloaded()
             guard hasTrack else { return }
             if isPlaying { loadAndPlayCurrent() } else { reloadPaused() }
         }
@@ -453,7 +455,13 @@ final class AudioPlayerController {
     }
 
     /// Ошибка записи: показать её; в плейлисте — перейти к следующей записи.
+    /// Не запустилась заранее подготовленная запись — это не повод пропускать зикр:
+    /// он загружается заново с той же паузой.
     private func handleFailure(_ failure: AudioEngineError) {
+        if failure == .preparedTrackFailed {
+            loadAndPlayCurrent(startAfter: pauseBetweenItems)
+            return
+        }
         assign(\.error, failure)
         if mode == .playlist, playback.hasNext, failure != .sessionUnavailable {
             advanceToNext(after: 0)
@@ -514,8 +522,8 @@ final class AudioPlayerController {
         }
     }
 
-    /// Позиция читается, только пока движок действительно играет: в момент окончания записи
-    /// он уже сбросил позицию в 0 — без этой проверки бегунок пробегал бы назад и вперёд.
+    /// Позиция читается, только пока движок играет: после окончания записи и паузы позицию
+    /// задаёт сам контроллер (`duration`, позиция паузы) — тикер её не перезаписывает.
     private func tick() {
         guard engine.isPlaying else { return }
         assign(\.currentTime, engine.currentTime)

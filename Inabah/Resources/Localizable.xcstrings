@@ -309,6 +309,17 @@
         }
       }
     },
+    "azkar.completion.hamd": {
+      "comment": "VoiceOver: перевод «الحمد لله رب العالمين» на экране завершения",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Хвала Аллаху, Господу миров"
+          }
+        }
+      }
+    },
     "azkar.completion.home": {
       "comment": "Кнопка возврата на главную раздела",
       "localizations": {
@@ -494,12 +505,360 @@
         }
       }
     },
-    "hadith.placeholder.message": {
+    "hadith.ajurri.meta %lld": {
+      "comment": "Подпись карточки сборника аль-Аджурри: число хадисов и арабское название (русский текст первым — иначе строка выстраивается справа налево)",
+      "localizations": {
+        "ru": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld хадис · أربعون حديثاً للآجري"
+                }
+              },
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld хадиса · أربعون حديثاً للآجري"
+                }
+              },
+              "many": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld хадисов · أربعون حديثاً للآجري"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld хадиса · أربعون حديثاً للآجري"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "hadith.ajurri.title": {
+      "comment": "Название сборника аль-Аджурри",
       "localizations": {
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Сборники хадисов появятся в следующем обновлении."
+            "value": "40 хадисов аль-Аджурри"
+          }
+        }
+      }
+    },
+    "hadith.audio.soon": {
+      "comment": "Заглушка: записей хадисов пока нет",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Аудио скоро"
+          }
+        }
+      }
+    },
+    "hadith.audio.title %lld": {
+      "comment": "Карточка аудио на экране хадиса",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Аудио · Хадис %lld"
+          }
+        }
+      }
+    },
+    "hadith.detail.counter %lld %lld": {
+      "comment": "Навбар экрана хадиса: номер и всего в сборнике («3 из 50»)",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld из %2$lld"
+          }
+        }
+      }
+    },
+    "hadith.detail.counter.short %lld %lld": {
+      "comment": "Навбар экрана хадиса, если полная подпись не помещается: номер/всего",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld/%2$lld"
+          }
+        }
+      }
+    },
+    "hadith.detail.narrator %@": {
+      "comment": "Передатчик хадиса над переводом",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Передал: %@"
+          }
+        }
+      }
+    },
+    "hadith.detail.next": {
+      "comment": "Доступность: кнопка › в навбаре",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Следующий хадис"
+          }
+        }
+      }
+    },
+    "hadith.detail.number %lld": {
+      "comment": "Подпись на пергаменте и номер в строке списка",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Хадис %lld"
+          }
+        }
+      }
+    },
+    "hadith.detail.previous": {
+      "comment": "Доступность: кнопка ‹ в навбаре",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Предыдущий хадис"
+          }
+        }
+      }
+    },
+    "hadith.detail.source %@": {
+      "comment": "Источник хадиса под переводом",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Приводится: %@"
+          }
+        }
+      }
+    },
+    "hadith.home.brand.tagline": {
+      "comment": "Подзаголовок главной раздела хадисов",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "НАСЛЕДИЕ ПРОРОКА ﷺ"
+          }
+        }
+      }
+    },
+    "hadith.home.epigraph.source": {
+      "comment": "Главная хадисов: источник хадиса о наследии пророков (мелким шрифтом)",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "имам Ахмад (21716), Абу Дауд (3641), ат-Тирмизи (2682)"
+          }
+        }
+      }
+    },
+    "hadith.home.epigraph.text": {
+      "comment": "Главная хадисов: хадис о наследии пророков под подзаголовком",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "«Пророки не оставляли в наследство ни динаров, ни дирхемов, но они оставляли в наследство знание…»"
+          }
+        }
+      }
+    },
+    "hadith.home.verse.reference": {
+      "comment": "Источник хадиса на главной раздела хадисов",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "аль-Бухари, Муслим"
+          }
+        }
+      }
+    },
+    "hadith.home.verse.translation": {
+      "comment": "Перевод хадиса на главной раздела хадисов",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "«Кому Аллах желает блага, тому Он даёт понимание религии»"
+          }
+        }
+      }
+    },
+    "hadith.list.progress %lld %lld %lld": {
+      "comment": "Шапка списка: прочитано, всего, выучено",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Прочитано: %1$lld из %2$lld · выучено: %3$lld"
+          }
+        }
+      }
+    },
+    "hadith.nawawi.meta %lld": {
+      "comment": "Подпись карточки сборника ан-Навави: число хадисов и арабское название (русский текст первым — иначе строка выстраивается справа налево)",
+      "localizations": {
+        "ru": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld хадис (с доп. Ибн Раджаба) · الأربعون النووية"
+                }
+              },
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld хадиса (с доп. Ибн Раджаба) · الأربعون النووية"
+                }
+              },
+              "many": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld хадисов (с доп. Ибн Раджаба) · الأربعون النووية"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld хадиса (с доп. Ибн Раджаба) · الأربعون النووية"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "hadith.nawawi.title": {
+      "comment": "Название сборника ан-Навави",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "40 хадисов ан-Навави"
+          }
+        }
+      }
+    },
+    "hadith.progress.card %lld %lld": {
+      "comment": "Прогресс на карточке сборника: прочитано, всего",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Прочитано %1$lld из %2$lld"
+          }
+        }
+      }
+    },
+    "hadith.qudsi.meta %lld": {
+      "comment": "Подпись карточки сборника кудси: число хадисов и арабское название (русский текст первым — иначе строка выстраивается справа налево)",
+      "localizations": {
+        "ru": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld хадис · الأربعون القدسية"
+                }
+              },
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld хадиса · الأربعون القدسية"
+                }
+              },
+              "many": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld хадисов · الأربعون القدسية"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld хадиса · الأربعون القدسية"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "hadith.qudsi.title": {
+      "comment": "Название сборника хадисов кудси",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "40 хадисов кудси"
+          }
+        }
+      }
+    },
+    "hadith.status.markRead": {
+      "comment": "Кнопка отметки «прочитан» (не отмечен)",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Прочитать"
+          }
+        }
+      }
+    },
+    "hadith.status.memorize": {
+      "comment": "Кнопка отметки «выучен» (не отмечен)",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Выучить"
+          }
+        }
+      }
+    },
+    "hadith.status.memorized": {
+      "comment": "Кнопка и статус «выучен» (отмечен)",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Выучен"
+          }
+        }
+      }
+    },
+    "hadith.status.read": {
+      "comment": "Кнопка и статус «прочитан» (отмечен)",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Прочитан"
           }
         }
       }
@@ -597,6 +956,28 @@
           "stringUnit": {
             "state": "translated",
             "value": "А+"
+          }
+        }
+      }
+    },
+    "section.progress.done": {
+      "comment": "Доступность: кольцо прогресса на карточке раздела, всё выполнено",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Выполнено полностью"
+          }
+        }
+      }
+    },
+    "section.progress.percent %lld": {
+      "comment": "Доступность: кольцо прогресса на карточке раздела, процент выполнения",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Выполнено на %lld %%"
           }
         }
       }

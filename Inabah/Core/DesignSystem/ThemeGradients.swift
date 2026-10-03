@@ -41,9 +41,14 @@ nonisolated struct ThemeGradient: Hashable, Sendable {
 /// Градиенты темы: фоны разделов и карточки навигации.
 nonisolated struct ThemeGradients: Hashable, Sendable {
     var azkarBackground: ThemeGradient
+    /// Фон вечерних азкаров — в цветах карточки «Вечерние азкары» главной.
+    var eveningBackground: ThemeGradient
     var hadithBackground: ThemeGradient
     var morningCard: ThemeGradient
     var eveningCard: ThemeGradient
+    var nawawiCard: ThemeGradient
+    var qudsiCard: ThemeGradient
+    var ajurriCard: ThemeGradient
     var progressFill: ThemeGradient
     var counterButton: ThemeGradient
     var counterButtonDone: ThemeGradient
@@ -56,6 +61,11 @@ nonisolated extension ThemeGradients {
             (.azkarBackgroundTop, 0),
             (.azkarBackgroundMid, 0.5),
             (.azkarBackgroundBottom, 1),
+        ], cssAngle: 168),
+        eveningBackground: ThemeGradient.css(stops: [
+            (.eveningCardStart, 0),
+            (.eveningCardMid, 0.55),
+            (.eveningCardEnd, 1),
         ], cssAngle: 168),
         hadithBackground: ThemeGradient.css(stops: [
             (.hadithBackgroundTop, 0),
@@ -71,6 +81,21 @@ nonisolated extension ThemeGradients {
             (.eveningCardStart, 0),
             (.eveningCardMid, 0.55),
             (.eveningCardEnd, 1),
+        ], cssAngle: 135),
+        nawawiCard: ThemeGradient.css(stops: [
+            (.nawawiCardStart, 0),
+            (.nawawiCardMid, 0.6),
+            (.nawawiCardEnd, 1),
+        ], cssAngle: 135),
+        qudsiCard: ThemeGradient.css(stops: [
+            (.qudsiCardStart, 0),
+            (.qudsiCardMid, 0.55),
+            (.qudsiCardEnd, 1),
+        ], cssAngle: 135),
+        ajurriCard: ThemeGradient.css(stops: [
+            (.ajurriCardStart, 0),
+            (.ajurriCardMid, 0.55),
+            (.ajurriCardEnd, 1),
         ], cssAngle: 135),
         progressFill: ThemeGradient.css(stops: [
             (.successDeep, 0),

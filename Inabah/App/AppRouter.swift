@@ -12,6 +12,12 @@ nonisolated enum AzkarRoute: Hashable, Codable, Sendable {
     case list(AzkarSection)
 }
 
+/// Экраны внутри вкладки «Хадисы».
+nonisolated enum HadithRoute: Hashable, Codable, Sendable {
+    case list(HadithCollection)
+    case detail(HadithID)
+}
+
 /// Навигация приложения: выбранная вкладка и типизированный стек каждой вкладки.
 ///
 /// Типизированный путь вместо `NavigationPath` позволяет открыть любой экран из кода
@@ -20,6 +26,7 @@ nonisolated enum AzkarRoute: Hashable, Codable, Sendable {
 final class AppRouter {
     var selectedTab: AppTab = .azkar
     var azkarPath: [AzkarRoute] = []
+    var hadithPath: [HadithRoute] = []
 
     /// Выбор вкладки из таб-бара. Повторный выбор активной вкладки возвращает к её корню.
     /// `TabView` вызывает установку выбора и во время отрисовки (при запуске) — поэтому
@@ -37,7 +44,9 @@ final class AppRouter {
         switch tab {
         case .azkar:
             if !azkarPath.isEmpty { azkarPath.removeAll() }
-        case .hadith, .settings:
+        case .hadith:
+            if !hadithPath.isEmpty { hadithPath.removeAll() }
+        case .settings:
             break
         }
     }
@@ -45,5 +54,16 @@ final class AppRouter {
     func open(_ route: AzkarRoute) {
         selectedTab = .azkar
         azkarPath = [route]
+    }
+
+    /// Хадис открывается поверх списка своего сборника — «назад» ведёт в список, как в приложении.
+    func open(_ route: HadithRoute) {
+        selectedTab = .hadith
+        switch route {
+        case .list:
+            hadithPath = [route]
+        case .detail(let id):
+            hadithPath = [.list(id.collection), route]
+        }
     }
 }

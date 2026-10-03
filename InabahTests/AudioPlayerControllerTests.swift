@@ -38,6 +38,13 @@ private final class FakeAudioEngine: AudioEngine {
         preloadedURL = url
     }
 
+    private(set) var discardedPreloads = 0
+
+    func discardPreloaded() {
+        preloadedURL = nil
+        discardedPreloads += 1
+    }
+
     func startPreloaded(url: URL, after delay: TimeInterval) -> TimeInterval? {
         guard preloadedURL == url else { return nil }
         preloadedURL = nil
@@ -433,6 +440,23 @@ struct AudioPlayerControllerTests {
         #expect(player.repetition == 1)
         #expect(engine.currentURL?.lastPathComponent == "morning_2.mp3")
         #expect(engine.isPlaying)
+    }
+
+    @Test("Не запустилась подготовленная запись — тот же зикр загружается заново с паузой, а не пропускается")
+    func preparedTrackFailureReloadsSameItem() async {
+        await playAll([1, 1, 1], pause: .seconds(3))
+        await finish()
+        #expect(player.index == 1)
+
+        engine.onError?(.preparedTrackFailed)
+        await player.waitForLoading()
+
+        #expect(player.index == 1)
+        #expect(player.error == nil)
+        #expect(player.isPlaying)
+        // Второй зикр запущен повторно (после загрузки), третий не тронут.
+        #expect(engine.playedURLs.map(\.lastPathComponent) == ["morning_1.mp3", "morning_2.mp3", "morning_2.mp3"])
+        #expect(engine.lastStartDelay == 3)
     }
 
     @Test("Следующая запись готовится заранее, пауза между зикрами — в аудиодорожке")

@@ -4,6 +4,7 @@ import SwiftUI
 struct RootTabView: View {
     @Environment(AppRouter.self) private var router
     @Environment(AzkarStore.self) private var azkarStore
+    @Environment(HadithStore.self) private var hadithStore
     @Environment(AudioPlayerController.self) private var audioPlayer
     @Environment(\.scenePhase) private var scenePhase
 
@@ -22,8 +23,14 @@ struct RootTabView: View {
                 }
             }
             Tab("tab.hadith", systemImage: "book.closed.fill", value: AppTab.hadith) {
-                NavigationStack {
+                NavigationStack(path: $router.hadithPath) {
                     HadithHomeView()
+                        .navigationDestination(for: HadithRoute.self) { route in
+                            switch route {
+                            case .list(let collection): HadithListView(collection: collection)
+                            case .detail(let id): HadithDetailView(id: id)
+                            }
+                        }
                 }
             }
             Tab("tab.settings", systemImage: "gearshape.fill", value: AppTab.settings) {
@@ -32,7 +39,10 @@ struct RootTabView: View {
                 }
             }
         }
-        .task { await azkarStore.loadAll() }
+        .task {
+            await azkarStore.loadAll()
+            await hadithStore.loadAll()
+        }
         .onChange(of: scenePhase) { oldPhase, phase in
             if phase == .background {
                 audioPlayer.applicationDidEnterBackground()
