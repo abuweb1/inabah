@@ -927,6 +927,28 @@
         }
       }
     },
+    "section.progress.done": {
+      "comment": "Доступность: кольцо прогресса на карточке раздела, всё выполнено",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Выполнено полностью"
+          }
+        }
+      }
+    },
+    "section.progress.percent %lld": {
+      "comment": "Доступность: кольцо прогресса на карточке раздела, процент выполнения",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Выполнено на %lld %%"
+          }
+        }
+      }
+    },
     "settings.placeholder.message": {
       "localizations": {
         "ru": {

@@ -133,6 +133,8 @@ struct SectionNavCard: View {
     let shadow: ShadowToken
     /// Дополнительная строка под подписью (например, прогресс чтения сборника).
     var progress: LocalizedStringResource?
+    /// Кольцо прогресса справа от иконки (например, выполнение азкаров за сегодня).
+    var ring: (fraction: Double, style: NavCardRingStyle)?
 
     @Environment(\.theme) private var theme
 
@@ -171,10 +173,16 @@ struct SectionNavCard: View {
                 }
             }
             Spacer(minLength: Spacing.s)
-            Image(systemName: "chevron.right")
-                .font(.title3.weight(.semibold))
-                .foregroundStyle(theme.palette.onAccentTertiary)
-                .frame(maxHeight: .infinity)
+            // Кольцо и стрелка — по центру карточки по вертикали.
+            HStack(spacing: Spacing.m) {
+                if let ring {
+                    NavCardProgressRing(fraction: ring.fraction, style: ring.style)
+                }
+                Image(systemName: "chevron.right")
+                    .font(.title3.weight(.semibold))
+                    .foregroundStyle(theme.palette.onAccentTertiary)
+            }
+            .frame(maxHeight: .infinity)
         }
         .padding(.vertical, Layout.verticalPadding)
         .padding(.horizontal, Spacing.xlPlus)

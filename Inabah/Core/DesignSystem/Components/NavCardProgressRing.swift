@@ -1,0 +1,59 @@
+import SwiftUI
+
+/// Оформление кольца прогресса на карточке раздела — у каждой карточки своё.
+struct NavCardRingStyle {
+    let track: Color
+    let fill: Color
+    /// Цвет процентов внутри кольца.
+    let text: Color
+}
+
+/// Прогресс раздела на карточке: тонкое кольцо с процентами; по заполнении кольцо замыкается,
+/// а проценты сменяются галочкой того же цвета — без заливки, в стиле карточки.
+struct NavCardProgressRing: View {
+    let fraction: Double
+    let style: NavCardRingStyle
+
+    private var isDone: Bool { fraction >= 1 }
+    private var percent: Int { Int((min(max(fraction, 0), 1) * 100).rounded()) }
+
+    private enum Layout {
+        static let lineWidth: CGFloat = 3
+    }
+
+    var body: some View {
+        ZStack {
+            ProgressRing(fraction: fraction, trackColor: style.track, fillColor: style.fill, lineWidth: Layout.lineWidth)
+            if isDone {
+                Image(systemName: "checkmark")
+                    .font(.callout.weight(.bold))
+                    .foregroundStyle(style.fill)
+                    .transition(.scale.combined(with: .opacity))
+            } else {
+                Text(Double(percent) / 100, format: .percent.precision(.fractionLength(0)))
+                    .font(.caption2.weight(.bold))
+                    .monospacedDigit()
+                    .foregroundStyle(style.text)
+                    .contentTransition(.numericText(value: Double(percent)))
+                    .minimumScaleFactor(0.7)
+                    .transition(.opacity)
+            }
+        }
+        .frame(width: Size.minTapTarget, height: Size.minTapTarget)
+        .animation(Motion.highlight, value: isDone)
+        .animation(Motion.highlight, value: percent)
+        .accessibilityElement()
+        .accessibilityLabel(isDone ? Text("section.progress.done") : Text("section.progress.percent \(percent)"))
+    }
+}
+
+#Preview {
+    let palette = Theme.inabah.palette
+    let style = NavCardRingStyle(track: palette.goldTrack, fill: palette.gold, text: palette.gold)
+    HStack {
+        NavCardProgressRing(fraction: 0.13, style: style)
+        NavCardProgressRing(fraction: 1, style: style)
+    }
+    .padding()
+    .background(palette.card)
+}

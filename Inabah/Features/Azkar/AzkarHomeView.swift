@@ -31,7 +31,8 @@ struct AzkarHomeView: View {
                         symbolName: section.symbolName,
                         iconColor: section.iconColor(in: theme),
                         gradient: section.cardGradient(in: theme),
-                        shadow: section.cardShadow(in: theme)
+                        shadow: section.cardShadow(in: theme),
+                        ring: ring(for: section)
                     )
                 }
                 .buttonStyle(PressScaleButtonStyle())
@@ -39,6 +40,13 @@ struct AzkarHomeView: View {
         }
         .audioPlayerInset()
         .toolbarVisibility(.hidden, for: .navigationBar)
+    }
+
+    /// Выполнение раздела за этот запуск; до загрузки кольца нет.
+    private func ring(for section: AzkarSection) -> (fraction: Double, style: NavCardRingStyle)? {
+        let progress = store.progress(of: section)
+        guard progress.total > 0 else { return nil }
+        return (progress.fraction, section.ringStyle(in: theme))
     }
 
     /// Количество зикров известно после загрузки; до неё карточка без подписи.

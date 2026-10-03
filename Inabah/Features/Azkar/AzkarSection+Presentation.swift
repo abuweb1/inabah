@@ -52,6 +52,16 @@ extension AzkarSection {
         }
     }
 
+    /// Кольцо прогресса на карточке: утро — солнечное на светлой карточке, вечер — золотое на тёмной.
+    func ringStyle(in theme: Theme) -> NavCardRingStyle {
+        switch self {
+        case .morning:
+            NavCardRingStyle(track: theme.palette.track, fill: theme.palette.sunRays, text: theme.palette.onAccent)
+        case .evening:
+            NavCardRingStyle(track: theme.palette.goldTrack, fill: theme.palette.gold, text: theme.palette.gold)
+        }
+    }
+
     func cardShadow(in theme: Theme) -> ShadowToken {
         let color = switch self {
         case .morning: theme.palette.accentShadow.opacity(0.35)
