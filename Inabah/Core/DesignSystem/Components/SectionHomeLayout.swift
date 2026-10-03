@@ -63,13 +63,27 @@ struct SectionHomeLayout<Cards: View>: View {
             VStack(spacing: Spacing.xxs) {
                 // Латиница — системным шрифтом, как остальной интерфейс (засечки Scheherazade
                 // в латинском названии пользователю не понравились).
-                Text(brand.latinName)
-                    .font(.system(size: Layout.brandLatinSize, weight: .medium))
-                    .foregroundStyle(theme.palette.onAccentSecondary)
+                if let latinName = brand.latinName {
+                    Text(latinName)
+                        .font(.system(size: Layout.brandLatinSize, weight: .medium))
+                        .foregroundStyle(theme.palette.onAccentSecondary)
+                }
                 Text(brand.tagline)
                     .font(.caption)
                     .tracking(0.8)
                     .foregroundStyle(theme.palette.onAccentTertiary)
+                if let epigraph = brand.epigraph {
+                    VStack(spacing: Spacing.xxxs) {
+                        Text(epigraph.text)
+                            .font(.footnote.italic())
+                            .foregroundStyle(theme.palette.onAccentSecondary)
+                        Text(epigraph.source)
+                            .font(.caption2)
+                            .foregroundStyle(theme.palette.onAccentTertiary)
+                    }
+                    .padding(.top, Spacing.s)
+                    .padding(.horizontal, Spacing.xl)
+                }
             }
         }
         .multilineTextAlignment(.center)
@@ -113,8 +127,16 @@ private enum SectionHomeLayoutMetrics {
 struct SectionBrand {
     /// Арабское название — контент, не переводится.
     let arabicName: String
-    let latinName: LocalizedStringResource
+    /// Название латиницей под арабским; `nil` — без него.
+    var latinName: LocalizedStringResource?
     let tagline: LocalizedStringResource
+    /// Цитата под подзаголовком и её источник мелким шрифтом (как иснад).
+    var epigraph: BrandEpigraph?
+}
+
+struct BrandEpigraph {
+    let text: LocalizedStringResource
+    let source: LocalizedStringResource
 }
 
 struct FeaturedVerse {
@@ -152,6 +174,7 @@ struct SectionNavCard: View {
                     .font(.system(size: Layout.iconSize))
                     .foregroundStyle(iconColor)
                     .frame(width: Size.navCardIcon, height: Size.navCardIcon, alignment: .leading)
+                    .accessibilityHidden(true)
                 Spacer(minLength: Spacing.s)
                 Text(title)
                     .font(.title3.bold())
@@ -166,6 +189,7 @@ struct SectionNavCard: View {
                         Text(progress)
                     } icon: {
                         Image(systemName: "checkmark.circle.fill")
+                            .accessibilityHidden(true)
                     }
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(theme.palette.onAccent)
@@ -178,9 +202,10 @@ struct SectionNavCard: View {
                 if let ring {
                     NavCardProgressRing(fraction: ring.fraction, style: ring.style)
                 }
-                Image(systemName: "chevron.right")
+                Image(systemName: "chevron.forward")
                     .font(.title3.weight(.semibold))
                     .foregroundStyle(theme.palette.onAccentTertiary)
+                    .accessibilityHidden(true)
             }
             .frame(maxHeight: .infinity)
         }

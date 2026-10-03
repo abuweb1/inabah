@@ -87,6 +87,36 @@ struct HadithProgressTests {
         #expect(defaults.object(forKey: "h_mem_nawawi_1") == nil)
     }
 
+    @Test("Номер 0 (адресация прототипа) и номера за пределами сборника в прогресс не попадают")
+    func outOfRangeNumbersIgnored() {
+        defaults.set("1", forKey: "h_read_nawawi_0")
+        defaults.set("1", forKey: "h_read_nawawi_51")
+        defaults.set("1", forKey: "h_read_nawawi_50")
+
+        let progress = HadithProgress(defaults: defaults).progress(in: .nawawi, total: 50)
+
+        #expect(progress.read == 1)
+    }
+
+    @Test("«Выучен» без «прочитан» в хранилище читается как «выучен»")
+    func memorizedWithoutReadLoads() {
+        defaults.set("1", forKey: "h_mem_qudsi_3")
+
+        #expect(HadithProgress(defaults: defaults).status(of: HadithID(collection: .qudsi, number: 3)) == .memorized)
+    }
+
+    @Test("Отметки одного сборника не попадают в другой, посторонние значения игнорируются")
+    func collectionsAreSeparate() {
+        defaults.set("1", forKey: "h_read_ajurri_1")
+        defaults.set("0", forKey: "h_read_nawawi_2")
+
+        let progress = HadithProgress(defaults: defaults)
+
+        #expect(progress.status(of: first) == .none)
+        #expect(progress.status(of: second) == .none)
+        #expect(progress.status(of: HadithID(collection: .ajurri, number: 1)) == .read)
+    }
+
     @Test("Прогресс сборника: выученные входят в прочитанные, другие сборники не считаются")
     func collectionProgress() {
         let progress = HadithProgress(defaults: defaults)

@@ -563,12 +563,23 @@
       }
     },
     "hadith.detail.counter %lld %lld": {
-      "comment": "Навбар экрана хадиса: номер и всего в сборнике",
+      "comment": "Навбар экрана хадиса: номер и всего в сборнике («3 из 50»)",
       "localizations": {
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Хадис %1$lld из %2$lld"
+            "value": "%1$lld из %2$lld"
+          }
+        }
+      }
+    },
+    "hadith.detail.counter.short %lld %lld": {
+      "comment": "Навбар экрана хадиса, если полная подпись не помещается: номер/всего",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld/%2$lld"
           }
         }
       }
@@ -628,17 +639,6 @@
         }
       }
     },
-    "hadith.home.brand.latin": {
-      "comment": "Название раздела латиницей под арабским «حديث»",
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Hadith"
-          }
-        }
-      }
-    },
     "hadith.home.brand.tagline": {
       "comment": "Подзаголовок главной раздела хадисов",
       "localizations": {
@@ -646,6 +646,28 @@
           "stringUnit": {
             "state": "translated",
             "value": "НАСЛЕДИЕ ПРОРОКА ﷺ"
+          }
+        }
+      }
+    },
+    "hadith.home.epigraph.source": {
+      "comment": "Главная хадисов: источник хадиса о наследии пророков (мелким шрифтом)",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "имам Ахмад (21716), Абу Дауд (3641), ат-Тирмизи (2682)"
+          }
+        }
+      }
+    },
+    "hadith.home.epigraph.text": {
+      "comment": "Главная хадисов: хадис о наследии пророков под подзаголовком",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "«Пророки не оставляли в наследство ни динаров, ни дирхемов, но они оставляли в наследство знание…»"
           }
         }
       }

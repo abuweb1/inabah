@@ -1,10 +1,11 @@
 import SwiftUI
 
 /// Одна страница экрана хадиса: арабский текст на пергаменте, отметки, аудио, перевод.
+/// Статус приходит значением — отметка другого хадиса эту страницу не перестраивает.
 struct HadithPage: View {
     let hadith: Hadith
+    let status: HadithStatus
 
-    @Environment(HadithProgress.self) private var progress
     @Environment(ReadingSettings.self) private var settings
     @Environment(\.theme) private var theme
 
@@ -12,7 +13,7 @@ struct HadithPage: View {
         ScrollView {
             VStack(spacing: Spacing.m) {
                 arabicPanel
-                HadithStatusButtons(id: hadith.id, status: progress.status(of: hadith.id))
+                HadithStatusButtons(id: hadith.id, status: status)
                 HadithAudioPlaceholder(number: hadith.number)
                 if let translation = hadith.translation {
                     HadithTranslationCard(translation: translation)
@@ -100,6 +101,8 @@ private struct HadithAudioPlaceholder: View {
                 .foregroundStyle(theme.palette.onAccentTertiary)
                 .frame(width: Size.minTapTarget, height: Size.minTapTarget)
                 .background(theme.palette.track, in: .circle)
+                // Неактивный значок — не кнопка «Воспроизвести»: VoiceOver читает только подписи.
+                .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: Spacing.xxxs) {
                 Text("hadith.audio.title \(number)")
                     .font(.caption)

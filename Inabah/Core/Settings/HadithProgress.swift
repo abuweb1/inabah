@@ -50,7 +50,7 @@ final class HadithProgress {
     }
 
     func progress(in collection: HadithCollection, total: Int) -> HadithCollectionProgress {
-        let values = statuses[collection, default: [:]].filter { $0.key <= total }.values
+        let values = statuses[collection, default: [:]].filter { (1...max(total, 1)).contains($0.key) }.values
         return HadithCollectionProgress(
             read: values.count(where: \.isRead),
             memorized: values.count(where: \.isMemorized),
@@ -87,7 +87,7 @@ final class HadithProgress {
             guard value as? String == storedFlag,
                   let match = key.wholeMatch(of: keyPattern),
                   match.2 == collection.rawValue,
-                  let number = Int(match.3) else { continue }
+                  let number = Int(match.3), number >= 1 else { continue }
             // «Выучен» без «прочитан» (например, отмечено в старой версии) — тоже «выучен».
             if match.1 == "mem" {
                 result[number] = .memorized

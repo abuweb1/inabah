@@ -41,6 +41,7 @@ struct HadithRow: View {
             Image(systemName: status.rowSymbolName)
                 .font(.footnote.weight(.semibold))
                 .foregroundStyle(status == .none ? theme.palette.onAccentTertiary : status.tint(in: theme))
+                .accessibilityHidden(true)
         }
         .padding(.vertical, Spacing.m)
         .contentShape(.rect)
