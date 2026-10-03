@@ -50,15 +50,18 @@ private struct HadithStatusButtons: View {
     @Environment(HadithProgress.self) private var progress
     @Environment(\.theme) private var theme
 
+    private static let glyphSize: CGFloat = 26
+
     var body: some View {
         HStack(spacing: Spacing.s) {
             Button {
                 progress.toggleRead(id)
             } label: {
-                Label(
-                    status.isRead ? "hadith.status.read" : "hadith.status.markRead",
-                    systemImage: status.isRead ? "checkmark.circle.fill" : "circle.dashed"
-                )
+                Label {
+                    Text(status.isRead ? "hadith.status.read" : "hadith.status.markRead")
+                } icon: {
+                    StatusGlyph(.read, isFilled: status.isRead, size: Self.glyphSize, relativeTo: .title3)
+                }
             }
             .buttonStyle(ToggleTileButtonStyle(
                 isOn: status.isRead,
@@ -71,10 +74,11 @@ private struct HadithStatusButtons: View {
             Button {
                 progress.toggleMemorized(id)
             } label: {
-                Label(
-                    status.isMemorized ? "hadith.status.memorized" : "hadith.status.memorize",
-                    systemImage: status.isMemorized ? "star.fill" : "star"
-                )
+                Label {
+                    Text(status.isMemorized ? "hadith.status.memorized" : "hadith.status.memorize")
+                } icon: {
+                    StatusGlyph(.memorized, isFilled: status.isMemorized, size: Self.glyphSize, relativeTo: .title3)
+                }
             }
             .buttonStyle(ToggleTileButtonStyle(
                 isOn: status.isMemorized,
