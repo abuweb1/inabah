@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Вкладки приложения: Азкары, Хадисы, Настройки — у каждой свой стек навигации.
+/// Вкладки приложения: Азкары, Хадисы, Махрадж, Настройки — у каждой свой стек навигации.
 struct RootTabView: View {
     @Environment(AppRouter.self) private var router
     @Environment(AzkarStore.self) private var azkarStore
@@ -31,6 +31,12 @@ struct RootTabView: View {
                             case .detail(let id): HadithDetailView(id: id)
                             }
                         }
+                }
+            }
+            // «ع» (айн) — гортанная буква, хрестоматийный пример махраджа.
+            Tab("tab.makharij", systemImage: "character.ar", value: AppTab.makharij) {
+                NavigationStack {
+                    MakharijHomeView()
                 }
             }
             Tab("tab.settings", systemImage: "gearshape.fill", value: AppTab.settings) {

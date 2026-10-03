@@ -951,6 +951,61 @@
         }
       }
     },
+    "makharij.home.brand.tagline" : {
+      "comment" : "Главная «Махрадж»: подзаголовок под арабским названием",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "МЕСТА ПРОИЗНОШЕНИЯ БУКВ"
+          }
+        }
+      }
+    },
+    "makharij.home.verse.reference" : {
+      "comment" : "Главная «Махрадж»: источник аята",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Къуран · аль-Муззаммиль 73:4"
+          }
+        }
+      }
+    },
+    "makharij.home.verse.translation" : {
+      "comment" : "Главная «Махрадж»: перевод аята аль-Муззаммиль 73:4",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "«И читай Коран размеренным чтением»"
+          }
+        }
+      }
+    },
+    "makharij.soon.message" : {
+      "comment" : "Главная «Махрадж»: что появится в разделе",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Здесь появятся махраджи арабских букв: где и как произносится каждая, с аудио"
+          }
+        }
+      }
+    },
+    "makharij.soon.title" : {
+      "comment" : "Главная «Махрадж»: заглушка — раздел в разработке",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Скоро"
+          }
+        }
+      }
+    },
     "placeholder.soon" : {
       "comment" : "Заголовок заглушки раздела в разработке",
       "extractionState" : "stale",
@@ -1408,6 +1463,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Хадисы"
+          }
+        }
+      }
+    },
+    "tab.makharij" : {
+      "comment" : "Вкладка раздела «Махрадж» (места произношения букв)",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Махрадж"
           }
         }
       }

@@ -42,7 +42,8 @@ struct SectionHomeLayout<Cards: View>: View {
     private var brandBlock: some View {
         // У Scheherazade New высокая строка (запас под огласовки над и под буквами), поэтому
         // латинское название подтянуто к арабскому отрицательным интервалом — но не до хамзы под алифом.
-        VStack(spacing: -Spacing.l) {
+        // Нижний вынос (хвост «ج» в «مخارج») занимает этот запас — тогда строки не сближаем.
+        VStack(spacing: brand.arabicNameHasDescender ? 0 : -Spacing.l) {
             ArabicText(
                 text: brand.arabicName,
                 size: Layout.brandArabicSize,
@@ -119,6 +120,8 @@ private enum SectionHomeLayoutMetrics {
 struct SectionBrand {
     /// Арабское название — контент, не переводится.
     let arabicName: String
+    /// У названия есть буквы с нижним выносом (ج, ر, ن в конце) — подзаголовок не подтягивается вверх.
+    var arabicNameHasDescender = false
     /// Название латиницей под арабским; `nil` — без него.
     var latinName: LocalizedStringResource?
     let tagline: LocalizedStringResource
