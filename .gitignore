@@ -1,0 +1,23 @@
+# macOS
+.DS_Store
+
+# Xcode
+xcuserdata/
+DerivedData/
+*.xcuserstate
+*.xcscmblueprint
+build/
+
+docs/
+audio/
+
+# Swift Package Manager
+.build/
+.swiftpm/
+
+# IDE
+.idea/
+
+# Claude Code — локальные настройки
+.claude
+CLAUDE.md
