@@ -1,6 +1,50 @@
 {
   "sourceLanguage" : "ru",
   "strings" : {
+    "appIcon.beads" : {
+      "comment" : "Иконка приложения: кольцо бусин с кистью",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Чётки"
+          }
+        }
+      }
+    },
+    "appIcon.classic" : {
+      "comment" : "Иконка приложения: основная (каллиграфия)",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Классическая"
+          }
+        }
+      }
+    },
+    "appIcon.dawn" : {
+      "comment" : "Иконка приложения: солнце над горизонтом в арке",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Рассвет в михрабе"
+          }
+        }
+      }
+    },
+    "appIcon.niche" : {
+      "comment" : "Иконка приложения: две вложенные арки",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ниша в нише"
+          }
+        }
+      }
+    },
     "audio.category.azkar" : {
       "comment" : "Раздел над названием записи в плеере (прописными)",
       "localizations" : {
@@ -1001,6 +1045,72 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Выполнено на %lld %%"
+          }
+        }
+      }
+    },
+    "settings.appIcon.error" : {
+      "comment" : "Выбор иконки: алерт, если система не сменила иконку",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не удалось сменить иконку"
+          }
+        }
+      }
+    },
+    "settings.appIcon.error.ok" : {
+      "comment" : "Выбор иконки: кнопка закрытия алерта",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Понятно"
+          }
+        }
+      }
+    },
+    "settings.appIcon.footer" : {
+      "comment" : "Выбор иконки: подпись под вариантами",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Иконка на экране «Домой» сменится сразу."
+          }
+        }
+      }
+    },
+    "settings.appIcon.subtitle" : {
+      "comment" : "Корень настроек: подпись строки «Иконка приложения»",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Классическая и ещё три варианта"
+          }
+        }
+      }
+    },
+    "settings.appIcon.title" : {
+      "comment" : "Настройки: экран и строка выбора иконки приложения",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Иконка приложения"
+          }
+        }
+      }
+    },
+    "settings.appearance.header" : {
+      "comment" : "Корень настроек: заголовок секции оформления",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Оформление"
           }
         }
       }

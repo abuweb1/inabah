@@ -7,29 +7,45 @@ struct SettingsView: View {
     var body: some View {
         List {
             Section {
-                ForEach(SettingsSection.allCases, id: \.self) { section in
-                    NavigationLink(value: section.route) {
-                        SettingsSectionRow(section: section)
-                    }
-                    .settingsRow()
-                }
+                rows(SettingsSection.content)
+            }
+            Section {
+                rows(SettingsSection.appearance)
+            } header: {
+                Text("settings.appearance.header")
             }
         }
         .settingsForm(background: theme.gradients.settingsBackground)
         .navigationTitle(Text("settings.title"))
         .audioPlayerInset()
     }
+
+    private func rows(_ sections: [SettingsSection]) -> some View {
+        ForEach(sections, id: \.self) { section in
+            NavigationLink(value: section.route) {
+                SettingsSectionRow(section: section)
+            }
+            .settingsRow()
+        }
+    }
 }
 
 /// Разделы в корне настроек (маршрутов в настройках больше — у разделов есть свои подэкраны).
-private enum SettingsSection: CaseIterable {
+private enum SettingsSection {
     case azkar
     case hadith
+    case appIcon
+
+    /// Настройки разделов приложения.
+    static let content: [SettingsSection] = [.azkar, .hadith]
+    /// Оформление.
+    static let appearance: [SettingsSection] = [.appIcon]
 
     var route: SettingsRoute {
         switch self {
         case .azkar: .azkar
         case .hadith: .hadith
+        case .appIcon: .appIcon
         }
     }
 
@@ -37,6 +53,7 @@ private enum SettingsSection: CaseIterable {
         switch self {
         case .azkar: "settings.azkar.title"
         case .hadith: "settings.hadith.title"
+        case .appIcon: "settings.appIcon.title"
         }
     }
 
@@ -44,6 +61,7 @@ private enum SettingsSection: CaseIterable {
         switch self {
         case .azkar: "settings.azkar.subtitle"
         case .hadith: "settings.hadith.subtitle"
+        case .appIcon: "settings.appIcon.subtitle"
         }
     }
 
@@ -51,6 +69,7 @@ private enum SettingsSection: CaseIterable {
         switch self {
         case .azkar: "hands.and.sparkles.fill"
         case .hadith: "book.closed.fill"
+        case .appIcon: "app.badge.fill"
         }
     }
 
@@ -59,6 +78,7 @@ private enum SettingsSection: CaseIterable {
         switch self {
         case .azkar: theme.gradients.morningCard
         case .hadith: theme.gradients.nawawiCard
+        case .appIcon: theme.gradients.eveningCard
         }
     }
 }

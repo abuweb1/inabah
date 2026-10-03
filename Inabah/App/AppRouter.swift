@@ -18,6 +18,8 @@ nonisolated enum SettingsRoute: Hashable, Codable, Sendable {
     case hadith
     /// Порядок сборников на главной хадисов (из настроек хадисов).
     case hadithOrder
+    /// Выбор иконки приложения.
+    case appIcon
 }
 
 /// Экраны внутри вкладки «Хадисы».
