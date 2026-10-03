@@ -40,6 +40,7 @@ struct RootTabView: View {
                             switch route {
                             case .azkar: AzkarSettingsView()
                             case .hadith: HadithSettingsView()
+                            case .hadithOrder: HadithOrderSettingsView()
                             }
                         }
                 }

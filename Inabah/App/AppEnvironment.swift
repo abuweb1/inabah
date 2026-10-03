@@ -12,6 +12,7 @@ struct AppEnvironment {
     let azkarStore: AzkarStore
     let hadithStore: HadithStore
     let hadithProgress: HadithProgress
+    let hadithCollectionOrder: HadithCollectionOrder
     let audioPlayer: AudioPlayerController
     let theme: Theme
 
@@ -28,6 +29,7 @@ struct AppEnvironment {
         azkarStore = AzkarStore(repository: repository, defaults: defaults, resetSettings: azkarResetSettings)
         hadithStore = HadithStore(repository: repository)
         hadithProgress = HadithProgress(defaults: defaults)
+        hadithCollectionOrder = HadithCollectionOrder(defaults: defaults)
         self.audioPlayer = audioPlayer ?? AudioPlayerController(
             engine: AVAudioEngineAdapter(),
             session: AudioSessionController(),
@@ -57,6 +59,7 @@ extension View {
             .environment(environment.azkarStore)
             .environment(environment.hadithStore)
             .environment(environment.hadithProgress)
+            .environment(environment.hadithCollectionOrder)
             .environment(environment.audioPlayer)
             .environment(\.theme, environment.theme)
     }

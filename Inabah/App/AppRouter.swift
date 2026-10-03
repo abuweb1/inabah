@@ -13,9 +13,11 @@ nonisolated enum AzkarRoute: Hashable, Codable, Sendable {
 }
 
 /// Экраны внутри вкладки «Настройки».
-nonisolated enum SettingsRoute: Hashable, Codable, Sendable, CaseIterable {
+nonisolated enum SettingsRoute: Hashable, Codable, Sendable {
     case azkar
     case hadith
+    /// Порядок сборников на главной хадисов (из настроек хадисов).
+    case hadithOrder
 }
 
 /// Экраны внутри вкладки «Хадисы».

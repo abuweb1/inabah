@@ -7,9 +7,9 @@ struct SettingsView: View {
     var body: some View {
         List {
             Section {
-                ForEach(SettingsRoute.allCases, id: \.self) { route in
-                    NavigationLink(value: route) {
-                        SettingsSectionRow(route: route)
+                ForEach(SettingsSection.allCases, id: \.self) { section in
+                    NavigationLink(value: section.route) {
+                        SettingsSectionRow(section: section)
                     }
                     .settingsRow()
                 }
@@ -21,37 +21,18 @@ struct SettingsView: View {
     }
 }
 
-/// Строка раздела: значок в цвет раздела, название и краткое описание.
-private struct SettingsSectionRow: View {
-    let route: SettingsRoute
+/// Разделы в корне настроек (маршрутов в настройках больше — у разделов есть свои подэкраны).
+private enum SettingsSection: CaseIterable {
+    case azkar
+    case hadith
 
-    @Environment(\.theme) private var theme
-
-    private enum Layout {
-        static let iconSize: CGFloat = 32
-    }
-
-    var body: some View {
-        HStack(spacing: Spacing.m) {
-            Image(systemName: route.symbolName)
-                .font(.title3)
-                .foregroundStyle(theme.palette.onAccent)
-                .frame(width: Layout.iconSize, height: Layout.iconSize)
-                .background(route.tint(in: theme).linear, in: .rect(cornerRadius: Radius.small))
-                .accessibilityHidden(true)
-            VStack(alignment: .leading, spacing: Spacing.xxxs) {
-                Text(route.title)
-                    .font(.body)
-                Text(route.subtitle)
-                    .font(.caption)
-                    .foregroundStyle(theme.palette.onAccentSecondary)
-            }
+    var route: SettingsRoute {
+        switch self {
+        case .azkar: .azkar
+        case .hadith: .hadith
         }
-        .padding(.vertical, Spacing.xxs)
     }
-}
 
-private extension SettingsRoute {
     var title: LocalizedStringResource {
         switch self {
         case .azkar: "settings.azkar.title"
@@ -79,6 +60,36 @@ private extension SettingsRoute {
         case .azkar: theme.gradients.morningCard
         case .hadith: theme.gradients.nawawiCard
         }
+    }
+}
+
+/// Строка раздела: значок в цвет раздела, название и краткое описание.
+private struct SettingsSectionRow: View {
+    let section: SettingsSection
+
+    @Environment(\.theme) private var theme
+
+    private enum Layout {
+        static let iconSize: CGFloat = 32
+    }
+
+    var body: some View {
+        HStack(spacing: Spacing.m) {
+            Image(systemName: section.symbolName)
+                .font(.title3)
+                .foregroundStyle(theme.palette.onAccent)
+                .frame(width: Layout.iconSize, height: Layout.iconSize)
+                .background(section.tint(in: theme).linear, in: .rect(cornerRadius: Radius.small))
+                .accessibilityHidden(true)
+            VStack(alignment: .leading, spacing: Spacing.xxxs) {
+                Text(section.title)
+                    .font(.body)
+                Text(section.subtitle)
+                    .font(.caption)
+                    .foregroundStyle(theme.palette.onAccentSecondary)
+            }
+        }
+        .padding(.vertical, Spacing.xxs)
     }
 }
 

@@ -4,6 +4,7 @@ import SwiftUI
 struct HadithHomeView: View {
     @Environment(HadithStore.self) private var store
     @Environment(HadithProgress.self) private var progress
+    @Environment(HadithCollectionOrder.self) private var order
     @Environment(\.theme) private var theme
 
     private static let brand = SectionBrand(
@@ -28,7 +29,8 @@ struct HadithHomeView: View {
             brand: Self.brand,
             verse: Self.verse
         ) {
-            ForEach(HadithCollection.allCases, id: \.self) { collection in
+            // Порядок карточек задаётся в настройках.
+            ForEach(order.collections, id: \.self) { collection in
                 NavigationLink(value: HadithRoute.list(collection)) {
                     SectionNavCard(
                         title: collection.title,

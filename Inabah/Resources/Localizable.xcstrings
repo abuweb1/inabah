@@ -1005,6 +1005,50 @@
         }
       }
     },
+    "settings.hadith.home.header" : {
+      "comment" : "Настройки хадисов: секция настроек главной хадисов",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Главная"
+          }
+        }
+      }
+    },
+    "settings.hadith.order.footer" : {
+      "comment" : "Настройки хадисов: пояснение к порядку сборников",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перетащите сборник за ручку справа, чтобы изменить порядок карточек на главной."
+          }
+        }
+      }
+    },
+    "settings.hadith.order.restore" : {
+      "comment" : "Настройки хадисов: вернуть порядок сборников по умолчанию",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Восстановить"
+          }
+        }
+      }
+    },
+    "settings.hadith.order.title" : {
+      "comment" : "Настройки хадисов: порядок карточек сборников на главной",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Порядок сборников"
+          }
+        }
+      }
+    },
     "settings.hadith.reset" : {
       "comment" : "Настройки хадисов: кнопка сброса отметок сборника",
       "localizations" : {

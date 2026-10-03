@@ -4,6 +4,7 @@ import SwiftUI
 struct HadithSettingsView: View {
     @Environment(HadithStore.self) private var store
     @Environment(HadithProgress.self) private var progress
+    @Environment(HadithCollectionOrder.self) private var order
     @Environment(\.theme) private var theme
 
     /// Сборник, сброс которого ждёт подтверждения.
@@ -11,7 +12,16 @@ struct HadithSettingsView: View {
 
     var body: some View {
         Form {
-            ForEach(HadithCollection.allCases, id: \.self) { collection in
+            Section {
+                NavigationLink(value: SettingsRoute.hadithOrder) {
+                    Text("settings.hadith.order.title")
+                }
+                .settingsRow()
+            } header: {
+                Text("settings.hadith.home.header")
+            }
+
+            ForEach(order.collections, id: \.self) { collection in
                 let total = store.hadiths(in: collection).count
                 let collectionProgress = progress.progress(in: collection, total: total)
                 Section {
