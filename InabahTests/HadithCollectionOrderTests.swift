@@ -30,6 +30,22 @@ struct HadithCollectionOrderTests {
         #expect(!restored.isDefault)
     }
 
+    @Test("Действия VoiceOver «Выше» / «Ниже»; за краями списка — ничего")
+    func moveByOffset() {
+        let order = HadithCollectionOrder(defaults: defaults)
+
+        #expect(!order.canMove(.nawawi, by: -1))
+        order.move(.nawawi, by: -1)
+        #expect(order.isDefault)
+
+        order.move(.ajurri, by: -1)
+        #expect(order.collections == [.nawawi, .ajurri, .qudsi])
+        order.move(.nawawi, by: 1)
+        #expect(order.collections == [.ajurri, .nawawi, .qudsi])
+        #expect(!order.canMove(.qudsi, by: 1))
+        #expect(HadithCollectionOrder(defaults: defaults).collections == [.ajurri, .nawawi, .qudsi])
+    }
+
     @Test("Восстановление исходного порядка")
     func restoreDefault() {
         let order = HadithCollectionOrder(defaults: defaults)

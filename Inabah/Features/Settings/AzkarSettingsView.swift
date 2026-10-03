@@ -47,28 +47,14 @@ struct AzkarSettingsView: View {
         .settingsForm(background: theme.gradients.azkarBackground)
         .navigationTitle(Text("settings.azkar.title"))
         .navigationBarTitleDisplayMode(.inline)
-        .confirmationDialog(
-            Text("settings.reset.now.confirm.title"),
-            isPresented: isConfirming,
-            titleVisibility: .visible,
-            presenting: pendingReset
-        ) { section in
-            Button(role: .destructive) {
-                store.resetProgress(of: section)
-            } label: {
-                Text("settings.reset.now.confirm.action")
-            }
-        } message: { section in
-            Text(section.resetConfirmationMessage)
-        }
-        .audioPlayerInset()
-    }
-
-    private var isConfirming: Binding<Bool> {
-        Binding(
-            get: { pendingReset != nil },
-            set: { if !$0 { pendingReset = nil } }
+        .destructiveConfirmation(
+            "settings.reset.now.confirm.title",
+            item: $pendingReset,
+            actionLabel: "settings.reset.now.confirm.action",
+            message: { Text($0.resetConfirmationMessage) },
+            perform: { store.resetProgress(of: $0) }
         )
+        .audioPlayerInset()
     }
 
     /// Время суток как дата сегодняшнего дня — для `DatePicker`; сохраняются только часы и минуты.

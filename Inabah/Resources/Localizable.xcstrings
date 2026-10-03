@@ -1038,6 +1038,28 @@
         }
       }
     },
+    "settings.hadith.order.moveDown" : {
+      "comment" : "Порядок сборников: действие VoiceOver — сдвинуть сборник ниже",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ниже"
+          }
+        }
+      }
+    },
+    "settings.hadith.order.moveUp" : {
+      "comment" : "Порядок сборников: действие VoiceOver — сдвинуть сборник выше",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Выше"
+          }
+        }
+      }
+    },
     "settings.hadith.order.restore" : {
       "comment" : "Настройки хадисов: вернуть порядок сборников по умолчанию",
       "localizations" : {

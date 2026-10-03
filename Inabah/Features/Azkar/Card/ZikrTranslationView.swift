@@ -35,6 +35,7 @@ struct ZikrTranslationView: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+        // Здесь только контент (подписей интерфейса нет) — язык перевода на весь блок.
         .environment(\.locale, Locale(identifier: translation.language.rawValue))
     }
 }

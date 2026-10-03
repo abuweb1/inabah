@@ -161,11 +161,12 @@ struct SectionNavCard: View {
     let iconColor: Color
     let gradient: ThemeGradient
     let shadow: ShadowToken
-    /// Показатели под подписью: первый — у левого края, второй — у правого (например,
-    /// «прочитано» и «выучено» сборника).
-    var stats: [NavCardStat] = []
-    /// Кольцо прогресса справа от иконки (например, выполнение азкаров за сегодня).
-    var ring: (fraction: Double, style: NavCardRingStyle)?
+    /// Показатели под подписью: у левого и у правого края (например, «прочитано» и «выучено»
+    /// сборника).
+    var leadingStat: NavCardStat?
+    var trailingStat: NavCardStat?
+    /// Кольцо прогресса справа (например, выполнение азкаров за сегодня).
+    var ring: NavCardRing?
 
     @Environment(\.theme) private var theme
 
@@ -194,11 +195,14 @@ struct SectionNavCard: View {
                         .font(.footnote)
                         .foregroundStyle(theme.palette.onAccentSecondary)
                 }
-                if !stats.isEmpty {
+                if leadingStat != nil || trailingStat != nil {
                     HStack(spacing: Spacing.s) {
-                        ForEach(Array(stats.enumerated()), id: \.offset) { index, stat in
-                            if index > 0 { Spacer(minLength: 0) }
-                            statLabel(stat)
+                        if let leadingStat {
+                            statLabel(leadingStat)
+                        }
+                        Spacer(minLength: 0)
+                        if let trailingStat {
+                            statLabel(trailingStat)
                         }
                     }
                     .font(.subheadline.weight(.semibold))
@@ -248,6 +252,12 @@ struct SectionNavCard: View {
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(Text(stat.accessibilityLabel))
     }
+}
+
+/// Кольцо прогресса на карточке раздела: доля выполнения и оформление.
+struct NavCardRing: Equatable {
+    let fraction: Double
+    let style: NavCardRingStyle
 }
 
 /// Показатель на карточке раздела: значок и короткое значение («3/50»); для VoiceOver — полная фраза.

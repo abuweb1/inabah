@@ -44,29 +44,15 @@ struct HadithSettingsView: View {
         .settingsForm(background: theme.gradients.hadithBackground)
         .navigationTitle(Text("settings.hadith.title"))
         .navigationBarTitleDisplayMode(.inline)
-        .confirmationDialog(
-            Text("settings.hadith.reset.confirm.title"),
-            isPresented: isConfirming,
-            titleVisibility: .visible,
-            presenting: pendingReset
-        ) { collection in
-            Button(role: .destructive) {
-                progress.reset(collection)
-            } label: {
-                Text("settings.hadith.reset.confirm.action")
-            }
-        } message: { collection in
-            Text("settings.hadith.reset.confirm.message \(String(localized: collection.title))")
-        }
+        .destructiveConfirmation(
+            "settings.hadith.reset.confirm.title",
+            item: $pendingReset,
+            actionLabel: "settings.hadith.reset.confirm.action",
+            message: { Text("settings.hadith.reset.confirm.message \(String(localized: $0.title))") },
+            perform: { progress.reset($0) }
+        )
         .task { await store.loadAll() }
         .audioPlayerInset()
-    }
-
-    private var isConfirming: Binding<Bool> {
-        Binding(
-            get: { pendingReset != nil },
-            set: { if !$0 { pendingReset = nil } }
-        )
     }
 }
 

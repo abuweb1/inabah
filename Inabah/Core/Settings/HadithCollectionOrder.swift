@@ -27,6 +27,23 @@ final class HadithCollectionOrder {
         collections.move(fromOffsets: source, toOffset: destination)
     }
 
+    /// Сдвиг сборника на `offset` позиций (−1 — выше, +1 — ниже) — действия VoiceOver.
+    /// За краями списка ничего не делает.
+    func move(_ collection: HadithCollection, by offset: Int) {
+        guard let index = collections.firstIndex(of: collection),
+              collections.indices.contains(index + offset) else { return }
+        var reordered = collections
+        reordered.remove(at: index)
+        reordered.insert(collection, at: index + offset)
+        collections = reordered
+    }
+
+    /// Можно ли сдвинуть сборник на `offset` позиций.
+    func canMove(_ collection: HadithCollection, by offset: Int) -> Bool {
+        guard let index = collections.firstIndex(of: collection) else { return false }
+        return collections.indices.contains(index + offset)
+    }
+
     func restoreDefault() {
         guard !isDefault else { return }
         collections = Self.defaultOrder

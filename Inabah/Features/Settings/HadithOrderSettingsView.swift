@@ -11,6 +11,15 @@ struct HadithOrderSettingsView: View {
                 ForEach(order.collections, id: \.self) { collection in
                     HadithOrderRow(collection: collection)
                         .settingsRow()
+                        // Перетаскивание с VoiceOver неудобно — те же перестановки действиями.
+                        .accessibilityActions {
+                            if order.canMove(collection, by: -1) {
+                                Button("settings.hadith.order.moveUp") { order.move(collection, by: -1) }
+                            }
+                            if order.canMove(collection, by: 1) {
+                                Button("settings.hadith.order.moveDown") { order.move(collection, by: 1) }
+                            }
+                        }
                 }
                 .onMove { order.move(fromOffsets: $0, toOffset: $1) }
             } footer: {
