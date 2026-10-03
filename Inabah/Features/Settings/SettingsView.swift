@@ -34,17 +34,19 @@ struct SettingsView: View {
 private enum SettingsSection {
     case azkar
     case hadith
+    case palette
     case appIcon
 
     /// Настройки разделов приложения.
     static let content: [SettingsSection] = [.azkar, .hadith]
     /// Оформление.
-    static let appearance: [SettingsSection] = [.appIcon]
+    static let appearance: [SettingsSection] = [.palette, .appIcon]
 
     var route: SettingsRoute {
         switch self {
         case .azkar: .azkar
         case .hadith: .hadith
+        case .palette: .palette
         case .appIcon: .appIcon
         }
     }
@@ -53,6 +55,7 @@ private enum SettingsSection {
         switch self {
         case .azkar: "settings.azkar.title"
         case .hadith: "settings.hadith.title"
+        case .palette: "settings.palette.title"
         case .appIcon: "settings.appIcon.title"
         }
     }
@@ -61,6 +64,7 @@ private enum SettingsSection {
         switch self {
         case .azkar: "settings.azkar.subtitle"
         case .hadith: "settings.hadith.subtitle"
+        case .palette: "settings.palette.subtitle"
         case .appIcon: "settings.appIcon.subtitle"
         }
     }
@@ -69,6 +73,7 @@ private enum SettingsSection {
         switch self {
         case .azkar: "hands.and.sparkles.fill"
         case .hadith: "book.closed.fill"
+        case .palette: "paintpalette.fill"
         case .appIcon: "app.badge.fill"
         }
     }
@@ -78,6 +83,7 @@ private enum SettingsSection {
         switch self {
         case .azkar: theme.gradients.morningCard
         case .hadith: theme.gradients.nawawiCard
+        case .palette: theme.gradients.qudsiCard
         case .appIcon: theme.gradients.eveningCard
         }
     }

@@ -1006,6 +1006,116 @@
         }
       }
     },
+    "palette.amber" : {
+      "comment" : "Палитра: всё приложение в цвет раздела «Махрадж»",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Янтарная"
+          }
+        }
+      }
+    },
+    "palette.amber.subtitle" : {
+      "comment" : "Палитра «Янтарная»: пояснение",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "как Махрадж"
+          }
+        }
+      }
+    },
+    "palette.emerald" : {
+      "comment" : "Палитра: всё приложение в цвет хадисов",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Изумрудная"
+          }
+        }
+      }
+    },
+    "palette.emerald.subtitle" : {
+      "comment" : "Палитра «Изумрудная»: пояснение",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "как Хадисы"
+          }
+        }
+      }
+    },
+    "palette.graphite" : {
+      "comment" : "Палитра: всё приложение в цвет настроек",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Графит"
+          }
+        }
+      }
+    },
+    "palette.graphite.subtitle" : {
+      "comment" : "Палитра «Графит»: пояснение",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "как Настройки"
+          }
+        }
+      }
+    },
+    "palette.sections" : {
+      "comment" : "Палитра: у каждого раздела свой цвет",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "По умолчанию"
+          }
+        }
+      }
+    },
+    "palette.sections.subtitle" : {
+      "comment" : "Палитра «По умолчанию»: пояснение",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Свой цвет у каждого раздела"
+          }
+        }
+      }
+    },
+    "palette.violet" : {
+      "comment" : "Палитра: всё приложение в цвет азкаров",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Фиолетовая"
+          }
+        }
+      }
+    },
+    "palette.violet.subtitle" : {
+      "comment" : "Палитра «Фиолетовая»: пояснение",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "как Азкары"
+          }
+        }
+      }
+    },
     "placeholder.soon" : {
       "comment" : "Заголовок заглушки раздела в разработке",
       "extractionState" : "stale",
@@ -1320,6 +1430,39 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Хадисы"
+          }
+        }
+      }
+    },
+    "settings.palette.footer" : {
+      "comment" : "Палитра: подпись под вариантами",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Единая палитра окрашивает всё приложение в цвет одного раздела: фоны, шапки, карточки и вкладки."
+          }
+        }
+      }
+    },
+    "settings.palette.subtitle" : {
+      "comment" : "Корень настроек: подпись строки «Палитра»",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Свой цвет у разделов или единый"
+          }
+        }
+      }
+    },
+    "settings.palette.title" : {
+      "comment" : "Настройки: экран и строка выбора палитры оформления",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Палитра"
           }
         }
       }
