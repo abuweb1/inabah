@@ -773,6 +773,17 @@
         }
       }
     },
+    "hadith.progress.card.memorized %lld %lld" : {
+      "comment" : "Прогресс на карточке сборника справа: выучено, всего",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Выучено %1$lld из %2$lld"
+          }
+        }
+      }
+    },
     "hadith.qudsi.meta %lld" : {
       "comment" : "Подпись карточки сборника аль-Къудси: число хадисов и арабское название (русский текст первым — иначе строка выстраивается справа налево)",
       "localizations" : {

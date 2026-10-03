@@ -163,6 +163,8 @@ struct SectionNavCard: View {
     let shadow: ShadowToken
     /// Дополнительная строка под подписью (например, прогресс чтения сборника).
     var progress: LocalizedStringResource?
+    /// Второй показатель на той же строке, у правого края (например, сколько выучено).
+    var secondaryProgress: LocalizedStringResource?
     /// Кольцо прогресса справа от иконки (например, выполнение азкаров за сегодня).
     var ring: (fraction: Double, style: NavCardRingStyle)?
 
@@ -192,15 +194,20 @@ struct SectionNavCard: View {
                         .font(.footnote)
                         .foregroundStyle(theme.palette.onAccentSecondary)
                 }
-                if let progress {
-                    Label {
-                        Text(progress)
-                    } icon: {
-                        Image(systemName: "checkmark.circle.fill")
-                            .accessibilityHidden(true)
+                if progress != nil || secondaryProgress != nil {
+                    HStack(spacing: Spacing.s) {
+                        if let progress {
+                            progressLabel(progress, symbolName: "checkmark.circle.fill")
+                        }
+                        Spacer(minLength: 0)
+                        if let secondaryProgress {
+                            progressLabel(secondaryProgress, symbolName: "star.fill")
+                        }
                     }
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(theme.palette.onAccent)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
                     .padding(.top, Spacing.xxs)
                 }
             }
@@ -234,5 +241,14 @@ struct SectionNavCard: View {
         }
         .contentShape(.rect(cornerRadius: Radius.navCard))
         .accessibilityElement(children: .combine)
+    }
+
+    private func progressLabel(_ text: LocalizedStringResource, symbolName: String) -> some View {
+        Label {
+            Text(text)
+        } icon: {
+            Image(systemName: symbolName)
+                .accessibilityHidden(true)
+        }
     }
 }

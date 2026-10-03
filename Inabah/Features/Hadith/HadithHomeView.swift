@@ -39,7 +39,8 @@ struct HadithHomeView: View {
                         iconColor: collection.iconColor(in: theme),
                         gradient: collection.cardGradient(in: theme),
                         shadow: collection.cardShadow(in: theme),
-                        progress: progressLine(for: collection)
+                        progress: progressLine(for: collection),
+                        secondaryProgress: memorizedLine(for: collection)
                     )
                 }
                 .buttonStyle(PressScaleButtonStyle())
@@ -61,6 +62,14 @@ struct HadithHomeView: View {
         let collectionProgress = progress.progress(in: collection, total: total)
         guard collectionProgress.read > 0 else { return nil }
         return "hadith.progress.card \(collectionProgress.read) \(total)"
+    }
+
+    /// «Выучено 2 из 50» — справа на той же строке, только когда что-то уже выучено.
+    private func memorizedLine(for collection: HadithCollection) -> LocalizedStringResource? {
+        let total = store.hadiths(in: collection).count
+        let collectionProgress = progress.progress(in: collection, total: total)
+        guard collectionProgress.memorized > 0 else { return nil }
+        return "hadith.progress.card.memorized \(collectionProgress.memorized) \(total)"
     }
 }
 
