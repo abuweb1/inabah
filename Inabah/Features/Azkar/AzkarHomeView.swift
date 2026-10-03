@@ -42,7 +42,7 @@ struct AzkarHomeView: View {
         .toolbarVisibility(.hidden, for: .navigationBar)
     }
 
-    /// Выполнение раздела за этот запуск; до загрузки кольца нет.
+    /// Выполнение раздела за текущий период; до загрузки кольца нет.
     private func ring(for section: AzkarSection) -> (fraction: Double, style: NavCardRingStyle)? {
         let progress = store.progress(of: section)
         guard progress.total > 0 else { return nil }

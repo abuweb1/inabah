@@ -74,6 +74,11 @@ struct AzkarStoreTests {
         (1...3).forEach { _ in sessions[1].increment() }
         #expect(store.progress(of: .morning).isFinished)
         #expect(store.progress(of: .morning).fraction == 1)
+
+        sessions[0].reset()
+        #expect(store.progress(of: .morning).completed == 1)
+        store.resetProgress(of: .morning)
+        #expect(store.progress(of: .morning) == SectionProgress(completed: 0, total: 2))
     }
 
     @Test("Разделы считаются независимо")

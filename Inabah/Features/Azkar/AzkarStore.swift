@@ -18,6 +18,10 @@ final class AzkarStore {
     @ObservationIgnored private let resetSettings: AzkarResetSettings
     @ObservationIgnored private let now: () -> Date
     private(set) var sections: [AzkarSection: Loadable<[ZikrSession]>] = [:]
+    /// Выполнение разделов. Хранится, а не вычисляется из сессий: читатели (главная, шапка
+    /// списка) зависят только от него и не перерисовываются на каждое нажатие счётчика —
+    /// значение меняется, лишь когда зикр выполнен или сброшен.
+    private var progressBySection: [AzkarSection: SectionProgress] = [:]
 
     /// Период, к которому относится загруженный прогресс раздела.
     @ObservationIgnored private var periods: [AzkarSection: AzkarPeriod] = [:]
@@ -64,7 +68,7 @@ final class AzkarStore {
             let restored = restoredProgress(of: section)
             let sessions = azkar.map {
                 ZikrSession(zikr: $0, count: restored.counts[$0.id.number] ?? 0) { [weak self] in
-                    self?.save(section)
+                    self?.countDidChange(in: section)
                 }
             }
             periods[section] = restored.period
@@ -72,6 +76,7 @@ final class AzkarStore {
                 acknowledgedCompletions.insert(section)
             }
             sections[section] = .loaded(sessions)
+            updateProgress(of: section)
             if restored.needsSave { save(section) }
             scheduleNextRefresh()
         } catch let error as ContentError {
@@ -88,8 +93,22 @@ final class AzkarStore {
     }
 
     func progress(of section: AzkarSection) -> SectionProgress {
+        progressBySection[section] ?? SectionProgress(completed: 0, total: 0)
+    }
+
+    private func countDidChange(in section: AzkarSection) {
+        updateProgress(of: section)
+        save(section)
+    }
+
+    /// Пересчёт выполнения раздела; запись — только при изменении (`@Observable` уведомляет
+    /// и о записи того же значения).
+    private func updateProgress(of section: AzkarSection) {
         let sessions = sessions(in: section)
-        return SectionProgress(completed: sessions.count(where: \.isCompleted), total: sessions.count)
+        let progress = SectionProgress(completed: sessions.count(where: \.isCompleted), total: sessions.count)
+        if progressBySection[section] != progress {
+            progressBySection[section] = progress
+        }
     }
 
     /// Есть ли что сбрасывать: начат хотя бы один зикр. Раздел, который ещё не загружен
@@ -107,6 +126,7 @@ final class AzkarStore {
         acknowledgedCompletions.remove(section)
         if periods[section] != nil {
             sessions(in: section).forEach { $0.discardProgress() }
+            updateProgress(of: section)
             save(section)
         } else {
             defaults.removeObject(forKey: Self.key(for: section))
@@ -143,6 +163,7 @@ final class AzkarStore {
             if period.isExpired(at: current) {
                 period = AzkarPeriod(startingAt: current, schedule: schedule)
                 sessions(in: section).forEach { $0.discardProgress() }
+                updateProgress(of: section)
                 acknowledgedCompletions.remove(section)
             }
             guard period != loaded else { continue }
