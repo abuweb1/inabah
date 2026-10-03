@@ -21,6 +21,16 @@
 		AB0000000000000000000012 /* InabahTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = InabahTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		AB0000000000000000000031 /* Exceptions for "data" folder in "Inabah" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				"pending/missing-texts.json",
+			);
+			target = AB0000000000000000000100 /* Inabah */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		AB0000000000000000000021 /* Inabah */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
@@ -30,6 +40,19 @@
 		AB0000000000000000000022 /* InabahTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = InabahTests;
+			sourceTree = "<group>";
+		};
+		AB0000000000000000000023 /* data */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				AB0000000000000000000031 /* Exceptions for "data" folder in "Inabah" target */,
+			);
+			path = data;
+			sourceTree = "<group>";
+		};
+		AB0000000000000000000024 /* audio */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = audio;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -57,6 +80,8 @@
 			children = (
 				AB0000000000000000000021 /* Inabah */,
 				AB0000000000000000000022 /* InabahTests */,
+				AB0000000000000000000023 /* data */,
+				AB0000000000000000000024 /* audio */,
 				AB0000000000000000000003 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -87,6 +112,8 @@
 			);
 			fileSystemSynchronizedGroups = (
 				AB0000000000000000000021 /* Inabah */,
+				AB0000000000000000000023 /* data */,
+				AB0000000000000000000024 /* audio */,
 			);
 			name = Inabah;
 			packageProductDependencies = (
@@ -267,6 +294,7 @@
 				DEVELOPMENT_TEAM = AART3QGCXW;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Inabah-Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = "Инаба";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -298,6 +326,7 @@
 				DEVELOPMENT_TEAM = AART3QGCXW;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Inabah-Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = "Инаба";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
