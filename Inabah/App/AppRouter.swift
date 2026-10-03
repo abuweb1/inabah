@@ -21,6 +21,8 @@ nonisolated enum SettingsRoute: Hashable, Codable, Sendable {
     case hadithOrder
     /// Выбор иконки приложения.
     case appIcon
+    /// Выбор палитры оформления.
+    case palette
 }
 
 /// Экраны внутри вкладки «Хадисы».

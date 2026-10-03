@@ -46,6 +46,9 @@ nonisolated struct Palette: Hashable, Sendable {
     var accentLight: Color
     var accentDim: Color
     var accentShadow: Color
+    /// Цветные тени светлых карточек навигации («Утренние азкары», ан-Навави).
+    var morningCardShadow: Color
+    var nawawiCardShadow: Color
 
     // Выбранная вкладка — в тон фона раздела (общий сиреневый акцент на зелёном,
     // янтарном и графитовом фоне уходил в розовый)
@@ -125,6 +128,8 @@ nonisolated extension Palette {
             accentLight: Color(asset: .accentPurpleLight),
             accentDim: Color(asset: .accentPurpleDim),
             accentShadow: Color(asset: .shadowPurple),
+            morningCardShadow: Color(asset: .shadowPurple),
+            nawawiCardShadow: successDeep,
             tabAzkar: Color(asset: .tabAzkar),
             tabHadith: Color(asset: .tabHadith),
             tabMakharij: Color(asset: .tabMakharij),

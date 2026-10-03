@@ -15,12 +15,12 @@ struct AppEnvironment {
     let hadithCollectionOrder: HadithCollectionOrder
     let appIconSettings: AppIconSettings
     let audioPlayer: AudioPlayerController
-    let theme: Theme
+    /// Палитра оформления — тема в окружении берётся из неё (`themed()`).
+    let appearanceSettings: AppearanceSettings
 
     init(
         repository: any ContentRepository = BundleContentRepository(),
         defaults: UserDefaults = .standard,
-        theme: Theme = .inabah,
         audioPlayer: AudioPlayerController? = nil,
         appIconSwitcher: (any AppIconSwitching)? = nil
     ) {
@@ -38,7 +38,7 @@ struct AppEnvironment {
             session: AudioSessionController(),
             nowPlaying: NowPlayingCoordinator()
         )
-        self.theme = theme
+        appearanceSettings = AppearanceSettings(defaults: defaults)
     }
 
     /// Превью: контент в памяти, отметки — в отдельном наборе `UserDefaults`; плеер без
@@ -78,6 +78,17 @@ extension View {
             .environment(environment.hadithCollectionOrder)
             .environment(environment.appIconSettings)
             .environment(environment.audioPlayer)
-            .environment(\.theme, environment.theme)
+            .environment(environment.appearanceSettings)
+            .modifier(ThemedModifier(settings: environment.appearanceSettings))
+    }
+}
+
+/// Тема в окружении — из выбранной палитры. Только этот модификатор следит за выбором:
+/// смена палитры один раз перерисовывает дерево с новой темой.
+private struct ThemedModifier: ViewModifier {
+    let settings: AppearanceSettings
+
+    func body(content: Content) -> some View {
+        content.environment(\.theme, settings.style.theme)
     }
 }

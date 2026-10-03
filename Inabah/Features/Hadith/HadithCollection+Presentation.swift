@@ -54,7 +54,7 @@ extension HadithCollection {
 
     func cardShadow(in theme: Theme) -> ShadowToken {
         switch self {
-        case .nawawi: .navCard(theme.palette.successDeep, strength: .medium)
+        case .nawawi: .navCard(theme.palette.nawawiCardShadow, strength: .medium)
         case .qudsi, .ajurri: .navCard(theme.palette.shadow, strength: .strong)
         }
     }

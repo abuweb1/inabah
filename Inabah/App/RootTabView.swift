@@ -52,6 +52,7 @@ struct RootTabView: View {
                             case .hadith: HadithSettingsView()
                             case .hadithOrder: HadithOrderSettingsView()
                             case .appIcon: AppIconSettingsView()
+                            case .palette: PaletteSettingsView()
                             }
                         }
                 }

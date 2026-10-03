@@ -39,54 +39,30 @@ struct AppIconSettingsView: View {
     }
 }
 
-/// Превью иконки со скруглением как на экране «Домой», подпись и отметка выбранной.
+/// Превью иконки со скруглением как на экране «Домой».
 private struct AppIconTile: View {
     let option: AppIconOption
     let isSelected: Bool
     let action: () -> Void
 
-    @Environment(\.theme) private var theme
-
     private enum Layout {
         static let iconSize: CGFloat = 88
         /// Скругление иконок iOS — доля стороны.
         static let cornerRatio: CGFloat = 0.2237
-        /// Зазор между иконкой и рамкой выбора.
-        static let selectionInset: CGFloat = 4
     }
 
     var body: some View {
-        Button(action: action) {
-            VStack(spacing: Spacing.s) {
-                Image(option.preview)
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: Layout.iconSize, height: Layout.iconSize)
-                    .clipShape(.rect(cornerRadius: Layout.iconSize * Layout.cornerRatio, style: .continuous))
-                    .padding(Layout.selectionInset)
-                    .overlay {
-                        RoundedRectangle(
-                            cornerRadius: Layout.iconSize * Layout.cornerRatio + Layout.selectionInset,
-                            style: .continuous
-                        )
-                        .strokeBorder(isSelected ? theme.palette.accentLight : .clear, lineWidth: Size.ringStroke)
-                    }
-                Text(option.title)
-                    .font(.footnote)
-                    .foregroundStyle(theme.palette.onAccent)
-                    .multilineTextAlignment(.center)
-                Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
-                    .font(.body)
-                    .foregroundStyle(isSelected ? theme.palette.accentLight : theme.palette.onAccentTertiary)
-                    .accessibilityHidden(true)
-            }
-            .frame(maxWidth: .infinity)
-            .contentShape(.rect)
+        SelectableTile(
+            title: option.title,
+            isSelected: isSelected,
+            cornerRadius: Layout.iconSize * Layout.cornerRatio,
+            action: action
+        ) {
+            Image(option.preview)
+                .resizable()
+                .scaledToFit()
+                .frame(width: Layout.iconSize, height: Layout.iconSize)
         }
-        .buttonStyle(PressScaleButtonStyle())
-        .animation(Motion.highlight, value: isSelected)
-        .accessibilityElement(children: .combine)
-        .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 }
 
