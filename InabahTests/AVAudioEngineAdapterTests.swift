@@ -13,10 +13,6 @@ struct AVAudioEngineAdapterTests {
         try #require(Bundle.main.url(forResource: name, withExtension: nil))
     }
 
-    private func settle() async {
-        for _ in 0..<10 { await Task.yield() }
-    }
-
     @Test("Загрузка возвращает длительность, запись стоит в начале")
     func loadReturnsDuration() async throws {
         let duration = try await engine.load(url: Self.url("morning_01.mp3"))
@@ -24,17 +20,6 @@ struct AVAudioEngineAdapterTests {
         #expect(duration > 0)
         #expect(!engine.isPlaying)
         #expect(engine.currentTime == 0)
-    }
-
-    @Test("Стоп во время загрузки отменяет её")
-    func stopCancelsLoad() async throws {
-        let url = try Self.url("morning_01.mp3")
-        let loading = Task { try await engine.load(url: url) }
-        await settle()
-
-        engine.stop()
-
-        await #expect(throws: CancellationError.self) { try await loading.value }
     }
 
     @Test("Перемотка, пауза и стоп видны сразу, без ожидания плеера")

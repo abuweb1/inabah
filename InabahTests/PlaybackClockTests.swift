@@ -71,13 +71,15 @@ struct PlaybackClockTests {
         #expect(clock.time(at: at(3)) == 2.5)
     }
 
-    @Test("Подстройка до отложенного старта игнорируется")
-    func syncBeforeDelayedStartIgnored() {
+    @Test("Подстройка на момент фактического отложенного старта")
+    func syncToActualDelayedStart() {
         var clock = PlaybackClock()
         clock.reset(duration: 60)
         clock.start(after: 3, at: at(0))
-        clock.sync(position: 0, at: at(1))
-        #expect(clock.time(at: at(4)) == 1)
+        // Плеер начал звук на секунду позже, чем рассчитывал главный актор.
+        clock.sync(position: 0, at: at(4))
+        #expect(clock.time(at: at(3.5)) == 0)
+        #expect(clock.time(at: at(5)) == 1)
     }
 
     @Test("Стоп — в начало, длительность сохраняется")
