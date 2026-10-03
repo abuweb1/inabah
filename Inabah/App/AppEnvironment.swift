@@ -13,6 +13,7 @@ struct AppEnvironment {
     let hadithStore: HadithStore
     let hadithProgress: HadithProgress
     let hadithCollectionOrder: HadithCollectionOrder
+    let appIconSettings: AppIconSettings
     let audioPlayer: AudioPlayerController
     let theme: Theme
 
@@ -20,7 +21,8 @@ struct AppEnvironment {
         repository: any ContentRepository = BundleContentRepository(),
         defaults: UserDefaults = .standard,
         theme: Theme = .inabah,
-        audioPlayer: AudioPlayerController? = nil
+        audioPlayer: AudioPlayerController? = nil,
+        appIconSwitcher: (any AppIconSwitching)? = nil
     ) {
         router = AppRouter()
         readingSettings = ReadingSettings(defaults: defaults)
@@ -30,6 +32,7 @@ struct AppEnvironment {
         hadithStore = HadithStore(repository: repository)
         hadithProgress = HadithProgress(defaults: defaults)
         hadithCollectionOrder = HadithCollectionOrder(defaults: defaults)
+        appIconSettings = AppIconSettings(switcher: appIconSwitcher ?? SystemAppIconSwitcher())
         self.audioPlayer = audioPlayer ?? AudioPlayerController(
             engine: AVAudioEngineAdapter(),
             session: AudioSessionController(),
@@ -39,12 +42,13 @@ struct AppEnvironment {
     }
 
     /// Превью: контент в памяти, отметки — в отдельном наборе `UserDefaults`; плеер без
-    /// аудиосессии и экрана блокировки — превью не трогают аудиосистему процесса.
+    /// аудиосессии и экрана блокировки, иконка не меняется — превью не трогают систему.
     static var preview: AppEnvironment {
         AppEnvironment(
             repository: InMemoryContentRepository.preview,
             defaults: previewDefaults(),
-            audioPlayer: AudioPlayerController(engine: AVAudioEngineAdapter())
+            audioPlayer: AudioPlayerController(engine: AVAudioEngineAdapter()),
+            appIconSwitcher: PreviewAppIconSwitcher()
         )
     }
 
@@ -72,6 +76,7 @@ extension View {
             .environment(environment.hadithStore)
             .environment(environment.hadithProgress)
             .environment(environment.hadithCollectionOrder)
+            .environment(environment.appIconSettings)
             .environment(environment.audioPlayer)
             .environment(\.theme, environment.theme)
     }
