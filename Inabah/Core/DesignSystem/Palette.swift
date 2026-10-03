@@ -47,6 +47,13 @@ nonisolated struct Palette: Hashable, Sendable {
     var accentDim: Color
     var accentShadow: Color
 
+    // Выбранная вкладка — в тон фона раздела (общий сиреневый акцент на зелёном,
+    // янтарном и графитовом фоне уходил в розовый)
+    var tabAzkar: Color
+    var tabHadith: Color
+    var tabMakharij: Color
+    var tabSettings: Color
+
     // Статусы
     var success: Color
     var successLight: Color
@@ -118,6 +125,10 @@ nonisolated extension Palette {
             accentLight: Color(asset: .accentPurpleLight),
             accentDim: Color(asset: .accentPurpleDim),
             accentShadow: Color(asset: .shadowPurple),
+            tabAzkar: Color(asset: .tabAzkar),
+            tabHadith: Color(asset: .tabHadith),
+            tabMakharij: Color(asset: .tabMakharij),
+            tabSettings: Color(asset: .tabSettings),
             success: Color(asset: .success),
             successLight: Color(asset: .successLight),
             successDeep: successDeep,

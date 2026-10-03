@@ -7,6 +7,7 @@ struct RootTabView: View {
     @Environment(HadithStore.self) private var hadithStore
     @Environment(AudioPlayerController.self) private var audioPlayer
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.theme) private var theme
 
     var body: some View {
         @Bindable var router = router
@@ -21,6 +22,7 @@ struct RootTabView: View {
                             }
                         }
                 }
+                .tint(theme.palette.accentLight)
             }
             Tab("tab.hadith", systemImage: "book.closed.fill", value: AppTab.hadith) {
                 NavigationStack(path: $router.hadithPath) {
@@ -32,12 +34,14 @@ struct RootTabView: View {
                             }
                         }
                 }
+                .tint(theme.palette.accentLight)
             }
             // «ع» (айн) — гортанная буква, хрестоматийный пример махраджа.
             Tab("tab.makharij", systemImage: "character.ar", value: AppTab.makharij) {
                 NavigationStack {
                     MakharijHomeView()
                 }
+                .tint(theme.palette.accentLight)
             }
             Tab("tab.settings", systemImage: "gearshape.fill", value: AppTab.settings) {
                 NavigationStack(path: $router.settingsPath) {
@@ -51,8 +55,12 @@ struct RootTabView: View {
                             }
                         }
                 }
+                .tint(theme.palette.accentLight)
             }
         }
+        // Подсветка выбранной вкладки — в тон раздела; содержимому вкладок выше возвращён
+        // общий акцент, чтобы оттенок таб-бара не перекрашивал кнопки и переключатели.
+        .tint(router.selectedTab.tint(in: theme))
         .task {
             await azkarStore.loadAll()
             await hadithStore.loadAll()
