@@ -66,6 +66,8 @@ enum Motion {
     static let overlay = Animation.easeOut(duration: 0.4)
     /// Подсветка звучащей карточки.
     static let highlight = Animation.easeInOut(duration: 0.3)
+    /// Смена кегля арабского кнопками А−/А+.
+    static let fontSize = Animation.smooth(duration: 0.3)
     /// Полоса прогресса раздела.
     static let progress = Animation.easeInOut(duration: 0.5)
     /// Пауза между заполнением счётчика и сворачиванием карточки (вспышка «готово»).

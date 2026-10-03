@@ -51,8 +51,8 @@ struct SectionHomeLayout<Cards: View>: View {
 
     private var brandBlock: some View {
         // У Scheherazade New высокая строка (запас под огласовки над и под буквами), поэтому
-        // строки бренда сближены отрицательными интервалами — плотность как `line-height: 1` в прототипе.
-        VStack(spacing: -Spacing.xxl) {
+        // латинское название подтянуто к арабскому отрицательным интервалом — но не до хамзы под алифом.
+        VStack(spacing: -Spacing.l) {
             ArabicText(
                 text: brand.arabicName,
                 size: Layout.brandArabicSize,
@@ -60,10 +60,11 @@ struct SectionHomeLayout<Cards: View>: View {
                 bold: true,
                 alignment: .center
             )
-            VStack(spacing: -Spacing.xs) {
-                // Латиница тоже есть в Scheherazade New — название набрано одним шрифтом, как в прототипе.
+            VStack(spacing: Spacing.xxs) {
+                // Латиница — системным шрифтом, как остальной интерфейс (засечки Scheherazade
+                // в латинском названии пользователю не понравились).
                 Text(brand.latinName)
-                    .font(.arabic(size: Layout.brandLatinSize))
+                    .font(.system(size: Layout.brandLatinSize, weight: .medium))
                     .foregroundStyle(theme.palette.onAccentSecondary)
                 Text(brand.tagline)
                     .font(.caption)
