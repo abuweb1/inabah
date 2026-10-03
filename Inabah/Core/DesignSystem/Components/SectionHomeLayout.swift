@@ -22,8 +22,9 @@ struct SectionHomeLayout<Cards: View>: View {
                     brandBlock
                     verseBox
                         .padding(.horizontal, Spacing.xs)
-                        .padding(.top, Spacing.l)
-                    Spacer(minLength: Spacing.xxl)
+                        .padding(.top, verse.isFramed ? Spacing.l : Spacing.xs)
+                    // Без рамки цитата стоит ближе к карточкам — они не прижимаются к низу.
+                    Spacer(minLength: verse.isFramed ? Spacing.xxl : Spacing.m)
                     // Карточки в натуральной высоте — свободное место уходит в отступы вокруг них.
                     VStack(spacing: Spacing.m) { cards }
                         .fixedSize(horizontal: false, vertical: true)
@@ -109,9 +110,13 @@ struct SectionHomeLayout<Cards: View>: View {
                 .foregroundStyle(theme.palette.onAccentTertiary)
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, Spacing.m)
+        .padding(.vertical, verse.isFramed ? Spacing.m : 0)
         .padding(.horizontal, Spacing.xl)
-        .surface(theme.palette.subtleFill, cornerRadius: Radius.box, border: theme.palette.hairline)
+        .surface(
+            verse.isFramed ? theme.palette.subtleFill : .clear,
+            cornerRadius: Radius.box,
+            border: verse.isFramed ? theme.palette.hairline : .clear
+        )
         .accessibilityElement(children: .combine)
     }
 }
@@ -143,6 +148,9 @@ struct FeaturedVerse {
     let arabic: String
     let translation: LocalizedStringResource
     let reference: LocalizedStringResource
+    /// В рамке на подложке (главная азкаров) или свободным текстом (главная хадисов —
+    /// над ней уже цитата бренда, вторая рамка утяжеляет экран).
+    var isFramed = true
 }
 
 /// Навигационная карточка раздела: градиент, иконка, заголовок, подпись, стрелка.
@@ -155,6 +163,8 @@ struct SectionNavCard: View {
     let shadow: ShadowToken
     /// Дополнительная строка под подписью (например, прогресс чтения сборника).
     var progress: LocalizedStringResource?
+    /// Второй показатель на той же строке, у правого края (например, сколько выучено).
+    var secondaryProgress: LocalizedStringResource?
     /// Кольцо прогресса справа от иконки (например, выполнение азкаров за сегодня).
     var ring: (fraction: Double, style: NavCardRingStyle)?
 
@@ -184,15 +194,20 @@ struct SectionNavCard: View {
                         .font(.footnote)
                         .foregroundStyle(theme.palette.onAccentSecondary)
                 }
-                if let progress {
-                    Label {
-                        Text(progress)
-                    } icon: {
-                        Image(systemName: "checkmark.circle.fill")
-                            .accessibilityHidden(true)
+                if progress != nil || secondaryProgress != nil {
+                    HStack(spacing: Spacing.s) {
+                        if let progress {
+                            progressLabel(progress, symbolName: "checkmark.circle.fill")
+                        }
+                        Spacer(minLength: 0)
+                        if let secondaryProgress {
+                            progressLabel(secondaryProgress, symbolName: "star.fill")
+                        }
                     }
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(theme.palette.onAccent)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
                     .padding(.top, Spacing.xxs)
                 }
             }
@@ -226,5 +241,14 @@ struct SectionNavCard: View {
         }
         .contentShape(.rect(cornerRadius: Radius.navCard))
         .accessibilityElement(children: .combine)
+    }
+
+    private func progressLabel(_ text: LocalizedStringResource, symbolName: String) -> some View {
+        Label {
+            Text(text)
+        } icon: {
+            Image(systemName: symbolName)
+                .accessibilityHidden(true)
+        }
     }
 }

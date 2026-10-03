@@ -44,6 +44,8 @@ nonisolated struct ThemeGradients: Hashable, Sendable {
     /// Фон вечерних азкаров — в цветах карточки «Вечерние азкары» главной.
     var eveningBackground: ThemeGradient
     var hadithBackground: ThemeGradient
+    /// Фон раздела «Настройки» — графит, нейтральный к фиолетовым азкарам и изумрудным хадисам.
+    var settingsBackground: ThemeGradient
     var morningCard: ThemeGradient
     var eveningCard: ThemeGradient
     var nawawiCard: ThemeGradient
@@ -71,6 +73,11 @@ nonisolated extension ThemeGradients {
             (.hadithBackgroundTop, 0),
             (.hadithBackgroundMid, 0.5),
             (.hadithBackgroundBottom, 1),
+        ], cssAngle: 168),
+        settingsBackground: ThemeGradient.css(stops: [
+            (.settingsBackgroundTop, 0),
+            (.settingsBackgroundMid, 0.5),
+            (.settingsBackgroundBottom, 1),
         ], cssAngle: 168),
         morningCard: ThemeGradient.css(stops: [
             (.morningCardStart, 0),

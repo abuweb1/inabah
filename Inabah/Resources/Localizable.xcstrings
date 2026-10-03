@@ -1,385 +1,385 @@
 {
-  "sourceLanguage": "ru",
-  "strings": {
-    "audio.category.azkar": {
-      "comment": "Раздел над названием записи в плеере (прописными)",
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "АЗКАРЫ"
+  "sourceLanguage" : "ru",
+  "strings" : {
+    "audio.category.azkar" : {
+      "comment" : "Раздел над названием записи в плеере (прописными)",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "АЗКАРЫ"
           }
         }
       }
     },
-    "audio.playAll.open": {
-      "comment": "Плейлист уже играет",
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Открыть плеер"
+    "audio.playAll.open" : {
+      "comment" : "Плейлист уже играет",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Открыть плеер"
           }
         }
       }
     },
-    "audio.playAll.pause": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Пауза между зикрами"
+    "audio.playAll.pause" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пауза между зикрами"
           }
         }
       }
     },
-    "audio.playAll.pause.seconds %lld": {
-      "comment": "Сегмент паузы: секунды",
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%lld с"
+    "audio.playAll.pause.seconds %lld" : {
+      "comment" : "Сегмент паузы: секунды",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld с"
           }
         }
       }
     },
-    "audio.playAll.rate": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Скорость"
+    "audio.playAll.rate" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Скорость"
           }
         }
       }
     },
-    "audio.playAll.rate.value %@": {
-      "comment": "Сегмент скорости: 0,75× / 1× …",
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@×"
+    "audio.playAll.rate.value %@" : {
+      "comment" : "Сегмент скорости: 0,75× / 1× …",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@×"
           }
         }
       }
     },
-    "audio.playAll.repeats": {
-      "comment": "Переключатель: каждый зикр звучит положенное число раз",
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Повторять по числу раз"
+    "audio.playAll.repeats" : {
+      "comment" : "Переключатель: каждый зикр звучит положенное число раз",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Повторять по числу раз"
           }
         }
       }
     },
-    "audio.playAll.start": {
-      "comment": "Запустить плейлист",
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Слушать"
+    "audio.playAll.start" : {
+      "comment" : "Запустить плейлист",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Слушать"
           }
         }
       }
     },
-    "audio.playAll.subtitle": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Все записи по порядку — можно слушать с заблокированным экраном"
+    "audio.playAll.subtitle" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Все записи по порядку — можно слушать с заблокированным экраном"
           }
         }
       }
     },
-    "audio.playAll.title": {
-      "comment": "Заголовок карточки плейлиста",
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Прослушать все азкары"
+    "audio.playAll.title" : {
+      "comment" : "Заголовок карточки плейлиста",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Прослушать все азкары"
           }
         }
       }
     },
-    "audio.player.back10": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Назад на 10 секунд"
+    "audio.player.back10" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Назад на 10 секунд"
           }
         }
       }
     },
-    "audio.player.close": {
-      "comment": "Остановить и закрыть",
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Закрыть плеер"
+    "audio.player.close" : {
+      "comment" : "Остановить и закрыть",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Закрыть плеер"
           }
         }
       }
     },
-    "audio.player.error": {
-      "comment": "Подпись в плеере: запись не открылась или не запустилась",
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Не удалось воспроизвести запись"
+    "audio.player.error" : {
+      "comment" : "Подпись в плеере: запись не открылась или не запустилась",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не удалось воспроизвести запись"
           }
         }
       }
     },
-    "audio.player.forward10": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Вперёд на 10 секунд"
+    "audio.player.forward10" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вперёд на 10 секунд"
           }
         }
       }
     },
-    "audio.player.hide": {
-      "comment": "Звук продолжает играть",
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Скрыть плеер"
+    "audio.player.hide" : {
+      "comment" : "Звук продолжает играть",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Скрыть плеер"
           }
         }
       }
     },
-    "audio.player.next": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Следующий зикр"
+    "audio.player.next" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Следующий зикр"
           }
         }
       }
     },
-    "audio.player.pause": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Пауза"
+    "audio.player.pause" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пауза"
           }
         }
       }
     },
-    "audio.player.play": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Воспроизвести"
+    "audio.player.play" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Воспроизвести"
           }
         }
       }
     },
-    "audio.player.position": {
-      "comment": "Доступность: ползунок прогресса",
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Позиция воспроизведения"
+    "audio.player.position" : {
+      "comment" : "Доступность: ползунок прогресса",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Позиция воспроизведения"
           }
         }
       }
     },
-    "audio.player.previous": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Предыдущий зикр"
+    "audio.player.previous" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Предыдущий зикр"
           }
         }
       }
     },
-    "audio.player.restart": {
-      "comment": "Начать запись с начала",
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Сначала"
+    "audio.player.restart" : {
+      "comment" : "Начать запись с начала",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сначала"
           }
         }
       }
     },
-    "audio.player.stop": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Стоп"
+    "audio.player.stop" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Стоп"
           }
         }
       }
     },
-    "audio.player.time %@ %@": {
-      "comment": "Доступность: прошло времени, длительность",
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%1$@ из %2$@"
+    "audio.player.time %@ %@" : {
+      "comment" : "Доступность: прошло времени, длительность",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ из %2$@"
           }
         }
       }
     },
-    "audio.playlist.position %lld %lld": {
-      "comment": "Плеер в режиме «Прослушать все»: номер зикра, всего",
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Зикр %1$lld из %2$lld"
+    "audio.playlist.position %lld %lld" : {
+      "comment" : "Плеер в режиме «Прослушать все»: номер зикра, всего",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зикр %1$lld из %2$lld"
           }
         }
       }
     },
-    "audio.playlist.repetition %lld %lld": {
-      "comment": "Номер повтора записи, всего повторов",
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "повтор %1$lld из %2$lld"
+    "audio.playlist.repetition %lld %lld" : {
+      "comment" : "Номер повтора записи, всего повторов",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "повтор %1$lld из %2$lld"
           }
         }
       }
     },
-    "audio.zikr.listen": {
-      "comment": "Кнопка ▶ на карточке зикра",
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Прослушать"
+    "audio.zikr.listen" : {
+      "comment" : "Кнопка ▶ на карточке зикра",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Прослушать"
           }
         }
       }
     },
-    "audio.zikr.openPlayer": {
-      "comment": "Кнопка на карточке, пока её запись звучит",
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Открыть плеер"
+    "audio.zikr.openPlayer" : {
+      "comment" : "Кнопка на карточке, пока её запись звучит",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Открыть плеер"
           }
         }
       }
     },
-    "audio.zikr.title %lld": {
-      "comment": "Название записи зикра в плеере и на экране блокировки",
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Зикр №%lld"
+    "audio.zikr.title %lld" : {
+      "comment" : "Название записи зикра в плеере и на экране блокировки",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зикр №%lld"
           }
         }
       }
     },
-    "azkar.completion.evening": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Все вечерние азкары прочитаны.\nДа примет Аллах ваше поклонение."
+    "azkar.completion.evening" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Все вечерние азкары прочитаны.\nДа примет Аллах ваше поклонение."
           }
         }
       }
     },
-    "azkar.completion.hamd": {
-      "comment": "VoiceOver: перевод «الحمد لله رب العالمين» на экране завершения",
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Хвала Аллаху, Господу миров"
+    "azkar.completion.hamd" : {
+      "comment" : "VoiceOver: перевод «الحمد لله رب العالمين» на экране завершения",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Хвала Аллаху, Господу миров"
           }
         }
       }
     },
-    "azkar.completion.home": {
-      "comment": "Кнопка возврата на главную раздела",
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "На главную"
+    "azkar.completion.home" : {
+      "comment" : "Кнопка возврата на главную раздела",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "На главную"
           }
         }
       }
     },
-    "azkar.completion.morning": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Все утренние азкары прочитаны.\nДа примет Аллах ваше поклонение."
+    "azkar.completion.morning" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Все утренние азкары прочитаны.\nДа примет Аллах ваше поклонение."
           }
         }
       }
     },
-    "azkar.completion.title": {
-      "comment": "Заголовок после прочтения всех азкаров",
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Машаа Аллах!"
+    "azkar.completion.title" : {
+      "comment" : "Заголовок после прочтения всех азкаров",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Машаа Аллах!"
           }
         }
       }
     },
-    "azkar.evening.meta %lld": {
-      "comment": "Подпись карточки вечерних азкаров",
-      "localizations": {
-        "ru": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld зикр · После аср"
+    "azkar.evening.meta %lld" : {
+      "comment" : "Подпись карточки вечерних азкаров",
+      "localizations" : {
+        "ru" : {
+          "variations" : {
+            "plural" : {
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld зикра · После аср"
                 }
               },
-              "few": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld зикра · После аср"
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld зикров · После аср"
                 }
               },
-              "many": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld зикров · После аср"
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld зикр · После аср"
                 }
               },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld зикра · После аср"
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld зикра · После аср"
                 }
               }
             }
@@ -387,55 +387,55 @@
         }
       }
     },
-    "azkar.evening.subtitle": {
-      "comment": "Подзаголовок списка вечерних азкаров",
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "После намаза Аср"
+    "azkar.evening.subtitle" : {
+      "comment" : "Подзаголовок списка вечерних азкаров",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "После намаза Аср"
           }
         }
       }
     },
-    "azkar.evening.title": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Вечерние азкары"
+    "azkar.evening.title" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вечерние азкары"
           }
         }
       }
     },
-    "azkar.morning.meta %lld": {
-      "comment": "Подпись карточки утренних азкаров",
-      "localizations": {
-        "ru": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld зикр · После фаджра"
+    "azkar.morning.meta %lld" : {
+      "comment" : "Подпись карточки утренних азкаров",
+      "localizations" : {
+        "ru" : {
+          "variations" : {
+            "plural" : {
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld зикра · После фаджра"
                 }
               },
-              "few": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld зикра · После фаджра"
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld зикров · После фаджра"
                 }
               },
-              "many": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld зикров · После фаджра"
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld зикр · После фаджра"
                 }
               },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld зикра · После фаджра"
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld зикра · После фаджра"
                 }
               }
             }
@@ -443,96 +443,96 @@
         }
       }
     },
-    "azkar.morning.subtitle": {
-      "comment": "Подзаголовок списка утренних азкаров",
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "После намаза Фаджр"
+    "azkar.morning.subtitle" : {
+      "comment" : "Подзаголовок списка утренних азкаров",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "После намаза Фаджр"
           }
         }
       }
     },
-    "azkar.morning.title": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Утренние азкары"
+    "azkar.morning.title" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Утренние азкары"
           }
         }
       }
     },
-    "azkar.progress %lld %lld": {
-      "comment": "Прогресс раздела: прочитано зикров, всего зикров",
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Выполнено: %1$lld из %2$lld"
+    "azkar.progress %lld %lld" : {
+      "comment" : "Прогресс раздела: прочитано зикров, всего зикров",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Выполнено: %1$lld из %2$lld"
           }
         }
       }
     },
-    "content.error.message": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Попробуйте ещё раз."
+    "content.error.message" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Попробуйте ещё раз."
           }
         }
       }
     },
-    "content.error.retry": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Повторить"
+    "content.error.retry" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Повторить"
           }
         }
       }
     },
-    "content.error.title": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Не удалось загрузить"
+    "content.error.title" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не удалось загрузить"
           }
         }
       }
     },
-    "hadith.ajurri.meta %lld": {
-      "comment": "Подпись карточки сборника аль-Аджурри: число хадисов и арабское название (русский текст первым — иначе строка выстраивается справа налево)",
-      "localizations": {
-        "ru": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld хадис · أربعون حديثاً للآجري"
+    "hadith.ajurri.meta %lld" : {
+      "comment" : "Подпись карточки сборника аль-Аджурри: число хадисов и арабское название (русский текст первым — иначе строка выстраивается справа налево)",
+      "localizations" : {
+        "ru" : {
+          "variations" : {
+            "plural" : {
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld хадиса · أربعون حديثاً للآجري"
                 }
               },
-              "few": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld хадиса · أربعون حديثاً للآجري"
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld хадисов · أربعون حديثاً للآجري"
                 }
               },
-              "many": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld хадисов · أربعون حديثاً للآجري"
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld хадис · أربعون حديثاً للآجري"
                 }
               },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld хадиса · أربعون حديثاً للآجري"
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld хадиса · أربعون حديثاً للآجري"
                 }
               }
             }
@@ -540,210 +540,210 @@
         }
       }
     },
-    "hadith.ajurri.title": {
-      "comment": "Название сборника аль-Аджурри",
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "40 хадисов аль-Аджурри"
+    "hadith.ajurri.title" : {
+      "comment" : "Название сборника аль-Аджурри",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "40 хадисов аль-Аджурри"
           }
         }
       }
     },
-    "hadith.audio.soon": {
-      "comment": "Заглушка: записей хадисов пока нет",
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Аудио скоро"
+    "hadith.audio.soon" : {
+      "comment" : "Заглушка: записей хадисов пока нет",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Аудио скоро"
           }
         }
       }
     },
-    "hadith.audio.title %lld": {
-      "comment": "Карточка аудио на экране хадиса",
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Аудио · Хадис %lld"
+    "hadith.audio.title %lld" : {
+      "comment" : "Карточка аудио на экране хадиса",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Аудио · Хадис %lld"
           }
         }
       }
     },
-    "hadith.detail.counter %lld %lld": {
-      "comment": "Навбар экрана хадиса: номер и всего в сборнике («3 из 50»)",
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%1$lld из %2$lld"
+    "hadith.detail.counter %lld %lld" : {
+      "comment" : "Навбар экрана хадиса: номер и всего в сборнике («3 из 50»)",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld из %2$lld"
           }
         }
       }
     },
-    "hadith.detail.counter.short %lld %lld": {
-      "comment": "Навбар экрана хадиса, если полная подпись не помещается: номер/всего",
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%1$lld/%2$lld"
+    "hadith.detail.counter.short %lld %lld" : {
+      "comment" : "Навбар экрана хадиса, если полная подпись не помещается: номер/всего",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld/%2$lld"
           }
         }
       }
     },
-    "hadith.detail.narrator %@": {
-      "comment": "Передатчик хадиса над переводом",
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Передал: %@"
+    "hadith.detail.narrator %@" : {
+      "comment" : "Передатчик хадиса над переводом",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Передал: %@"
           }
         }
       }
     },
-    "hadith.detail.next": {
-      "comment": "Доступность: кнопка › в навбаре",
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Следующий хадис"
+    "hadith.detail.next" : {
+      "comment" : "Доступность: кнопка › в навбаре",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Следующий хадис"
           }
         }
       }
     },
-    "hadith.detail.number %lld": {
-      "comment": "Подпись на пергаменте и номер в строке списка",
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Хадис %lld"
+    "hadith.detail.number %lld" : {
+      "comment" : "Подпись на пергаменте и номер в строке списка",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Хадис %lld"
           }
         }
       }
     },
-    "hadith.detail.previous": {
-      "comment": "Доступность: кнопка ‹ в навбаре",
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Предыдущий хадис"
+    "hadith.detail.previous" : {
+      "comment" : "Доступность: кнопка ‹ в навбаре",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Предыдущий хадис"
           }
         }
       }
     },
-    "hadith.detail.source %@": {
-      "comment": "Источник хадиса под переводом",
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Приводится: %@"
+    "hadith.detail.source %@" : {
+      "comment" : "Источник хадиса под переводом",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Приводится: %@"
           }
         }
       }
     },
-    "hadith.home.brand.tagline": {
-      "comment": "Подзаголовок главной раздела хадисов",
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "НАСЛЕДИЕ ПРОРОКА ﷺ"
+    "hadith.home.brand.tagline" : {
+      "comment" : "Подзаголовок главной раздела хадисов",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "НАСЛЕДИЕ ПРОРОКА ﷺ"
           }
         }
       }
     },
-    "hadith.home.epigraph.source": {
-      "comment": "Главная хадисов: источник хадиса о наследии пророков (мелким шрифтом)",
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "имам Ахмад (21716), Абу Дауд (3641), ат-Тирмизи (2682)"
+    "hadith.home.epigraph.source" : {
+      "comment" : "Главная хадисов: источник хадиса о наследии пророков (мелким шрифтом)",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "имам Ахмад (21716), Абу Дауд (3641), ат-Тирмизи (2682)"
           }
         }
       }
     },
-    "hadith.home.epigraph.text": {
-      "comment": "Главная хадисов: хадис о наследии пророков под подзаголовком",
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "«Пророки не оставляли в наследство ни динаров, ни дирхемов, но они оставляли в наследство знание…»"
+    "hadith.home.epigraph.text" : {
+      "comment" : "Главная хадисов: хадис о наследии пророков под подзаголовком",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "«Пророки не оставляли в наследство ни динаров, ни дирхемов, но они оставляли в наследство знание…»"
           }
         }
       }
     },
-    "hadith.home.verse.reference": {
-      "comment": "Источник хадиса на главной раздела хадисов",
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "аль-Бухари, Муслим"
+    "hadith.home.verse.reference" : {
+      "comment" : "Источник хадиса на главной раздела хадисов",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "аль-Бухари, Муслим"
           }
         }
       }
     },
-    "hadith.home.verse.translation": {
-      "comment": "Перевод хадиса на главной раздела хадисов",
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "«Кому Аллах желает блага, тому Он даёт понимание религии»"
+    "hadith.home.verse.translation" : {
+      "comment" : "Перевод хадиса на главной раздела хадисов",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "«Кому Аллах желает блага, тому Он даёт понимание религии»"
           }
         }
       }
     },
-    "hadith.list.progress %lld %lld %lld": {
-      "comment": "Шапка списка: прочитано, всего, выучено",
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Прочитано: %1$lld из %2$lld · выучено: %3$lld"
+    "hadith.list.progress %lld %lld %lld" : {
+      "comment" : "Шапка списка: прочитано, всего, выучено",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Прочитано: %1$lld из %2$lld · выучено: %3$lld"
           }
         }
       }
     },
-    "hadith.nawawi.meta %lld": {
-      "comment": "Подпись карточки сборника ан-Навави: число хадисов и арабское название (русский текст первым — иначе строка выстраивается справа налево)",
-      "localizations": {
-        "ru": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld хадис (с доп. Ибн Раджаба) · الأربعون النووية"
+    "hadith.nawawi.meta %lld" : {
+      "comment" : "Подпись карточки сборника ан-Навави: число хадисов и арабское название (русский текст первым — иначе строка выстраивается справа налево)",
+      "localizations" : {
+        "ru" : {
+          "variations" : {
+            "plural" : {
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld хадиса (с доп. Ибн Раджаба) · الأربعون النووية"
                 }
               },
-              "few": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld хадиса (с доп. Ибн Раджаба) · الأربعون النووية"
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld хадисов (с доп. Ибн Раджаба) · الأربعون النووية"
                 }
               },
-              "many": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld хадисов (с доп. Ибн Раджаба) · الأربعون النووية"
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld хадис (с доп. Ибн Раджаба) · الأربعون النووية"
                 }
               },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld хадиса (с доп. Ибн Раджаба) · الأربعون النووية"
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld хадиса (с доп. Ибн Раджаба) · الأربعون النووية"
                 }
               }
             }
@@ -751,56 +751,67 @@
         }
       }
     },
-    "hadith.nawawi.title": {
-      "comment": "Название сборника ан-Навави",
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "40 хадисов ан-Навави"
+    "hadith.nawawi.title" : {
+      "comment" : "Название сборника ан-Навави",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "40 хадисов ан-Навави"
           }
         }
       }
     },
-    "hadith.progress.card %lld %lld": {
-      "comment": "Прогресс на карточке сборника: прочитано, всего",
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Прочитано %1$lld из %2$lld"
+    "hadith.progress.card %lld %lld" : {
+      "comment" : "Прогресс на карточке сборника: прочитано, всего",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Прочитано %1$lld из %2$lld"
           }
         }
       }
     },
-    "hadith.qudsi.meta %lld": {
-      "comment": "Подпись карточки сборника кудси: число хадисов и арабское название (русский текст первым — иначе строка выстраивается справа налево)",
-      "localizations": {
-        "ru": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld хадис · الأربعون القدسية"
+    "hadith.progress.card.memorized %lld %lld" : {
+      "comment" : "Прогресс на карточке сборника справа: выучено, всего",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Выучено %1$lld из %2$lld"
+          }
+        }
+      }
+    },
+    "hadith.qudsi.meta %lld" : {
+      "comment" : "Подпись карточки сборника аль-Къудси: число хадисов и арабское название (русский текст первым — иначе строка выстраивается справа налево)",
+      "localizations" : {
+        "ru" : {
+          "variations" : {
+            "plural" : {
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld хадиса · الأربعون القدسية"
                 }
               },
-              "few": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld хадиса · الأربعون القدسية"
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld хадисов · الأربعون القدسية"
                 }
               },
-              "many": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld хадисов · الأربعون القدسية"
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld хадис · الأربعون القدسية"
                 }
               },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld хадиса · الأربعون القدسية"
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld хадиса · الأربعون القدسية"
                 }
               }
             }
@@ -808,372 +819,571 @@
         }
       }
     },
-    "hadith.qudsi.title": {
-      "comment": "Название сборника хадисов кудси",
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "40 хадисов кудси"
+    "hadith.qudsi.title" : {
+      "comment" : "Название сборника хадисов аль-Къудси",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "40 хадисов аль-Къудси"
           }
         }
       }
     },
-    "hadith.status.markRead": {
-      "comment": "Кнопка отметки «прочитан» (не отмечен)",
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Прочитать"
+    "hadith.status.markRead" : {
+      "comment" : "Кнопка отметки «прочитан» (не отмечен)",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Прочитать"
           }
         }
       }
     },
-    "hadith.status.memorize": {
-      "comment": "Кнопка отметки «выучен» (не отмечен)",
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Выучить"
+    "hadith.status.memorize" : {
+      "comment" : "Кнопка отметки «выучен» (не отмечен)",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Выучить"
           }
         }
       }
     },
-    "hadith.status.memorized": {
-      "comment": "Кнопка и статус «выучен» (отмечен)",
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Выучен"
+    "hadith.status.memorized" : {
+      "comment" : "Кнопка и статус «выучен» (отмечен)",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Выучен"
           }
         }
       }
     },
-    "hadith.status.read": {
-      "comment": "Кнопка и статус «прочитан» (отмечен)",
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Прочитан"
+    "hadith.status.read" : {
+      "comment" : "Кнопка и статус «прочитан» (отмечен)",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Прочитан"
           }
         }
       }
     },
-    "home.brand.latin": {
-      "comment": "Название приложения латиницей под арабским",
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Inabah"
+    "home.brand.latin" : {
+      "comment" : "Название приложения латиницей под арабским",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inabah"
           }
         }
       }
     },
-    "home.brand.tagline": {
-      "comment": "Подпись под названием на главной (прописными)",
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ВОЗВРАЩЕНИЕ К АЛЛАХУ"
+    "home.brand.tagline" : {
+      "comment" : "Подпись под названием на главной (прописными)",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ВОЗВРАЩЕНИЕ К АЛЛАХУ"
           }
         }
       }
     },
-    "home.verse.reference": {
-      "comment": "Ссылка на аят",
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Къуран · Аз-Зумар 39:54"
+    "home.verse.reference" : {
+      "comment" : "Ссылка на аят",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Къуран · Аз-Зумар 39:54"
           }
         }
       }
     },
-    "home.verse.translation": {
-      "comment": "Смысловой перевод аята Аз-Зумар 39:54",
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "«И обращайтесь к Господу вашему и покоритесь Ему»"
+    "home.verse.translation" : {
+      "comment" : "Смысловой перевод аята Аз-Зумар 39:54",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "«И обращайтесь к Господу вашему и покоритесь Ему»"
           }
         }
       }
     },
-    "placeholder.soon": {
-      "comment": "Заголовок заглушки раздела в разработке",
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Скоро"
+    "placeholder.soon" : {
+      "comment" : "Заголовок заглушки раздела в разработке",
+      "extractionState" : "stale",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Скоро"
           }
         }
       }
     },
-    "reading.fontSize.decrease": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Уменьшить арабский шрифт"
+    "reading.fontSize.decrease" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Уменьшить арабский шрифт"
           }
         }
       }
     },
-    "reading.fontSize.decrease.short": {
-      "comment": "Кнопка в навбаре: меньше шрифт",
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "А−"
+    "reading.fontSize.decrease.short" : {
+      "comment" : "Кнопка в навбаре: меньше шрифт",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "А−"
           }
         }
       }
     },
-    "reading.fontSize.increase": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Увеличить арабский шрифт"
+    "reading.fontSize.increase" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Увеличить арабский шрифт"
           }
         }
       }
     },
-    "reading.fontSize.increase.short": {
-      "comment": "Кнопка в навбаре: больше шрифт",
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "А+"
+    "reading.fontSize.increase.short" : {
+      "comment" : "Кнопка в навбаре: больше шрифт",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "А+"
           }
         }
       }
     },
-    "section.progress.done": {
-      "comment": "Доступность: кольцо прогресса на карточке раздела, всё выполнено",
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Выполнено полностью"
+    "section.progress.done" : {
+      "comment" : "Доступность: кольцо прогресса на карточке раздела, всё выполнено",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Выполнено полностью"
           }
         }
       }
     },
-    "section.progress.percent %lld": {
-      "comment": "Доступность: кольцо прогресса на карточке раздела, процент выполнения",
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Выполнено на %lld %%"
+    "section.progress.percent %lld" : {
+      "comment" : "Доступность: кольцо прогресса на карточке раздела, процент выполнения",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Выполнено на %lld %%"
           }
         }
       }
     },
-    "settings.reset.evening": {
-      "comment": "Настройки: время обнуления вечерних азкаров",
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Вечерние — после"
+    "settings.azkar.subtitle" : {
+      "comment" : "Настройки: подпись раздела «Азкары»",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Обнуление и сброс прогресса"
           }
         }
       }
     },
-    "settings.reset.footer": {
-      "comment": "Настройки: пояснение под временем обнуления",
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Каждый день в это время прогресс чтения раздела обнуляется. Новое время действует со следующего обнуления."
+    "settings.azkar.title" : {
+      "comment" : "Настройки: раздел «Азкары»",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Азкары"
           }
         }
       }
     },
-    "settings.reset.header": {
-      "comment": "Настройки: заголовок секции времени обнуления прогресса",
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Обнуление азкаров"
+    "settings.hadith.home.header" : {
+      "comment" : "Настройки хадисов: секция настроек главной хадисов",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Главная"
           }
         }
       }
     },
-    "settings.reset.morning": {
-      "comment": "Настройки: время обнуления утренних азкаров",
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Утренние — после"
+    "settings.hadith.order.footer" : {
+      "comment" : "Настройки хадисов: пояснение к порядку сборников",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перетащите сборник за ручку справа, чтобы изменить порядок карточек на главной."
           }
         }
       }
     },
-    "settings.title": {
-      "comment": "Заголовок экрана настроек",
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Настройки"
+    "settings.hadith.order.restore" : {
+      "comment" : "Настройки хадисов: вернуть порядок сборников по умолчанию",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Восстановить"
           }
         }
       }
     },
-    "tab.azkar": {
-      "comment": "Вкладка: утренние и вечерние азкары",
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Азкары"
+    "settings.hadith.order.title" : {
+      "comment" : "Настройки хадисов: порядок карточек сборников на главной",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Порядок сборников"
           }
         }
       }
     },
-    "tab.hadith": {
-      "comment": "Вкладка: сборники хадисов",
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Хадисы"
+    "settings.hadith.reset" : {
+      "comment" : "Настройки хадисов: кнопка сброса отметок сборника",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сбросить прогресс"
           }
         }
       }
     },
-    "tab.settings": {
-      "comment": "Вкладка: настройки",
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Настройки"
+    "settings.hadith.reset.confirm.action" : {
+      "comment" : "Подтверждение сброса отметок сборника: кнопка",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сбросить"
           }
         }
       }
     },
-    "zikr.collapse": {
-      "comment": "Свернуть выполненную карточку",
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Свернуть"
+    "settings.hadith.reset.confirm.message %@" : {
+      "comment" : "Подтверждение сброса отметок: название сборника",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отметки «прочитан» и «выучен» в сборнике «%@» будут удалены."
           }
         }
       }
     },
-    "zikr.completed": {
-      "comment": "Зикр выполнен",
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Прочитано"
+    "settings.hadith.reset.confirm.title" : {
+      "comment" : "Подтверждение сброса отметок сборника: заголовок",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сбросить отметки?"
           }
         }
       }
     },
-    "zikr.counter.hint": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Нажмите, чтобы отметить прочтение"
+    "settings.hadith.subtitle" : {
+      "comment" : "Настройки: подпись раздела «Хадисы»",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сброс отметок сборников"
           }
         }
       }
     },
-    "zikr.counter.label": {
-      "comment": "Доступность: кнопка-счётчик прочтений",
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Счётчик"
+    "settings.hadith.title" : {
+      "comment" : "Настройки: раздел «Хадисы»",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Хадисы"
           }
         }
       }
     },
-    "zikr.counter.of %lld": {
-      "comment": "Под числом на счётчике: из скольких",
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "из %lld"
+    "settings.reset.evening" : {
+      "comment" : "Настройки: время обнуления вечерних азкаров",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вечерние — после"
           }
         }
       }
     },
-    "zikr.counter.value %lld %lld": {
-      "comment": "Доступность: прочитано раз, всего раз",
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%1$lld из %2$lld"
+    "settings.reset.footer" : {
+      "comment" : "Настройки: пояснение под временем обнуления",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Каждый день в это время прогресс чтения раздела обнуляется. Новое время действует со следующего обнуления."
           }
         }
       }
     },
-    "zikr.expand": {
-      "comment": "Развернуть выполненную карточку",
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Развернуть"
+    "settings.reset.header" : {
+      "comment" : "Настройки: заголовок секции времени обнуления прогресса",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Обнуление азкаров"
           }
         }
       }
     },
-    "zikr.repetitions %lld": {
-      "comment": "Бейдж: сколько раз читать зикр",
-      "localizations": {
-        "ru": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld раз"
+    "settings.reset.morning" : {
+      "comment" : "Настройки: время обнуления утренних азкаров",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Утренние — после"
+          }
+        }
+      }
+    },
+    "settings.reset.now.confirm.action" : {
+      "comment" : "Подтверждение ручного сброса азкаров: кнопка",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сбросить"
+          }
+        }
+      }
+    },
+    "settings.reset.now.confirm.evening" : {
+      "comment" : "Подтверждение сброса вечерних азкаров",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Счётчики вечерних азкаров будут обнулены."
+          }
+        }
+      }
+    },
+    "settings.reset.now.confirm.morning" : {
+      "comment" : "Подтверждение сброса утренних азкаров",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Счётчики утренних азкаров будут обнулены."
+          }
+        }
+      }
+    },
+    "settings.reset.now.confirm.title" : {
+      "comment" : "Подтверждение ручного сброса азкаров: заголовок",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сбросить прогресс?"
+          }
+        }
+      }
+    },
+    "settings.reset.now.footer" : {
+      "comment" : "Настройки азкаров: пояснение к ручному сбросу",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Счётчики раздела обнулятся сразу, не дожидаясь времени обнуления."
+          }
+        }
+      }
+    },
+    "settings.reset.now.header" : {
+      "comment" : "Настройки азкаров: секция ручного сброса",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сбросить сейчас"
+          }
+        }
+      }
+    },
+    "settings.title" : {
+      "comment" : "Заголовок экрана настроек",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Настройки"
+          }
+        }
+      }
+    },
+    "tab.azkar" : {
+      "comment" : "Вкладка: утренние и вечерние азкары",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Азкары"
+          }
+        }
+      }
+    },
+    "tab.hadith" : {
+      "comment" : "Вкладка: сборники хадисов",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Хадисы"
+          }
+        }
+      }
+    },
+    "tab.settings" : {
+      "comment" : "Вкладка: настройки",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Настройки"
+          }
+        }
+      }
+    },
+    "zikr.collapse" : {
+      "comment" : "Свернуть выполненную карточку",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Свернуть"
+          }
+        }
+      }
+    },
+    "zikr.completed" : {
+      "comment" : "Зикр выполнен",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Прочитано"
+          }
+        }
+      }
+    },
+    "zikr.counter.hint" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Нажмите, чтобы отметить прочтение"
+          }
+        }
+      }
+    },
+    "zikr.counter.label" : {
+      "comment" : "Доступность: кнопка-счётчик прочтений",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Счётчик"
+          }
+        }
+      }
+    },
+    "zikr.counter.of %lld" : {
+      "comment" : "Под числом на счётчике: из скольких",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "из %lld"
+          }
+        }
+      }
+    },
+    "zikr.counter.value %lld %lld" : {
+      "comment" : "Доступность: прочитано раз, всего раз",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld из %2$lld"
+          }
+        }
+      }
+    },
+    "zikr.expand" : {
+      "comment" : "Развернуть выполненную карточку",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Развернуть"
+          }
+        }
+      }
+    },
+    "zikr.repetitions %lld" : {
+      "comment" : "Бейдж: сколько раз читать зикр",
+      "localizations" : {
+        "ru" : {
+          "variations" : {
+            "plural" : {
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld раза"
                 }
               },
-              "few": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld раза"
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld раз"
                 }
               },
-              "many": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld раз"
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld раз"
                 }
               },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld раза"
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld раза"
                 }
               }
             }
@@ -1181,38 +1391,38 @@
         }
       }
     },
-    "zikr.reset": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Сбросить счёт"
+    "zikr.reset" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сбросить счёт"
           }
         }
       }
     },
-    "zikr.translation.toggle": {
-      "comment": "Доступность: кнопка показа перевода",
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Перевод и транскрипция"
+    "zikr.translation.toggle" : {
+      "comment" : "Доступность: кнопка показа перевода",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перевод и транскрипция"
           }
         }
       }
     },
-    "zikr.translation.toggle.short": {
-      "comment": "Короткая надпись на круглой кнопке перевода (2 буквы)",
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Аа"
+    "zikr.translation.toggle.short" : {
+      "comment" : "Короткая надпись на круглой кнопке перевода (2 буквы)",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Аа"
           }
         }
       }
     }
   },
-  "version": "1.0"
+  "version" : "1.0"
 }

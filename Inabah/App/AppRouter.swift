@@ -12,6 +12,14 @@ nonisolated enum AzkarRoute: Hashable, Codable, Sendable {
     case list(AzkarSection)
 }
 
+/// Экраны внутри вкладки «Настройки».
+nonisolated enum SettingsRoute: Hashable, Codable, Sendable {
+    case azkar
+    case hadith
+    /// Порядок сборников на главной хадисов (из настроек хадисов).
+    case hadithOrder
+}
+
 /// Экраны внутри вкладки «Хадисы».
 nonisolated enum HadithRoute: Hashable, Codable, Sendable {
     case list(HadithCollection)
@@ -27,6 +35,7 @@ final class AppRouter {
     var selectedTab: AppTab = .azkar
     var azkarPath: [AzkarRoute] = []
     var hadithPath: [HadithRoute] = []
+    var settingsPath: [SettingsRoute] = []
 
     /// Выбор вкладки из таб-бара. Повторный выбор активной вкладки возвращает к её корню.
     /// `TabView` вызывает установку выбора и во время отрисовки (при запуске) — поэтому
@@ -47,7 +56,7 @@ final class AppRouter {
         case .hadith:
             if !hadithPath.isEmpty { hadithPath.removeAll() }
         case .settings:
-            break
+            if !settingsPath.isEmpty { settingsPath.removeAll() }
         }
     }
 

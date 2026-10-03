@@ -4,6 +4,7 @@ import SwiftUI
 struct HadithHomeView: View {
     @Environment(HadithStore.self) private var store
     @Environment(HadithProgress.self) private var progress
+    @Environment(HadithCollectionOrder.self) private var order
     @Environment(\.theme) private var theme
 
     private static let brand = SectionBrand(
@@ -18,7 +19,8 @@ struct HadithHomeView: View {
     private static let verse = FeaturedVerse(
         arabic: "مَنْ يُرِدِ اللَّهُ بِهِ خَيْرًا يُفَقِّهْهُ فِي الدِّينِ",
         translation: "hadith.home.verse.translation",
-        reference: "hadith.home.verse.reference"
+        reference: "hadith.home.verse.reference",
+        isFramed: false
     )
 
     var body: some View {
@@ -27,7 +29,8 @@ struct HadithHomeView: View {
             brand: Self.brand,
             verse: Self.verse
         ) {
-            ForEach(HadithCollection.allCases, id: \.self) { collection in
+            // Порядок карточек задаётся в настройках.
+            ForEach(order.collections, id: \.self) { collection in
                 NavigationLink(value: HadithRoute.list(collection)) {
                     SectionNavCard(
                         title: collection.title,
@@ -36,7 +39,8 @@ struct HadithHomeView: View {
                         iconColor: collection.iconColor(in: theme),
                         gradient: collection.cardGradient(in: theme),
                         shadow: collection.cardShadow(in: theme),
-                        progress: progressLine(for: collection)
+                        progress: progressLine(for: collection),
+                        secondaryProgress: memorizedLine(for: collection)
                     )
                 }
                 .buttonStyle(PressScaleButtonStyle())
@@ -58,6 +62,14 @@ struct HadithHomeView: View {
         let collectionProgress = progress.progress(in: collection, total: total)
         guard collectionProgress.read > 0 else { return nil }
         return "hadith.progress.card \(collectionProgress.read) \(total)"
+    }
+
+    /// «Выучено 2 из 50» — справа на той же строке, только когда что-то уже выучено.
+    private func memorizedLine(for collection: HadithCollection) -> LocalizedStringResource? {
+        let total = store.hadiths(in: collection).count
+        let collectionProgress = progress.progress(in: collection, total: total)
+        guard collectionProgress.memorized > 0 else { return nil }
+        return "hadith.progress.card.memorized \(collectionProgress.memorized) \(total)"
     }
 }
 
