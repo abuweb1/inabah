@@ -131,6 +131,8 @@ struct SectionNavCard: View {
     let iconColor: Color
     let gradient: ThemeGradient
     let shadow: ShadowToken
+    /// Дополнительная строка под подписью (например, прогресс чтения сборника).
+    var progress: LocalizedStringResource?
 
     @Environment(\.theme) private var theme
 
@@ -156,6 +158,16 @@ struct SectionNavCard: View {
                     Text(meta)
                         .font(.footnote)
                         .foregroundStyle(theme.palette.onAccentSecondary)
+                }
+                if let progress {
+                    Label {
+                        Text(progress)
+                    } icon: {
+                        Image(systemName: "checkmark.circle.fill")
+                    }
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(theme.palette.onAccent)
+                    .padding(.top, Spacing.xxs)
                 }
             }
             Spacer(minLength: Spacing.s)

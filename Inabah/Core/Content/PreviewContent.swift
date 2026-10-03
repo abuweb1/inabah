@@ -2,7 +2,32 @@ import Foundation
 
 /// Небольшой набор контента для превью — без обращения к Bundle.
 nonisolated extension InMemoryContentRepository {
-    static let preview = InMemoryContentRepository(azkar: [
+    static let preview = InMemoryContentRepository(azkar: previewAzkar, hadiths: [
+        .nawawi: [
+            Hadith(
+                id: HadithID(collection: .nawawi, number: 1),
+                arabic: "عَنْ أَمِيرِ الْمُؤْمِنِينَ أَبِي حَفْصٍ عُمَرَ بْنِ الْخَطَّابِ رَضِيَ اللَّهُ عَنْهُ\nقَالَ: سَمِعْتُ رَسُولَ اللَّهِ ﷺ يَقُولُ: «إِنَّمَا الْأَعْمَالُ بِالنِّيَّاتِ، وَإِنَّمَا لِكُلِّ امْرِئٍ مَا نَوَى»",
+                translation: HadithTranslation(
+                    language: .base,
+                    narrator: "Умар ибн аль-Хаттаб",
+                    text: "«Дела оцениваются только по намерениям, и, поистине, каждому человеку достанется лишь то, что он намеревался обрести».",
+                    source: "Аль-Бухари (№ 1); Муслим (№ 1907)"
+                )
+            ),
+            Hadith(
+                id: HadithID(collection: .nawawi, number: 2),
+                arabic: "عَنْ أَبِي هُرَيْرَةَ رَضِيَ اللَّهُ عَنْهُ قَالَ: قَالَ رَسُولُ اللَّهِ ﷺ: «مِنْ حُسْنِ إِسْلَامِ الْمَرْءِ تَرْكُهُ مَا لَا يَعْنِيهِ»",
+                translation: HadithTranslation(
+                    language: .base,
+                    narrator: "Абу Хурайра",
+                    text: "От Абу Хурайры: «Признаком хорошего Ислама человека является то, что он оставляет не касающееся его».",
+                    source: nil
+                )
+            ),
+        ],
+    ])
+
+    private static let previewAzkar: [AzkarSection: [Zikr]] = [
         .morning: [
             Zikr(
                 id: ZikrID(section: .morning, number: 1),
@@ -29,5 +54,5 @@ nonisolated extension InMemoryContentRepository {
                 )
             ),
         ],
-    ])
+    ]
 }

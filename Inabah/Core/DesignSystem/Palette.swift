@@ -11,6 +11,8 @@ nonisolated struct Palette: Hashable, Sendable {
     var card: Color
     var actionBackground: Color
     var header: Color
+    /// Навбар и шапки раздела «Хадисы».
+    var hadithHeader: Color
 
     // Текст
     var textPrimary: Color
@@ -49,9 +51,16 @@ nonisolated struct Palette: Hashable, Sendable {
     /// Подложка и рамка зелёных плашек на пергаменте (бейдж «✦ N раз»).
     var successTint: Color
     var successBorder: Color
-    /// Заготовка этапа хадисов: статусы «прочитан» / «выучен».
+    /// Статусы хадисов «прочитан» / «выучен»: основной цвет, подложка бейджа и кнопки,
+    /// плотная подложка активной кнопки, рамка бейджа.
     var statusRead: Color
+    var statusReadTint: Color
+    var statusReadStrong: Color
+    var statusReadBorder: Color
     var statusMemorized: Color
+    var statusMemorizedTint: Color
+    var statusMemorizedStrong: Color
+    var statusMemorizedBorder: Color
 
     // Золото: кольцо счётчика, кнопка счёта, плеер
     var gold: Color
@@ -63,6 +72,8 @@ nonisolated struct Palette: Hashable, Sendable {
     var goldTrack: Color
     /// Ручка панели плеера.
     var goldMuted: Color
+    /// Подложка бейджа номера хадиса без статуса.
+    var goldTint: Color
     var sunRays: Color
 
     // Пергамент под арабским текстом — не зависит от темы интерфейса
@@ -76,11 +87,14 @@ nonisolated extension Palette {
         let onAccent = Color(asset: .onAccent)
         let gold = Color(asset: .gold)
         let successDeep = Color(asset: .successDeep)
+        let statusRead = Color(asset: .statusRead)
+        let statusMemorized = Color(asset: .statusMemorized)
         return Palette(
             background: Color(asset: .appBackground),
             card: Color(asset: .cardBackground),
             actionBackground: Color(asset: .actionBackground),
             header: Color(asset: .headerBackground),
+            hadithHeader: Color(asset: .hadithHeaderBackground),
             textPrimary: Color(asset: .textPrimary),
             textSecondary: Color(asset: .textSecondary),
             textTertiary: Color(asset: .textTertiary),
@@ -102,14 +116,21 @@ nonisolated extension Palette {
             successDim: Color(asset: .successDim),
             successTint: successDeep.opacity(0.1),
             successBorder: successDeep.opacity(0.25),
-            statusRead: Color(asset: .statusRead),
-            statusMemorized: Color(asset: .statusMemorized),
+            statusRead: statusRead,
+            statusReadTint: statusRead.opacity(0.13),
+            statusReadStrong: statusRead.opacity(0.32),
+            statusReadBorder: statusRead.opacity(0.3),
+            statusMemorized: statusMemorized,
+            statusMemorizedTint: statusMemorized.opacity(0.12),
+            statusMemorizedStrong: statusMemorized.opacity(0.3),
+            statusMemorizedBorder: statusMemorized.opacity(0.3),
             gold: gold,
             goldLight: Color(asset: .goldLight),
             goldDeep: Color(asset: .goldDeep),
             goldBorder: gold.opacity(0.25),
             goldTrack: gold.opacity(0.12),
             goldMuted: gold.opacity(0.45),
+            goldTint: gold.opacity(0.13),
             sunRays: Color(asset: .sunRays),
             parchmentLight: Color(asset: .parchmentLight),
             parchmentInk: Color(asset: .parchmentInk)

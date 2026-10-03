@@ -44,6 +44,9 @@ nonisolated struct ThemeGradients: Hashable, Sendable {
     var hadithBackground: ThemeGradient
     var morningCard: ThemeGradient
     var eveningCard: ThemeGradient
+    var nawawiCard: ThemeGradient
+    var qudsiCard: ThemeGradient
+    var ajurriCard: ThemeGradient
     var progressFill: ThemeGradient
     var counterButton: ThemeGradient
     var counterButtonDone: ThemeGradient
@@ -71,6 +74,21 @@ nonisolated extension ThemeGradients {
             (.eveningCardStart, 0),
             (.eveningCardMid, 0.55),
             (.eveningCardEnd, 1),
+        ], cssAngle: 135),
+        nawawiCard: ThemeGradient.css(stops: [
+            (.nawawiCardStart, 0),
+            (.nawawiCardMid, 0.6),
+            (.nawawiCardEnd, 1),
+        ], cssAngle: 135),
+        qudsiCard: ThemeGradient.css(stops: [
+            (.qudsiCardStart, 0),
+            (.qudsiCardMid, 0.55),
+            (.qudsiCardEnd, 1),
+        ], cssAngle: 135),
+        ajurriCard: ThemeGradient.css(stops: [
+            (.ajurriCardStart, 0),
+            (.ajurriCardMid, 0.55),
+            (.ajurriCardEnd, 1),
         ], cssAngle: 135),
         progressFill: ThemeGradient.css(stops: [
             (.successDeep, 0),
