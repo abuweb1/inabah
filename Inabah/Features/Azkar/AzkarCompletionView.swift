@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// «Машаа Аллах!» — показывается, когда прочитаны все азкары раздела.
+/// «مَا شَاءَ اللَّهُ» — показывается, когда прочитаны все азкары раздела.
 struct AzkarCompletionView: View {
     let section: AzkarSection
     let onGoHome: () -> Void
@@ -8,26 +8,27 @@ struct AzkarCompletionView: View {
     @Environment(\.theme) private var theme
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-    private static let emojiSize: CGFloat = 60
+    private static let titleSize: Double = 52
     private static let arabicSize: Double = 24
 
     var body: some View {
         VStack(spacing: Spacing.l) {
-            // Пульсация живёт ровно столько, сколько оверлей на экране (phaseAnimator),
-            // и выключается при «Уменьшении движения».
-            Text(verbatim: "🤲")
-                .font(.system(size: Self.emojiSize))
-                .phaseAnimator([1.0, 1.08]) { content, scale in
-                    content.scaleEffect(reduceMotion ? 1 : scale)
-                } animation: { _ in
-                    .easeInOut(duration: 1)
-                }
-                .accessibilityHidden(true)
-
-            Text("azkar.completion.title")
-                .font(.title.bold())
-                .foregroundStyle(theme.palette.success)
-                .accessibilityAddTraits(.isHeader)
+            // Каллиграфия — главный элемент экрана, без значка. Пульсация живёт ровно столько,
+            // сколько оверлей на экране (phaseAnimator), и выключается при «Уменьшении движения».
+            ArabicText(
+                text: "مَا شَاءَ اللَّهُ",
+                size: Self.titleSize,
+                color: theme.palette.gold,
+                bold: true,
+                alignment: .center
+            )
+            .phaseAnimator([1.0, 1.05]) { content, scale in
+                content.scaleEffect(reduceMotion ? 1 : scale)
+            } animation: { _ in
+                .easeInOut(duration: 1.2)
+            }
+            .accessibilityLabel(Text("azkar.completion.title"))
+            .accessibilityAddTraits(.isHeader)
 
             ArabicText(
                 text: "الحمد لله رب العالمين",
