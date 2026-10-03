@@ -49,6 +49,8 @@ struct RootTabView: View {
             } else if oldPhase == .background {
                 audioPlayer.applicationWillEnterForeground()
             }
+            // Пока приложение было в фоне, время обнуления азкаров могло наступить.
+            if phase == .active { azkarStore.refreshPeriods() }
         }
     }
 

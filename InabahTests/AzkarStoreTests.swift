@@ -1,9 +1,17 @@
+import Foundation
 import Testing
 @testable import Inabah
 
 @MainActor
 @Suite("Счёт азкаров")
 struct AzkarStoreTests {
+    /// Отдельный suite на каждый тест: прогресс сохраняется в UserDefaults.
+    private let defaults: UserDefaults
+
+    init() throws {
+        defaults = try #require(UserDefaults(suiteName: "AzkarStoreTests.\(UUID().uuidString)"))
+    }
+
     private static func zikr(_ number: Int, repetitions: Int, section: AzkarSection = .morning) -> Zikr {
         Zikr(
             id: ZikrID(section: section, number: number),
@@ -19,7 +27,7 @@ struct AzkarStoreTests {
             .morning: [Self.zikr(1, repetitions: 1), Self.zikr(2, repetitions: 3)],
             .evening: [Self.zikr(1, repetitions: 1, section: .evening)],
         ])
-        let store = AzkarStore(repository: repository)
+        let store = AzkarStore(repository: repository, defaults: defaults)
         await store.loadAll()
         return store
     }
@@ -89,7 +97,7 @@ struct AzkarStoreTests {
 
     @Test("Ошибка загрузки — состояние failed, повторная попытка разрешена")
     func loadFailure() async {
-        let store = AzkarStore(repository: InMemoryContentRepository(error: .resourceMissing("azkar.json")))
+        let store = AzkarStore(repository: InMemoryContentRepository(error: .resourceMissing("azkar.json")), defaults: defaults)
 
         await store.load(.morning)
 

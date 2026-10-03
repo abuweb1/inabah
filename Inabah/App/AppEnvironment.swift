@@ -8,6 +8,7 @@ struct AppEnvironment {
     let router: AppRouter
     let readingSettings: ReadingSettings
     let playlistSettings: PlaylistSettings
+    let azkarResetSettings: AzkarResetSettings
     let azkarStore: AzkarStore
     let hadithStore: HadithStore
     let hadithProgress: HadithProgress
@@ -23,7 +24,8 @@ struct AppEnvironment {
         router = AppRouter()
         readingSettings = ReadingSettings(defaults: defaults)
         playlistSettings = PlaylistSettings(defaults: defaults)
-        azkarStore = AzkarStore(repository: repository)
+        azkarResetSettings = AzkarResetSettings(defaults: defaults)
+        azkarStore = AzkarStore(repository: repository, defaults: defaults, resetSettings: azkarResetSettings)
         hadithStore = HadithStore(repository: repository)
         hadithProgress = HadithProgress(defaults: defaults)
         self.audioPlayer = audioPlayer ?? AudioPlayerController(
@@ -51,6 +53,7 @@ extension View {
             .environment(environment.router)
             .environment(environment.readingSettings)
             .environment(environment.playlistSettings)
+            .environment(environment.azkarResetSettings)
             .environment(environment.azkarStore)
             .environment(environment.hadithStore)
             .environment(environment.hadithProgress)

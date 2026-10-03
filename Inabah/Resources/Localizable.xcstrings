@@ -982,12 +982,57 @@
         }
       }
     },
-    "settings.placeholder.message": {
+    "settings.reset.evening": {
+      "comment": "Настройки: время обнуления вечерних азкаров",
       "localizations": {
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Настройки появятся позже."
+            "value": "Вечерние — после"
+          }
+        }
+      }
+    },
+    "settings.reset.footer": {
+      "comment": "Настройки: пояснение под временем обнуления",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Каждый день в это время прогресс чтения раздела обнуляется. Новое время действует со следующего обнуления."
+          }
+        }
+      }
+    },
+    "settings.reset.header": {
+      "comment": "Настройки: заголовок секции времени обнуления прогресса",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Обнуление азкаров"
+          }
+        }
+      }
+    },
+    "settings.reset.morning": {
+      "comment": "Настройки: время обнуления утренних азкаров",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Утренние — после"
+          }
+        }
+      }
+    },
+    "settings.title": {
+      "comment": "Заголовок экрана настроек",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Настройки"
           }
         }
       }
