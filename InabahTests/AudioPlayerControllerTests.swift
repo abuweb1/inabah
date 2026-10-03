@@ -7,7 +7,7 @@ import Testing
 @MainActor
 private final class FakeAudioEngine: AudioEngine {
     var onFinish: ((_ successfully: Bool) -> Void)?
-    var onDecodeError: (() -> Void)?
+    var onError: ((AudioEngineError) -> Void)?
     var currentTime: TimeInterval = 0
     var rate: Float = 1
     var duration: TimeInterval = 30
@@ -47,13 +47,15 @@ private final class FakeAudioEngine: AudioEngine {
         return duration
     }
 
-    @discardableResult
-    func play(after delay: TimeInterval) -> Bool {
-        guard !refusesToPlay, let currentURL else { return false }
+    /// Отказ старта приходит асинхронно — как у настоящего движка.
+    func play(after delay: TimeInterval) {
+        guard !refusesToPlay, let currentURL else {
+            Task { self.onError?(.playbackFailed) }
+            return
+        }
         isPlaying = true
         lastStartDelay = delay
         playedURLs.append(currentURL)
-        return true
     }
 
     func pause() { isPlaying = false }
@@ -382,6 +384,7 @@ struct AudioPlayerControllerTests {
         engine.refusesToPlay = true
 
         await play(1)
+        await settle()
 
         #expect(!player.isPlaying)
         #expect(player.error == .playbackFailed)
@@ -403,7 +406,7 @@ struct AudioPlayerControllerTests {
     func decodeError() async {
         await play(1)
 
-        engine.onDecodeError?()
+        engine.onError?(.cannotLoad("morning_1.mp3"))
 
         #expect(player.error != nil)
         #expect(!player.isPlaying)

@@ -71,7 +71,7 @@ final class AudioPlayerController {
         self.session = session
         self.nowPlaying = nowPlaying
         engine.onFinish = { [weak self] successfully in self?.handleFinish(successfully: successfully) }
-        engine.onDecodeError = { [weak self] in self?.handleFailure(.cannotLoad(self?.currentTrack?.url.lastPathComponent ?? "")) }
+        engine.onError = { [weak self] error in self?.handleFailure(error) }
         session?.onEvent = { [weak self] event in self?.handle(event) }
         nowPlaying?.attach(to: self)
     }
@@ -173,9 +173,7 @@ final class AudioPlayerController {
             assign(\.duration, loadedDuration)
             try await enqueueSessionOperation { try await $0.activate() }.value
             guard generation == loadGeneration else { return }
-            if isPlaying, !engine.play(after: delay) {
-                throw AudioEngineError.playbackFailed
-            }
+            if isPlaying { engine.play(after: delay) }
             nowPlaying?.trackDidChange()
             await preloadNextIfNeeded()
         } catch is CancellationError {
@@ -247,7 +245,7 @@ final class AudioPlayerController {
         }
         cancelIdleDeactivation()
         setPlaying(true)
-        if !engine.play() { handleFailure(.playbackFailed) }
+        engine.play()
     }
 
     /// Остановить: позиция в начало записи (с первого повтора), плеер остаётся открытым.
@@ -425,7 +423,7 @@ final class AudioPlayerController {
             assign(\.playback, queue)
             engine.currentTime = 0
             assign(\.currentTime, 0)
-            if !engine.play() { handleFailure(.playbackFailed) }
+            engine.play()
             nowPlaying?.playbackDidChange()
         case .advance:
             advanceToNext(after: pauseBetweenItems)
