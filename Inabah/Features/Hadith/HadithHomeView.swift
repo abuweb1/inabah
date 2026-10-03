@@ -35,6 +35,7 @@ struct HadithHomeView: View {
                     SectionNavCard(
                         title: collection.title,
                         meta: meta(for: collection),
+                        metaOriginal: collection.arabicTitle,
                         symbolName: collection.symbolName,
                         iconColor: collection.iconColor(in: theme),
                         gradient: collection.cardGradient(in: theme),

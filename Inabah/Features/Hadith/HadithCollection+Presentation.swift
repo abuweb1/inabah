@@ -19,7 +19,7 @@ extension HadithCollection {
         }
     }
 
-    /// «50 хадисов (с доп. Ибн Раджаба) · الأربعون النووية».
+    /// «50 хадисов (с доп. Ибн Раджаба)»; арабское название добавляет карточка (`metaOriginal`).
     func cardMeta(count: Int) -> LocalizedStringResource {
         switch self {
         case .nawawi: "hadith.nawawi.meta \(count)"
@@ -53,10 +53,9 @@ extension HadithCollection {
     }
 
     func cardShadow(in theme: Theme) -> ShadowToken {
-        let color = switch self {
-        case .nawawi: theme.palette.successDeep.opacity(0.4)
-        case .qudsi, .ajurri: theme.palette.shadow.opacity(0.45)
+        switch self {
+        case .nawawi: .navCard(theme.palette.successDeep, strength: .medium)
+        case .qudsi, .ajurri: .navCard(theme.palette.shadow, strength: .strong)
         }
-        return ShadowToken(color: color, radius: 12, y: 8)
     }
 }

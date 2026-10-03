@@ -55,6 +55,8 @@ nonisolated struct ThemeGradients: Hashable, Sendable {
     var counterButton: ThemeGradient
     var counterButtonDone: ThemeGradient
     var parchment: ThemeGradient
+    /// Полоска по верхнему краю пергамента — полупрозрачная, проступает фон.
+    var parchmentStripe: ThemeGradient
 }
 
 nonisolated extension ThemeGradients {
@@ -121,6 +123,15 @@ nonisolated extension ThemeGradients {
             (.gold, 0.45),
             (.parchmentMid, 0.75),
             (.parchmentDeep, 1),
-        ], cssAngle: 150)
+        ], cssAngle: 150),
+        parchmentStripe: ThemeGradient(
+            [
+                Gradient.Stop(color: Color(asset: .successDeep).opacity(0.6), location: 0),
+                Gradient.Stop(color: Color(asset: .success).opacity(0.6), location: 0.5),
+                Gradient.Stop(color: Color(asset: .successDeep).opacity(0.6), location: 1),
+            ],
+            startPoint: .leading,
+            endPoint: .trailing
+        )
     )
 }

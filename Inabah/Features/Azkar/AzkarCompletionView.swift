@@ -28,7 +28,7 @@ struct AzkarCompletionView: View {
             .phaseAnimator(reduceMotion ? Self.restingPhase : Self.pulsePhases) { content, scale in
                 content.scaleEffect(scale)
             } animation: { _ in
-                .easeInOut(duration: 1.2)
+                Motion.pulse
             }
             .accessibilityLabel(Text("azkar.completion.title"))
             .accessibilityAddTraits(.isHeader)
@@ -45,7 +45,7 @@ struct AzkarCompletionView: View {
                 theme.gradients.parchment.linear,
                 cornerRadius: Radius.control,
                 border: theme.palette.successDeep,
-                lineWidth: 2
+                lineWidth: Size.parchmentBorder
             )
             .accessibilityLabel(Text("azkar.completion.hamd"))
 

@@ -506,7 +506,7 @@
       }
     },
     "hadith.ajurri.meta %lld" : {
-      "comment" : "Подпись карточки сборника аль-Аджурри: число хадисов и арабское название (русский текст первым — иначе строка выстраивается справа налево)",
+      "comment" : "Подпись карточки сборника аль-Аджурри: число хадисов (арабское название подставляется отдельно — section.card.meta.original)",
       "localizations" : {
         "ru" : {
           "variations" : {
@@ -514,25 +514,25 @@
               "few" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "%lld хадиса · أربعون حديثاً للآجري"
+                  "value" : "%lld хадиса"
                 }
               },
               "many" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "%lld хадисов · أربعون حديثاً للآجري"
+                  "value" : "%lld хадисов"
                 }
               },
               "one" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "%lld хадис · أربعون حديثاً للآجري"
+                  "value" : "%lld хадис"
                 }
               },
               "other" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "%lld хадиса · أربعون حديثاً للآجري"
+                  "value" : "%lld хадиса"
                 }
               }
             }
@@ -706,7 +706,7 @@
       }
     },
     "hadith.nawawi.meta %lld" : {
-      "comment" : "Подпись карточки сборника ан-Навави: число хадисов и арабское название (русский текст первым — иначе строка выстраивается справа налево)",
+      "comment" : "Подпись карточки сборника ан-Навави: число хадисов (арабское название подставляется отдельно — section.card.meta.original)",
       "localizations" : {
         "ru" : {
           "variations" : {
@@ -714,25 +714,25 @@
               "few" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "%lld хадиса (с доп. Ибн Раджаба) · الأربعون النووية"
+                  "value" : "%lld хадиса (с доп. Ибн Раджаба)"
                 }
               },
               "many" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "%lld хадисов (с доп. Ибн Раджаба) · الأربعون النووية"
+                  "value" : "%lld хадисов (с доп. Ибн Раджаба)"
                 }
               },
               "one" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "%lld хадис (с доп. Ибн Раджаба) · الأربعون النووية"
+                  "value" : "%lld хадис (с доп. Ибн Раджаба)"
                 }
               },
               "other" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "%lld хадиса (с доп. Ибн Раджаба) · الأربعون النووية"
+                  "value" : "%lld хадиса (с доп. Ибн Раджаба)"
                 }
               }
             }
@@ -774,7 +774,7 @@
       }
     },
     "hadith.qudsi.meta %lld" : {
-      "comment" : "Подпись карточки сборника аль-Къудси: число хадисов и арабское название (русский текст первым — иначе строка выстраивается справа налево)",
+      "comment" : "Подпись карточки сборника аль-Къудси: число хадисов (арабское название подставляется отдельно — section.card.meta.original)",
       "localizations" : {
         "ru" : {
           "variations" : {
@@ -782,25 +782,25 @@
               "few" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "%lld хадиса · الأربعون القدسية"
+                  "value" : "%lld хадиса"
                 }
               },
               "many" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "%lld хадисов · الأربعون القدسية"
+                  "value" : "%lld хадисов"
                 }
               },
               "one" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "%lld хадис · الأربعون القدسية"
+                  "value" : "%lld хадис"
                 }
               },
               "other" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "%lld хадиса · الأربعون القدسية"
+                  "value" : "%lld хадиса"
                 }
               }
             }
@@ -968,6 +968,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "А+"
+          }
+        }
+      }
+    },
+    "section.card.meta.original %@ %@" : {
+      "comment" : "Подпись карточки и название в оригинале (арабский — контент). Подпись первой — иначе строка выстраивается справа налево",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$@"
           }
         }
       }

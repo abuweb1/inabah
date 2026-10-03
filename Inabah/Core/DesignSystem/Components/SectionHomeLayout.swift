@@ -71,7 +71,7 @@ struct SectionHomeLayout<Cards: View>: View {
                 }
                 Text(brand.tagline)
                     .font(.caption)
-                    .tracking(0.8)
+                    .tracking(Tracking.caption)
                     .foregroundStyle(theme.palette.onAccentTertiary)
                 if let epigraph = brand.epigraph {
                     VStack(spacing: Spacing.xxxs) {
@@ -98,7 +98,7 @@ struct SectionHomeLayout<Cards: View>: View {
             ArabicText(
                 text: verse.arabic,
                 size: ReadingSettings.defaultArabicFontSize,
-                color: theme.palette.onAccent.opacity(0.85),
+                color: theme.palette.onAccentStrong,
                 alignment: .center
             )
             Text(verse.translation)
@@ -157,6 +157,9 @@ struct FeaturedVerse {
 struct SectionNavCard: View {
     let title: LocalizedStringResource
     let meta: LocalizedStringResource?
+    /// Название в оригинале после подписи через «·» (арабское название сборника — контент,
+    /// не переводится и не хранится в каталоге строк).
+    var metaOriginal: String?
     let symbolName: String
     let iconColor: Color
     let gradient: ThemeGradient
@@ -191,7 +194,7 @@ struct SectionNavCard: View {
                     .font(.title3.bold())
                     .foregroundStyle(theme.palette.onAccent)
                 if let meta {
-                    Text(meta)
+                    metaText(meta)
                         .font(.footnote)
                         .foregroundStyle(theme.palette.onAccentSecondary)
                 }
@@ -242,6 +245,11 @@ struct SectionNavCard: View {
         }
         .contentShape(.rect(cornerRadius: Radius.navCard))
         .accessibilityElement(children: .combine)
+    }
+
+    private func metaText(_ meta: LocalizedStringResource) -> Text {
+        guard let metaOriginal else { return Text(meta) }
+        return Text("section.card.meta.original \(Text(meta)) \(Text(verbatim: metaOriginal))")
     }
 
     private func statLabel(_ stat: NavCardStat) -> some View {

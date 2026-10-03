@@ -7,6 +7,9 @@ struct AudioPlayerPanel: View {
     @Environment(AudioPlayerController.self) private var player
     @Environment(\.theme) private var theme
 
+    /// Подпись под названием ужимается, а не обрезается, когда тесно.
+    private static let subtitleMinimumScale: CGFloat = 0.85
+
     var body: some View {
         if let item = player.currentItem {
             VStack(spacing: Spacing.m) {
@@ -66,7 +69,7 @@ struct AudioPlayerPanel: View {
                 VStack(alignment: .leading, spacing: Spacing.xxxs) {
                     Text(verbatim: item.track.category)
                         .font(.caption2.weight(.bold))
-                        .tracking(0.8)
+                        .tracking(Tracking.caption)
                         .foregroundStyle(theme.palette.textSecondary)
                     Text(verbatim: item.track.title)
                         .font(.headline)
@@ -82,7 +85,7 @@ struct AudioPlayerPanel: View {
                 .font(.footnote)
                 .foregroundStyle(theme.palette.textSecondary)
                 .lineLimit(1)
-                .minimumScaleFactor(0.85)
+                .minimumScaleFactor(Self.subtitleMinimumScale)
         }
     }
 

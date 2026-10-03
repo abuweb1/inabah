@@ -30,7 +30,7 @@ struct HadithPage: View {
                 Text("hadith.detail.number \(hadith.number)")
                     .font(.caption2.weight(.bold))
                     .textCase(.uppercase)
-                    .tracking(0.6)
+                    .tracking(Tracking.label)
                     .foregroundStyle(theme.palette.parchmentInk)
                 ArabicText(
                     text: hadith.arabicDisplayText,
@@ -157,7 +157,7 @@ private struct HadithTranslationCard: View {
                     .overlay(alignment: .top) {
                         Rectangle()
                             .fill(theme.palette.hairline)
-                            .frame(height: 1)
+                            .frame(height: Size.hairline)
                     }
             }
         }

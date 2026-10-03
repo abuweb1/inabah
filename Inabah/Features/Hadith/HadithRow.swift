@@ -55,7 +55,7 @@ struct HadithRow: View {
         .overlay(alignment: .bottom) {
             Rectangle()
                 .fill(theme.palette.divider)
-                .frame(height: 1)
+                .frame(height: Size.hairline)
         }
         .accessibilityElement(children: .combine)
         .accessibilityValue(status.accessibilityLabel.map { Text($0) } ?? Text(verbatim: ""))

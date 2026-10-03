@@ -2,7 +2,7 @@ import SwiftUI
 
 /// Нажатие слегка уменьшает элемент — для крупных карточек и кнопок без собственного фона.
 struct PressScaleButtonStyle: ButtonStyle {
-    var pressedScale: CGFloat = 0.97
+    var pressedScale = PressFeedback.cardScale
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
@@ -28,7 +28,7 @@ struct ToggleTileButtonStyle: ButtonStyle {
             .frame(maxWidth: .infinity, minHeight: Size.primaryButtonHeight)
             .padding(.vertical, Spacing.m)
             .surface(isOn ? activeFill : fill, cornerRadius: Radius.control)
-            .scaleEffect(configuration.isPressed ? 0.97 : 1)
+            .scaleEffect(configuration.isPressed ? PressFeedback.cardScale : 1)
             .animation(Motion.press, value: configuration.isPressed)
             .animation(Motion.highlight, value: isOn)
     }
@@ -52,7 +52,7 @@ extension LabelStyle where Self == VerticalTileLabelStyle {
 
 /// Строки списков: нажатая строка приглушается (`opacity .65` в прототипе).
 struct PressDimButtonStyle: ButtonStyle {
-    var pressedOpacity = 0.65
+    var pressedOpacity = PressFeedback.rowOpacity
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
@@ -77,16 +77,19 @@ struct IconButtonStyle: ButtonStyle {
 
     @Environment(\.isEnabled) private var isEnabled
 
+    /// Размер значка — доля размера кнопки.
+    private static let glyphRatio: CGFloat = 0.36
+
     func makeBody(configuration: Configuration) -> some View {
         let radius = shape == .circle ? size / 2 : Radius.control
         configuration.label
-            .font(.system(size: size * 0.36, weight: .semibold))
+            .font(.system(size: size * Self.glyphRatio, weight: .semibold))
             .foregroundStyle(foreground)
             .frame(width: size, height: size)
             .surface(background, cornerRadius: radius, border: border)
             .contentShape(.rect(cornerRadius: radius))
-            .opacity(isEnabled ? 1 : 0.4)
-            .scaleEffect(configuration.isPressed ? 0.92 : 1)
+            .opacity(isEnabled ? 1 : PressFeedback.disabledOpacity)
+            .scaleEffect(configuration.isPressed ? PressFeedback.iconScale : 1)
             .animation(Motion.press, value: configuration.isPressed)
     }
 }
@@ -103,7 +106,7 @@ struct BareIconButtonStyle: ButtonStyle {
             .foregroundStyle(foreground)
             .frame(width: Size.minTapTarget, height: Size.minTapTarget)
             .contentShape(.circle)
-            .opacity(isEnabled ? (configuration.isPressed ? 0.5 : 1) : 0.4)
+            .opacity(isEnabled ? (configuration.isPressed ? PressFeedback.bareOpacity : 1) : PressFeedback.disabledOpacity)
     }
 }
 
@@ -121,7 +124,7 @@ struct ProminentRoundButtonStyle: ButtonStyle {
                 cornerRadius: Size.playerMainButton / 2,
                 shadow: .goldButton(theme.palette)
             )
-            .scaleEffect(configuration.isPressed ? 0.93 : 1)
+            .scaleEffect(configuration.isPressed ? PressFeedback.roundScale : 1)
             .animation(Motion.press, value: configuration.isPressed)
     }
 }
@@ -138,8 +141,8 @@ struct PrimaryButtonStyle: ButtonStyle {
             .frame(maxWidth: .infinity, minHeight: Size.primaryButtonHeight)
             .padding(.horizontal, Spacing.xl)
             .surface(theme.palette.accent, cornerRadius: Radius.box)
-            .opacity(isEnabled ? (configuration.isPressed ? 0.8 : 1) : 0.4)
-            .scaleEffect(configuration.isPressed ? 0.98 : 1)
+            .opacity(isEnabled ? (configuration.isPressed ? PressFeedback.wideOpacity : 1) : PressFeedback.disabledOpacity)
+            .scaleEffect(configuration.isPressed ? PressFeedback.wideScale : 1)
             .animation(Motion.press, value: configuration.isPressed)
     }
 }

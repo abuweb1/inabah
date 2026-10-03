@@ -21,7 +21,6 @@ struct NavCardProgressRing: View {
     }
 
     private enum Layout {
-        static let lineWidth: CGFloat = 3
         static let minimumTextScale: CGFloat = 0.7
         /// Кольцо фиксированного размера: проценты растут с Dynamic Type только до этого размера,
         /// дальше задевали бы кольцо (VoiceOver читает их полностью).
@@ -30,7 +29,7 @@ struct NavCardProgressRing: View {
 
     var body: some View {
         ZStack {
-            ProgressRing(fraction: fraction, trackColor: style.track, fillColor: style.fill, lineWidth: Layout.lineWidth)
+            ProgressRing(fraction: fraction, trackColor: style.track, fillColor: style.fill, lineWidth: Size.ringStroke)
             if isDone {
                 Image(systemName: "checkmark")
                     .font(.callout.weight(.bold))

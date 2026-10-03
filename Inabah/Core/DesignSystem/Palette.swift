@@ -26,6 +26,8 @@ nonisolated struct Palette: Hashable, Sendable {
     var onAccentSecondary: Color
     /// Третичный текст поверх акцента (ссылки, мелкие пометки).
     var onAccentTertiary: Color
+    /// Чуть приглушённый основной текст поверх акцента (аят на главных).
+    var onAccentStrong: Color
 
     // Линии и подложки поверх тёмных и градиентных поверхностей
     /// Тонкая рамка карточек и кнопок.
@@ -80,6 +82,8 @@ nonisolated struct Palette: Hashable, Sendable {
 
     // Пергамент под арабским текстом — не зависит от темы интерфейса
     var parchmentLight: Color
+    /// Блик в углу пергамента.
+    var parchmentGlow: Color
     var parchmentInk: Color
 }
 
@@ -104,6 +108,7 @@ nonisolated extension Palette {
             onAccent: onAccent,
             onAccentSecondary: onAccent.opacity(0.6),
             onAccentTertiary: onAccent.opacity(0.4),
+            onAccentStrong: onAccent.opacity(0.85),
             hairline: onAccent.opacity(0.1),
             divider: onAccent.opacity(0.08),
             track: onAccent.opacity(0.15),
@@ -136,6 +141,7 @@ nonisolated extension Palette {
             goldTint: gold.opacity(0.13),
             sunRays: Color(asset: .sunRays),
             parchmentLight: Color(asset: .parchmentLight),
+            parchmentGlow: Color(asset: .parchmentLight).opacity(0.7),
             parchmentInk: Color(asset: .parchmentInk)
         )
     }()
@@ -155,4 +161,22 @@ nonisolated extension ShadowToken {
     static func floating(_ palette: Palette) -> ShadowToken { ShadowToken(color: palette.shadow.opacity(0.45), radius: 18, y: 6) }
     /// Золотые кнопки (счётчик, плей).
     static func goldButton(_ palette: Palette) -> ShadowToken { ShadowToken(color: palette.goldDeep.opacity(0.4), radius: 10, y: 4) }
+
+    /// Плотность тени навигационной карточки — подбирается под цвет карточки.
+    enum NavCardStrength {
+        case light, medium, strong
+
+        var opacity: Double {
+            switch self {
+            case .light: 0.35
+            case .medium: 0.4
+            case .strong: 0.45
+            }
+        }
+    }
+
+    /// Навигационные карточки главных экранов: цветная тень снизу.
+    static func navCard(_ color: Color, strength: NavCardStrength) -> ShadowToken {
+        ShadowToken(color: color.opacity(strength.opacity), radius: 12, y: 8)
+    }
 }
