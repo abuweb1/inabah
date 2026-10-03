@@ -558,10 +558,11 @@ struct AudioPlayerControllerTests {
 @MainActor
 @Suite("Настройки «Прослушать все»")
 struct PlaylistSettingsTests {
-    private let defaults: UserDefaults
+    private let storage: IsolatedDefaults
+    private var defaults: UserDefaults { storage.defaults }
 
     init() throws {
-        defaults = try #require(UserDefaults(suiteName: "PlaylistSettingsTests.\(UUID().uuidString)"))
+        storage = try IsolatedDefaults("PlaylistSettingsTests")
     }
 
     @Test("Значения по умолчанию")

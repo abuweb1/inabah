@@ -5,13 +5,13 @@ import Testing
 @MainActor
 @Suite("Отметки хадисов")
 struct HadithProgressTests {
-    /// Отдельный suite на каждый тест — тесты идут параллельно и не делят UserDefaults.
-    private let defaults: UserDefaults
+    private let storage: IsolatedDefaults
+    private var defaults: UserDefaults { storage.defaults }
     private let first = HadithID(collection: .nawawi, number: 1)
     private let second = HadithID(collection: .nawawi, number: 2)
 
     init() throws {
-        defaults = try #require(UserDefaults(suiteName: "HadithProgressTests.\(UUID().uuidString)"))
+        storage = try IsolatedDefaults("HadithProgressTests")
     }
 
     @Test("Без отметок — статус «нет»")

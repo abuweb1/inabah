@@ -160,10 +160,11 @@ struct AzkarPeriodTests {
 @MainActor
 @Suite("Время обнуления в настройках")
 struct AzkarResetSettingsTests {
-    private let defaults: UserDefaults
+    private let storage: IsolatedDefaults
+    private var defaults: UserDefaults { storage.defaults }
 
     init() throws {
-        defaults = try #require(UserDefaults(suiteName: "AzkarResetSettingsTests.\(UUID().uuidString)"))
+        storage = try IsolatedDefaults("AzkarResetSettingsTests")
     }
 
     @Test("По умолчанию утренние — 17:00, вечерние — 02:00")
@@ -184,7 +185,8 @@ struct AzkarResetSettingsTests {
 @MainActor
 @Suite("Сохранение и обнуление прогресса азкаров")
 struct AzkarProgressPersistenceTests {
-    private let defaults: UserDefaults
+    private let storage: IsolatedDefaults
+    private var defaults: UserDefaults { storage.defaults }
     /// Текущее время — меняется тестом.
     private final class Clock {
         var now: Date
@@ -193,7 +195,7 @@ struct AzkarProgressPersistenceTests {
     private let clock = Clock(date(2026, 10, 3, 8))
 
     init() throws {
-        defaults = try #require(UserDefaults(suiteName: "AzkarProgressPersistenceTests.\(UUID().uuidString)"))
+        storage = try IsolatedDefaults("AzkarProgressPersistenceTests")
     }
 
     private static let repository = InMemoryContentRepository(azkar: [

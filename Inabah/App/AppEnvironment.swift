@@ -43,9 +43,21 @@ struct AppEnvironment {
     static var preview: AppEnvironment {
         AppEnvironment(
             repository: InMemoryContentRepository.preview,
-            defaults: UserDefaults(suiteName: "preview") ?? .standard,
+            defaults: previewDefaults(),
             audioPlayer: AudioPlayerController(engine: AVAudioEngineAdapter())
         )
+    }
+
+    /// Набор превью очищается при каждом создании и засевается парой отметок хадисов:
+    /// превью всегда показывают одно и то же, а не накопленное прошлыми запусками.
+    private static func previewDefaults() -> UserDefaults {
+        let suiteName = "preview"
+        guard let defaults = UserDefaults(suiteName: suiteName) else { return .standard }
+        defaults.removePersistentDomain(forName: suiteName)
+        let read = (1...3).map { HadithID(collection: .nawawi, number: $0) }
+        read.forEach { defaults.set("1", forKey: HadithProgress.readKey($0)) }
+        defaults.set("1", forKey: HadithProgress.memorizedKey(read[0]))
+        return defaults
     }
 }
 

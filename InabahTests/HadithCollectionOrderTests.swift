@@ -5,12 +5,12 @@ import Testing
 @MainActor
 @Suite("Порядок сборников хадисов")
 struct HadithCollectionOrderTests {
-    /// Отдельный suite на каждый тест — тесты идут параллельно и не делят UserDefaults.
-    private let defaults: UserDefaults
+    private let storage: IsolatedDefaults
+    private var defaults: UserDefaults { storage.defaults }
     private static let key = "hadith.collectionOrder"
 
     init() throws {
-        defaults = try #require(UserDefaults(suiteName: "HadithCollectionOrderTests.\(UUID().uuidString)"))
+        storage = try IsolatedDefaults("HadithCollectionOrderTests")
     }
 
     @Test("По умолчанию — исходный порядок")

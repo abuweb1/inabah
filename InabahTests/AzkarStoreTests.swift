@@ -5,11 +5,12 @@ import Testing
 @MainActor
 @Suite("Счёт азкаров")
 struct AzkarStoreTests {
-    /// Отдельный suite на каждый тест: прогресс сохраняется в UserDefaults.
-    private let defaults: UserDefaults
+    /// Отдельный набор на каждый тест: прогресс сохраняется в UserDefaults.
+    private let storage: IsolatedDefaults
+    private var defaults: UserDefaults { storage.defaults }
 
     init() throws {
-        defaults = try #require(UserDefaults(suiteName: "AzkarStoreTests.\(UUID().uuidString)"))
+        storage = try IsolatedDefaults("AzkarStoreTests")
     }
 
     private static func zikr(_ number: Int, repetitions: Int, section: AzkarSection = .morning) -> Zikr {
