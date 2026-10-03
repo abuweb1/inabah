@@ -15,7 +15,10 @@ struct NavCardProgressRing: View {
     let style: NavCardRingStyle
 
     private var isDone: Bool { fraction >= 1 }
-    private var percent: Int { Int((min(max(fraction, 0), 1) * 100).rounded()) }
+    /// До полного выполнения — не больше 99 %: «100 %» без галочки сбивало бы с толку.
+    private var percent: Int {
+        isDone ? 100 : min(Int((max(fraction, 0) * 100).rounded()), 99)
+    }
 
     private enum Layout {
         static let lineWidth: CGFloat = 3

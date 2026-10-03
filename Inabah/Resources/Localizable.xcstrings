@@ -309,6 +309,17 @@
         }
       }
     },
+    "azkar.completion.hamd": {
+      "comment": "VoiceOver: перевод «الحمد لله رب العالمين» на экране завершения",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Хвала Аллаху, Господу миров"
+          }
+        }
+      }
+    },
     "azkar.completion.home": {
       "comment": "Кнопка возврата на главную раздела",
       "localizations": {
