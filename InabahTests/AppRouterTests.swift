@@ -62,6 +62,20 @@ struct AppRouterTests {
         #expect(router.settingsPath.isEmpty)
     }
 
+    @Test("Вкладка «Махрадж»: выбор и повторный выбор не трогают пути других вкладок")
+    func makharijTabKeepsOtherPaths() {
+        let router = AppRouter()
+        router.open(.list(.evening))
+        router.settingsPath = [.appIcon]
+
+        router.select(.makharij)
+        router.select(.makharij)
+
+        #expect(router.selectedTab == .makharij)
+        #expect(router.azkarPath == [.list(.evening)])
+        #expect(router.settingsPath == [.appIcon])
+    }
+
     @Test("Повторный выбор вкладки «Хадисы» возвращает к главной хадисов")
     func reselectHadithPopsToRoot() {
         let router = AppRouter()

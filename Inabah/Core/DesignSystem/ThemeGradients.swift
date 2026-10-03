@@ -46,6 +46,8 @@ nonisolated struct ThemeGradients: Hashable, Sendable {
     var hadithBackground: ThemeGradient
     /// Фон раздела «Настройки» — графит, нейтральный к фиолетовым азкарам и изумрудным хадисам.
     var settingsBackground: ThemeGradient
+    /// Фон раздела «Махрадж» — янтарно-коричневый (прежний цвет карточки аль-Аджурри, приглушённый).
+    var makharijBackground: ThemeGradient
     var morningCard: ThemeGradient
     var eveningCard: ThemeGradient
     var nawawiCard: ThemeGradient
@@ -80,6 +82,11 @@ nonisolated extension ThemeGradients {
             (.settingsBackgroundTop, 0),
             (.settingsBackgroundMid, 0.5),
             (.settingsBackgroundBottom, 1),
+        ], cssAngle: 168),
+        makharijBackground: ThemeGradient.css(stops: [
+            (.makharijBackgroundTop, 0),
+            (.makharijBackgroundMid, 0.5),
+            (.makharijBackgroundBottom, 1),
         ], cssAngle: 168),
         morningCard: ThemeGradient.css(stops: [
             (.morningCardStart, 0),

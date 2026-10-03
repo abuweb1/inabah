@@ -4,6 +4,7 @@ import Observation
 enum AppTab: Hashable {
     case azkar
     case hadith
+    case makharij
     case settings
 }
 
@@ -57,6 +58,9 @@ final class AppRouter {
             if !azkarPath.isEmpty { azkarPath.removeAll() }
         case .hadith:
             if !hadithPath.isEmpty { hadithPath.removeAll() }
+        case .makharij:
+            // Пока раздел — одна главная (заглушка), стека нет.
+            break
         case .settings:
             if !settingsPath.isEmpty { settingsPath.removeAll() }
         }
