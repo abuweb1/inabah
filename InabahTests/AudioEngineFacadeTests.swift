@@ -141,6 +141,35 @@ struct AudioEngineFacadeTests {
         #expect(finished == 0)
     }
 
+    @Test("Заметная поправка часов сообщается (экран блокировки), мелкая — нет", arguments: [
+        (12.0, 1),
+        (0.1, 0),
+    ])
+    func timeCorrectionReported(reportedPosition: TimeInterval, expectedCorrections: Int) async throws {
+        var corrections = 0
+        engine.onTimeCorrection = { corrections += 1 }
+        _ = try await engine.load(url: url)
+        engine.pause()
+        try await waitForCommands(2)
+        let revision = try #require(await backend.lastRevision)
+
+        await backend.emit(.position(revision: revision, reportedPosition, at: .now))
+        try await finishAndWait(epoch: 1)
+
+        #expect(corrections == expectedCorrections)
+    }
+
+    @Test("Загрузка записи, которая ещё готовится, отменяет её подготовку")
+    func loadCancelsPreloadOfSameTrack() async throws {
+        let preloading = Task { await engine.preload(url: url) }
+        try await waitForCommands(1)
+
+        _ = try await engine.load(url: url)
+        await preloading.value
+
+        #expect(engine.startPreloaded(url: url, after: 0) == nil)
+    }
+
     @Test("Отложенный старт: часы идут от момента, который сообщил бэкенд")
     func delayedStartAnchorsToBackendInstant() async throws {
         _ = try await engine.load(url: url)

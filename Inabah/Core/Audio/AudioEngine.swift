@@ -31,6 +31,9 @@ protocol AudioEngine: AnyObject {
     /// Ошибка текущей записи: декодирование (`.cannotLoad`), отказ старта (`.playbackFailed`,
     /// `.preparedTrackFailed`). Вызывается на главном акторе.
     var onError: ((AudioEngineError) -> Void)? { get set }
+    /// Позиция заметно поправлена по фактической позиции плеера — экран блокировки
+    /// стоит обновить. Вызывается на главном акторе.
+    var onTimeCorrection: (() -> Void)? { get set }
 }
 
 extension AudioEngine {
@@ -62,6 +65,11 @@ nonisolated enum AudioEngineError: Error, Equatable {
 final class AVAudioEngineAdapter: AudioEngine {
     var onFinish: ((_ successfully: Bool) -> Void)?
     var onError: ((AudioEngineError) -> Void)?
+    var onTimeCorrection: (() -> Void)?
+
+    /// Поправка часов, о которой стоит сообщить (`onTimeCorrection`): мелкие подстройки
+    /// экран блокировки догоняет сам.
+    private static let reportedCorrection: TimeInterval = 0.5
 
     var rate: Float = 1 {
         didSet {
@@ -88,6 +96,8 @@ final class AVAudioEngineAdapter: AudioEngine {
     /// Подготовленная запись и её длительность — `startPreloaded` отвечает без ожидания бэкенда.
     private var preloadedTrack: (url: URL, duration: TimeInterval)?
     private var preloadRequest = 0
+    /// Запись, подготовка которой ещё идёт в бэкенде.
+    private var preloadingURL: URL?
     private let commands: AsyncStream<AudioBackendCommand>.Continuation
 
     /// - Parameter makeBackend: исполнитель команд; тесты подставляют свой. События он
@@ -115,6 +125,12 @@ final class AVAudioEngineAdapter: AudioEngine {
     }
 
     func load(url: URL) async throws -> TimeInterval {
+        // Та же запись готовится заранее — бэкенд отбросит подготовленный экземпляр, фасад забывает о нём.
+        if preloadingURL == url || preloadedTrack?.url == url {
+            preloadRequest += 1
+            preloadingURL = nil
+            preloadedTrack = nil
+        }
         epoch += 1
         _ = nextRevision()
         let requestEpoch = epoch
@@ -132,15 +148,19 @@ final class AVAudioEngineAdapter: AudioEngine {
         preloadRequest += 1
         let request = preloadRequest
         preloadedTrack = nil
+        preloadingURL = url
         let duration = await withCheckedContinuation { reply in
             send(.preload(url, reply: reply))
         }
-        guard let duration, request == preloadRequest else { return }
+        guard request == preloadRequest else { return }
+        preloadingURL = nil
+        guard let duration else { return }
         preloadedTrack = (url, duration)
     }
 
     func discardPreloaded() {
         preloadRequest += 1
+        preloadingURL = nil
         preloadedTrack = nil
         send(.discardPreloaded)
     }
@@ -173,6 +193,7 @@ final class AVAudioEngineAdapter: AudioEngine {
         _ = nextRevision()
         clock.stop()
         preloadRequest += 1
+        preloadingURL = nil
         preloadedTrack = nil
         send(.stop(epoch: epoch))
     }
@@ -190,7 +211,12 @@ final class AVAudioEngineAdapter: AudioEngine {
         switch event {
         case let .position(eventRevision, time, instant):
             guard eventRevision == revision else { return }
+            let now = ContinuousClock.now
+            let before = clock.time(at: now)
             clock.sync(position: time, at: instant)
+            if abs(clock.time(at: now) - before) > Self.reportedCorrection {
+                onTimeCorrection?()
+            }
         case let .finished(eventEpoch, successfully):
             guard eventEpoch == epoch else { return }
             clock.pause(at: .now)

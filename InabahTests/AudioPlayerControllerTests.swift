@@ -8,6 +8,7 @@ import Testing
 private final class FakeAudioEngine: AudioEngine {
     var onFinish: ((_ successfully: Bool) -> Void)?
     var onError: ((AudioEngineError) -> Void)?
+    var onTimeCorrection: (() -> Void)?
     var currentTime: TimeInterval = 0
     var rate: Float = 1
     var duration: TimeInterval = 30
