@@ -71,7 +71,7 @@ struct SectionHomeLayout<Cards: View>: View {
                 }
                 Text(brand.tagline)
                     .font(.caption)
-                    .tracking(0.8)
+                    .tracking(Tracking.caption)
                     .foregroundStyle(theme.palette.onAccentTertiary)
                 if let epigraph = brand.epigraph {
                     VStack(spacing: Spacing.xxxs) {
@@ -98,7 +98,7 @@ struct SectionHomeLayout<Cards: View>: View {
             ArabicText(
                 text: verse.arabic,
                 size: ReadingSettings.defaultArabicFontSize,
-                color: theme.palette.onAccent.opacity(0.85),
+                color: theme.palette.onAccentStrong,
                 alignment: .center
             )
             Text(verse.translation)
@@ -157,15 +157,19 @@ struct FeaturedVerse {
 struct SectionNavCard: View {
     let title: LocalizedStringResource
     let meta: LocalizedStringResource?
+    /// Название в оригинале после подписи через «·» (арабское название сборника — контент,
+    /// не переводится и не хранится в каталоге строк).
+    var metaOriginal: String?
     let symbolName: String
     let iconColor: Color
     let gradient: ThemeGradient
     let shadow: ShadowToken
-    /// Показатели под подписью: первый — у левого края, второй — у правого (например,
-    /// «прочитано» и «выучено» сборника).
-    var stats: [NavCardStat] = []
-    /// Кольцо прогресса справа от иконки (например, выполнение азкаров за сегодня).
-    var ring: (fraction: Double, style: NavCardRingStyle)?
+    /// Показатели под подписью: у левого и у правого края (например, «прочитано» и «выучено»
+    /// сборника).
+    var leadingStat: NavCardStat?
+    var trailingStat: NavCardStat?
+    /// Кольцо прогресса справа (например, выполнение азкаров за сегодня).
+    var ring: NavCardRing?
 
     @Environment(\.theme) private var theme
 
@@ -190,15 +194,18 @@ struct SectionNavCard: View {
                     .font(.title3.bold())
                     .foregroundStyle(theme.palette.onAccent)
                 if let meta {
-                    Text(meta)
+                    metaText(meta)
                         .font(.footnote)
                         .foregroundStyle(theme.palette.onAccentSecondary)
                 }
-                if !stats.isEmpty {
+                if leadingStat != nil || trailingStat != nil {
                     HStack(spacing: Spacing.s) {
-                        ForEach(Array(stats.enumerated()), id: \.offset) { index, stat in
-                            if index > 0 { Spacer(minLength: 0) }
-                            statLabel(stat)
+                        if let leadingStat {
+                            statLabel(leadingStat)
+                        }
+                        Spacer(minLength: 0)
+                        if let trailingStat {
+                            statLabel(trailingStat)
                         }
                     }
                     .font(.subheadline.weight(.semibold))
@@ -240,6 +247,11 @@ struct SectionNavCard: View {
         .accessibilityElement(children: .combine)
     }
 
+    private func metaText(_ meta: LocalizedStringResource) -> Text {
+        guard let metaOriginal else { return Text(meta) }
+        return Text("section.card.meta.original \(Text(meta)) \(Text(verbatim: metaOriginal))")
+    }
+
     private func statLabel(_ stat: NavCardStat) -> some View {
         HStack(spacing: Spacing.xs) {
             StatusGlyph(stat.glyph, size: Layout.statGlyphSize, relativeTo: .subheadline)
@@ -248,6 +260,12 @@ struct SectionNavCard: View {
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(Text(stat.accessibilityLabel))
     }
+}
+
+/// Кольцо прогресса на карточке раздела: доля выполнения и оформление.
+struct NavCardRing: Equatable {
+    let fraction: Double
+    let style: NavCardRingStyle
 }
 
 /// Показатель на карточке раздела: значок и короткое значение («3/50»); для VoiceOver — полная фраза.

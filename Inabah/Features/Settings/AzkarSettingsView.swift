@@ -5,7 +5,6 @@ struct AzkarSettingsView: View {
     @Environment(AzkarResetSettings.self) private var resetSettings
     @Environment(AzkarStore.self) private var store
     @Environment(\.theme) private var theme
-    @Environment(\.calendar) private var calendar
 
     /// Раздел, сброс которого ждёт подтверждения.
     @State private var pendingReset: AzkarSection?
@@ -35,7 +34,7 @@ struct AzkarSettingsView: View {
                     } label: {
                         Text(section.title)
                     }
-                    .disabled(!hasProgress(section))
+                    .disabled(!store.hasProgress(of: section))
                     .settingsRow()
                 }
             } header: {
@@ -48,38 +47,21 @@ struct AzkarSettingsView: View {
         .settingsForm(background: theme.gradients.azkarBackground)
         .navigationTitle(Text("settings.azkar.title"))
         .navigationBarTitleDisplayMode(.inline)
-        .confirmationDialog(
-            Text("settings.reset.now.confirm.title"),
-            isPresented: isConfirming,
-            titleVisibility: .visible,
-            presenting: pendingReset
-        ) { section in
-            Button(role: .destructive) {
-                store.resetProgress(of: section)
-            } label: {
-                Text("settings.reset.now.confirm.action")
-            }
-        } message: { section in
-            Text(section.resetConfirmationMessage)
-        }
+        .destructiveConfirmation(
+            "settings.reset.now.confirm.title",
+            item: $pendingReset,
+            actionLabel: "settings.reset.now.confirm.action",
+            message: { Text($0.resetConfirmationMessage) },
+            perform: { store.resetProgress(of: $0) }
+        )
         .audioPlayerInset()
     }
 
-    /// Есть ли что сбрасывать — хотя бы один зикр начат.
-    private func hasProgress(_ section: AzkarSection) -> Bool {
-        store.sessions(in: section).contains { $0.count > 0 }
-    }
-
-    private var isConfirming: Binding<Bool> {
-        Binding(
-            get: { pendingReset != nil },
-            set: { if !$0 { pendingReset = nil } }
-        )
-    }
-
     /// Время суток как дата сегодняшнего дня — для `DatePicker`; сохраняются только часы и минуты.
+    /// Календарь — тот же, что у расписания обнуления.
     private func resetTime(for section: AzkarSection) -> Binding<Date> {
-        Binding {
+        let calendar = store.calendar
+        return Binding {
             let time = resetSettings.resetTime(for: section)
             return calendar.date(bySettingHour: time.hour, minute: time.minute, second: 0, of: .now) ?? .now
         } set: { date in

@@ -35,11 +35,13 @@ struct HadithHomeView: View {
                     SectionNavCard(
                         title: collection.title,
                         meta: meta(for: collection),
+                        metaOriginal: collection.arabicTitle,
                         symbolName: collection.symbolName,
                         iconColor: collection.iconColor(in: theme),
                         gradient: collection.cardGradient(in: theme),
                         shadow: collection.cardShadow(in: theme),
-                        stats: stats(for: collection)
+                        leadingStat: readStat(for: collection),
+                        trailingStat: memorizedStat(for: collection)
                     )
                 }
                 .buttonStyle(PressScaleButtonStyle())
@@ -55,26 +57,30 @@ struct HadithHomeView: View {
         return count > 0 ? collection.cardMeta(count: count) : nil
     }
 
-    /// Книга «3/50» слева (если что-то прочитано) и сердце «2/50» справа (если что-то выучено).
-    private func stats(for collection: HadithCollection) -> [NavCardStat] {
-        let total = store.hadiths(in: collection).count
-        let collectionProgress = progress.progress(in: collection, total: total)
-        var stats: [NavCardStat] = []
-        if collectionProgress.read > 0 {
-            stats.append(NavCardStat(
-                glyph: .read,
-                value: "progress.fraction \(collectionProgress.read) \(total)",
-                accessibilityLabel: "hadith.progress.card \(collectionProgress.read) \(total)"
-            ))
-        }
-        if collectionProgress.memorized > 0 {
-            stats.append(NavCardStat(
-                glyph: .memorized,
-                value: "progress.fraction \(collectionProgress.memorized) \(total)",
-                accessibilityLabel: "hadith.progress.card.memorized \(collectionProgress.memorized) \(total)"
-            ))
-        }
-        return stats
+    private func collectionProgress(_ collection: HadithCollection) -> HadithCollectionProgress {
+        progress.progress(in: collection, total: store.hadiths(in: collection).count)
+    }
+
+    /// Книга «3/50» слева — если что-то прочитано.
+    private func readStat(for collection: HadithCollection) -> NavCardStat? {
+        let progress = collectionProgress(collection)
+        guard progress.read > 0 else { return nil }
+        return NavCardStat(
+            glyph: .read,
+            value: "progress.fraction \(progress.read) \(progress.total)",
+            accessibilityLabel: "hadith.progress.card \(progress.read) \(progress.total)"
+        )
+    }
+
+    /// Сердце «2/50» справа — если что-то выучено.
+    private func memorizedStat(for collection: HadithCollection) -> NavCardStat? {
+        let progress = collectionProgress(collection)
+        guard progress.memorized > 0 else { return nil }
+        return NavCardStat(
+            glyph: .memorized,
+            value: "progress.fraction \(progress.memorized) \(progress.total)",
+            accessibilityLabel: "hadith.progress.card.memorized \(progress.memorized) \(progress.total)"
+        )
     }
 }
 

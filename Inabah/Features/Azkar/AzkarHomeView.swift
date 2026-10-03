@@ -42,11 +42,11 @@ struct AzkarHomeView: View {
         .toolbarVisibility(.hidden, for: .navigationBar)
     }
 
-    /// Выполнение раздела за этот запуск; до загрузки кольца нет.
-    private func ring(for section: AzkarSection) -> (fraction: Double, style: NavCardRingStyle)? {
+    /// Выполнение раздела за текущий период; до загрузки кольца нет.
+    private func ring(for section: AzkarSection) -> NavCardRing? {
         let progress = store.progress(of: section)
         guard progress.total > 0 else { return nil }
-        return (progress.fraction, section.ringStyle(in: theme))
+        return NavCardRing(fraction: progress.fraction, style: section.ringStyle(in: theme))
     }
 
     /// Количество зикров известно после загрузки; до неё карточка без подписи.

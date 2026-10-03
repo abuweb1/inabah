@@ -5,11 +5,12 @@ import Testing
 @MainActor
 @Suite("Счёт азкаров")
 struct AzkarStoreTests {
-    /// Отдельный suite на каждый тест: прогресс сохраняется в UserDefaults.
-    private let defaults: UserDefaults
+    /// Отдельный набор на каждый тест: прогресс сохраняется в UserDefaults.
+    private let storage: IsolatedDefaults
+    private var defaults: UserDefaults { storage.defaults }
 
     init() throws {
-        defaults = try #require(UserDefaults(suiteName: "AzkarStoreTests.\(UUID().uuidString)"))
+        storage = try IsolatedDefaults("AzkarStoreTests")
     }
 
     private static func zikr(_ number: Int, repetitions: Int, section: AzkarSection = .morning) -> Zikr {
@@ -74,6 +75,11 @@ struct AzkarStoreTests {
         (1...3).forEach { _ in sessions[1].increment() }
         #expect(store.progress(of: .morning).isFinished)
         #expect(store.progress(of: .morning).fraction == 1)
+
+        sessions[0].reset()
+        #expect(store.progress(of: .morning).completed == 1)
+        store.resetProgress(of: .morning)
+        #expect(store.progress(of: .morning) == SectionProgress(completed: 0, total: 2))
     }
 
     @Test("Разделы считаются независимо")

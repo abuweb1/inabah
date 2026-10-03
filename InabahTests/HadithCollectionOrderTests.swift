@@ -5,12 +5,12 @@ import Testing
 @MainActor
 @Suite("Порядок сборников хадисов")
 struct HadithCollectionOrderTests {
-    /// Отдельный suite на каждый тест — тесты идут параллельно и не делят UserDefaults.
-    private let defaults: UserDefaults
+    private let storage: IsolatedDefaults
+    private var defaults: UserDefaults { storage.defaults }
     private static let key = "hadith.collectionOrder"
 
     init() throws {
-        defaults = try #require(UserDefaults(suiteName: "HadithCollectionOrderTests.\(UUID().uuidString)"))
+        storage = try IsolatedDefaults("HadithCollectionOrderTests")
     }
 
     @Test("По умолчанию — исходный порядок")
@@ -28,6 +28,22 @@ struct HadithCollectionOrderTests {
         let restored = HadithCollectionOrder(defaults: defaults)
         #expect(restored.collections == [.ajurri, .nawawi, .qudsi])
         #expect(!restored.isDefault)
+    }
+
+    @Test("Действия VoiceOver «Выше» / «Ниже»; за краями списка — ничего")
+    func moveByOffset() {
+        let order = HadithCollectionOrder(defaults: defaults)
+
+        #expect(!order.canMove(.nawawi, by: -1))
+        order.move(.nawawi, by: -1)
+        #expect(order.isDefault)
+
+        order.move(.ajurri, by: -1)
+        #expect(order.collections == [.nawawi, .ajurri, .qudsi])
+        order.move(.nawawi, by: 1)
+        #expect(order.collections == [.ajurri, .nawawi, .qudsi])
+        #expect(!order.canMove(.qudsi, by: 1))
+        #expect(HadithCollectionOrder(defaults: defaults).collections == [.ajurri, .nawawi, .qudsi])
     }
 
     @Test("Восстановление исходного порядка")

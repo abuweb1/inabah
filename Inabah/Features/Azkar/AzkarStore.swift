@@ -4,22 +4,27 @@ import Observation
 /// Азкары и прогресс их чтения в текущем периоде.
 ///
 /// Прогресс сохраняется между запусками и обнуляется каждый день во время из
-/// `AzkarResetSettings` (утренние — 17:00, вечерние — 02:00 по умолчанию). Период раздела —
-/// от последнего обнуления до следующего (`AzkarResetSchedule`); сохранённый счёт другого
-/// периода не восстанавливается.
+/// `AzkarResetSettings` (утренние — 17:00, вечерние — 02:00 по умолчанию). Период раздела
+/// (`AzkarPeriod`) действует до ближайшего обнуления; сохранённый счёт истёкшего периода
+/// не восстанавливается.
 ///
 /// Живёт на уровне приложения, поэтому счёт не теряется при переходе между экранами.
 @Observable
 final class AzkarStore {
+    /// Календарь расписания — им же экран настроек переводит время в дату для `DatePicker`.
+    @ObservationIgnored let calendar: Calendar
     @ObservationIgnored private let repository: any ContentRepository
     @ObservationIgnored private let defaults: UserDefaults
     @ObservationIgnored private let resetSettings: AzkarResetSettings
     @ObservationIgnored private let now: () -> Date
-    @ObservationIgnored private let calendar: Calendar
     private(set) var sections: [AzkarSection: Loadable<[ZikrSession]>] = [:]
+    /// Выполнение разделов. Хранится, а не вычисляется из сессий: читатели (главная, шапка
+    /// списка) зависят только от него и не перерисовываются на каждое нажатие счётчика —
+    /// значение меняется, лишь когда зикр выполнен или сброшен.
+    private var progressBySection: [AzkarSection: SectionProgress] = [:]
 
-    /// Начало периода, к которому относится загруженный прогресс раздела.
-    @ObservationIgnored private var periods: [AzkarSection: Date] = [:]
+    /// Период, к которому относится загруженный прогресс раздела.
+    @ObservationIgnored private var periods: [AzkarSection: AzkarPeriod] = [:]
     @ObservationIgnored private var refreshTask: Task<Void, Never>?
     @ObservationIgnored private var timeChangeTasks: [Task<Void, Never>] = []
 
@@ -37,8 +42,13 @@ final class AzkarStore {
         self.resetSettings = resetSettings ?? AzkarResetSettings(defaults: defaults)
         self.now = now
         self.calendar = calendar
-        self.resetSettings.onChange = { [weak self] in self?.adoptNewResetTimes() }
+        self.resetSettings.onResetTimeChange { [weak self] in self?.adoptNewResetTimes() }
         observeSystemTimeChanges()
+    }
+
+    deinit {
+        refreshTask?.cancel()
+        timeChangeTasks.forEach { $0.cancel() }
     }
 
     func state(of section: AzkarSection) -> Loadable<[ZikrSession]> {
@@ -55,14 +65,19 @@ final class AzkarStore {
         sections[section] = .loading
         do {
             let azkar = try await repository.azkar(in: section)
-            let period = periodStart(of: section)
-            let counts = storedCounts(of: section, period: period)
-            let sessions = azkar.map { ZikrSession(zikr: $0, count: counts[$0.id.number] ?? 0) }
-            for session in sessions {
-                session.onCountChange = { [weak self] in self?.save(section) }
+            let restored = restoredProgress(of: section)
+            let sessions = azkar.map {
+                ZikrSession(zikr: $0, count: restored.counts[$0.id.number] ?? 0) { [weak self] in
+                    self?.countDidChange(in: section)
+                }
             }
-            periods[section] = period
+            periods[section] = restored.period
+            if restored.completionShown {
+                acknowledgedCompletions.insert(section)
+            }
             sections[section] = .loaded(sessions)
+            updateProgress(of: section)
+            if restored.needsSave { save(section) }
             scheduleNextRefresh()
         } catch let error as ContentError {
             sections[section] = .failed(error)
@@ -78,46 +93,82 @@ final class AzkarStore {
     }
 
     func progress(of section: AzkarSection) -> SectionProgress {
+        progressBySection[section] ?? SectionProgress(completed: 0, total: 0)
+    }
+
+    private func countDidChange(in section: AzkarSection) {
+        updateProgress(of: section)
+        save(section)
+    }
+
+    /// Пересчёт выполнения раздела; запись — только при изменении (`@Observable` уведомляет
+    /// и о записи того же значения).
+    private func updateProgress(of section: AzkarSection) {
         let sessions = sessions(in: section)
-        return SectionProgress(completed: sessions.count(where: \.isCompleted), total: sessions.count)
+        let progress = SectionProgress(completed: sessions.count(where: \.isCompleted), total: sessions.count)
+        if progressBySection[section] != progress {
+            progressBySection[section] = progress
+        }
+    }
+
+    /// Есть ли что сбрасывать: начат хотя бы один зикр. Раздел, который ещё не загружен
+    /// (или не загрузился), — по сохранённому прогрессу.
+    func hasProgress(of section: AzkarSection) -> Bool {
+        if periods[section] != nil {
+            return sessions(in: section).contains { $0.count > 0 }
+        }
+        return storedProgress(of: section).map { !$0.counts.isEmpty } ?? false
     }
 
     /// Ручной сброс раздела из настроек: счётчики — в 0, флаг «مَا شَاءَ اللَّهُ» — сброшен.
     /// Не загруженный ещё раздел — просто забыть сохранённый прогресс.
     func resetProgress(of section: AzkarSection) {
+        acknowledgedCompletions.remove(section)
         if periods[section] != nil {
-            sessions(in: section).forEach { $0.reset() }
+            sessions(in: section).forEach { $0.discardProgress() }
+            updateProgress(of: section)
             save(section)
         } else {
             defaults.removeObject(forKey: Self.key(for: section))
         }
-        resetCompletionAcknowledgement(of: section)
     }
 
     // MARK: - Обнуление по времени
 
-    /// Время обнуления изменили в настройках: текущий прогресс сохраняется и относится к периоду
-    /// по новому времени — новое время действует со следующего обнуления. Иначе прокрутка
-    /// колеса времени через «сейчас» стирала бы прочитанное.
+    /// Время обнуления изменили в настройках: текущий прогресс сохраняется, граница периода
+    /// переносится по правилам `AzkarPeriod.reschedule` — ближайшее обнуление не пропускается,
+    /// а прокрутка колеса времени через «сейчас» не стирает прочитанное.
     private func adoptNewResetTimes() {
-        for section in AzkarSection.allCases where periods[section] != nil {
-            periods[section] = periodStart(of: section)
+        let current = now()
+        for section in AzkarSection.allCases {
+            guard var period = periods[section] else { continue }
+            period.reschedule(to: schedule(for: section), at: current)
+            guard period != periods[section] else { continue }
+            periods[section] = period
             save(section)
         }
         scheduleNextRefresh()
     }
 
-    /// Обнуляет разделы, у которых начался новый период. Вызывается по таймеру, при возврате
-    /// приложения на экран, при смене системного времени или часового пояса.
+    /// Обнуляет разделы, у которых истёк период, и переносит границы при смене часового пояса.
+    /// Вызывается по таймеру, при возврате приложения на экран, при смене системного времени
+    /// или часового пояса.
     func refreshPeriods() {
+        let current = now()
         for section in AzkarSection.allCases {
-            guard let loadedPeriod = periods[section] else { continue }
-            let period = periodStart(of: section)
-            guard period != loadedPeriod else { continue }
+            guard let loaded = periods[section] else { continue }
+            let schedule = schedule(for: section)
+            var period = loaded
+            period.relocate(to: schedule, at: current)
+            if period.isExpired(at: current) {
+                period = AzkarPeriod(startingAt: current, schedule: schedule)
+                sessions(in: section).forEach { $0.discardProgress() }
+                updateProgress(of: section)
+                acknowledgedCompletions.remove(section)
+            }
+            guard period != loaded else { continue }
             periods[section] = period
-            sessions(in: section).forEach { $0.reset() }
             save(section)
-            resetCompletionAcknowledgement(of: section)
         }
         scheduleNextRefresh()
     }
@@ -126,17 +177,12 @@ final class AzkarStore {
         AzkarResetSchedule(time: resetSettings.resetTime(for: section), calendar: calendar)
     }
 
-    private func periodStart(of section: AzkarSection) -> Date {
-        schedule(for: section).periodStart(at: now())
-    }
-
     /// Задача спит до ближайшего обнуления среди загруженных разделов. Пока приложение
     /// приостановлено, она не срабатывает — тогда период пересчитывается при возврате на экран.
     private func scheduleNextRefresh() {
         refreshTask?.cancel()
-        let current = now()
-        guard let next = periods.keys.map({ schedule(for: $0).nextReset(after: current) }).min() else { return }
-        let delay = max(next.timeIntervalSince(current), 0)
+        guard let next = periods.values.map(\.validUntil).min() else { return }
+        let delay = max(next.timeIntervalSince(now()), 0)
         refreshTask = Task { [weak self] in
             try? await Task.sleep(for: .seconds(delay))
             guard !Task.isCancelled else { return }
@@ -144,7 +190,8 @@ final class AzkarStore {
         }
     }
 
-    /// Перевод часов, ручная смена времени или часового пояса — период мог смениться.
+    /// Ручная смена времени или часового пояса — период мог истечь или его граница — сместиться.
+    /// Переход на летнее время мгновений не меняет: таймер спит до абсолютного момента обнуления.
     private func observeSystemTimeChanges() {
         for name in [Notification.Name.NSSystemClockDidChange, .NSSystemTimeZoneDidChange] {
             timeChangeTasks.append(Task { [weak self] in
@@ -157,21 +204,50 @@ final class AzkarStore {
 
     // MARK: - Хранение
 
-    /// Прогресс раздела: начало периода и счёт по номерам зикров.
+    /// Прогресс раздела: период, счёт по номерам зикров, показан ли оверлей завершения.
     private nonisolated struct StoredProgress: Codable {
-        let periodStart: Date
-        let counts: [Int: Int]
+        var period: AzkarPeriod?
+        /// Формат до 2026-10-03: вместо периода — его начало.
+        var periodStart: Date?
+        var counts: [Int: Int]
+        var completionShown: Bool?
+    }
+
+    /// Что восстановить при загрузке раздела.
+    private struct RestoredProgress {
+        var period: AzkarPeriod
+        var counts: [Int: Int] = [:]
+        var completionShown = false
+        /// Период новый или изменён (истёк, старый формат, другой часовой пояс) — записать.
+        var needsSave = true
     }
 
     private static func key(for section: AzkarSection) -> String {
         "azkar.progress.\(section.rawValue)"
     }
 
-    private func storedCounts(of section: AzkarSection, period: Date) -> [Int: Int] {
-        guard let data = defaults.data(forKey: Self.key(for: section)),
-              let stored = try? JSONDecoder().decode(StoredProgress.self, from: data),
-              stored.periodStart == period else { return [:] }
-        return stored.counts
+    private func storedProgress(of section: AzkarSection) -> StoredProgress? {
+        guard let data = defaults.data(forKey: Self.key(for: section)) else { return nil }
+        return try? JSONDecoder().decode(StoredProgress.self, from: data)
+    }
+
+    private func restoredProgress(of section: AzkarSection) -> RestoredProgress {
+        let current = now()
+        let schedule = schedule(for: section)
+        let fresh = RestoredProgress(period: AzkarPeriod(startingAt: current, schedule: schedule))
+        guard let stored = storedProgress(of: section),
+              let storedPeriod = stored.period
+                ?? stored.periodStart.map({ AzkarPeriod(legacyPeriodStart: $0, schedule: schedule) })
+        else { return fresh }
+        var period = storedPeriod
+        period.relocate(to: schedule, at: current)
+        guard !period.isExpired(at: current) else { return fresh }
+        return RestoredProgress(
+            period: period,
+            counts: stored.counts,
+            completionShown: stored.completionShown ?? false,
+            needsSave: period != stored.period
+        )
     }
 
     private func save(_ section: AzkarSection) {
@@ -180,13 +256,19 @@ final class AzkarStore {
             sessions(in: section).filter { $0.count > 0 }.map { ($0.zikr.id.number, $0.count) },
             uniquingKeysWith: { first, _ in first }
         )
-        guard let data = try? JSONEncoder().encode(StoredProgress(periodStart: period, counts: counts)) else { return }
+        let stored = StoredProgress(
+            period: period,
+            counts: counts,
+            completionShown: acknowledgedCompletions.contains(section)
+        )
+        guard let data = try? JSONEncoder().encode(stored) else { return }
         defaults.set(data, forKey: Self.key(for: section))
     }
 
     // MARK: - Оверлей завершения
 
-    /// Разделы, для которых «Машаа Аллах!» уже показан за это прохождение. Читается только
+    /// Разделы, для которых «مَا شَاءَ اللَّهُ» уже показан в этом периоде. Сохраняется вместе
+    /// с прогрессом — после перезапуска выполненный раздел не поздравляет снова. Читается только
     /// из задач, не из `body`, — наблюдение не нужно.
     @ObservationIgnored private var acknowledgedCompletions: Set<AzkarSection> = []
 
@@ -196,12 +278,14 @@ final class AzkarStore {
     }
 
     func acknowledgeCompletion(of section: AzkarSection) {
-        acknowledgedCompletions.insert(section)
+        guard acknowledgedCompletions.insert(section).inserted else { return }
+        save(section)
     }
 
     /// Раздел снова не выполнен (сбросили зикр) — следующее завершение покажет оверлей снова.
     func resetCompletionAcknowledgement(of section: AzkarSection) {
-        acknowledgedCompletions.remove(section)
+        guard acknowledgedCompletions.remove(section) != nil else { return }
+        save(section)
     }
 }
 

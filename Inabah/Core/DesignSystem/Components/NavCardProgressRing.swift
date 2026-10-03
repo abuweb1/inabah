@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// Оформление кольца прогресса на карточке раздела — у каждой карточки своё.
-struct NavCardRingStyle {
+struct NavCardRingStyle: Equatable {
     let track: Color
     let fill: Color
     /// Цвет процентов внутри кольца.
@@ -21,12 +21,15 @@ struct NavCardProgressRing: View {
     }
 
     private enum Layout {
-        static let lineWidth: CGFloat = 3
+        static let minimumTextScale: CGFloat = 0.7
+        /// Кольцо фиксированного размера: проценты растут с Dynamic Type только до этого размера,
+        /// дальше задевали бы кольцо (VoiceOver читает их полностью).
+        static let maxTextSize = DynamicTypeSize.xxxLarge
     }
 
     var body: some View {
         ZStack {
-            ProgressRing(fraction: fraction, trackColor: style.track, fillColor: style.fill, lineWidth: Layout.lineWidth)
+            ProgressRing(fraction: fraction, trackColor: style.track, fillColor: style.fill, lineWidth: Size.ringStroke)
             if isDone {
                 Image(systemName: "checkmark")
                     .font(.callout.weight(.bold))
@@ -38,10 +41,11 @@ struct NavCardProgressRing: View {
                     .monospacedDigit()
                     .foregroundStyle(style.text)
                     .contentTransition(.numericText(value: Double(percent)))
-                    .minimumScaleFactor(0.7)
+                    .minimumScaleFactor(Layout.minimumTextScale)
                     .transition(.opacity)
             }
         }
+        .dynamicTypeSize(...Layout.maxTextSize)
         .frame(width: Size.minTapTarget, height: Size.minTapTarget)
         .animation(Motion.highlight, value: isDone)
         .animation(Motion.highlight, value: percent)

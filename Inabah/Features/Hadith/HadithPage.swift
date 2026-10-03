@@ -30,7 +30,7 @@ struct HadithPage: View {
                 Text("hadith.detail.number \(hadith.number)")
                     .font(.caption2.weight(.bold))
                     .textCase(.uppercase)
-                    .tracking(0.6)
+                    .tracking(Tracking.label)
                     .foregroundStyle(theme.palette.parchmentInk)
                 ArabicText(
                     text: hadith.arabicDisplayText,
@@ -69,7 +69,10 @@ private struct HadithStatusButtons: View {
                 fill: theme.palette.statusReadTint,
                 activeFill: theme.palette.statusReadStrong
             ))
-            .accessibilityAddTraits(status.isRead ? .isSelected : [])
+            // Переключатель, как системная кнопка-переключатель UIKit: подпись постоянная,
+            // состояние — признак «выбран» («вкл/выкл» читает VoiceOver).
+            .accessibilityLabel(Text("hadith.status.read"))
+            .accessibilityAddTraits(status.isRead ? [.isToggle, .isSelected] : .isToggle)
 
             Button {
                 progress.toggleMemorized(id)
@@ -86,7 +89,8 @@ private struct HadithStatusButtons: View {
                 fill: theme.palette.statusMemorizedTint,
                 activeFill: theme.palette.statusMemorizedStrong
             ))
-            .accessibilityAddTraits(status.isMemorized ? .isSelected : [])
+            .accessibilityLabel(Text("hadith.status.memorized"))
+            .accessibilityAddTraits(status.isMemorized ? [.isToggle, .isSelected] : .isToggle)
         }
         .sensoryFeedback(.selection, trigger: status)
     }
@@ -141,6 +145,9 @@ private struct HadithTranslationCard: View {
                 .font(.body)
                 .lineSpacing(Spacing.xxs)
                 .foregroundStyle(theme.palette.onAccent)
+                // Язык перевода — только для его текста (переносы); подписи «Передал:» /
+                // «Приводится:» — на языке интерфейса.
+                .environment(\.locale, Locale(identifier: translation.language.rawValue))
             if let source = translation.source {
                 Text("hadith.detail.source \(source)")
                     .font(.caption.italic())
@@ -150,7 +157,7 @@ private struct HadithTranslationCard: View {
                     .overlay(alignment: .top) {
                         Rectangle()
                             .fill(theme.palette.hairline)
-                            .frame(height: 1)
+                            .frame(height: Size.hairline)
                     }
             }
         }
@@ -158,6 +165,5 @@ private struct HadithTranslationCard: View {
         .padding(.vertical, Spacing.l)
         .padding(.horizontal, Spacing.xl)
         .surface(theme.palette.subtleFill, cornerRadius: Radius.box)
-        .environment(\.locale, Locale(identifier: translation.language.rawValue))
     }
 }

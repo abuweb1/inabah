@@ -50,6 +50,42 @@ enum Size {
     static let grabber = CGSize(width: 40, height: 5)
     /// Размер «✦»-орнаментов пергамента.
     static let ornament: CGFloat = 11
+    /// Разделительная линия.
+    static let hairline: CGFloat = 1
+    /// Рамка пергамента и плашек в его стиле.
+    static let parchmentBorder: CGFloat = 2
+    /// Толщина колец прогресса (счётчик зикра, карточки главной).
+    static let ringStroke: CGFloat = 3
+}
+
+/// Межбуквенный интервал подписей.
+enum Tracking {
+    /// Номер хадиса над арабским текстом.
+    static let label: CGFloat = 0.6
+    /// Подзаголовок бренда, категория в плеере.
+    static let caption: CGFloat = 0.8
+}
+
+/// Отклик на нажатие: уменьшение и приглушение — единые для стилей кнопок.
+enum PressFeedback {
+    /// Карточки и плитки.
+    static let cardScale: CGFloat = 0.97
+    /// Иконки-кнопки с подложкой.
+    static let iconScale: CGFloat = 0.92
+    /// Крупная круглая кнопка плеера.
+    static let roundScale: CGFloat = 0.93
+    /// Счётчик зикра — заметнее остальных: на него нажимают десятки раз подряд.
+    static let counterScale: CGFloat = 0.91
+    /// Кнопка на всю ширину.
+    static let wideScale: CGFloat = 0.98
+    /// Строки списков (`opacity .65` в прототипе).
+    static let rowOpacity: Double = 0.65
+    /// Иконка без подложки.
+    static let bareOpacity: Double = 0.5
+    /// Кнопка на всю ширину.
+    static let wideOpacity: Double = 0.8
+    /// Неактивная кнопка.
+    static let disabledOpacity: Double = 0.4
 }
 
 /// Длительности анимаций — единые для всего приложения.
@@ -66,6 +102,8 @@ enum Motion {
     static let overlay = Animation.easeOut(duration: 0.4)
     /// Подсветка звучащей карточки.
     static let highlight = Animation.easeInOut(duration: 0.3)
+    /// Медленная пульсация (каллиграфия экрана завершения).
+    static let pulse = Animation.easeInOut(duration: 1.2)
     /// Смена кегля арабского кнопками А−/А+.
     static let fontSize = Animation.smooth(duration: 0.3)
     /// Полоса прогресса раздела.

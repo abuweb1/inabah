@@ -131,7 +131,7 @@ struct ZikrCardView: View {
     private var separator: some View {
         Rectangle()
             .fill(theme.palette.divider)
-            .frame(height: 1)
+            .frame(height: Size.hairline)
             .accessibilityHidden(true)
     }
 

@@ -27,14 +27,12 @@ nonisolated struct HadithCollectionProgress: Hashable, Sendable {
 @Observable
 final class HadithProgress {
     @ObservationIgnored private let defaults: UserDefaults
-    /// Статусы в памяти — `UserDefaults` читается один раз на сборник, а не из каждого `body`.
+    /// Статусы в памяти — `UserDefaults` читается один раз при создании, а не из каждого `body`.
     private var statuses: [HadithCollection: [Int: HadithStatus]] = [:]
 
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
-        for collection in HadithCollection.allCases {
-            statuses[collection] = Self.load(collection, from: defaults)
-        }
+        statuses = Self.load(from: defaults)
     }
 
     func status(of id: HadithID) -> HadithStatus {
@@ -75,6 +73,7 @@ final class HadithProgress {
     static func memorizedKey(_ id: HadithID) -> String { "h_mem_\(id.collection.rawValue)_\(id.number)" }
 
     private static let storedFlag = "1"
+    private static let keyPrefix = "h_"
     private static let keyPattern = /h_(read|mem)_(\w+)_(\d+)/
 
     private func set(_ status: HadithStatus, for id: HadithID) {
@@ -92,18 +91,20 @@ final class HadithProgress {
         }
     }
 
-    private static func load(_ collection: HadithCollection, from defaults: UserDefaults) -> [Int: HadithStatus] {
-        var result: [Int: HadithStatus] = [:]
-        for (key, value) in defaults.dictionaryRepresentation() {
+    /// Один проход по `UserDefaults` (словарь включает системные домены — дорого строить его
+    /// на каждый сборник); регулярное выражение — только для ключей с префиксом отметок.
+    private static func load(from defaults: UserDefaults) -> [HadithCollection: [Int: HadithStatus]] {
+        var result: [HadithCollection: [Int: HadithStatus]] = [:]
+        for (key, value) in defaults.dictionaryRepresentation() where key.hasPrefix(keyPrefix) {
             guard value as? String == storedFlag,
                   let match = key.wholeMatch(of: keyPattern),
-                  match.2 == collection.rawValue,
+                  let collection = HadithCollection(rawValue: String(match.2)),
                   let number = Int(match.3), number >= 1 else { continue }
             // «Выучен» без «прочитан» (например, отмечено в старой версии) — тоже «выучен».
             if match.1 == "mem" {
-                result[number] = .memorized
-            } else if result[number] == nil {
-                result[number] = .read
+                result[collection, default: [:]][number] = .memorized
+            } else if result[collection]?[number] == nil {
+                result[collection, default: [:]][number] = .read
             }
         }
         return result

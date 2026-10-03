@@ -97,6 +97,7 @@ private struct HadithPager: View {
 
     /// Шевроны визуально мельче, зона нажатия — полные 44 pt (`BareIconButtonStyle`).
     private static let chevronFont = Font.callout.weight(.semibold)
+    private static let counterMinimumScale: CGFloat = 0.75
 
     var body: some View {
         if count > 0 {
@@ -131,7 +132,7 @@ private struct HadithPager: View {
     /// переключалась на короткую форму даже там, где полная помещается.
     private func counter(_ current: Int) -> some View {
         Text("hadith.detail.counter \(current) \(count)")
-            .minimumScaleFactor(0.75)
+            .minimumScaleFactor(Self.counterMinimumScale)
             .font(.footnote.weight(.semibold))
         .monospacedDigit()
         .lineLimit(1)

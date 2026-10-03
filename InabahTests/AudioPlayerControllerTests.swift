@@ -8,6 +8,7 @@ import Testing
 private final class FakeAudioEngine: AudioEngine {
     var onFinish: ((_ successfully: Bool) -> Void)?
     var onError: ((AudioEngineError) -> Void)?
+    var onTimeCorrection: (() -> Void)?
     var currentTime: TimeInterval = 0
     var rate: Float = 1
     var duration: TimeInterval = 30
@@ -557,10 +558,11 @@ struct AudioPlayerControllerTests {
 @MainActor
 @Suite("Настройки «Прослушать все»")
 struct PlaylistSettingsTests {
-    private let defaults: UserDefaults
+    private let storage: IsolatedDefaults
+    private var defaults: UserDefaults { storage.defaults }
 
     init() throws {
-        defaults = try #require(UserDefaults(suiteName: "PlaylistSettingsTests.\(UUID().uuidString)"))
+        storage = try IsolatedDefaults("PlaylistSettingsTests")
     }
 
     @Test("Значения по умолчанию")

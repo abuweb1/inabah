@@ -72,6 +72,8 @@ final class AudioPlayerController {
         self.nowPlaying = nowPlaying
         engine.onFinish = { [weak self] successfully in self?.handleFinish(successfully: successfully) }
         engine.onError = { [weak self] error in self?.handleFailure(error) }
+        // Часы подстроились по плееру — экран блокировки получает точное время.
+        engine.onTimeCorrection = { [weak self] in self?.nowPlaying?.playbackDidChange() }
         session?.onEvent = { [weak self] event in self?.handle(event) }
         nowPlaying?.attach(to: self)
     }

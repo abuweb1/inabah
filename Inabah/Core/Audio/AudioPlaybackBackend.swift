@@ -37,7 +37,22 @@ protocol AudioBackend: Actor {
 /// создание и освобождение) синхронно ждут ответа аудиосервера — десятки миллисекунд,
 /// поэтому они выполняются здесь, вне главного актора. Команды приходят строго по очереди
 /// (см. `AVAudioEngineAdapter`) и выполняются целиком, без точек приостановки.
+///
+/// У актора свой последовательный исполнитель: блокирующие вызовы плеера занимают его поток,
+/// а не потоки общего пула (их столько же, сколько ядер, — на них идут и другие задачи).
 actor AudioPlaybackBackend: AudioBackend {
+    private nonisolated let queue = DispatchSerialQueue(label: "com.abumusaev.inabah.audio", qos: .userInitiated)
+
+    nonisolated var unownedExecutor: UnownedSerialExecutor {
+        queue.asUnownedSerialExecutor()
+    }
+
+    /// Событие делегата конкретного плеера.
+    private nonisolated struct PlayerEvent: Sendable {
+        let id: Int
+        let event: PlayerDelegate.Event
+    }
+
     /// Плеер, его делегат и номер — делегат хранится здесь (`AVAudioPlayer.delegate` — слабая ссылка).
     private struct Slot {
         var id: Int
@@ -52,13 +67,24 @@ actor AudioPlaybackBackend: AudioBackend {
     private var lastID = 0
     private var rate: Float = 1
     private let events: AsyncStream<AudioBackendEvent>.Continuation
+    /// События делегатов — одной очередью: «ошибка декодирования» и «доиграл» обрабатываются
+    /// в том порядке, в котором их прислал плеер.
+    private let playerEvents: AsyncStream<PlayerEvent>.Continuation
     private let logger = Logger(subsystem: "com.abumusaev.inabah", category: "audio")
 
     init(events: AsyncStream<AudioBackendEvent>.Continuation) {
         self.events = events
+        let (stream, playerEvents) = AsyncStream.makeStream(of: PlayerEvent.self)
+        self.playerEvents = playerEvents
+        Task { [weak self] in
+            for await event in stream {
+                await self?.deliver(event.event, from: event.id)
+            }
+        }
     }
 
     deinit {
+        playerEvents.finish()
         events.finish()
     }
 
@@ -97,6 +123,8 @@ actor AudioPlaybackBackend: AudioBackend {
     private func load(url: URL, epoch: Int) throws -> TimeInterval {
         current?.player.stop()
         current = nil
+        // Подготовка этой же записи (её `preload` пришёл раньше) больше не нужна — лишний плеер.
+        if preloaded?.url == url { preloaded = nil }
         let player = try makePlayer(url: url)
         current = makeSlot(url: url, player: player, epoch: epoch)
         return player.duration
@@ -207,8 +235,9 @@ actor AudioPlaybackBackend: AudioBackend {
     }
 
     private func makeDelegate(id: Int) -> PlayerDelegate {
-        PlayerDelegate { [weak self] event in
-            Task { await self?.deliver(event, from: id) }
+        let playerEvents = playerEvents
+        return PlayerDelegate { event in
+            playerEvents.yield(PlayerEvent(id: id, event: event))
         }
     }
 }

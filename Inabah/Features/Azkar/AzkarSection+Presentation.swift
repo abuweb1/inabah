@@ -79,10 +79,9 @@ extension AzkarSection {
     }
 
     func cardShadow(in theme: Theme) -> ShadowToken {
-        let color = switch self {
-        case .morning: theme.palette.accentShadow.opacity(0.35)
-        case .evening: theme.palette.shadow.opacity(0.4)
+        switch self {
+        case .morning: .navCard(theme.palette.accentShadow, strength: .light)
+        case .evening: .navCard(theme.palette.shadow, strength: .medium)
         }
-        return ShadowToken(color: color, radius: 12, y: 8)
     }
 }

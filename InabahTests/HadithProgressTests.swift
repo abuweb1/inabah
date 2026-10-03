@@ -5,13 +5,13 @@ import Testing
 @MainActor
 @Suite("Отметки хадисов")
 struct HadithProgressTests {
-    /// Отдельный suite на каждый тест — тесты идут параллельно и не делят UserDefaults.
-    private let defaults: UserDefaults
+    private let storage: IsolatedDefaults
+    private var defaults: UserDefaults { storage.defaults }
     private let first = HadithID(collection: .nawawi, number: 1)
     private let second = HadithID(collection: .nawawi, number: 2)
 
     init() throws {
-        defaults = try #require(UserDefaults(suiteName: "HadithProgressTests.\(UUID().uuidString)"))
+        storage = try IsolatedDefaults("HadithProgressTests")
     }
 
     @Test("Без отметок — статус «нет»")
@@ -94,8 +94,14 @@ struct HadithProgressTests {
         progress.toggleMemorized(second)
         let qudsi = HadithID(collection: .qudsi, number: 1)
         progress.toggleRead(qudsi)
+        // Чужие ключи с похожими именами — не отметки сборника.
+        defaults.set("1", forKey: "h_read_nawawi_x")
+        defaults.set(17, forKey: "azkar.reset.morning")
 
         progress.reset(.nawawi)
+
+        #expect(defaults.string(forKey: "h_read_nawawi_x") == "1")
+        #expect(defaults.integer(forKey: "azkar.reset.morning") == 17)
 
         #expect(progress.status(of: first) == .none)
         #expect(progress.status(of: second) == .none)
