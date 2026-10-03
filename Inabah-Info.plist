@@ -4,6 +4,10 @@
      которых нет среди INFOPLIST_KEY_* в настройках сборки. -->
 <plist version="1.0">
 <dict>
+	<!-- Только стандартное шифрование системы (HTTPS не используется вовсе) — App Store Connect
+	     не спрашивает про экспорт криптографии при каждой загрузке. -->
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>audio</string>

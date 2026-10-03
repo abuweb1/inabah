@@ -30,7 +30,7 @@ final class AudioSessionController: AudioSessionHandling {
     /// в `deinit`, когда других ссылок на объект уже нет, — одновременного доступа не бывает.
     nonisolated(unsafe) private var observers: [any NSObjectProtocol] = []
     private var isConfigured = false
-    private let logger = Logger(subsystem: "com.abumusaev.inabah", category: "audio")
+    private let logger = Logger(subsystem: "app.inabah.ios", category: "audio")
 
     init() {
         observe()

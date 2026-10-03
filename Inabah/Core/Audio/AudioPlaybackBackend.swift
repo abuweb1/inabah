@@ -41,7 +41,7 @@ protocol AudioBackend: Actor {
 /// У актора свой последовательный исполнитель: блокирующие вызовы плеера занимают его поток,
 /// а не потоки общего пула (их столько же, сколько ядер, — на них идут и другие задачи).
 actor AudioPlaybackBackend: AudioBackend {
-    private nonisolated let queue = DispatchSerialQueue(label: "com.abumusaev.inabah.audio", qos: .userInitiated)
+    private nonisolated let queue = DispatchSerialQueue(label: "app.inabah.ios.audio", qos: .userInitiated)
 
     nonisolated var unownedExecutor: UnownedSerialExecutor {
         queue.asUnownedSerialExecutor()
@@ -70,7 +70,7 @@ actor AudioPlaybackBackend: AudioBackend {
     /// События делегатов — одной очередью: «ошибка декодирования» и «доиграл» обрабатываются
     /// в том порядке, в котором их прислал плеер.
     private let playerEvents: AsyncStream<PlayerEvent>.Continuation
-    private let logger = Logger(subsystem: "com.abumusaev.inabah", category: "audio")
+    private let logger = Logger(subsystem: "app.inabah.ios", category: "audio")
 
     init(events: AsyncStream<AudioBackendEvent>.Continuation) {
         self.events = events
