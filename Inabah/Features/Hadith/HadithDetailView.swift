@@ -3,7 +3,8 @@ import SwiftUI
 /// Экран хадиса: страницы сборника листаются свайпом или кнопками ‹ › в навбаре.
 ///
 /// Страницы — ленивый горизонтальный стек с постраничной прокруткой: строятся только видимая
-/// и соседние. Номер текущей страницы — позиция прокрутки (`scrollPosition`).
+/// и соседние. Номер текущей страницы — позиция прокрутки (`scrollPosition`). Лента строится
+/// только для загруженного сборника — тогда начальная позиция применяется с первой раскладки.
 struct HadithDetailView: View {
     let id: HadithID
 
@@ -20,8 +21,7 @@ struct HadithDetailView: View {
     }
 
     var body: some View {
-        let hadiths = store.hadiths(in: id.collection)
-        pages(hadiths)
+        content
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .audioPlayerInset()
             .background { theme.gradients.hadithBackground.linear.ignoresSafeArea() }
@@ -30,19 +30,42 @@ struct HadithDetailView: View {
             .toolbarBackgroundVisibility(.visible, for: .navigationBar)
             .toolbarColorScheme(.dark, for: .navigationBar)
             .toolbar {
-                ToolbarItem(placement: .principal) { pager(count: hadiths.count) }
+                ToolbarItem(placement: .principal) {
+                    HadithPager(number: $currentNumber, count: store.hadiths(in: id.collection).count)
+                }
                 FontSizeControls(settings: settings)
             }
             .task { await store.load(id.collection) }
     }
 
+    @ViewBuilder
+    private var content: some View {
+        switch store.state(of: id.collection) {
+        case .idle, .loading:
+            ProgressView()
+                .tint(theme.palette.onAccent)
+        case .failed:
+            ContentUnavailableView {
+                Label("content.error.title", systemImage: "exclamationmark.triangle")
+            } description: {
+                Text("content.error.message")
+            } actions: {
+                Button("content.error.retry") {
+                    Task { await store.load(id.collection) }
+                }
+            }
+            .foregroundStyle(theme.palette.onAccent)
+        case .loaded(let hadiths):
+            pages(hadiths)
+        }
+    }
+
     private func pages(_ hadiths: [Hadith]) -> some View {
         ScrollView(.horizontal) {
             LazyHStack(spacing: 0) {
-                ForEach(hadiths) { hadith in
-                    HadithPage(hadith: hadith)
+                ForEach(hadiths, id: \.number) { hadith in
+                    HadithPageContainer(hadith: hadith)
                         .containerRelativeFrame(.horizontal)
-                        .id(hadith.number)
                 }
             }
             .scrollTargetLayout()
@@ -51,43 +74,78 @@ struct HadithDetailView: View {
         .scrollPosition(id: $currentNumber)
         .scrollIndicators(.hidden)
     }
+}
 
-    /// ‹ «Хадис 3 из 50» ›
-    private func pager(count: Int) -> some View {
-        let number = currentNumber ?? id.number
-        return HStack(spacing: Spacing.s) {
-            Button {
-                go(to: number - 1)
-            } label: {
-                Image(systemName: "chevron.left")
+/// Страница с готовым статусом: только эта обёртка читает отметки, сама страница получает значение.
+private struct HadithPageContainer: View {
+    let hadith: Hadith
+
+    @Environment(HadithProgress.self) private var progress
+
+    var body: some View {
+        HadithPage(hadith: hadith, status: progress.status(of: hadith.id))
+    }
+}
+
+/// ‹ «Хадис 3 из 50» › в навбаре. Отдельная вьюха: смена страницы пересчитывает только её.
+/// Пока сборник не загружен (`count == 0`), пейджер не показывается.
+private struct HadithPager: View {
+    @Binding var number: Int?
+    let count: Int
+
+    @Environment(\.theme) private var theme
+
+    /// Шевроны визуально мельче, зона нажатия — полные 44 pt (`BareIconButtonStyle`).
+    private static let chevronFont = Font.callout.weight(.semibold)
+
+    var body: some View {
+        if count > 0 {
+            let current = min(max(number ?? 1, 1), count)
+            HStack(spacing: 0) {
+                Button {
+                    go(to: current - 1)
+                } label: {
+                    Image(systemName: "chevron.backward")
+                        .font(Self.chevronFont)
+                }
+                .disabled(current <= 1)
+                .accessibilityLabel(Text("hadith.detail.previous"))
+
+                counter(current)
+
+                Button {
+                    go(to: current + 1)
+                } label: {
+                    Image(systemName: "chevron.forward")
+                        .font(Self.chevronFont)
+                }
+                .disabled(current >= count)
+                .accessibilityLabel(Text("hadith.detail.next"))
             }
-            .disabled(number <= 1)
-            .accessibilityLabel(Text("hadith.detail.previous"))
-
-            Text("hadith.detail.counter \(number) \(count)")
-                .font(.footnote.weight(.semibold))
-                .monospacedDigit()
-                .foregroundStyle(theme.palette.onAccent)
-                .padding(.horizontal, Spacing.m)
-                .padding(.vertical, Spacing.xxs)
-                .background(theme.palette.track, in: .capsule)
-                .contentTransition(.numericText(value: Double(number)))
-
-            Button {
-                go(to: number + 1)
-            } label: {
-                Image(systemName: "chevron.right")
-            }
-            .disabled(number >= count)
-            .accessibilityLabel(Text("hadith.detail.next"))
+            .buttonStyle(BareIconButtonStyle(foreground: theme.palette.onAccent))
         }
-        .fontWeight(.semibold)
-        .tint(theme.palette.onAccent)
     }
 
-    private func go(to number: Int) {
+    /// Полная подпись, а если в навбаре тесно (узкий экран, крупный шрифт) — «3/50».
+    private func counter(_ current: Int) -> some View {
+        ViewThatFits(in: .horizontal) {
+            Text("hadith.detail.counter \(current) \(count)")
+            Text("hadith.detail.counter.short \(current) \(count)")
+        }
+        .font(.footnote.weight(.semibold))
+        .monospacedDigit()
+        .lineLimit(1)
+        .foregroundStyle(theme.palette.onAccent)
+        .padding(.horizontal, Spacing.m)
+        .padding(.vertical, Spacing.xxs)
+        .background(theme.palette.track, in: .capsule)
+        .contentTransition(.numericText(value: Double(current)))
+        .animation(Motion.highlight, value: current)
+    }
+
+    private func go(to target: Int) {
         withAnimation(Motion.collapse) {
-            currentNumber = number
+            number = target
         }
     }
 }

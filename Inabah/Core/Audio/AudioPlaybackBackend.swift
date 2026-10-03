@@ -1,37 +1,49 @@
 import AVFoundation
 import os
 
-/// Команда бэкенду. «Эпоха» — номер, который фасад (`AVAudioEngineAdapter`) присваивает
-/// записи, когда делает её текущей; по нему фасад отбрасывает устаревшие события.
+/// Команда бэкенду.
+///
+/// - «Эпоха» — номер записи, которую фасад сделал текущей (новая запись, стоп): по ней
+///   отбрасываются устаревшие события «доиграл» / ошибка.
+/// - «Ревизия» — номер команды, менявшей позицию: отчёт о позиции применяется, только если
+///   после этой команды позицию на главном акторе больше не меняли.
 nonisolated enum AudioBackendCommand: Sendable {
     case load(URL, epoch: Int, reply: CheckedContinuation<TimeInterval, any Error>)
     case preload(URL, reply: CheckedContinuation<TimeInterval?, Never>)
-    case startPreloaded(URL, after: TimeInterval, epoch: Int)
-    case play(after: TimeInterval, epoch: Int)
-    case pause
+    case discardPreloaded
+    case startPreloaded(URL, after: TimeInterval, epoch: Int, revision: Int)
+    case play(after: TimeInterval, epoch: Int, revision: Int)
+    case pause(revision: Int)
     case stop(epoch: Int)
-    case seek(to: TimeInterval)
-    case setRate(Float)
+    case seek(to: TimeInterval, revision: Int)
+    case setRate(Float, revision: Int)
 }
 
 /// Что сообщает бэкенд: события плеера и фактическая позиция для подстройки часов.
 nonisolated enum AudioBackendEvent: Sendable {
     case finished(epoch: Int, successfully: Bool)
     case failed(epoch: Int, AudioEngineError)
-    case position(epoch: Int, TimeInterval, at: ContinuousClock.Instant)
+    /// Позиция `position` в момент `at`. Для отложенного старта `at` — момент начала звука
+    /// (может быть в будущем): часы начинают отсчёт ровно тогда же, когда плеер.
+    case position(revision: Int, TimeInterval, at: ContinuousClock.Instant)
+}
+
+/// Исполнитель команд плеера. Протокол — чтобы тесты фасада подставляли детерминированный бэкенд.
+protocol AudioBackend: Actor {
+    func execute(_ command: AudioBackendCommand)
 }
 
 /// Единственный владелец `AVAudioPlayer`. Вызовы плеера (`play`, `stop`, `currentTime = …`,
 /// создание и освобождение) синхронно ждут ответа аудиосервера — десятки миллисекунд,
 /// поэтому они выполняются здесь, вне главного актора. Команды приходят строго по очереди
 /// (см. `AVAudioEngineAdapter`) и выполняются целиком, без точек приостановки.
-actor AudioPlaybackBackend {
+actor AudioPlaybackBackend: AudioBackend {
     /// Плеер, его делегат и номер — делегат хранится здесь (`AVAudioPlayer.delegate` — слабая ссылка).
     private struct Slot {
-        let id: Int
+        var id: Int
         let url: URL
         let player: AVAudioPlayer
-        let delegate: PlayerDelegate
+        var delegate: PlayerDelegate
         var epoch: Int
     }
 
@@ -56,24 +68,27 @@ actor AudioPlaybackBackend {
             reply.resume(with: Result(catching: { try load(url: url, epoch: epoch) }))
         case let .preload(url, reply):
             reply.resume(returning: preload(url: url))
-        case let .startPreloaded(url, delay, epoch):
-            startPreloaded(url: url, after: delay, epoch: epoch)
-        case let .play(delay, epoch):
-            play(after: delay, epoch: epoch)
-        case .pause:
-            current?.player.pause()
-            reportPosition()
-        case let .stop(epoch):
-            current?.player.stop()
-            current?.player.currentTime = 0
-            current?.epoch = epoch
+        case .discardPreloaded:
             preloaded = nil
-        case let .seek(time):
+        case let .startPreloaded(url, delay, epoch, revision):
+            startPreloaded(url: url, after: delay, epoch: epoch, revision: revision)
+        case let .play(delay, epoch, revision):
+            play(after: delay, epoch: epoch, revision: revision)
+        case let .pause(revision):
+            // Доигравший плеер уже сбросил позицию в 0 — его «паузу» не сообщаем,
+            // иначе часы на главном акторе откатились бы с конца записи в начало.
+            guard let player = current?.player, player.isPlaying else { return }
+            player.pause()
+            report(revision)
+        case let .stop(epoch):
+            stop(epoch: epoch)
+        case let .seek(time, revision):
             current?.player.currentTime = time
-            if current?.player.isPlaying == true { reportPosition() }
-        case let .setRate(newRate):
+            report(revision)
+        case let .setRate(newRate, revision):
             rate = newRate
             current?.player.rate = newRate
+            if current?.player.isPlaying == true { report(revision) }
         }
     }
 
@@ -95,9 +110,11 @@ actor AudioPlaybackBackend {
         return player.duration
     }
 
-    private func startPreloaded(url: URL, after delay: TimeInterval, epoch: Int) {
+    private func startPreloaded(url: URL, after delay: TimeInterval, epoch: Int, revision: Int) {
         guard var slot = preloaded, slot.url == url else {
-            events.yield(.failed(epoch: epoch, .playbackFailed))
+            // Подготовленной записи нет (например, сброшена после сброса медиасервисов) —
+            // контроллер загрузит её заново, а не пропустит.
+            events.yield(.failed(epoch: epoch, .preparedTrackFailed))
             return
         }
         preloaded = nil
@@ -105,28 +122,52 @@ actor AudioPlaybackBackend {
         slot.epoch = epoch
         slot.player.rate = rate
         current = slot
-        play(after: delay, epoch: epoch)
+        play(after: delay, epoch: epoch, revision: revision, failure: .preparedTrackFailed)
     }
 
-    private func play(after delay: TimeInterval, epoch: Int) {
+    private func play(
+        after delay: TimeInterval,
+        epoch: Int,
+        revision: Int,
+        failure: AudioEngineError = .playbackFailed
+    ) {
         guard let player = current?.player else {
-            events.yield(.failed(epoch: epoch, .playbackFailed))
+            events.yield(.failed(epoch: epoch, failure))
             return
         }
-        let started = delay > 0
-            ? player.play(atTime: player.deviceCurrentTime + delay)
+        let startDelay = max(0, delay)
+        // Момент старта считаем здесь, рядом с `deviceCurrentTime`: часы фасада начнут отсчёт
+        // тогда же, когда звук, даже если команда простояла в очереди.
+        let startInstant = ContinuousClock.now + .seconds(startDelay)
+        let started = startDelay > 0
+            ? player.play(atTime: player.deviceCurrentTime + startDelay)
             : player.play()
         guard started else {
             logger.error("AVAudioPlayer не запустился: \(self.current?.url.lastPathComponent ?? "-", privacy: .public)")
-            events.yield(.failed(epoch: epoch, .playbackFailed))
+            events.yield(.failed(epoch: epoch, failure))
             return
         }
-        if delay == 0 { reportPosition() }
+        events.yield(.position(revision: revision, player.currentTime, at: startInstant))
     }
 
-    private func reportPosition() {
+    /// Стоп: в начало записи. Слот получает новый номер и делегата — «доиграл», отправленный
+    /// старым делегатом до стопа, не будет принят за конец уже остановленной записи.
+    private func stop(epoch: Int) {
+        preloaded = nil
+        guard var slot = current else { return }
+        slot.player.stop()
+        slot.player.currentTime = 0
+        lastID += 1
+        slot.id = lastID
+        slot.delegate = makeDelegate(id: lastID)
+        slot.player.delegate = slot.delegate
+        slot.epoch = epoch
+        current = slot
+    }
+
+    private func report(_ revision: Int) {
         guard let current else { return }
-        events.yield(.position(epoch: current.epoch, current.player.currentTime, at: .now))
+        events.yield(.position(revision: revision, current.player.currentTime, at: .now))
     }
 
     // MARK: - События плеера
@@ -159,13 +200,16 @@ actor AudioPlaybackBackend {
 
     private func makeSlot(url: URL, player: AVAudioPlayer, epoch: Int) -> Slot {
         lastID += 1
-        let id = lastID
-        let delegate = PlayerDelegate { [weak self] event in
-            Task { await self?.deliver(event, from: id) }
-        }
+        let delegate = makeDelegate(id: lastID)
         player.delegate = delegate
         player.rate = rate
-        return Slot(id: id, url: url, player: player, delegate: delegate, epoch: epoch)
+        return Slot(id: lastID, url: url, player: player, delegate: delegate, epoch: epoch)
+    }
+
+    private func makeDelegate(id: Int) -> PlayerDelegate {
+        PlayerDelegate { [weak self] event in
+            Task { await self?.deliver(event, from: id) }
+        }
     }
 }
 

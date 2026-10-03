@@ -8,8 +8,11 @@ struct HadithHomeView: View {
 
     private static let brand = SectionBrand(
         arabicName: "حديث",
-        latinName: "hadith.home.brand.latin",
-        tagline: "hadith.home.brand.tagline"
+        tagline: "hadith.home.brand.tagline",
+        epigraph: BrandEpigraph(
+            text: "hadith.home.epigraph.text",
+            source: "hadith.home.epigraph.source"
+        )
     )
 
     private static let verse = FeaturedVerse(

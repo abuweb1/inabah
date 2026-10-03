@@ -5,7 +5,8 @@ import Foundation
 ///
 /// Нужна, потому что `AVAudioPlayer` живёт вне главного актора (его вызовы синхронно ждут
 /// аудиосервер), а полосе прогресса и экрану блокировки позиция нужна мгновенно.
-/// Расхождение не накапливается: после ответа плеера часы подстраиваются (`sync`).
+/// Расхождение не накапливается: после ответа плеера часы подстраиваются (`sync`) —
+/// в том числе на точный момент отложенного старта.
 nonisolated struct PlaybackClock: Equatable, Sendable {
     typealias Instant = ContinuousClock.Instant
 
@@ -65,12 +66,12 @@ nonisolated struct PlaybackClock: Equatable, Sendable {
         rate = newRate
     }
 
-    /// Подстройка по фактической позиции плеера в момент `now`. Пока не наступил отложенный
-    /// старт, позиция плеера ещё не меняется — подстраивать нечего.
-    mutating func sync(position actual: TimeInterval, at now: Instant) {
-        if isRunning, let anchor, anchor > now { return }
+    /// Подстройка по фактической позиции плеера: `actual` — позиция в момент `instant`.
+    /// Для отложенного старта `instant` — будущий момент начала звука: часы начнут отсчёт
+    /// тогда же, когда плеер. Устаревшие отчёты отсеивает фасад (по номеру команды).
+    mutating func sync(position actual: TimeInterval, at instant: Instant) {
         position = actual
-        if isRunning { anchor = now }
+        if isRunning { anchor = instant }
     }
 }
 

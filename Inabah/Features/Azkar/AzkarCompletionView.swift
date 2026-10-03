@@ -10,6 +10,8 @@ struct AzkarCompletionView: View {
 
     private static let titleSize: Double = 52
     private static let arabicSize: Double = 24
+    private static let pulsePhases: [CGFloat] = [1, 1.05]
+    private static let restingPhase: [CGFloat] = [1]
 
     var body: some View {
         VStack(spacing: Spacing.l) {
@@ -22,8 +24,9 @@ struct AzkarCompletionView: View {
                 bold: true,
                 alignment: .center
             )
-            .phaseAnimator([1.0, 1.05]) { content, scale in
-                content.scaleEffect(reduceMotion ? 1 : scale)
+            // При «Уменьшении движения» одна фаза — анимация не запускается вовсе.
+            .phaseAnimator(reduceMotion ? Self.restingPhase : Self.pulsePhases) { content, scale in
+                content.scaleEffect(scale)
             } animation: { _ in
                 .easeInOut(duration: 1.2)
             }
@@ -44,6 +47,7 @@ struct AzkarCompletionView: View {
                 border: theme.palette.successDeep,
                 lineWidth: 2
             )
+            .accessibilityLabel(Text("azkar.completion.hamd"))
 
             Text(section.completionMessage)
                 .font(.subheadline)

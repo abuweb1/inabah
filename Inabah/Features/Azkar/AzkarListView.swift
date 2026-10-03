@@ -18,15 +18,18 @@ struct AzkarListView: View {
     var body: some View {
         content
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .audioPlayerInset()
             .background { section.background(in: theme).linear.ignoresSafeArea() }
             .overlay {
                 if showsCompletion {
                     AzkarCompletionView(section: section) { router.popToRoot(.azkar) }
                         .transition(.opacity)
+                        .accessibilityAddTraits(.isModal)
                 }
             }
             .animation(Motion.overlay, value: showsCompletion)
+            // После оверлея: мини-плеер остаётся над экраном завершения — последний зикр
+            // плейлиста может ещё звучать.
+            .audioPlayerInset()
             .background { AzkarCompletionWatcher(section: section, showsCompletion: $showsCompletion) }
             .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(section.headerColor(in: theme), for: .navigationBar)

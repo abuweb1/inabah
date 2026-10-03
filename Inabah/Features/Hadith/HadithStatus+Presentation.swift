@@ -35,7 +35,7 @@ extension HadithStatus {
     /// Значок справа в строке списка: «›» / «✓» / «★».
     var rowSymbolName: String {
         switch self {
-        case .none: "chevron.right"
+        case .none: "chevron.forward"
         case .read: "checkmark"
         case .memorized: "star.fill"
         }
