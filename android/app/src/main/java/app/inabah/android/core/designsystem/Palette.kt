@@ -4,9 +4,9 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.Color
 
 /**
- * Цвета темы. HEX — только здесь; экраны берут цвета из [InabahTheme].
- * Значения — тема «По умолчанию» (iOS `Assets.xcassets/Palette`), docs/android/05-design-system.md, 5.2.
- * Единые стили (violet, emerald, amber, graphite) — этап 2.
+ * Цвета темы. HEX — только здесь, в [ThemeGradients] и сгенерированном [ThemePalettes]; экраны берут
+ * цвета из [InabahTheme]. Значения — тема «По умолчанию» (iOS `Assets.xcassets/Palette`),
+ * docs/android/05-design-system.md, 5.2; единые стили — [ThemeStyle.theme].
  */
 @Immutable
 data class Palette(
@@ -53,6 +53,19 @@ data class Palette(
     val divider: Color get() = onAccent.copy(alpha = 0.08f)
     val track: Color get() = onAccent.copy(alpha = 0.15f)
     val subtleFill: Color get() = onAccent.copy(alpha = 0.07f)
+    val successTint: Color get() = successDeep.copy(alpha = 0.1f)
+    val successBorder: Color get() = successDeep.copy(alpha = 0.25f)
+    val statusReadTint: Color get() = statusRead.copy(alpha = 0.13f)
+    val statusReadStrong: Color get() = statusRead.copy(alpha = 0.32f)
+    val statusReadBorder: Color get() = statusRead.copy(alpha = 0.3f)
+    val statusMemorizedTint: Color get() = statusMemorized.copy(alpha = 0.12f)
+    val statusMemorizedStrong: Color get() = statusMemorized.copy(alpha = 0.3f)
+    val statusMemorizedBorder: Color get() = statusMemorized.copy(alpha = 0.3f)
+    val goldBorder: Color get() = gold.copy(alpha = 0.25f)
+    val goldTrack: Color get() = gold.copy(alpha = 0.12f)
+    val goldMuted: Color get() = gold.copy(alpha = 0.45f)
+    val goldTint: Color get() = gold.copy(alpha = 0.13f)
+    val parchmentGlow: Color get() = parchmentLight.copy(alpha = 0.7f)
 
     companion object {
         val Sections = Palette(
