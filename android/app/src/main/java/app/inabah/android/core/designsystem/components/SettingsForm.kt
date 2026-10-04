@@ -56,6 +56,7 @@ import app.inabah.android.core.designsystem.monospacedDigits
 
 private val GroupRadius = 26.dp
 private val RowMinHeight = 56.dp
+private val CompactRowMinHeight = 44.dp
 private val RowHorizontalPadding = 22.dp
 private val GroupSpacing = 24.dp
 private const val SETTINGS_ICON_SIZE = 32f
@@ -143,13 +144,15 @@ fun SettingsGroup(
 
 /**
  * Строка настроек: [content] слева, [trailing] справа; нажатие — [onClick] (затемнение строки,
- * как в списках iOS), без него — строка только показывает значение.
+ * как в списках iOS), без него — строка только показывает значение. [compact] — ниже: строки
+ * только с текстом (прогресс и сброс в настройках хадисов, решение пользователя 2026-10-04).
  */
 @Composable
 fun SettingsRow(
     modifier: Modifier = Modifier,
     onClick: (() -> Unit)? = null,
     enabled: Boolean = true,
+    compact: Boolean = false,
     trailing: @Composable RowScope.() -> Unit = {},
     content: @Composable RowScope.() -> Unit,
 ) {
@@ -157,7 +160,7 @@ fun SettingsRow(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .defaultMinSize(minHeight = RowMinHeight)
+            .defaultMinSize(minHeight = if (compact) CompactRowMinHeight else RowMinHeight)
             .then(
                 if (onClick != null) {
                     Modifier
@@ -168,7 +171,7 @@ fun SettingsRow(
                 },
             )
             .alpha(if (enabled) 1f else PressFeedback.DISABLED_OPACITY)
-            .padding(horizontal = RowHorizontalPadding, vertical = Spacing.m),
+            .padding(horizontal = RowHorizontalPadding, vertical = if (compact) Spacing.s else Spacing.m),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(Spacing.m),
     ) {

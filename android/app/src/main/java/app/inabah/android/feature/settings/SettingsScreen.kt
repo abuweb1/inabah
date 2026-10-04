@@ -15,8 +15,8 @@ import app.inabah.android.core.designsystem.components.SettingsRowText
 import app.inabah.android.core.designsystem.components.SettingsScaffold
 
 /**
- * Корень «Настроек» (iOS `SettingsView`) на графитовом фоне: «Азкары» и «Оформление → Размер текста».
- * «Хадисы» — этап 4, «Палитра» — 6, «Иконка приложения» — 9 (решение пользователя 2026-10-04).
+ * Корень «Настроек» (iOS `SettingsView`) на графитовом фоне: «Азкары», «Хадисы» и «Оформление →
+ * Размер текста». «Палитра» — этап 6, «Иконка приложения» — 9 (решение пользователя 2026-10-04).
  */
 @Composable
 fun SettingsScreen(
@@ -32,15 +32,26 @@ fun SettingsScreen(
         modifier = modifier,
     ) {
         SettingsGroup(
-            rows = listOf {
-                SettingsRow(onClick = { onOpen(SettingsRoute.Azkar) }, trailing = { SettingsChevron() }) {
-                    SettingsIcon(R.drawable.ic_folded_hands, theme.gradients.morningCard)
-                    SettingsRowText(
-                        title = stringResource(R.string.settings_azkar_title),
-                        subtitle = stringResource(R.string.settings_azkar_subtitle),
-                    )
-                }
-            },
+            rows = listOf(
+                {
+                    SettingsRow(onClick = { onOpen(SettingsRoute.Azkar) }, trailing = { SettingsChevron() }) {
+                        SettingsIcon(R.drawable.ic_folded_hands, theme.gradients.morningCard)
+                        SettingsRowText(
+                            title = stringResource(R.string.settings_azkar_title),
+                            subtitle = stringResource(R.string.settings_azkar_subtitle),
+                        )
+                    }
+                },
+                {
+                    SettingsRow(onClick = { onOpen(SettingsRoute.Hadith) }, trailing = { SettingsChevron() }) {
+                        SettingsIcon(R.drawable.ic_book, theme.gradients.nawawiCard)
+                        SettingsRowText(
+                            title = stringResource(R.string.settings_hadith_title),
+                            subtitle = stringResource(R.string.settings_hadith_subtitle),
+                        )
+                    }
+                },
+            ),
         )
         // «Оформление»: пока только «Размер текста»; «Палитра» — этап 6, «Иконка приложения» — 9.
         SettingsGroup(

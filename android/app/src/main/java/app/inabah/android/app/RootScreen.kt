@@ -33,9 +33,13 @@ import app.inabah.android.core.designsystem.LocalInabahTheme
 import app.inabah.android.core.designsystem.components.bottomOnly
 import app.inabah.android.feature.azkar.AzkarHomeScreen
 import app.inabah.android.feature.azkar.AzkarListScreen
+import app.inabah.android.feature.hadith.HadithDetailScreen
 import app.inabah.android.feature.hadith.HadithHomeScreen
+import app.inabah.android.feature.hadith.HadithListScreen
 import app.inabah.android.feature.makharij.MakharijHomeScreen
 import app.inabah.android.feature.settings.AzkarSettingsScreen
+import app.inabah.android.feature.settings.HadithOrderSettingsScreen
+import app.inabah.android.feature.settings.HadithSettingsScreen
 import app.inabah.android.feature.settings.SettingsScreen
 import app.inabah.android.feature.settings.TextSizeSettingsScreen
 
@@ -132,7 +136,37 @@ private fun TabScreens(tab: AppTab, services: AppServices, contentPadding: Paddi
                 )
             }
         }
-        AppTab.Hadith -> HadithHomeScreen(contentPadding)
+        AppTab.Hadith -> TabNavDisplay(router.hadithStack, onBack = { router.pop(AppTab.Hadith) }) {
+            entry<TabRoot> {
+                HadithHomeScreen(
+                    store = services.hadithStore,
+                    progress = services.hadithProgress,
+                    order = services.hadithCollectionOrder,
+                    onOpenCollection = { router.push(HadithRoute.CollectionList(it)) },
+                    contentPadding = contentPadding,
+                )
+            }
+            entry<HadithRoute.CollectionList> { route ->
+                HadithListScreen(
+                    collection = route.collection,
+                    store = services.hadithStore,
+                    progress = services.hadithProgress,
+                    onBack = { router.pop(AppTab.Hadith) },
+                    onOpenHadith = { router.push(HadithRoute.Detail(it)) },
+                    contentPadding = contentPadding.bottomOnly(),
+                )
+            }
+            entry<HadithRoute.Detail> { route ->
+                HadithDetailScreen(
+                    id = route.id,
+                    store = services.hadithStore,
+                    progress = services.hadithProgress,
+                    readingSettings = services.readingSettings,
+                    onBack = { router.pop(AppTab.Hadith) },
+                    contentPadding = contentPadding.bottomOnly(),
+                )
+            }
+        }
         AppTab.Makharij -> MakharijHomeScreen(contentPadding)
         AppTab.Settings -> TabNavDisplay(router.settingsStack, onBack = { router.pop(AppTab.Settings) }) {
             entry<TabRoot> {
@@ -142,6 +176,23 @@ private fun TabScreens(tab: AppTab, services: AppServices, contentPadding: Paddi
                 AzkarSettingsScreen(
                     store = services.azkarStore,
                     resetSettings = services.azkarResetSettings,
+                    onBack = { router.pop(AppTab.Settings) },
+                    contentPadding = contentPadding.bottomOnly(),
+                )
+            }
+            entry<SettingsRoute.Hadith> {
+                HadithSettingsScreen(
+                    store = services.hadithStore,
+                    progress = services.hadithProgress,
+                    order = services.hadithCollectionOrder,
+                    onOpenOrder = { router.push(SettingsRoute.HadithOrder) },
+                    onBack = { router.pop(AppTab.Settings) },
+                    contentPadding = contentPadding.bottomOnly(),
+                )
+            }
+            entry<SettingsRoute.HadithOrder> {
+                HadithOrderSettingsScreen(
+                    order = services.hadithCollectionOrder,
                     onBack = { router.pop(AppTab.Settings) },
                     contentPadding = contentPadding.bottomOnly(),
                 )

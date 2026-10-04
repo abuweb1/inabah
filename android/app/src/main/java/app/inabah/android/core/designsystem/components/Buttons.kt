@@ -26,6 +26,8 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
@@ -219,7 +221,9 @@ fun PrimaryButton(
 /**
  * Плитка-переключатель (iOS `ToggleTileButtonStyle`, отметки хадиса): значок над подписью.
  * Включена — фон [activeFill], текст onAccent; выключена — [fill], цвет [tint]; смена — 300 мс.
- * Для TalkBack — переключатель. [icon] получает цвет и размер значка (sp — растёт со шрифтом).
+ * Для TalkBack — переключатель с постоянной подписью [accessibilityLabel] («Прочитан»; видимая
+ * подпись меняется «Прочитать» → «Прочитан», состояние озвучивает сам переключатель), смена —
+ * с тактильным откликом. [icon] получает цвет и размер значка.
  */
 @Composable
 fun ToggleTile(
@@ -230,15 +234,21 @@ fun ToggleTile(
     fill: Color,
     activeFill: Color,
     modifier: Modifier = Modifier,
+    accessibilityLabel: String = label,
     icon: @Composable (color: Color, size: TextUnit) -> Unit,
 ) = FixedTextSize {
     val palette = InabahTheme.palette
+    val haptics = LocalHapticFeedback.current
     val interaction = remember { MutableInteractionSource() }
     val color by animateColorAsState(if (checked) palette.onAccent else tint, Motion.highlight(), label = "toggleColor")
     val background by animateColorAsState(if (checked) activeFill else fill, Motion.highlight(), label = "toggleFill")
     Column(
         modifier = modifier
-            .toggleable(checked, interaction, indication = null, role = Role.Switch, onValueChange = onCheckedChange)
+            .toggleable(checked, interaction, indication = null, role = Role.Switch) { value ->
+                haptics.performHapticFeedback(if (value) HapticFeedbackType.ToggleOn else HapticFeedbackType.ToggleOff)
+                onCheckedChange(value)
+            }
+            .clearAndSetSemantics { contentDescription = accessibilityLabel }
             .pressFeedback(interaction, scale = PressFeedback.CARD_SCALE)
             .surface(background, Radius.control)
             // Как в iOS: минимум 50 — у содержимого, отступы 12 сверху и снизу — поверх него.
