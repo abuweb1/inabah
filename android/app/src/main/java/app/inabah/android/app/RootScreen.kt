@@ -24,6 +24,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.scene.Scene
 import androidx.navigation3.ui.NavDisplay
+import dev.chrisbanes.haze.hazeSource
+import dev.chrisbanes.haze.rememberHazeState
 import app.inabah.android.core.designsystem.LocalInabahTheme
 import app.inabah.android.core.designsystem.components.bottomOnly
 import app.inabah.android.feature.azkar.AzkarHomeScreen
@@ -73,17 +75,22 @@ fun RootContent(
 
     val theme = LocalInabahTheme.current
     val tabStates = rememberSaveableStateHolder()
-    Box(
-        modifier = modifier
-            .fillMaxSize()
-            .background(selectedTab.background(theme)),
-    ) {
+    // Экран вкладки (вместе с фоном) — источник размытия под панелью вкладок, как стекло iOS.
+    val backdrop = rememberHazeState()
+    Box(modifier.fillMaxSize()) {
         Scaffold(
             containerColor = Color.Transparent,
-            bottomBar = { FloatingTabBar(selectedTab = selectedTab, onSelect = onSelectTab) },
+            bottomBar = { FloatingTabBar(selectedTab = selectedTab, onSelect = onSelectTab, backdrop = backdrop) },
         ) { innerPadding ->
-            tabStates.SaveableStateProvider(selectedTab.name) {
-                content(selectedTab, innerPadding)
+            Box(
+                Modifier
+                    .fillMaxSize()
+                    .hazeSource(backdrop)
+                    .background(selectedTab.background(theme)),
+            ) {
+                tabStates.SaveableStateProvider(selectedTab.name) {
+                    content(selectedTab, innerPadding)
+                }
             }
         }
     }
