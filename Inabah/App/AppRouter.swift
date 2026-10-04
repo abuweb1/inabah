@@ -23,6 +23,8 @@ nonisolated enum SettingsRoute: Hashable, Codable, Sendable {
     case appIcon
     /// Выбор палитры оформления.
     case palette
+    /// Размер текста переводов и интерфейса.
+    case textSize
 }
 
 /// Экраны внутри вкладки «Хадисы».

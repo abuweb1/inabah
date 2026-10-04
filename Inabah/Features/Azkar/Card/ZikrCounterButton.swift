@@ -44,6 +44,8 @@ struct ZikrCounterButton: View {
             }
         }
         .buttonStyle(PressScaleButtonStyle(pressedScale: PressFeedback.counterScale))
+        // Кнопка не меняется с размером интерфейса: цифры — внутри круга фиксированного размера.
+        .fixedTextSize()
         .disabled(isCompleted)
         .onChange(of: isCompleted) { _, completed in
             if completed { flashTrigger += 1 }

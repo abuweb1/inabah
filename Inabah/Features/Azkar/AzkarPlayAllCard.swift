@@ -67,8 +67,10 @@ struct AzkarPlayAllCard: View {
             Text(title)
                 .font(.subheadline)
                 .foregroundStyle(theme.palette.textSecondary)
+            // Сегменты — кнопки: не меняются с размером интерфейса.
             picker()
                 .pickerStyle(.segmented)
+                .fixedTextSize()
         }
     }
 

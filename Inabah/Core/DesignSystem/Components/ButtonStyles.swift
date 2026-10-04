@@ -31,6 +31,7 @@ struct ToggleTileButtonStyle: ButtonStyle {
             .scaleEffect(configuration.isPressed ? PressFeedback.cardScale : 1)
             .animation(Motion.press, value: configuration.isPressed)
             .animation(Motion.highlight, value: isOn)
+            .fixedTextSize()
     }
 }
 
@@ -91,6 +92,7 @@ struct IconButtonStyle: ButtonStyle {
             .opacity(isEnabled ? 1 : PressFeedback.disabledOpacity)
             .scaleEffect(configuration.isPressed ? PressFeedback.iconScale : 1)
             .animation(Motion.press, value: configuration.isPressed)
+            .fixedTextSize()
     }
 }
 
@@ -107,6 +109,7 @@ struct BareIconButtonStyle: ButtonStyle {
             .frame(width: Size.minTapTarget, height: Size.minTapTarget)
             .contentShape(.circle)
             .opacity(isEnabled ? (configuration.isPressed ? PressFeedback.bareOpacity : 1) : PressFeedback.disabledOpacity)
+            .fixedTextSize()
     }
 }
 
@@ -126,6 +129,7 @@ struct ProminentRoundButtonStyle: ButtonStyle {
             )
             .scaleEffect(configuration.isPressed ? PressFeedback.roundScale : 1)
             .animation(Motion.press, value: configuration.isPressed)
+            .fixedTextSize()
     }
 }
 
@@ -144,5 +148,6 @@ struct PrimaryButtonStyle: ButtonStyle {
             .opacity(isEnabled ? (configuration.isPressed ? PressFeedback.wideOpacity : 1) : PressFeedback.disabledOpacity)
             .scaleEffect(configuration.isPressed ? PressFeedback.wideScale : 1)
             .animation(Motion.press, value: configuration.isPressed)
+            .fixedTextSize()
     }
 }

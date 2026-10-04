@@ -124,6 +124,8 @@ private struct HadithPager: View {
                 .accessibilityLabel(Text("hadith.detail.next"))
             }
             .buttonStyle(BareIconButtonStyle(foreground: theme.palette.onAccent))
+            // Навбар не меняется с размером интерфейса.
+            .fixedTextSize()
         }
     }
 

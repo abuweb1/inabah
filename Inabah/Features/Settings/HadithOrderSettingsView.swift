@@ -42,6 +42,7 @@ struct HadithOrderSettingsView: View {
                 }
                 .disabled(order.isDefault)
                 .accessibilityLabel(Text("settings.hadith.order.restore"))
+                .fixedTextSize()
             }
         }
         .audioPlayerInset()
@@ -54,16 +55,15 @@ private struct HadithOrderRow: View {
 
     @Environment(\.theme) private var theme
 
-    private enum Layout {
-        static let iconSize: CGFloat = 32
-    }
+    /// Плашка значка растёт вместе с текстом строки (размер интерфейса).
+    @ScaledMetric(relativeTo: .body) private var iconSize: CGFloat = 32
 
     var body: some View {
         HStack(spacing: Spacing.m) {
             Image(systemName: collection.symbolName)
                 .font(.body)
                 .foregroundStyle(collection.iconColor(in: theme))
-                .frame(width: Layout.iconSize, height: Layout.iconSize)
+                .frame(width: iconSize, height: iconSize)
                 .background(collection.cardGradient(in: theme).linear, in: .rect(cornerRadius: Radius.small))
                 .accessibilityHidden(true)
             Text(collection.title)

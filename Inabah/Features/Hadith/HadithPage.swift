@@ -133,24 +133,26 @@ private struct HadithTranslationCard: View {
     let translation: HadithTranslation
 
     @Environment(\.theme) private var theme
+    @Environment(\.contentTextScale) private var scale
 
     var body: some View {
+        // Размеры — общие с переводом зикра (`ContentTextStyle`), шаг — из настройки «Размер текста».
         VStack(alignment: .leading, spacing: Spacing.s) {
             if let narrator = translation.narrator {
                 Text("hadith.detail.narrator \(narrator)")
-                    .font(.caption.weight(.semibold))
+                    .font(.content(.note, scale: scale, weight: .semibold))
                     .foregroundStyle(theme.palette.onAccentSecondary)
             }
             Text(verbatim: translation.text)
-                .font(.body)
-                .lineSpacing(Spacing.xxs)
+                .font(.content(.translation, scale: scale))
+                .lineSpacing(ContentTextStyle.translationLineSpacing * scale)
                 .foregroundStyle(theme.palette.onAccent)
                 // Язык перевода — только для его текста (переносы); подписи «Передал:» /
                 // «Приводится:» — на языке интерфейса.
                 .environment(\.locale, Locale(identifier: translation.language.rawValue))
             if let source = translation.source {
                 Text("hadith.detail.source \(source)")
-                    .font(.caption.italic())
+                    .font(.content(.note, scale: scale).italic())
                     .foregroundStyle(theme.palette.onAccentTertiary)
                     .padding(.top, Spacing.s)
                     .frame(maxWidth: .infinity, alignment: .leading)

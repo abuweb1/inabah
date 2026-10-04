@@ -76,6 +76,8 @@ struct AzkarListView: View {
                 .foregroundStyle(theme.palette.onAccentSecondary)
         }
         .foregroundStyle(theme.palette.onAccent)
+        // Заголовок экрана не меняется с размером интерфейса.
+        .fixedTextSize()
         .accessibilityElement(children: .combine)
         .accessibilityAddTraits(.isHeader)
     }
