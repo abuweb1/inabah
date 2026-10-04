@@ -25,11 +25,11 @@ struct TextSizeSettingsTests {
     func persists() {
         let settings = TextSizeSettings(defaults: defaults)
         settings.select(content: .largest)
-        settings.select(interface: .larger)
+        settings.select(interface: .smaller)
 
         let reloaded = TextSizeSettings(defaults: defaults)
         #expect(reloaded.content == .largest)
-        #expect(reloaded.interface == .larger)
+        #expect(reloaded.interface == .smaller)
     }
 
     @Test("Повреждённое значение — обычный размер")
@@ -73,7 +73,7 @@ struct TextSizeSettingsTests {
         #expect(ContentTextSize.standard.scale == 1)
     }
 
-    @Test("Шаги интерфейса растут, «Обычный» — стандартный размер, без размеров доступности")
+    @Test("Шаги интерфейса растут, «Обычный» — стандартный размер посередине, без размеров доступности")
     func interfaceSizes() {
         let sizes = InterfaceTextSize.allCases.map(\.dynamicTypeSize)
 
@@ -83,6 +83,7 @@ struct TextSizeSettingsTests {
         #expect(sizes.count == 3)
         #expect(isIncreasing)
         #expect(InterfaceTextSize.standard.dynamicTypeSize == .large)
+        #expect(InterfaceTextSize.allCases.firstIndex(of: .standard) == 1)
         #expect(!hasAccessibilitySize)
     }
 

@@ -31,8 +31,8 @@ enum Size {
     /// Минимальная зона нажатия по HIG.
     static let minTapTarget: CGFloat = 44
     static let counter: CGFloat = 76
-    static let navCardIcon: CGFloat = 38
-    static let navCardMinHeight: CGFloat = 118
+    static let navCardIcon: CGFloat = 32
+    static let navCardMinHeight: CGFloat = 104
     static let progressBarHeight: CGFloat = 4
     /// Высота основной кнопки действия («На главную», «Слушать»).
     static let primaryButtonHeight: CGFloat = 50
@@ -40,10 +40,10 @@ enum Size {
     static let accentStripe: CGFloat = 3
     /// Кнопки мини-строки выполненной карточки.
     static let miniButton: CGFloat = 38
-    /// Квадратные кнопки плеера.
-    static let playerButton: CGFloat = 42
+    /// Квадратные кнопки плеера (компактный плеер — решение пользователя 2026-10-04).
+    static let playerButton: CGFloat = 34
     /// Большая кнопка плей/пауза плеера.
-    static let playerMainButton: CGFloat = 64
+    static let playerMainButton: CGFloat = 50
     /// Точка «выполнено» в мини-строке.
     static let statusDot: CGFloat = 8
     /// Ручка панели плеера.
@@ -116,4 +116,6 @@ enum Motion {
     /// между отсчётами анимацией той же длительности — без скачков.
     static let progressTick = Duration.milliseconds(250)
     static let progressTickSeconds: Double = 0.25
+    /// Перескок бегунка ползунка с шагами на соседнюю отметку.
+    static let stepSnapSeconds: Double = 0.2
 }

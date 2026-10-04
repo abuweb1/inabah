@@ -11,7 +11,7 @@ struct TextSizeSettingsView: View {
     var body: some View {
         Form {
             Section {
-                StepSlider(
+                TextSizeStepRow(
                     label: "settings.textSize.content.label",
                     steps: ContentTextSize.allCases,
                     selection: settings.content,
@@ -36,7 +36,7 @@ struct TextSizeSettingsView: View {
 
             Section {
                 // Смена размера интерфейса перестраивает всё дерево — без анимации.
-                StepSlider(
+                TextSizeStepRow(
                     label: "settings.textSize.interface.label",
                     steps: InterfaceTextSize.allCases,
                     selection: settings.interface,
@@ -78,41 +78,27 @@ struct TextSizeSettingsView: View {
     }
 }
 
-/// Название выбранного шага и ползунок с шагами между значками «меньше» / «больше».
-private struct StepSlider<Step: Hashable>: View {
+/// Название выбранного шага и ползунок с отметками (`StepSlider`).
+private struct TextSizeStepRow<Step: Hashable>: View {
     let label: LocalizedStringResource
     let steps: [Step]
     let selection: Step
     let title: KeyPath<Step, LocalizedStringResource>
     let onSelect: (Step) -> Void
 
-    @Environment(\.theme) private var theme
-
-    private var index: Binding<Double> {
-        Binding {
-            Double(steps.firstIndex(of: selection) ?? 0)
-        } set: { value in
-            let position = Int(value.rounded()).clamped(to: 0...(steps.count - 1))
-            onSelect(steps[position])
-        }
-    }
-
     var body: some View {
-        VStack(alignment: .leading, spacing: Spacing.xs) {
+        VStack(alignment: .leading, spacing: Spacing.xxs) {
             Text(selection[keyPath: title])
                 .font(.subheadline.weight(.semibold))
-            Slider(value: index, in: 0...Double(steps.count - 1), step: 1) {
-                Text(label)
-            } minimumValueLabel: {
-                Image(systemName: "textformat.size.smaller")
-                    .foregroundStyle(theme.palette.onAccentSecondary)
-            } maximumValueLabel: {
-                Image(systemName: "textformat.size.larger")
-                    .foregroundStyle(theme.palette.onAccentSecondary)
-            }
-            .accessibilityValue(Text(selection[keyPath: title]))
+                .accessibilityHidden(true)
+            StepSlider(
+                label: label,
+                valueTitle: selection[keyPath: title],
+                count: steps.count,
+                index: steps.firstIndex(of: selection) ?? 0
+            ) { onSelect(steps[$0]) }
         }
-        .padding(.vertical, Spacing.xxs)
+        .padding(.top, Spacing.xxs)
     }
 }
 
@@ -131,9 +117,9 @@ private extension ContentTextSize {
 private extension InterfaceTextSize {
     var title: LocalizedStringResource {
         switch self {
+        case .smaller: "textSize.interface.smaller"
         case .standard: "textSize.interface.standard"
         case .larger: "textSize.interface.larger"
-        case .largest: "textSize.interface.largest"
         }
     }
 }

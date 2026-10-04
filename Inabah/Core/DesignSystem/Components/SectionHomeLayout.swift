@@ -163,13 +163,15 @@ struct SectionNavCard: View {
 
     @Environment(\.theme) private var theme
 
-    /// Значок растёт вместе с текстом карточки (размер интерфейса).
-    @ScaledMetric(relativeTo: .title3) private var iconSize: CGFloat = 30
-    @ScaledMetric(relativeTo: .title3) private var iconFrame: CGFloat = Size.navCardIcon
+    /// Значок растёт вместе с текстом карточки (размер интерфейса). Размеры текста карточки
+    /// на ступень меньше прежних (title3 → headline и т. д.) — решение пользователя 2026-10-04:
+    /// крупные карточки не нужны ни на одном шаге размера интерфейса.
+    @ScaledMetric(relativeTo: .headline) private var iconSize: CGFloat = 26
+    @ScaledMetric(relativeTo: .headline) private var iconFrame: CGFloat = Size.navCardIcon
 
     private enum Layout {
-        static let verticalPadding: CGFloat = 18
-        static let statGlyphSize: CGFloat = 18
+        static let verticalPadding: CGFloat = 16
+        static let statGlyphSize: CGFloat = 16
     }
 
     var body: some View {
@@ -182,11 +184,11 @@ struct SectionNavCard: View {
                     .accessibilityHidden(true)
                 Spacer(minLength: Spacing.s)
                 Text(title)
-                    .font(.title3.bold())
+                    .font(.headline)
                     .foregroundStyle(theme.palette.onAccent)
                 if let meta {
                     metaText(meta)
-                        .font(.footnote)
+                        .font(.caption)
                         .foregroundStyle(theme.palette.onAccentSecondary)
                 }
                 if leadingStat != nil || trailingStat != nil {
@@ -199,7 +201,7 @@ struct SectionNavCard: View {
                             statLabel(trailingStat)
                         }
                     }
-                    .font(.subheadline.weight(.semibold))
+                    .font(.footnote.weight(.semibold))
                     .monospacedDigit()
                     .foregroundStyle(theme.palette.onAccent)
                     .lineLimit(1)
@@ -213,7 +215,7 @@ struct SectionNavCard: View {
                     NavCardProgressRing(fraction: ring.fraction, style: ring.style)
                 }
                 Image(systemName: "chevron.forward")
-                    .font(.title3.weight(.semibold))
+                    .font(.headline)
                     .foregroundStyle(theme.palette.onAccentTertiary)
                     .accessibilityHidden(true)
             }
@@ -229,12 +231,15 @@ struct SectionNavCard: View {
 
     private func metaText(_ meta: LocalizedStringResource) -> Text {
         guard let metaOriginal else { return Text(meta) }
-        return Text("section.card.meta.original \(Text(meta)) \(Text(verbatim: metaOriginal))")
+        // Название в оригинале не разрывается между строками: при крупном тексте оно целиком
+        // переходит на следующую строку, а не делится пополам.
+        let unbroken = metaOriginal.replacing(" ", with: "\u{00A0}")
+        return Text("section.card.meta.original \(Text(meta)) \(Text(verbatim: unbroken))")
     }
 
     private func statLabel(_ stat: NavCardStat) -> some View {
         HStack(spacing: Spacing.xs) {
-            StatusGlyph(stat.glyph, size: Layout.statGlyphSize, relativeTo: .subheadline)
+            StatusGlyph(stat.glyph, size: Layout.statGlyphSize, relativeTo: .footnote)
             Text(stat.value)
         }
         .accessibilityElement(children: .ignore)

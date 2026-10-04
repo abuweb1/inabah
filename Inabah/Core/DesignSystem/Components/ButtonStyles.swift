@@ -99,12 +99,13 @@ struct IconButtonStyle: ButtonStyle {
 /// Иконка без подложки (перемотка ±10 с в плеере).
 struct BareIconButtonStyle: ButtonStyle {
     var foreground: Color
+    var font: Font = .title2.weight(.medium)
 
     @Environment(\.isEnabled) private var isEnabled
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(.title2.weight(.medium))
+            .font(font)
             .foregroundStyle(foreground)
             .frame(width: Size.minTapTarget, height: Size.minTapTarget)
             .contentShape(.circle)
@@ -119,7 +120,7 @@ struct ProminentRoundButtonStyle: ButtonStyle {
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(.title.weight(.bold))
+            .font(.title2.weight(.bold))
             .foregroundStyle(theme.palette.parchmentInk)
             .frame(width: Size.playerMainButton, height: Size.playerMainButton)
             .surface(
