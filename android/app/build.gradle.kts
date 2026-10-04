@@ -127,6 +127,17 @@ val copySharedContent = tasks.register<CopySharedContentTask>("copySharedContent
     licenseFiles.from(repositoryRoot.file("Inabah/Resources/Fonts/ScheherazadeNew-OFL.txt"))
 }
 
+// JVM-тесты «Контент в ассетах» читают те же файлы, что попадают в APK.
+tasks.withType<Test>().configureEach {
+    dependsOn(copySharedContent)
+    val assetsDir = copySharedContent.flatMap { it.outputDir }
+    // Содержимое — вход задачи: правка data/ перезапускает тесты, а не берёт старый результат из кэша.
+    inputs.dir(assetsDir).withPropertyName("sharedAssets").withPathSensitivity(PathSensitivity.RELATIVE)
+    jvmArgumentProviders.add(
+        CommandLineArgumentProvider { listOf("-Dinabah.assetsDir=${assetsDir.get().asFile.absolutePath}") },
+    )
+}
+
 androidComponents {
     onVariants { variant ->
         variant.sources.assets?.addGeneratedSourceDirectory(

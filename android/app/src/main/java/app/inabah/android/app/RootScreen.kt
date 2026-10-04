@@ -12,10 +12,6 @@ import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
@@ -32,17 +28,33 @@ private const val TAB_BAR_ALPHA = 0.9f
 private const val TAB_INDICATOR_ALPHA = 0.15f
 
 /**
- * Корень: фон раздела до краёв экрана и четыре вкладки (iOS `RootTabView`).
- * Стеки экранов вкладок (`AppRouter`, Navigation 3) — этап 1; плеер над вкладками — этап 5.
+ * Корень (iOS `RootTabView`): вкладки и системная «Назад» по [AppRouter].
+ * Экраны стеков вкладок (Navigation 3) — этап 3; плеер над вкладками — этап 5.
  */
 @Composable
-fun RootScreen(modifier: Modifier = Modifier) {
-    var selectedTab by rememberSaveable { mutableStateOf(AppTab.Azkar) }
+fun RootScreen(router: AppRouter, modifier: Modifier = Modifier) {
+    RootContent(
+        selectedTab = router.selectedTab,
+        canGoBack = router.canGoBack,
+        onSelectTab = router::select,
+        onBack = { router.goBack() },
+        modifier = modifier,
+    )
+}
 
-    // Системная «Назад» с корня вкладки — на «Азкары»; с корня «Азкаров» — выход (docs/android/02).
-    BackHandler(enabled = selectedTab != AppTab.Azkar) {
-        selectedTab = AppTab.Azkar
-    }
+/**
+ * Фон раздела до краёв экрана и четыре вкладки. Системная «Назад»: снять экран вкладки,
+ * с корня вкладки — на «Азкары», с корня «Азкаров» — выход (docs/android/02).
+ */
+@Composable
+fun RootContent(
+    selectedTab: AppTab,
+    canGoBack: Boolean,
+    onSelectTab: (AppTab) -> Unit,
+    onBack: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    BackHandler(enabled = canGoBack, onBack = onBack)
 
     val theme = LocalInabahTheme.current
     Box(
@@ -55,7 +67,7 @@ fun RootScreen(modifier: Modifier = Modifier) {
             bottomBar = {
                 RootTabBar(
                     selectedTab = selectedTab,
-                    onSelect = { selectedTab = it },
+                    onSelect = onSelectTab,
                 )
             },
         ) { innerPadding ->
