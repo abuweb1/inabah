@@ -43,7 +43,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
@@ -54,13 +53,13 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.intl.LocaleList
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.inabah.android.R
 import app.inabah.android.core.content.model.ZikrTranslation
+import app.inabah.android.core.designsystem.FixedTextSize
 import app.inabah.android.core.designsystem.InabahTheme
 import app.inabah.android.core.designsystem.InabahType
 import app.inabah.android.core.designsystem.Motion
@@ -75,11 +74,9 @@ import app.inabah.android.core.designsystem.components.ParchmentPanel
 import app.inabah.android.core.designsystem.components.ProgressRing
 import app.inabah.android.core.designsystem.components.Sparkle
 import app.inabah.android.core.designsystem.components.collapsible
-import app.inabah.android.core.designsystem.components.fixedSp
 import app.inabah.android.core.designsystem.components.pressFeedback
 import app.inabah.android.core.designsystem.components.surface
 import app.inabah.android.core.designsystem.monospacedDigits
-import kotlin.math.min
 import kotlinx.coroutines.delay
 
 /** Свёрнутая строка показывает одну строку — хватает первых слов (вёрстка длинного текста дороже). */
@@ -93,9 +90,6 @@ private val CounterCheckGlyph = 26.dp
 /** Ореол вспышки выполненного счётчика — на столько выходит за кнопку. */
 private val FlashHaloRadius = 14.dp
 
-/** «из N» в круге растёт со шрифтом не больше, чем до «крупного» (iOS `...DynamicTypeSize.large`). */
-private const val COUNTER_CAPTION_SIZE = 11f
-private const val COUNTER_CAPTION_MAX_SCALE = 1.15f
 
 /** Первые [words] слов арабского текста и «…»; короче — целиком. */
 internal fun miniRowPreview(arabic: String, words: Int = MINI_ROW_WORDS): String {
@@ -241,21 +235,24 @@ private fun RepetitionsBadge(repetitions: Int) {
 
 private const val SPARKLE_IN_BADGE = 0.8f
 
-/** Транскрипция, перевод на подложке с полосой и источник; язык текста — язык перевода (переносы). */
+/**
+ * Транскрипция, перевод на подложке с полосой и источник (iOS `ZikrTranslationView`); язык текста —
+ * язык перевода (переносы). Стили переводов — растут с шагом «Размера переводов»; также образец
+ * на экране «Размер текста».
+ */
 @Composable
-private fun ZikrTranslationBlock(translation: ZikrTranslation, modifier: Modifier = Modifier) {
+fun ZikrTranslationBlock(translation: ZikrTranslation, modifier: Modifier = Modifier) {
     val palette = InabahTheme.palette
     val locale = LocaleList(translation.language.code)
     Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
         translation.transliteration?.let {
-            Text(it, color = palette.textSecondary,
-                style = InabahType.footnote.copy(fontStyle = FontStyle.Italic, localeList = locale))
+            Text(it, color = palette.textSecondary, style = InabahType.contentTransliteration.copy(localeList = locale))
         }
         val stripeColor = palette.accent
         Text(
             translation.text,
             color = palette.textPrimary,
-            style = InabahType.subheadline.copy(localeList = locale),
+            style = InabahType.contentTranslation.copy(localeList = locale),
             modifier = Modifier
                 .fillMaxWidth()
                 .background(palette.accentDim, RoundedCornerShape(topEnd = BubbleRadius, bottomEnd = BubbleRadius))
@@ -268,7 +265,7 @@ private fun ZikrTranslationBlock(translation: ZikrTranslation, modifier: Modifie
                 .padding(horizontal = Spacing.m, vertical = Spacing.s),
         )
         translation.source?.let {
-            Text(it, color = palette.textTertiary, style = InabahType.caption.copy(localeList = locale))
+            Text(it, color = palette.textTertiary, style = InabahType.contentNote.copy(localeList = locale))
         }
     }
 }
@@ -326,10 +323,11 @@ private fun ZikrActions(
 
 /**
  * Счётчик (iOS `ZikrCounterButton`): кольцо и кнопка с числом; по заполнении — зелёная галочка
- * и вспышка. Выполненный неактивен. Для TalkBack — одна кнопка «Счётчик, 2 из 3».
+ * и вспышка. Выполненный неактивен. Для TalkBack — одна кнопка «Счётчик, 2 из 3». Закреплён —
+ * не растёт с шагом интерфейса, как и остальные кнопки.
  */
 @Composable
-private fun ZikrCounter(count: Int, total: Int, onIncrement: () -> Unit, modifier: Modifier = Modifier) {
+private fun ZikrCounter(count: Int, total: Int, onIncrement: () -> Unit, modifier: Modifier = Modifier) = FixedTextSize {
     val palette = InabahTheme.palette
     val gradients = InabahTheme.gradients
     val isCompleted = count >= total
@@ -433,9 +431,7 @@ private fun CounterDigits(count: Int, total: Int) {
             Text(value.toString(), color = palette.parchmentInk,
                 style = InabahType.title3.copy(fontWeight = FontWeight.Bold).monospacedDigits())
         }
-        val scale = min(LocalDensity.current.fontScale, COUNTER_CAPTION_MAX_SCALE)
-        Text(stringResource(R.string.zikr_counter_of, total), color = palette.parchmentInk,
-            style = InabahType.caption2.copy(fontSize = fixedSp(COUNTER_CAPTION_SIZE * scale)))
+        Text(stringResource(R.string.zikr_counter_of, total), color = palette.parchmentInk, style = InabahType.caption2)
     }
 }
 

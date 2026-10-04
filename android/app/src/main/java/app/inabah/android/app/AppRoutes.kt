@@ -42,4 +42,8 @@ sealed interface SettingsRoute {
     /** Выбор палитры оформления. */
     @Serializable
     data object Palette : SettingsRoute
+
+    /** Размер текста: переводы и интерфейс. */
+    @Serializable
+    data object TextSize : SettingsRoute
 }

@@ -40,9 +40,12 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.layout.layout
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import app.inabah.android.R
+import app.inabah.android.core.designsystem.FixedTextSize
 import app.inabah.android.core.designsystem.InabahTheme
 import app.inabah.android.core.designsystem.InabahType
 import app.inabah.android.core.designsystem.PressFeedback
@@ -149,8 +152,11 @@ private fun BrandBlock(brand: SectionBrand) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(Spacing.xxs),
         ) {
+            // «Inabah» закреплён (10-typography.md, 10.3): не растёт с шагом интерфейса.
             brand.latinName?.let {
-                Text(it, color = palette.onAccentSecondary, style = InabahType.title.copy(fontWeight = FontWeight.Medium))
+                FixedTextSize {
+                    Text(it, color = palette.onAccentSecondary, style = InabahType.title.copy(fontWeight = FontWeight.Medium))
+                }
             }
             Text(
                 brand.tagline,
@@ -242,13 +248,16 @@ fun SectionNavCard(
         verticalAlignment = Alignment.Bottom,
     ) {
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Spacing.xxxs)) {
-            Box(Modifier.size(Size.navCardIcon), contentAlignment = Alignment.CenterStart) {
-                Icon(icon, contentDescription = null, tint = iconColor, modifier = Modifier.size(Size.navCardSymbol))
+            // Значок растёт вместе с текстом шага интерфейса (iOS `@ScaledMetric`): размеры — в sp.
+            val iconFrame = with(LocalDensity.current) { NAV_ICON_FRAME.sp.toDp() }
+            val iconSymbol = with(LocalDensity.current) { NAV_ICON_SYMBOL.sp.toDp() }
+            Box(Modifier.size(iconFrame), contentAlignment = Alignment.CenterStart) {
+                Icon(icon, contentDescription = null, tint = iconColor, modifier = Modifier.size(iconSymbol))
             }
             Spacer(Modifier.size(Spacing.s))
-            // iOS — title3 bold; SF Bold заметно легче Roboto Bold, по снимкам совпадает SemiBold.
-            Text(title, color = palette.onAccent, style = InabahType.title3.copy(fontWeight = FontWeight.SemiBold))
-            meta?.let { Text(it, color = palette.onAccentSecondary, style = InabahType.footnote) }
+            // Компактная карточка iOS 1.0.0: заголовок headline, подпись caption (10-typography.md, 10.3).
+            Text(title, color = palette.onAccent, style = InabahType.headline)
+            meta?.let { Text(it, color = palette.onAccentSecondary, style = InabahType.caption) }
             if (leadingStat != null || trailingStat != null) {
                 Row(Modifier.fillMaxWidth().padding(top = Spacing.xxs), horizontalArrangement = Arrangement.SpaceBetween) {
                     leadingStat?.let { StatLabel(it) } ?: Spacer(Modifier)
@@ -263,14 +272,19 @@ fun SectionNavCard(
             horizontalArrangement = Arrangement.spacedBy(Spacing.m),
         ) {
             ring?.let { NavCardProgressRing(it.fraction, it.style) }
+            val chevron = with(LocalDensity.current) { CHEVRON_SIZE.sp.toDp() }
             Icon(painterResource(R.drawable.ic_chevron_right), contentDescription = null,
-                tint = palette.onAccentTertiary, modifier = Modifier.size(ChevronSize))
+                tint = palette.onAccentTertiary, modifier = Modifier.size(chevron))
         }
     }
 }
 
-private val NavCardVerticalPadding = 18.dp
-private val ChevronSize = 24.dp
+private val NavCardVerticalPadding = 16.dp
+
+/** Значок 26 в рамке 32 и стрелка — как символ headline; в sp, растут с шагом интерфейса. */
+private const val NAV_ICON_SYMBOL = 26f
+private const val NAV_ICON_FRAME = 32f
+private const val CHEVRON_SIZE = 22f
 
 @Composable
 private fun StatLabel(stat: NavCardStat) {
@@ -280,11 +294,11 @@ private fun StatLabel(stat: NavCardStat) {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(Spacing.xxs),
     ) {
-        StatusGlyph(stat.glyph, stat.color, InabahType.subheadline.fontSize * STAT_GLYPH_SCALE)
+        StatusGlyph(stat.glyph, stat.color, InabahType.footnote.fontSize * STAT_GLYPH_SCALE)
         Text(stat.value, color = palette.onAccent, maxLines = 1,
-            style = InabahType.subheadline.monospacedDigits().copy(fontWeight = FontWeight.SemiBold))
+            style = InabahType.footnote.monospacedDigits().copy(fontWeight = FontWeight.SemiBold))
     }
 }
 
-/** Значок показателя — 18 при подписи 15 (iOS `StatusGlyph(size: 18, relativeTo: .subheadline)`). */
-private const val STAT_GLYPH_SCALE = 1.2f
+/** Значок показателя — 16 при подписи 13 (iOS `StatusGlyph(size: 16, relativeTo: .footnote)`). */
+private const val STAT_GLYPH_SCALE = 16f / 13f

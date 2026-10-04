@@ -9,7 +9,10 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.compose.runtime.CompositionLocalProvider
+import app.inabah.android.core.designsystem.FixedTextSize
 import app.inabah.android.core.designsystem.InabahTheme
+import app.inabah.android.core.designsystem.LocalContentTextScale
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -27,8 +30,14 @@ class MainActivity : ComponentActivity() {
             // До первого чтения настроек экран закрыт заставкой — рисовать нечего.
             services?.let { ready ->
                 val style by ready.appearanceSettings.style.collectAsStateWithLifecycle()
+                val contentSize by ready.textSizeSettings.content.collectAsStateWithLifecycle()
                 InabahTheme(theme = style.theme) {
-                    RootScreen(services = ready)
+                    // Системный размер шрифта не влияет ни на что (как в iOS): свои шаги — в настройках.
+                    FixedTextSize {
+                        CompositionLocalProvider(LocalContentTextScale provides contentSize.scale) {
+                            RootScreen(services = ready)
+                        }
+                    }
                 }
             }
         }

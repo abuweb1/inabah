@@ -26,6 +26,9 @@ import androidx.navigation3.scene.Scene
 import androidx.navigation3.ui.NavDisplay
 import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.rememberHazeState
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import app.inabah.android.core.designsystem.InterfaceTextScale
 import app.inabah.android.core.designsystem.LocalInabahTheme
 import app.inabah.android.core.designsystem.components.bottomOnly
 import app.inabah.android.feature.azkar.AzkarHomeScreen
@@ -34,6 +37,7 @@ import app.inabah.android.feature.hadith.HadithHomeScreen
 import app.inabah.android.feature.makharij.MakharijHomeScreen
 import app.inabah.android.feature.settings.AzkarSettingsScreen
 import app.inabah.android.feature.settings.SettingsScreen
+import app.inabah.android.feature.settings.TextSizeSettingsScreen
 
 /**
  * Корень (iOS `RootTabView`): вкладки, у «Азкаров» и «Настроек» — свой стек экранов (Navigation 3)
@@ -101,6 +105,16 @@ private data object TabRoot
 
 @Composable
 private fun TabContent(tab: AppTab, services: AppServices, contentPadding: PaddingValues) {
+    // Шаг интерфейса — на экраны вкладки (панель вкладок — вне его); навбар, кнопки и всплывающие
+    // окна внутри экранов закреплены сами (docs/android/10-typography.md, 10.1).
+    val interfaceSize by services.textSizeSettings.interfaceSize.collectAsStateWithLifecycle()
+    InterfaceTextScale(interfaceSize.fontScale) {
+        TabScreens(tab, services, contentPadding)
+    }
+}
+
+@Composable
+private fun TabScreens(tab: AppTab, services: AppServices, contentPadding: PaddingValues) {
     val router = services.router
     when (tab) {
         AppTab.Azkar -> TabNavDisplay(router.azkarStack, onBack = { router.pop(AppTab.Azkar) }) {
@@ -128,6 +142,15 @@ private fun TabContent(tab: AppTab, services: AppServices, contentPadding: Paddi
                 AzkarSettingsScreen(
                     store = services.azkarStore,
                     resetSettings = services.azkarResetSettings,
+                    onBack = { router.pop(AppTab.Settings) },
+                    contentPadding = contentPadding.bottomOnly(),
+                )
+            }
+            entry<SettingsRoute.TextSize> {
+                TextSizeSettingsScreen(
+                    settings = services.textSizeSettings,
+                    azkarStore = services.azkarStore,
+                    hadithStore = services.hadithStore,
                     onBack = { router.pop(AppTab.Settings) },
                     contentPadding = contentPadding.bottomOnly(),
                 )

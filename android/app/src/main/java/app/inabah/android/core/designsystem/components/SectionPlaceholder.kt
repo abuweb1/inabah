@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -16,6 +15,7 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import app.inabah.android.core.designsystem.InabahTheme
+import app.inabah.android.core.designsystem.InabahType
 import app.inabah.android.core.designsystem.Spacing
 
 /**
@@ -47,13 +47,13 @@ fun SectionPlaceholder(
                 text = title,
                 modifier = Modifier.semantics { heading() },
                 color = palette.onAccent,
-                style = MaterialTheme.typography.titleLarge,
+                style = InabahType.headline,
                 textAlign = TextAlign.Center,
             )
             Text(
                 text = message,
                 color = palette.onAccentSecondary,
-                style = MaterialTheme.typography.bodyMedium,
+                style = InabahType.caption,
                 textAlign = TextAlign.Center,
             )
         }

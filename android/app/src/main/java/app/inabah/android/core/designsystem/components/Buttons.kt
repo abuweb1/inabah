@@ -36,6 +36,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import app.inabah.android.core.designsystem.FixedTextSize
 import app.inabah.android.core.designsystem.InabahTheme
 import app.inabah.android.core.designsystem.InabahType
 import app.inabah.android.core.designsystem.Motion
@@ -65,8 +66,10 @@ private val ProminentIconSize = 30.dp
 /** Значок в кнопке на всю ширину — как символ body. */
 private val PrimaryIconSize = 20.dp
 
-/** Значок плитки-переключателя — как title3 (растёт со шрифтом). */
+/** Значок плитки-переключателя — как title3 (плитка закреплена — не растёт с шагом интерфейса). */
 private val ToggleIconSize = 22.sp
+
+// Все кнопки закреплены (`FixedTextSize`): не растут с шагом интерфейса (docs/android/10-typography.md).
 
 private fun Modifier.disabledAlpha(enabled: Boolean) = alpha(if (enabled) 1f else PressFeedback.DISABLED_OPACITY)
 
@@ -107,7 +110,7 @@ fun IconButton(
     border: Color? = null,
     enabled: Boolean = true,
     content: @Composable () -> Unit,
-) {
+) = FixedTextSize {
     val interaction = remember { MutableInteractionSource() }
     val corner = when (shape) {
         IconButtonShape.Circle -> CircleShape
@@ -143,7 +146,7 @@ fun BareIconButton(
     foreground: Color,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-) {
+) = FixedTextSize {
     val interaction = remember { MutableInteractionSource() }
     Box(
         modifier = modifier
@@ -166,7 +169,7 @@ fun ProminentRoundButton(
     contentDescription: String,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-) {
+) = FixedTextSize {
     val palette = InabahTheme.palette
     val gradient = InabahTheme.gradients.counterButton
     val interaction = remember { MutableInteractionSource() }
@@ -192,7 +195,7 @@ fun PrimaryButton(
     enabled: Boolean = true,
     /** Значок перед текстом («←» у «На главную»), для TalkBack не озвучивается. */
     leadingIcon: Painter? = null,
-) {
+) = FixedTextSize {
     val palette = InabahTheme.palette
     val interaction = remember { MutableInteractionSource() }
     Row(
@@ -228,7 +231,7 @@ fun ToggleTile(
     activeFill: Color,
     modifier: Modifier = Modifier,
     icon: @Composable (color: Color, size: TextUnit) -> Unit,
-) {
+) = FixedTextSize {
     val palette = InabahTheme.palette
     val interaction = remember { MutableInteractionSource() }
     val color by animateColorAsState(if (checked) palette.onAccent else tint, Motion.highlight(), label = "toggleColor")

@@ -51,6 +51,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import app.inabah.android.R
+import app.inabah.android.core.designsystem.FixedTextSize
 import app.inabah.android.core.designsystem.InabahTheme
 import app.inabah.android.core.designsystem.InabahType
 import app.inabah.android.core.designsystem.PressFeedback
@@ -131,7 +132,8 @@ fun InabahTopBar(
      */
     centerTitle: Boolean = true,
     actions: @Composable RowScope.() -> Unit = {},
-) {
+) = FixedTextSize {
+    // Навбар закреплён — не растёт с шагом интерфейса (docs/android/10-typography.md).
     val palette = InabahTheme.palette
     val titleBlock: @Composable (Modifier, Alignment.Horizontal, TextAlign) -> Unit = { titleModifier, alignment, textAlign ->
         Column(titleModifier.semantics(mergeDescendants = true) { heading() }, horizontalAlignment = alignment) {

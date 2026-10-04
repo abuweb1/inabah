@@ -40,9 +40,7 @@ object Size {
     val minTapTarget = 48.dp
     val visibleTapTarget = 44.dp
     val counter = 76.dp
-    val navCardIcon = 38.dp
-    val navCardSymbol = 30.dp
-    val navCardMinHeight = 118.dp
+    val navCardMinHeight = 104.dp
     val progressBarHeight = 4.dp
     val primaryButtonHeight = 50.dp
     val accentStripe = 3.dp
@@ -106,6 +104,9 @@ object Motion {
     /** Вспышка выполненного счётчика: разгорается 200 мс, гаснет 350 мс. */
     const val FLASH_IN_MILLIS = 200
     const val FLASH_OUT_MILLIS = 350
+
+    /** Перескок бегунка ползунка с засечками на соседний шаг (iOS `stepSnapSeconds`, snappy 200 мс). */
+    fun <T> stepSnap() = tween<T>(durationMillis = 200, easing = StandardEasing)
 
     /** Кегль А−/А+ — пружина без отскока. */
     fun <T> fontSize() = spring<T>(dampingRatio = Spring.DampingRatioNoBouncy, stiffness = Spring.StiffnessMediumLow)

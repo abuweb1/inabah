@@ -35,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupPositionProvider
 import androidx.compose.ui.window.PopupProperties
+import app.inabah.android.core.designsystem.FixedTextSize
 import app.inabah.android.core.designsystem.InabahTheme
 import app.inabah.android.core.designsystem.ShadowToken
 import app.inabah.android.core.designsystem.Spacing
@@ -141,7 +142,10 @@ fun AnchoredPopover(
                     top = if (showsArrow) ArrowHeight else 0.dp,
                     bottom = if (showsArrow) ArrowHeight else 0.dp,
                 ),
-        ) { content() }
+        ) {
+            // Всплывающие окна закреплены — не растут с шагом интерфейса.
+            FixedTextSize(content)
+        }
     }
 }
 

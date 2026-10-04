@@ -89,7 +89,7 @@ private val BarBottomMargin = 4.dp
 private val PillInset = 4.dp
 private val TabIconSize = 26.dp
 
-/** Кегль подписи и буквы «ع»; панель iOS не растёт с системным шрифтом. */
+/** Кегль подписи (medium, как `UITabBarAppearance` iOS) и буквы «ع»; панель не растёт ни с системным шрифтом, ни с шагом интерфейса. */
 private const val LABEL_SIZE = 10f
 private const val GLYPH_SIZE = 21f
 
@@ -441,7 +441,7 @@ private fun TabItem(
             stringResource(tab.label),
             color = color,
             maxLines = 1,
-            style = InabahType.caption2.copy(fontSize = fixedSp(LABEL_SIZE), fontWeight = FontWeight.SemiBold),
+            style = InabahType.caption2.copy(fontSize = fixedSp(LABEL_SIZE), fontWeight = FontWeight.Medium),
         )
     }
 }
