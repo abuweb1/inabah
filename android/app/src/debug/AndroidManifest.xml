@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Только debug-сборка: каталог компонентов дизайн-системы для сверки с iOS по снимкам.
+     exported — чтобы запускать через adb (am start); фильтров намерений нет, в release его нет. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application>
+        <activity
+            android:name=".designcatalog.DesignCatalogActivity"
+            android:exported="true"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.Inabah" />
+    </application>
+</manifest>

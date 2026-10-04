@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
-"""Генерирует цвета единых стилей оформления (ThemeStyle) в Assets.xcassets/Palette/Themes.
+"""Генерирует цвета единых стилей оформления (ThemeStyle) для iOS и Android.
 
-    python3 scripts/generate-theme-palettes.py          # записать ассеты
-    python3 scripts/generate-theme-palettes.py --check  # сверить ассеты с расчётом (код 1 — расходятся)
+    python3 scripts/generate-theme-palettes.py          # записать ассеты iOS и Kotlin-файл Android
+    python3 scripts/generate-theme-palettes.py --check  # сверить оба вывода с расчётом (код 1 — расходятся)
+
+Выводы: iOS — Assets.xcassets/Palette/Themes (colorset на цвет); Android — ThemePalettes.kt
+в core/designsystem (ThemeColors на стиль) — один расчёт, цвета платформ не расходятся.
 
 Опорные цвета берутся из нынешних ассетов разделов:
   violet   — азкары (фон, шапка, поверхности, акцент, карточки утро/вечер);
@@ -13,8 +16,10 @@
 светлоте; насыщенность масштабируется по отношению насыщенностей фонов. Цвета вне sRGB
 приводятся в охват уменьшением насыщенности.
 
-HEX живут только в ассетах (правило CLAUDE.md); этот скрипт хранит, как они получены.
-Имя ассета — <стиль><Токен>, токены — ThemeColorToken в Core/DesignSystem/ThemeStyle.swift.
+HEX живут только в ассетах iOS и в сгенерированном ThemePalettes.kt (правило CLAUDE.md);
+этот скрипт хранит, как они получены.
+Имя ассета — <стиль><Токен>, токены — ThemeColorToken в Core/DesignSystem/ThemeStyle.swift
+и поля ThemeColors в android/.../core/designsystem/ThemeColors.kt (те же имена, тот же порядок).
 """
 import json
 import math
@@ -24,6 +29,8 @@ import shutil
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PALETTE = os.path.join(ROOT, 'Inabah', 'Resources', 'Assets.xcassets', 'Palette')
 OUT = os.path.join(PALETTE, 'Themes')
+KOTLIN_OUT = os.path.join(ROOT, 'android', 'app', 'src', 'main', 'java', 'app', 'inabah', 'android',
+                          'core', 'designsystem', 'ThemePalettes.kt')
 
 # --- цветовые пространства -------------------------------------------------
 
@@ -188,18 +195,44 @@ def stored_hex(style, token):
     return ''.join(comp[k][2:] for k in ('red', 'green', 'blue')).upper()
 
 
+def render_kotlin(result):
+    """ThemePalettes.kt: по ThemeColors на единый стиль, токены — в порядке TOKENS."""
+    lines = [
+        '// Сгенерировано scripts/generate-theme-palettes.py — не править вручную:',
+        '// поправили цвет раздела — перезапустить скрипт (docs/process/design.md).',
+        'package app.inabah.android.core.designsystem',
+        '',
+        'import androidx.compose.ui.graphics.Color',
+        '',
+        '/** Цвета единых стилей оформления, выведенные из цветов разделов (как ассеты Palette/Themes в iOS). */',
+        'internal object ThemePalettes {',
+    ]
+    for i, (style, colors) in enumerate(result.items()):
+        if i:
+            lines.append('')
+        lines.append(f'    val {style.capitalize()} = ThemeColors(')
+        lines += [f'        {token} = Color(0xFF{h}),' for token, h in colors.items()]
+        lines.append('    )')
+    lines.append('}')
+    return '\n'.join(lines) + '\n'
+
+
 def check(result):
-    """Ассеты совпадают с расчётом? Цвет раздела поправили, а скрипт не перезапустили — расхождение."""
+    """Оба вывода совпадают с расчётом? Цвет раздела поправили, а скрипт не перезапустили — расхождение."""
     mismatches = [
         f'{asset_name(style, token)}: в ассетах {stored_hex(style, token) or "нет"}, по расчёту {h}'
         for style, colors in result.items() for token, h in colors.items()
         if stored_hex(style, token) != h
     ]
+    kotlin = open(KOTLIN_OUT, encoding='utf-8').read() if os.path.exists(KOTLIN_OUT) else None
+    if kotlin != render_kotlin(result):
+        state = 'нет файла' if kotlin is None else 'устарел или правлен вручную'
+        mismatches.append(f'{os.path.relpath(KOTLIN_OUT, ROOT)}: {state}')
     if mismatches:
-        print('Ассеты палитр расходятся с расчётом — запустите скрипт без --check:')
+        print('Палитры расходятся с расчётом — запустите скрипт без --check:')
         print('\n'.join(f'  {m}' for m in mismatches))
         return 1
-    print(f'✔ Ассеты палитр совпадают с расчётом, цветов: {sum(len(c) for c in result.values())}')
+    print(f'✔ Ассеты iOS и ThemePalettes.kt совпадают с расчётом, цветов: {sum(len(c) for c in result.values())}')
     return 0
 
 
@@ -221,7 +254,10 @@ def write(result):
                 'alpha': '1.000', 'red': f'0x{h[0:2]}', 'green': f'0x{h[2:4]}', 'blue': f'0x{h[4:6]}'}},
                 'idiom': 'universal'}], **info}, open(os.path.join(d, 'Contents.json'), 'w'), indent=2)
         print(style, ' '.join(f'{t}=#{h}' for t, h in colors.items()))
-    print(f'Токенов на стиль: {len(TOKENS)}, ассеты — {os.path.relpath(OUT, ROOT)}')
+    with open(KOTLIN_OUT, 'w', encoding='utf-8') as f:
+        f.write(render_kotlin(result))
+    print(f'Токенов на стиль: {len(TOKENS)}, ассеты — {os.path.relpath(OUT, ROOT)}, '
+          f'Android — {os.path.relpath(KOTLIN_OUT, ROOT)}')
 
 
 if __name__ == '__main__':

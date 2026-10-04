@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import app.inabah.android.R
 import app.inabah.android.core.designsystem.InabahTheme
 import app.inabah.android.core.designsystem.components.ArabicText
@@ -30,6 +31,7 @@ fun AzkarHomeScreen(
                 size = BRAND_ARABIC_SIZE,
                 color = InabahTheme.palette.onAccent,
                 bold = true,
+                textAlign = TextAlign.Center,
             )
         },
     )

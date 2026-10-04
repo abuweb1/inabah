@@ -24,8 +24,12 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             val services by container.services.collectAsStateWithLifecycle()
-            InabahTheme {
-                services?.let { RootScreen(router = it.router) }
+            // До первого чтения настроек экран закрыт заставкой — рисовать нечего.
+            services?.let { ready ->
+                val style by ready.appearanceSettings.style.collectAsStateWithLifecycle()
+                InabahTheme(theme = style.theme) {
+                    RootScreen(router = ready.router)
+                }
             }
         }
     }

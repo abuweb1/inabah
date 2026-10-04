@@ -6,6 +6,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.ReadOnlyComposable
+import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.runtime.staticCompositionLocalOf
 
 /** Тема приложения: палитра и градиенты текущего стиля (iOS `Theme`, `@Environment(\.theme)`). */
@@ -40,8 +42,12 @@ fun InabahTheme(
         onSurface = palette.textPrimary,
         onSurfaceVariant = palette.textSecondary,
     )
-    CompositionLocalProvider(LocalInabahTheme provides theme) {
-        MaterialTheme(colorScheme = colorScheme, content = content)
+    // Шрифты собираются один раз на процесс ресурсов (только встроенные — см. InterFont.kt).
+    val resources = LocalResources.current
+    val fonts = remember(resources) { InabahFonts.from(resources) }
+    val typography = remember(fonts) { materialTypography(fonts) }
+    CompositionLocalProvider(LocalInabahTheme provides theme, LocalInabahFonts provides fonts) {
+        MaterialTheme(colorScheme = colorScheme, typography = typography, content = content)
     }
 }
 
