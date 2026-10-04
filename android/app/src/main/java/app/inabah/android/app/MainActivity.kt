@@ -1,5 +1,6 @@
 package app.inabah.android.app
 
+import android.content.Context
 import android.graphics.Color
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -15,6 +16,12 @@ import app.inabah.android.core.designsystem.InabahTheme
 import app.inabah.android.core.designsystem.LocalContentTextScale
 
 class MainActivity : ComponentActivity() {
+    override fun attachBaseContext(newBase: Context) {
+        super.attachBaseContext(newBase)
+        // Язык интерфейса — из поддержанных (сейчас русский), не язык системы: склонение и числа — русские.
+        applyOverrideConfiguration(uiLocaleOverride(newBase.resources.configuration))
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         val container = (application as InabahApplication).container
         // Заставка держится до первого чтения настроек: иначе мигнули бы значения по умолчанию.
