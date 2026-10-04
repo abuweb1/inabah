@@ -45,6 +45,8 @@ data class Palette(
     val tabHadith: Color,
     val tabMakharij: Color,
     val tabSettings: Color,
+    /** Разрушающее действие («Сбросить»): системный красный iOS в тёмной теме. */
+    val destructive: Color,
 ) {
     val onAccentSecondary: Color get() = onAccent.copy(alpha = 0.6f)
     val onAccentTertiary: Color get() = onAccent.copy(alpha = 0.4f)
@@ -104,6 +106,7 @@ data class Palette(
             tabHadith = Color(0xFF5ED6A6),
             tabMakharij = Color(0xFFE8A85A),
             tabSettings = Color(0xFF8FB4F0),
+            destructive = Color(0xFFFF453A),
         )
     }
 }

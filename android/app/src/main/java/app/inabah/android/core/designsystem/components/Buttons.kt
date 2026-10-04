@@ -6,6 +6,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -26,6 +27,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
@@ -58,6 +62,9 @@ private val BareIconSize = 24.dp
 /** Значок на круглой кнопке плеера — как символ title (28 pt) bold. */
 private val ProminentIconSize = 30.dp
 
+/** Значок в кнопке на всю ширину — как символ body. */
+private val PrimaryIconSize = 20.dp
+
 /** Значок плитки-переключателя — как title3 (растёт со шрифтом). */
 private val ToggleIconSize = 22.sp
 
@@ -80,6 +87,27 @@ fun IconButton(
     border: Color? = null,
     enabled: Boolean = true,
 ) {
+    IconButton(onClick, contentDescription, background, modifier, shape, size, border, enabled) {
+        Icon(icon, contentDescription = null, tint = foreground, modifier = Modifier.size(size * ICON_FRACTION))
+    }
+}
+
+/**
+ * То же с произвольным содержимым [content] вместо значка («Аа» на карточке зикра);
+ * для TalkBack кнопка озвучивается [contentDescription], содержимое — нет.
+ */
+@Composable
+fun IconButton(
+    onClick: () -> Unit,
+    contentDescription: String,
+    background: Color,
+    modifier: Modifier = Modifier,
+    shape: IconButtonShape = IconButtonShape.Circle,
+    size: Dp = Size.visibleTapTarget,
+    border: Color? = null,
+    enabled: Boolean = true,
+    content: @Composable () -> Unit,
+) {
     val interaction = remember { MutableInteractionSource() }
     val corner = when (shape) {
         IconButtonShape.Circle -> CircleShape
@@ -89,6 +117,7 @@ fun IconButton(
         modifier = modifier
             .minimumInteractiveComponentSize()
             .clickable(interaction, indication = null, enabled = enabled, role = Role.Button, onClick = onClick)
+            .semantics { this.contentDescription = contentDescription }
             .disabledAlpha(enabled),
         contentAlignment = Alignment.Center,
     ) {
@@ -96,10 +125,11 @@ fun IconButton(
             modifier = Modifier
                 .pressFeedback(interaction, scale = PressFeedback.ICON_SCALE)
                 .size(size)
-                .surface(SolidColor(background), corner, border),
+                .surface(SolidColor(background), corner, border)
+                .clearAndSetSemantics {},
             contentAlignment = Alignment.Center,
         ) {
-            Icon(icon, contentDescription, tint = foreground, modifier = Modifier.size(size * ICON_FRACTION))
+            content()
         }
     }
 }
@@ -160,10 +190,12 @@ fun PrimaryButton(
     text: String,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
+    /** Значок перед текстом («←» у «На главную»), для TalkBack не озвучивается. */
+    leadingIcon: Painter? = null,
 ) {
     val palette = InabahTheme.palette
     val interaction = remember { MutableInteractionSource() }
-    Box(
+    Row(
         modifier = modifier
             .fillMaxWidth()
             .clickable(interaction, indication = null, enabled = enabled, role = Role.Button, onClick = onClick)
@@ -172,8 +204,10 @@ fun PrimaryButton(
             .defaultMinSize(minHeight = Size.primaryButtonHeight)
             .surface(palette.accent, Radius.box)
             .padding(horizontal = Spacing.xl),
-        contentAlignment = Alignment.Center,
+        horizontalArrangement = Arrangement.spacedBy(Spacing.s, Alignment.CenterHorizontally),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
+        leadingIcon?.let { Icon(it, contentDescription = null, tint = palette.onAccent, modifier = Modifier.size(PrimaryIconSize)) }
         Text(text, color = palette.onAccent, textAlign = TextAlign.Center,
             style = InabahType.body.copy(fontWeight = FontWeight.SemiBold))
     }
