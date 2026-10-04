@@ -41,6 +41,8 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.compositeOver
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -86,10 +88,15 @@ private const val LABEL_SIZE = 10f
 private const val GLYPH_SIZE = 21f
 
 /**
- * Подложка капсулы — нейтральное затемнение (тень палитры): сквозь него виден цвет раздела под панелью,
- * как у стекла iOS; содержимое проходит под панелью.
+ * Подложка капсулы — светлое стекло: лёгкая белая дымка, подкрашенная цветом раздела, — тон панели
+ * близок к фону, как у прозрачной панели iOS (затемнение делало её заметно темнее фона на всех
+ * главных — замечание пользователя 2026-10-04). Содержимое проходит под панелью.
  */
-private const val BAR_FILL_ALPHA = 0.14f
+private const val BAR_FILL_ALPHA = 0.07f
+private const val BAR_TINT_ALPHA = 0.08f
+
+/** Доля цвета раздела в невыбранных значках и подписях. */
+private const val IDLE_TINT = 0.18f
 
 /** Буква «ع» в насхе сидит низко (большая нижняя дуга) — поднять к центру значка. */
 private val GlyphLift = (-5).dp
@@ -172,6 +179,8 @@ fun FloatingTabBar(
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) LiquidLensShader() else null
     }
     val rimColor = palette.onAccent
+    // Невыбранные — не белые, а белый в тон раздела (снимки iOS android/docs/navbar).
+    val idleColor = lerp(palette.onAccent, tint, IDLE_TINT)
     BoxWithConstraints(
         modifier = modifier
             .fillMaxWidth()
@@ -184,7 +193,7 @@ fun FloatingTabBar(
             }
             .height(BarHeight)
             .surface(
-                palette.shadow.copy(alpha = BAR_FILL_ALPHA),
+                palette.onAccent.copy(alpha = BAR_FILL_ALPHA).compositeOver(tint.copy(alpha = BAR_TINT_ALPHA)),
                 BarHeight / 2,
                 border = tint.copy(alpha = BAR_RIM_ALPHA),
                 shadow = ShadowToken.card(palette),
@@ -288,7 +297,7 @@ fun FloatingTabBar(
                     TabItem(
                         tab = tab,
                         selected = tab == selectedTab,
-                        color = if (tab == selectedTab) tint else palette.onAccent,
+                        color = if (tab == selectedTab) tint else idleColor,
                         onClick = { onSelect(tab) },
                         magnification = {
                             if (lensShader != null) {
