@@ -1,6 +1,16 @@
 package app.inabah.android.core.designsystem.components
 
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.drawOutline
+import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
@@ -65,6 +75,43 @@ private const val GLASS_RIM_ALPHA = 0.4f
 fun Modifier.glass(tint: Color, shape: Shape = CircleShape): Modifier =
     surface(SolidColor(tint.copy(alpha = GLASS_FILL_ALPHA)), shape, border = tint.copy(alpha = GLASS_RIM_ALPHA))
 
+// Нажатие на стекло iOS 26 (запись пользователя IMG_9751): кнопка увеличивается и заливается
+// ярким светом в тон раздела — свет ярче и насыщеннее самого цвета, с уходом оттенка к пурпуру
+// (у фиолетового раздела — розово-малиновый, как в iOS); у капсулы «А− А+» — со стороны нажатой половины.
+
+private const val GLASS_PRESS_SCALE = 1.15f
+private const val CAPSULE_PRESS_SCALE = 1.06f
+private const val GLOW_HUE_SHIFT = 40f
+private const val GLOW_MIN_SATURATION = 0.6f
+private const val GLOW_EDGE_ALPHA = 0.7f
+
+/** Нажатие — пружина с небольшим отскоком, отпускание — плавно. */
+private fun glassPressSpec() = spring<Float>(dampingRatio = 0.6f, stiffness = Spring.StiffnessMedium)
+private fun glassReleaseSpec() = tween<Float>(durationMillis = 300)
+
+/** Цвет света нажатого стекла из цвета раздела [tint]: оттенок сдвинут, насыщенность и яркость подняты. */
+internal fun glassHighlight(tint: Color): Color {
+    val hsv = FloatArray(3)
+    android.graphics.Color.colorToHSV(tint.toArgb(), hsv)
+    hsv[0] = (hsv[0] + GLOW_HUE_SHIFT) % FULL_TURN
+    hsv[1] = maxOf(hsv[1], GLOW_MIN_SATURATION)
+    hsv[2] = 1f
+    return Color(android.graphics.Color.HSVToColor(hsv))
+}
+
+private const val FULL_TURN = 360f
+
+/** Свет из точки [center] (доли размера) с непрозрачностью [alpha]; рисовать поверх подложки, под содержимым. */
+private fun DrawScope.drawGlassGlow(glow: Color, alpha: Float, shape: Shape, centerX: Float = 0.5f) {
+    if (alpha <= 0f) return
+    val brush = Brush.radialGradient(
+        listOf(glow, glow.copy(alpha = GLOW_EDGE_ALPHA)),
+        center = Offset(size.width * centerX, size.height / 2),
+        radius = maxOf(size.width, size.height) * 0.75f,
+    )
+    drawOutline(shape.createOutline(size, layoutDirection, this), brush, alpha = alpha.coerceIn(0f, 1f))
+}
+
 /**
  * Навбар экрана: фон [background] до верха экрана (под строкой состояния; `null` — прозрачный,
  * как в настройках), «‹» [onBack], заголовок [title] и необязательный [subtitle] по центру,
@@ -78,46 +125,55 @@ fun InabahTopBar(
     modifier: Modifier = Modifier,
     subtitle: (@Composable () -> Unit)? = null,
     background: Color? = null,
+    /**
+     * Заголовок по центру (как в iOS) или сразу за «‹» — когда справа широкие действия
+     * («А− А+»): на узком экране центрированный заголовок наезжал на них (снимок с телефона).
+     */
+    centerTitle: Boolean = true,
     actions: @Composable RowScope.() -> Unit = {},
 ) {
     val palette = InabahTheme.palette
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .then(if (background != null) Modifier.background(background) else Modifier)
-            .windowInsetsPadding(WindowInsets.statusBars)
-            .height(BarHeight)
-            .padding(horizontal = Spacing.xl),
-    ) {
-        GlassIconButton(
-            onClick = onBack,
-            iconRes = R.drawable.ic_chevron_left,
-            contentDescription = stringResource(R.string.common_back),
-            tint = tint,
-            modifier = Modifier.align(Alignment.CenterStart),
-        )
-        Column(
-            modifier = Modifier
-                .align(Alignment.Center)
-                .padding(horizontal = SideSlotWidth / 2)
-                .semantics(mergeDescendants = true) { heading() },
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
+    val titleBlock: @Composable (Modifier, Alignment.Horizontal, TextAlign) -> Unit = { titleModifier, alignment, textAlign ->
+        Column(titleModifier.semantics(mergeDescendants = true) { heading() }, horizontalAlignment = alignment) {
             Text(
                 title,
                 color = palette.onAccent,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                textAlign = TextAlign.Center,
+                textAlign = textAlign,
                 style = InabahType.headline.copy(fontWeight = FontWeight.Bold),
             )
             subtitle?.invoke()
         }
-        Row(
-            modifier = Modifier.align(Alignment.CenterEnd),
-            verticalAlignment = Alignment.CenterVertically,
-            content = actions,
+    }
+    val back = @Composable { backModifier: Modifier ->
+        GlassIconButton(
+            onClick = onBack,
+            iconRes = R.drawable.ic_chevron_left,
+            contentDescription = stringResource(R.string.common_back),
+            tint = tint,
+            modifier = backModifier,
         )
+    }
+    val barModifier = modifier
+        .fillMaxWidth()
+        .then(if (background != null) Modifier.background(background) else Modifier)
+        .windowInsetsPadding(WindowInsets.statusBars)
+        .height(BarHeight)
+        .padding(horizontal = Spacing.xl)
+    if (centerTitle) {
+        Box(barModifier) {
+            back(Modifier.align(Alignment.CenterStart))
+            titleBlock(Modifier.align(Alignment.Center).padding(horizontal = SideSlotWidth / 2),
+                Alignment.CenterHorizontally, TextAlign.Center)
+            Row(Modifier.align(Alignment.CenterEnd), verticalAlignment = Alignment.CenterVertically, content = actions)
+        }
+    } else {
+        Row(barModifier, verticalAlignment = Alignment.CenterVertically) {
+            back(Modifier)
+            titleBlock(Modifier.weight(1f).padding(horizontal = Spacing.s), Alignment.Start, TextAlign.Start)
+            Row(verticalAlignment = Alignment.CenterVertically, content = actions)
+        }
     }
 }
 
@@ -138,6 +194,8 @@ fun GlassIconButton(
     enabled: Boolean = true,
 ) {
     val interaction = remember { MutableInteractionSource() }
+    val pressed = rememberPressProgress(interaction, glassPressSpec(), glassReleaseSpec())
+    val glow = glassHighlight(tint)
     Box(
         modifier = modifier
             .size(Size.minTapTarget)
@@ -147,9 +205,14 @@ fun GlassIconButton(
     ) {
         Box(
             modifier = Modifier
-                .pressFeedback(interaction, scale = PressFeedback.ICON_SCALE)
+                .graphicsLayer {
+                    val scale = 1f + (GLASS_PRESS_SCALE - 1f) * pressed.value
+                    scaleX = scale
+                    scaleY = scale
+                }
                 .size(GlassButtonSize)
-                .glass(tint),
+                .glass(tint)
+                .drawBehind { drawGlassGlow(glow, pressed.value, CircleShape) },
             contentAlignment = Alignment.Center,
         ) {
             Icon(painterResource(iconRes), contentDescription, tint = InabahTheme.palette.onAccent,
@@ -171,24 +234,68 @@ fun FontSizeControls(
     tint: Color,
     modifier: Modifier = Modifier,
 ) {
+    val decrease = remember { MutableInteractionSource() }
+    val increase = remember { MutableInteractionSource() }
+    val decreasePressed = rememberPressProgress(decrease, glassPressSpec(), glassReleaseSpec())
+    val increasePressed = rememberPressProgress(increase, glassPressSpec(), glassReleaseSpec())
+    val glow = glassHighlight(tint)
     Row(
         modifier = modifier
+            .graphicsLayer {
+                // Капсула лишь чуть подаётся вперёд — меньше круглой кнопки.
+                val scale = 1f + (CAPSULE_PRESS_SCALE - 1f) * maxOf(decreasePressed.value, increasePressed.value)
+                scaleX = scale
+                scaleY = scale
+            }
             .height(GlassButtonSize)
-            .glass(tint, CircleShape),
+            .glass(tint, CircleShape)
+            .drawBehind {
+                drawSideGlow(glow, decreasePressed.value, fromStart = true)
+                drawSideGlow(glow, increasePressed.value, fromStart = false)
+            },
         verticalAlignment = Alignment.CenterVertically,
     ) {
         CapsuleTextButton(stringResource(R.string.reading_font_size_decrease_short),
-            stringResource(R.string.reading_font_size_decrease), canDecrease, onDecrease)
+            stringResource(R.string.reading_font_size_decrease), canDecrease, decrease, onDecrease)
         CapsuleTextButton(stringResource(R.string.reading_font_size_increase_short),
-            stringResource(R.string.reading_font_size_increase), canIncrease, onIncrease)
+            stringResource(R.string.reading_font_size_increase), canIncrease, increase, onIncrease)
     }
 }
 
-private val CapsuleButtonWidth = 56.dp
+private val CapsuleButtonWidth = 48.dp
+
+/**
+ * Свет капсулы — только с нажатой стороны: ярко на нажатой половине и градиентом уходит в исходное
+ * стекло к противоположному краю (запись IMG_9751).
+ */
+private fun DrawScope.drawSideGlow(glow: Color, alpha: Float, fromStart: Boolean) {
+    if (alpha <= 0f) return
+    val colors = listOf(
+        0f to glow,
+        SIDE_GLOW_SOLID to glow.copy(alpha = SIDE_GLOW_MID),
+        1f to glow.copy(alpha = 0f),
+    )
+    val start = if (fromStart) 0f else size.width
+    val end = size.width - start
+    drawRoundRect(
+        Brush.horizontalGradient(*colors.toTypedArray(), startX = start, endX = end),
+        cornerRadius = androidx.compose.ui.geometry.CornerRadius(size.height / 2),
+        alpha = alpha.coerceIn(0f, 1f),
+    )
+}
+
+/** Сплошной свет — до трети ширины, к середине — вполовину, дальше гаснет. */
+private const val SIDE_GLOW_SOLID = 0.35f
+private const val SIDE_GLOW_MID = 0.55f
 
 @Composable
-private fun CapsuleTextButton(label: String, description: String, enabled: Boolean, onClick: () -> Unit) {
-    val interaction = remember { MutableInteractionSource() }
+private fun CapsuleTextButton(
+    label: String,
+    description: String,
+    enabled: Boolean,
+    interaction: MutableInteractionSource,
+    onClick: () -> Unit,
+) {
     Box(
         modifier = Modifier
             .widthIn(min = CapsuleButtonWidth)
@@ -199,8 +306,7 @@ private fun CapsuleTextButton(label: String, description: String, enabled: Boole
                 role = Role.Button
                 if (!enabled) disabled()
             }
-            .alpha(if (enabled) 1f else PressFeedback.DISABLED_OPACITY)
-            .pressFeedback(interaction, opacity = PressFeedback.BARE_OPACITY, animation = PressAnimation.Instant),
+            .alpha(if (enabled) 1f else PressFeedback.DISABLED_OPACITY),
         contentAlignment = Alignment.Center,
     ) {
         Text(label, color = InabahTheme.palette.onAccent, style = InabahType.body.copy(fontWeight = FontWeight.SemiBold))

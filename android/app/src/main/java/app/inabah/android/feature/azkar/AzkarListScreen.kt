@@ -116,6 +116,7 @@ fun AzkarListScreen(
             onBack = onBack,
             subtitle = { TopBarSubtitle(stringResource(section.subtitle)) },
             background = section.headerColor(theme),
+            centerTitle = false,
         ) {
             FontSizeControls(
                 canDecrease = fontSize > ReadingSettings.MIN_SIZE,

@@ -42,6 +42,7 @@ private const val ACTION_FILL_ALPHA = 0.1f
  */
 @Composable
 fun ConfirmationPopover(
+    expanded: Boolean,
     title: String,
     message: String,
     actionLabel: String,
@@ -50,14 +51,14 @@ fun ConfirmationPopover(
     onDismiss: () -> Unit,
 ) {
     val palette = InabahTheme.palette
-    AnchoredPopover(PopoverPlacement.AboveCenter, tint, onDismiss) {
+    AnchoredPopover(expanded, PopoverPlacement.AboveCenter, tint, onDismiss, showsArrow = true) {
         Column(
             Modifier.width(ConfirmationWidth).padding(ConfirmationPadding),
             verticalArrangement = Arrangement.spacedBy(Spacing.s),
         ) {
             Text(title, color = palette.onAccent, style = InabahType.headline.copy(fontWeight = FontWeight.Bold),
                 modifier = Modifier.semantics { heading() })
-            Text(message, color = palette.onAccentSecondary, style = InabahType.subheadline)
+            Text(message, color = palette.onAccentSecondary, style = InabahType.footnote)
             val interaction = remember { MutableInteractionSource() }
             Box(
                 contentAlignment = Alignment.Center,
@@ -84,6 +85,7 @@ fun ConfirmationPopover(
  */
 @Composable
 fun TimePickerPopover(
+    expanded: Boolean,
     hour: Int,
     minute: Int,
     tint: Color,
@@ -92,7 +94,7 @@ fun TimePickerPopover(
     onChange: (hour: Int, minute: Int) -> Unit,
     onDismiss: () -> Unit,
 ) {
-    AnchoredPopover(PopoverPlacement.BelowEnd, tint, onDismiss) {
+    AnchoredPopover(expanded, PopoverPlacement.BelowEnd, tint, onDismiss) {
         TimeWheelPicker(hour, minute, onChange, hourDescription, minuteDescription)
     }
 }
