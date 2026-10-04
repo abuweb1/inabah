@@ -70,6 +70,12 @@ import app.inabah.android.core.designsystem.Spacing
 import app.inabah.android.core.designsystem.components.ScheherazadeNew
 import app.inabah.android.core.designsystem.components.fixedSp
 import app.inabah.android.core.designsystem.components.surface
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
+import dev.chrisbanes.haze.HazeInput
+import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.blur.HazeBlurStyle
+import dev.chrisbanes.haze.blur.hazeBlur
 import kotlin.math.abs
 import kotlin.math.roundToInt
 import kotlinx.coroutines.Job
@@ -95,6 +101,15 @@ private const val GLYPH_SIZE = 21f
 private const val BAR_FILL_ALPHA = 0.07f
 private const val BAR_TINT_ALPHA = 0.08f
 
+/**
+ * Размытие под панелью — слабое (24 и 12 dp на телефоне размывали слишком сильно — решения пользователя 2026-10-04);
+ * лёгкое зерно — без него стекло выглядит «пластиком». Без подкраски: светлое стекло поверх.
+ */
+private val BarBlur = HazeBlurStyle {
+    blurRadius(6.dp)
+    noiseFactor(0.08f)
+}
+
 /** Доля цвета раздела в невыбранных значках и подписях. */
 private const val IDLE_TINT = 0.18f
 
@@ -110,10 +125,30 @@ private const val PILL_ALPHA = 0.3f
 // увеличено и преломлено ([LiquidLensShader]), по краю — блик; сама панель насыщается цветом
 // раздела. Отпустили — выбирается вкладка под линзой, линза пружиной садится в цветную пилюлю.
 
-private val LensFollow = spring<Float>(dampingRatio = 0.85f, stiffness = Spring.StiffnessHigh)
-private val PillSpring = spring<Float>(dampingRatio = 0.72f, stiffness = Spring.StiffnessMediumLow)
-private val LensRise = spring<Float>(dampingRatio = 0.7f, stiffness = Spring.StiffnessMedium)
+// Темп подобран на телефоне пользователя: 400 — слишком быстро через всю панель, 120 — слишком медленно.
+private val PillSpring = spring<Float>(dampingRatio = 0.72f, stiffness = 220f)
+private val LensRise = spring<Float>(dampingRatio = 0.75f, stiffness = 300f)
+
+/** Возврат капли в пилюлю — быстрый: начинается на подходе, не ждёт, пока переезд успокоится. */
 private val LensSettle = spring<Float>(dampingRatio = 0.9f, stiffness = Spring.StiffnessMediumLow)
+
+/** Доля пути (в вкладках), с которой капля начинает садиться в пилюлю. */
+private const val SETTLE_DISTANCE = 0.15f
+
+/**
+ * Переезд к [target]: когда до цели меньше [SETTLE_DISTANCE] вкладки (или переезд закончен) — один раз
+ * [onArrive]; хвост пружины (покачивание у цели) доигрывает уже под садящейся каплей.
+ */
+private suspend fun Animatable<Float, *>.travelTo(target: Float, onArrive: () -> Unit) {
+    var arrived = false
+    animateTo(target, PillSpring) {
+        if (!arrived && abs(value - target) < SETTLE_DISTANCE) {
+            arrived = true
+            onArrive()
+        }
+    }
+    if (!arrived) onArrive()
+}
 
 /** Капля чуть шире вкладки и чуть выше панели — почти не увеличивается (IMG_9754). */
 private const val LENS_SCALE_X = 0.12f
@@ -149,6 +184,8 @@ fun FloatingTabBar(
     selectedTab: AppTab,
     onSelect: (AppTab) -> Unit,
     modifier: Modifier = Modifier,
+    /** Экран под панелью — размывается под капсулой (Android 12+); `null` — без размытия. */
+    backdrop: HazeState? = null,
 ) {
     val theme = LocalInabahTheme.current
     val palette = theme.palette
@@ -171,8 +208,7 @@ fun FloatingTabBar(
         val target = selectedTab.ordinal.toFloat()
         if (isDragging || abs(position.value - target) < 0.01f) return@LaunchedEffect
         launch { lift.animateTo(1f, LensRise) }
-        position.animateTo(target, PillSpring)
-        lift.animateTo(0f, LensSettle)
+        position.travelTo(target) { launch { lift.animateTo(0f, LensSettle) } }
     }
 
     val lensShader = remember {
@@ -181,8 +217,8 @@ fun FloatingTabBar(
     val rimColor = palette.onAccent
     // Невыбранные — не белые, а белый в тон раздела (снимки iOS android/docs/navbar).
     val idleColor = lerp(palette.onAccent, tint, IDLE_TINT)
-    BoxWithConstraints(
-        modifier = modifier
+    Box(
+        modifier
             .fillMaxWidth()
             .windowInsetsPadding(WindowInsets.navigationBars)
             .padding(start = BarHorizontalMargin, end = BarHorizontalMargin, bottom = BarBottomMargin)
@@ -191,7 +227,22 @@ fun FloatingTabBar(
                 scaleX = scale
                 scaleY = scale
             }
-            .height(BarHeight)
+            .height(BarHeight),
+    ) {
+    // Размытое содержимое под капсулой — как у стекла iOS: пергамент под панелью становится мягким
+    // пятном, подписи читаются. Отдельный слой позади: обрезка по капсуле не задевает каплю,
+    // которая выступает за панель. Поверх — то же светлое стекло, что и без размытия.
+    if (backdrop != null) {
+        Box(
+            Modifier
+                .matchParentSize()
+                .clip(RoundedCornerShape(BarHeight / 2))
+                .hazeBlur(HazeInput.Sources(backdrop), BarBlur),
+        )
+    }
+    BoxWithConstraints(
+        modifier = Modifier
+            .matchParentSize()
             .surface(
                 palette.onAccent.copy(alpha = BAR_FILL_ALPHA).compositeOver(tint.copy(alpha = BAR_TINT_ALPHA)),
                 BarHeight / 2,
@@ -217,7 +268,7 @@ fun FloatingTabBar(
                     awaitEachGesture {
                         val down = awaitFirstDown()
                         isDragging = true
-                        var follow: Job? = scope.launch { position.animateTo(slotAt(down.position.x), LensFollow) }
+                        var follow: Job? = scope.launch { position.animateTo(slotAt(down.position.x), PillSpring) }
                         scope.launch { lift.animateTo(1f, LensRise) }
                         var lastSlot = slotAt(down.position.x).roundToInt()
                         var x = down.position.x
@@ -257,9 +308,10 @@ fun FloatingTabBar(
                         // Палец отпустил — растяжение пружинит обратно с покачиванием, как капля.
                         scope.launch { dragStretch.animateTo(0f, StretchWobble) }
                         scope.launch {
-                            position.animateTo(target.toFloat(), PillSpring)
-                            isDragging = false
-                            lift.animateTo(0f, LensSettle)
+                            position.travelTo(target.toFloat()) {
+                                isDragging = false
+                                scope.launch { lift.animateTo(0f, LensSettle) }
+                            }
                         }
                     }
                 }
@@ -335,6 +387,7 @@ fun FloatingTabBar(
                     drawRoundRect(rim, Offset(left, top), Size(w, h), CornerRadius(h / 2), style = Stroke(rimWidth))
                 },
         )
+    }
     }
 }
 
