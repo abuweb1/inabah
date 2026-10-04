@@ -20,6 +20,7 @@ import app.inabah.android.core.settings.HadithProgress
 import app.inabah.android.core.settings.PlaylistSettings
 import app.inabah.android.core.settings.PreferencesStorage
 import app.inabah.android.core.settings.ReadingSettings
+import app.inabah.android.core.settings.TextSizeSettings
 import app.inabah.android.feature.azkar.AzkarStore
 import app.inabah.android.feature.hadith.HadithStore
 import java.time.Instant
@@ -43,6 +44,7 @@ class AppServices(
     val hadithProgress: HadithProgress,
     val hadithCollectionOrder: HadithCollectionOrder,
     val appearanceSettings: AppearanceSettings,
+    val textSizeSettings: TextSizeSettings,
 )
 
 /**
@@ -127,6 +129,7 @@ class AppContainer(context: Context) {
             hadithProgress = HadithProgress(storage),
             hadithCollectionOrder = HadithCollectionOrder(storage),
             appearanceSettings = AppearanceSettings(storage),
+            textSizeSettings = TextSizeSettings(storage),
         )
     }
 

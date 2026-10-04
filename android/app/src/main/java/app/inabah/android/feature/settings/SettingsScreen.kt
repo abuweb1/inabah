@@ -15,7 +15,7 @@ import app.inabah.android.core.designsystem.components.SettingsRowText
 import app.inabah.android.core.designsystem.components.SettingsScaffold
 
 /**
- * Корень «Настроек» (iOS `SettingsView`) на графитовом фоне. Пока одна строка «Азкары»:
+ * Корень «Настроек» (iOS `SettingsView`) на графитовом фоне: «Азкары» и «Оформление → Размер текста».
  * «Хадисы» — этап 4, «Палитра» — 6, «Иконка приложения» — 9 (решение пользователя 2026-10-04).
  */
 @Composable
@@ -38,6 +38,19 @@ fun SettingsScreen(
                     SettingsRowText(
                         title = stringResource(R.string.settings_azkar_title),
                         subtitle = stringResource(R.string.settings_azkar_subtitle),
+                    )
+                }
+            },
+        )
+        // «Оформление»: пока только «Размер текста»; «Палитра» — этап 6, «Иконка приложения» — 9.
+        SettingsGroup(
+            header = stringResource(R.string.settings_appearance_header),
+            rows = listOf {
+                SettingsRow(onClick = { onOpen(SettingsRoute.TextSize) }, trailing = { SettingsChevron() }) {
+                    SettingsIcon(R.drawable.ic_format_size, theme.gradients.ajurriCard)
+                    SettingsRowText(
+                        title = stringResource(R.string.settings_text_size_title),
+                        subtitle = stringResource(R.string.settings_text_size_subtitle),
                     )
                 }
             },

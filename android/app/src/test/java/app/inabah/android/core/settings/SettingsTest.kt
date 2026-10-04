@@ -130,3 +130,62 @@ class AppearanceSettingsTest {
         assertEquals(ThemeStyle.Sections, AppearanceSettings(restarted).style.value)
     }
 }
+
+/** «Размер текста». */
+class TextSizeSettingsTest {
+    @Test
+    fun `По умолчанию — «Обычный» у переводов и интерфейса`() = TestStorage.run { storage ->
+        val settings = TextSizeSettings(storage.storage)
+
+        assertEquals(ContentTextSize.Standard, settings.content.value)
+        assertEquals(InterfaceTextSize.Standard, settings.interfaceSize.value)
+    }
+
+    @Test
+    fun `Выбор сохраняется между запусками`() = TestStorage.run { storage ->
+        TextSizeSettings(storage.storage).apply {
+            select(ContentTextSize.Largest)
+            select(InterfaceTextSize.Smaller)
+        }
+
+        val restarted = TextSizeSettings(storage.restart())
+        assertEquals(ContentTextSize.Largest, restarted.content.value)
+        assertEquals(InterfaceTextSize.Smaller, restarted.interfaceSize.value)
+    }
+
+    @Test
+    fun `Повторный выбор того же шага не уведомляет и не пишет`() = TestStorage.run { storage ->
+        val settings = TextSizeSettings(storage.storage)
+        settings.select(InterfaceTextSize.Larger)
+        val before = storage.storage.snapshot
+
+        settings.interfaceSize.test {
+            assertEquals(InterfaceTextSize.Larger, awaitItem())
+
+            settings.select(InterfaceTextSize.Larger)
+            expectNoEvents()
+            assertTrue(before === storage.storage.snapshot, "повторный выбор не должен писать в хранилище")
+
+            settings.select(InterfaceTextSize.Standard)
+            assertEquals(InterfaceTextSize.Standard, awaitItem())
+        }
+    }
+
+    @Test
+    fun `Неизвестное значение и прежнее iOS largest у интерфейса — «Обычный»`() = TestStorage.run { storage ->
+        val restarted = storage.seed {
+            it[stringPreferencesKey("appearance.contentTextSize")] = "huge"
+            it[stringPreferencesKey("appearance.interfaceTextSize")] = "largest"
+        }
+
+        val settings = TextSizeSettings(restarted)
+        assertEquals(ContentTextSize.Standard, settings.content.value)
+        assertEquals(InterfaceTextSize.Standard, settings.interfaceSize.value)
+    }
+
+    @Test
+    fun `Шаги — как в iOS, кроме «Мельче» (мельче по решению пользователя)`() {
+        assertEquals(listOf(0.8f, 1f, 1.15f, 1.3f, 1.5f), ContentTextSize.entries.map { it.scale })
+        assertEquals(listOf(0.88f, 1f, 1.12f), InterfaceTextSize.entries.map { it.fontScale })
+    }
+}

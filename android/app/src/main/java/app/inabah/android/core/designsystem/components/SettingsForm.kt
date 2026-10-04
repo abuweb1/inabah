@@ -32,13 +32,16 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import app.inabah.android.R
+import app.inabah.android.core.designsystem.FixedTextSize
 import app.inabah.android.core.designsystem.InabahTheme
 import app.inabah.android.core.designsystem.InabahType
 import app.inabah.android.core.designsystem.PressFeedback
@@ -55,8 +58,8 @@ private val GroupRadius = 26.dp
 private val RowMinHeight = 56.dp
 private val RowHorizontalPadding = 22.dp
 private val GroupSpacing = 24.dp
-private val SettingsIconSize = 32.dp
-private val SettingsIconGlyph = 20.dp
+private const val SETTINGS_ICON_SIZE = 32f
+private const val SETTINGS_ICON_GLYPH = 20f
 private val ChevronSize = 22.dp
 
 /**
@@ -83,13 +86,16 @@ fun SettingsScaffold(
                 .padding(bottom = contentPadding.calculateBottomPadding() + Spacing.xl),
             verticalArrangement = Arrangement.spacedBy(GroupSpacing),
         ) {
+            // Крупный заголовок закреплён, как заголовки навбара; строки — с шагом интерфейса.
             largeTitle?.let {
-                Text(
-                    it,
-                    color = InabahTheme.palette.onAccent,
-                    style = InabahType.largeTitle.copy(fontWeight = FontWeight.Bold),
-                    modifier = Modifier.padding(top = Spacing.xxxl).semantics { heading() },
-                )
+                FixedTextSize {
+                    Text(
+                        it,
+                        color = InabahTheme.palette.onAccent,
+                        style = InabahType.largeTitle.copy(fontWeight = FontWeight.Bold),
+                        modifier = Modifier.padding(top = Spacing.xxxl).semantics { heading() },
+                    )
+                }
             }
             content()
         }
@@ -182,11 +188,17 @@ fun SettingsRowText(title: String, subtitle: String? = null, color: Color = Inab
     }
 }
 
-/** Значок строки корня настроек: символ на градиенте раздела, 32 dp, скругление 5. */
+/**
+ * Значок строки корня настроек: символ на градиенте раздела, плашка 32, скругление 5. Размеры — в sp:
+ * плашка растёт вместе с текстом строки (шаг интерфейса, iOS `@ScaledMetric`).
+ */
 @Composable
 fun SettingsIcon(iconRes: Int, gradient: Brush, tint: Color = InabahTheme.palette.onAccent) {
-    Box(Modifier.size(SettingsIconSize).surface(gradient, Radius.small), contentAlignment = Alignment.Center) {
-        Icon(painterResource(iconRes), contentDescription = null, tint = tint, modifier = Modifier.size(SettingsIconGlyph))
+    val density = LocalDensity.current
+    val plate = with(density) { SETTINGS_ICON_SIZE.sp.toDp() }
+    val glyph = with(density) { SETTINGS_ICON_GLYPH.sp.toDp() }
+    Box(Modifier.size(plate).surface(gradient, Radius.small), contentAlignment = Alignment.Center) {
+        Icon(painterResource(iconRes), contentDescription = null, tint = tint, modifier = Modifier.size(glyph))
     }
 }
 
