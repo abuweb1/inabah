@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Заглушка: iOS-иконка целиком, уменьшенная так, чтобы арка уместилась в маску.
+     Настоящий передний план (арка и каллиграфия в безопасной зоне 66 dp) — docs/android/07, 7.4. -->
+<inset xmlns:android="http://schemas.android.com/apk/res/android"
+    android:drawable="@drawable/ic_launcher_art"
+    android:inset="10%" />
