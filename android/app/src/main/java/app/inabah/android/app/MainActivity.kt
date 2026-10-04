@@ -28,7 +28,7 @@ class MainActivity : ComponentActivity() {
             services?.let { ready ->
                 val style by ready.appearanceSettings.style.collectAsStateWithLifecycle()
                 InabahTheme(theme = style.theme) {
-                    RootScreen(router = ready.router)
+                    RootScreen(services = ready)
                 }
             }
         }

@@ -100,6 +100,13 @@ object Motion {
 
     fun <T> progress() = tween<T>(durationMillis = 500, easing = EaseInOut)
 
+    /** Смена цифры счётчика (iOS `.snappy` у `.numericText`): быстрая пружина почти без отскока. */
+    fun <T> digits() = spring<T>(dampingRatio = 0.85f, stiffness = Spring.StiffnessMedium)
+
+    /** Вспышка выполненного счётчика: разгорается 200 мс, гаснет 350 мс. */
+    const val FLASH_IN_MILLIS = 200
+    const val FLASH_OUT_MILLIS = 350
+
     /** Кегль А−/А+ — пружина без отскока. */
     fun <T> fontSize() = spring<T>(dampingRatio = Spring.DampingRatioNoBouncy, stiffness = Spring.StiffnessMediumLow)
 

@@ -137,6 +137,8 @@
     <string name="settings_reset_now_footer">Счётчики раздела обнулятся сразу, не дожидаясь времени обнуления.</string>
     <string name="settings_reset_now_header">Сбросить сейчас</string>
     <string name="settings_reset_time_picker_title">Время обнуления</string>
+    <string name="settings_reset_time_hour">Часы</string>
+    <string name="settings_reset_time_minute">Минуты</string>
     <string name="settings_title">Настройки</string>
     <string name="tab_azkar">Азкары</string>
     <string name="tab_hadith">Хадисы</string>

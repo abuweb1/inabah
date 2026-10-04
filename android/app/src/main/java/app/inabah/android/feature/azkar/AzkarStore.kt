@@ -51,6 +51,11 @@ class AzkarStore(
     }
     private val progressBySection = AzkarSection.entries.associateWith { MutableStateFlow(SectionProgress(0, 0)) }
 
+    // Одни и те же объекты на каждый вызов: Compose собирает поток по ключу-объекту и иначе
+    // перезапускал бы сборщик на каждой перерисовке.
+    private val stateViews = sections.mapValues { (_, flow) -> flow.asStateFlow() }
+    private val progressViews = progressBySection.mapValues { (_, flow) -> flow.asStateFlow() }
+
     /** Раздел загружен — у него есть период. */
     private val periods = mutableMapOf<AzkarSection, AzkarPeriod>()
 
@@ -67,13 +72,13 @@ class AzkarStore(
         resetSettings.onResetTimeChange(::adoptNewResetTimes)
     }
 
-    fun state(section: AzkarSection): StateFlow<Loadable<List<ZikrSession>>> = sections.getValue(section).asStateFlow()
+    fun state(section: AzkarSection): StateFlow<Loadable<List<ZikrSession>>> = stateViews.getValue(section)
 
     fun sessions(section: AzkarSection): List<ZikrSession> =
         (sections.getValue(section).value as? Loadable.Loaded)?.value.orEmpty()
 
     /** Меняется только при выполнении или сбросе зикра, а не на каждое нажатие. */
-    fun progress(section: AzkarSection): StateFlow<SectionProgress> = progressBySection.getValue(section).asStateFlow()
+    fun progress(section: AzkarSection): StateFlow<SectionProgress> = progressViews.getValue(section)
 
     /** Загружен или загружается — ничего; после ошибки — повторная попытка. Повторная загрузка не сбрасывает счёт. */
     suspend fun load(section: AzkarSection) {

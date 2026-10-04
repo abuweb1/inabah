@@ -111,4 +111,60 @@ class AppRouterTest {
         assertFalse(router.canGoBack)
         assertFalse(router.goBack())
     }
+
+    @Test
+    fun `pop снимает верхний экран своей вкладки, с корня ничего не делает`() {
+        val router = AppRouter()
+        router.push(SettingsRoute.Azkar)
+        router.open(AzkarRoute.SectionList(AzkarSection.Morning))
+
+        router.pop(AppTab.Settings)
+        router.pop(AppTab.Settings)
+
+        assertTrue(router.settingsStack.isEmpty())
+        assertEquals(listOf(AzkarRoute.SectionList(AzkarSection.Morning)), router.azkarStack.toList())
+        assertEquals(AppTab.Azkar, router.selectedTab)
+    }
+
+    @Test
+    fun `Двойное открытие того же экрана кладёт его один раз`() {
+        val router = AppRouter()
+
+        router.push(AzkarRoute.SectionList(AzkarSection.Morning))
+        router.push(AzkarRoute.SectionList(AzkarSection.Morning))
+        router.push(SettingsRoute.Azkar)
+        router.push(SettingsRoute.Azkar)
+
+        assertEquals(listOf(AzkarRoute.SectionList(AzkarSection.Morning)), router.azkarStack.toList())
+        assertEquals(listOf<SettingsRoute>(SettingsRoute.Azkar), router.settingsStack.toList())
+    }
+
+    @Test
+    fun `Снимок восстанавливает вкладку и стеки всех вкладок`() {
+        val source = AppRouter()
+        source.open(AzkarRoute.SectionList(AzkarSection.Evening))
+        source.open(HadithRoute.Detail(HadithId(HadithCollection.Qudsi, 7)))
+        source.select(AppTab.Settings)
+        source.push(SettingsRoute.Azkar)
+
+        val restored = AppRouter()
+        restored.restore(source.snapshot())
+
+        assertEquals(AppTab.Settings, restored.selectedTab)
+        assertEquals(source.azkarStack.toList(), restored.azkarStack.toList())
+        assertEquals(source.hadithStack.toList(), restored.hadithStack.toList())
+        assertEquals(listOf<SettingsRoute>(SettingsRoute.Azkar), restored.settingsStack.toList())
+    }
+
+    @Test
+    fun `Повреждённый снимок оставляет корни`() {
+        val router = AppRouter()
+
+        router.restore("{\"selectedTab\":\"Settings\",\"azkar\":[{\"type\":\"unknown\"}]}")
+        router.restore("не JSON")
+
+        assertEquals(AppTab.Azkar, router.selectedTab)
+        assertTrue(router.azkarStack.isEmpty())
+        assertTrue(router.settingsStack.isEmpty())
+    }
 }
