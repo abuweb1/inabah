@@ -20,3 +20,10 @@ docs/
 # Claude Code — локальные настройки
 .claude
 CLAUDE.md
+# Android (android/ — проект Android Studio)
+android/.gradle/
+android/.kotlin/
+android/local.properties
+android/captures/
+android/**/build/
+*.iml
