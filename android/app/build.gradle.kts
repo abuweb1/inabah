@@ -38,6 +38,14 @@ android {
     buildFeatures {
         compose = true
     }
+
+    // Язык интерфейса выбирает приложение, не система (app/AppLocale.kt): все переводы строк — в основном
+    // APK, иначе Play отдаст только язык системы и выбранного перевода на устройстве не окажется.
+    bundle {
+        language {
+            enableSplit = false
+        }
+    }
 }
 
 dependencies {
