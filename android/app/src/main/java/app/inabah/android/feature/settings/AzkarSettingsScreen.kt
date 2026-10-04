@@ -90,23 +90,23 @@ fun AzkarSettingsScreen(
             rows = AzkarSection.entries.map { section ->
                 {
                     val canReset = remember(resets, progress) { store.hasProgress(section) }
-                    SettingsRow(onClick = { pendingReset = section }, enabled = canReset) {
-                        Box {
+                    // Якорь — вся строка: подтверждение стоит над ней по центру, уголок — на её середину.
+                    Box {
+                        SettingsRow(onClick = { pendingReset = section }, enabled = canReset) {
                             SettingsRowText(stringResource(section.title))
-                            if (pendingReset == section) {
-                                ConfirmationPopover(
-                                    title = stringResource(R.string.settings_reset_now_confirm_title),
-                                    message = stringResource(section.resetConfirmationMessage),
-                                    actionLabel = stringResource(R.string.settings_reset_now_confirm_action),
-                                    tint = tint,
-                                    onConfirm = {
-                                        store.resetProgress(section)
-                                        resets++
-                                    },
-                                    onDismiss = { pendingReset = null },
-                                )
-                            }
                         }
+                        ConfirmationPopover(
+                            expanded = pendingReset == section,
+                            title = stringResource(R.string.settings_reset_now_confirm_title),
+                            message = stringResource(section.resetConfirmationMessage),
+                            actionLabel = stringResource(R.string.settings_reset_now_confirm_action),
+                            tint = tint,
+                            onConfirm = {
+                                store.resetProgress(section)
+                                resets++
+                            },
+                            onDismiss = { pendingReset = null },
+                        )
                     }
                 }
             },
@@ -133,17 +133,16 @@ private fun ResetTimeChip(
             .pressFeedback(interaction, opacity = PressFeedback.ROW_OPACITY),
     ) {
         SettingsValueChip(time.toString(), highlighted = isEditing, tint = tint)
-        if (isEditing) {
-            TimePickerPopover(
-                hour = time.hour,
-                minute = time.minute,
-                tint = tint,
-                hourDescription = stringResource(R.string.settings_reset_time_hour),
-                minuteDescription = stringResource(R.string.settings_reset_time_minute),
-                onChange = { hour, minute -> onChange(DayTime.of(hour, minute)) },
-                onDismiss = onDismiss,
-            )
-        }
+        TimePickerPopover(
+            expanded = isEditing,
+            hour = time.hour,
+            minute = time.minute,
+            tint = tint,
+            hourDescription = stringResource(R.string.settings_reset_time_hour),
+            minuteDescription = stringResource(R.string.settings_reset_time_minute),
+            onChange = { hour, minute -> onChange(DayTime.of(hour, minute)) },
+            onDismiss = onDismiss,
+        )
     }
 }
 

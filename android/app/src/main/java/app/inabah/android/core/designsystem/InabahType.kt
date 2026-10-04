@@ -15,26 +15,35 @@ import androidx.compose.ui.unit.sp
  * масштабируются системным размером шрифта. Арабский текст — только `ArabicText`.
  */
 object InabahType {
-    val largeTitle: TextStyle @Composable @ReadOnlyComposable get() = display(34.sp)
-    val title: TextStyle @Composable @ReadOnlyComposable get() = display(28.sp)
-    val title2: TextStyle @Composable @ReadOnlyComposable get() = display(22.sp)
-    val title3: TextStyle @Composable @ReadOnlyComposable get() = display(20.sp)
-    val headline: TextStyle @Composable @ReadOnlyComposable get() = text(17.sp, FontWeight.SemiBold)
-    val body: TextStyle @Composable @ReadOnlyComposable get() = text(17.sp)
-    val callout: TextStyle @Composable @ReadOnlyComposable get() = text(16.sp)
-    val subheadline: TextStyle @Composable @ReadOnlyComposable get() = text(15.sp)
-    val footnote: TextStyle @Composable @ReadOnlyComposable get() = text(13.sp)
-    val caption: TextStyle @Composable @ReadOnlyComposable get() = text(12.sp)
-    val caption2: TextStyle @Composable @ReadOnlyComposable get() = text(11.sp)
+    val largeTitle: TextStyle @Composable @ReadOnlyComposable get() = display(34f)
+    val title: TextStyle @Composable @ReadOnlyComposable get() = display(28f)
+    val title2: TextStyle @Composable @ReadOnlyComposable get() = display(22f)
+    val title3: TextStyle @Composable @ReadOnlyComposable get() = display(20f)
+    val headline: TextStyle @Composable @ReadOnlyComposable get() = text(17f, FontWeight.SemiBold)
+    val body: TextStyle @Composable @ReadOnlyComposable get() = text(17f)
+    val callout: TextStyle @Composable @ReadOnlyComposable get() = text(16f)
+    val subheadline: TextStyle @Composable @ReadOnlyComposable get() = text(15f)
+    val footnote: TextStyle @Composable @ReadOnlyComposable get() = text(13f)
+    val caption: TextStyle @Composable @ReadOnlyComposable get() = text(12f)
+    val caption2: TextStyle @Composable @ReadOnlyComposable get() = text(11f)
+
+    /**
+     * Кегли выше — pt iOS. Inter шире SF Pro и с более высокими строчными: при тех же числах
+     * кириллица выглядит заметно крупнее, особенно на узких экранах Android (замечание
+     * пользователя 2026-10-04, снимок с телефона). Все стили интерфейса уменьшены на 8 %.
+     */
+    private const val INTER_SCALE = 0.92f
 
     @Composable
     @ReadOnlyComposable
-    private fun text(size: TextUnit, weight: FontWeight? = null) =
-        TextStyle(fontFamily = LocalInabahFonts.current.text, fontSize = size, fontWeight = weight)
+    private fun text(points: Float, weight: FontWeight? = null) =
+        TextStyle(fontFamily = LocalInabahFonts.current.text, fontSize = scaled(points), fontWeight = weight)
 
     @Composable
     @ReadOnlyComposable
-    private fun display(size: TextUnit) = TextStyle(fontFamily = LocalInabahFonts.current.display, fontSize = size)
+    private fun display(points: Float) = TextStyle(fontFamily = LocalInabahFonts.current.display, fontSize = scaled(points))
+
+    private fun scaled(points: Float): TextUnit = (points * INTER_SCALE).sp
 }
 
 /** Моноширинные цифры — счётчики, время, проценты. */

@@ -5,6 +5,10 @@ import androidx.compose.animation.core.AnimationSpec
 import androidx.compose.animation.core.snap
 import androidx.compose.foundation.interaction.InteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.State
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.Measurable
 import androidx.compose.ui.layout.MeasureResult
@@ -20,6 +24,53 @@ import kotlinx.coroutines.launch
 // Отклик на нажатие вместо ряби Material (iOS PressScale/PressDim): только трансформация отрисовки,
 // без изменения размеров. Значение анимации читается в слое при размещении — нажатие меняет
 // отрисовку, а не композицию и не раскладку.
+
+/**
+ * Доля нажатия 0…1 для своих эффектов (стекло навбара, линза панели вкладок): то же правило, что у
+ * [pressFeedback], — быстрое касание доигрывает нажатие до конца, отмена (прокрутка) — сразу назад.
+ * Значение читать в фазе отрисовки (`graphicsLayer`, `drawBehind`), не в композиции.
+ */
+@Composable
+fun rememberPressProgress(
+    interactionSource: InteractionSource,
+    press: AnimationSpec<Float> = Motion.press(),
+    release: AnimationSpec<Float> = press,
+): State<Float> {
+    val progress = remember(interactionSource) { Animatable(0f) }
+    LaunchedEffect(interactionSource) {
+        val presses = mutableSetOf<PressInteraction.Press>()
+        var running: Job? = null
+        interactionSource.interactions.collect { interaction ->
+            val released = when (interaction) {
+                is PressInteraction.Press -> {
+                    presses += interaction
+                    false
+                }
+                is PressInteraction.Release -> {
+                    presses -= interaction.press
+                    true
+                }
+                is PressInteraction.Cancel -> {
+                    presses -= interaction.press
+                    false
+                }
+                else -> return@collect
+            }
+            running?.cancel()
+            running = launch {
+                when {
+                    presses.isNotEmpty() -> progress.animateTo(1f, press)
+                    released -> {
+                        progress.animateTo(1f, press)
+                        progress.animateTo(0f, release)
+                    }
+                    else -> progress.animateTo(0f, release)
+                }
+            }
+        }
+    }
+    return progress.asState()
+}
 
 /** Скорость отклика: карточки и плитки — [Card] (180 мс), кнопки — [Control] (120 мс), [Instant] — сразу. */
 enum class PressAnimation { Card, Control, Instant }
@@ -85,18 +136,41 @@ private class PressFeedbackNode(
     private fun collect() {
         collector = coroutineScope.launch {
             val presses = mutableSetOf<PressInteraction.Press>()
+            var running: Job? = null
             interactionSource.interactions.collect { interaction ->
-                when (interaction) {
-                    is PressInteraction.Press -> presses += interaction
-                    is PressInteraction.Release -> presses -= interaction.press
-                    is PressInteraction.Cancel -> presses -= interaction.press
+                val released = when (interaction) {
+                    is PressInteraction.Press -> {
+                        presses += interaction
+                        false
+                    }
+                    is PressInteraction.Release -> {
+                        presses -= interaction.press
+                        true
+                    }
+                    is PressInteraction.Cancel -> {
+                        presses -= interaction.press
+                        false
+                    }
+                    else -> return@collect
                 }
                 val spec: AnimationSpec<Float> = when (animation) {
                     PressAnimation.Card -> Motion.cardPress()
                     PressAnimation.Control -> Motion.press()
                     PressAnimation.Instant -> snap()
                 }
-                launch { progress.animateTo(if (presses.isEmpty()) 0f else 1f, spec) }
+                running?.cancel()
+                running = launch {
+                    when {
+                        presses.isNotEmpty() -> progress.animateTo(1f, spec)
+                        // Быстрое касание: в прокрутке нажатие приходит с задержкой вместе с отпусканием —
+                        // сначала доиграть сжатие, иначе отклика не видно. Отмена (это была прокрутка) — сразу назад.
+                        released -> {
+                            progress.animateTo(1f, spec)
+                            progress.animateTo(0f, spec)
+                        }
+                        else -> progress.animateTo(0f, spec)
+                    }
+                }
             }
         }
     }

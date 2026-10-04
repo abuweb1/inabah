@@ -41,10 +41,12 @@ import kotlinx.coroutines.flow.filter
 // на подсвеченной полосе посередине, дальние строки бледнее и сжаты. Значение сообщается, когда
 // барабан остановился.
 
-private val RowHeight = 40.dp
+// Компактнее iOS-барабана: на телефоне пользователя полный размер выглядел громоздко.
+private val RowHeight = 32.dp
 private const val VISIBLE_ROWS = 5
-private val ColumnWidth = 88.dp
-private val SelectionRadius = 14.dp
+private val ColumnWidth = 60.dp
+private val SelectionRadius = 12.dp
+private val ColumnGap = 8.dp
 private const val SELECTION_ALPHA = 0.12f
 
 /** «Бесконечный» список: столько повторов, чтобы до края не долистать. */
@@ -132,7 +134,7 @@ fun WheelPicker(
                         label(index % count),
                         color = palette.onAccent,
                         textAlign = TextAlign.Center,
-                        style = InabahType.title2.monospacedDigits(),
+                        style = InabahType.title3.monospacedDigits(),
                     )
                 }
             }
@@ -156,16 +158,16 @@ fun TimeWheelPicker(
     val palette = InabahTheme.palette
     val currentHour by rememberUpdatedState(hour)
     val currentMinute by rememberUpdatedState(minute)
-    Box(modifier.padding(horizontal = Spacing.xl, vertical = Spacing.m), contentAlignment = Alignment.Center) {
+    Box(modifier.padding(horizontal = Spacing.m, vertical = Spacing.s), contentAlignment = Alignment.Center) {
         Box(
             Modifier
-                .width(ColumnWidth * 2 + Spacing.xl)
+                .width(ColumnWidth * 2 + ColumnGap)
                 .height(RowHeight)
                 .surface(SolidColor(palette.onAccent.copy(alpha = SELECTION_ALPHA)), RoundedCornerShape(SelectionRadius)),
         )
         Row {
             WheelPicker(HOURS, hour, { onChange(it, currentMinute) }, ::twoDigits, hourDescription)
-            Box(Modifier.width(Spacing.xl))
+            Box(Modifier.width(ColumnGap))
             WheelPicker(MINUTES, minute, { onChange(currentHour, it) }, ::twoDigits, minuteDescription)
         }
     }
