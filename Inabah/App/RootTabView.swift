@@ -14,12 +14,18 @@ struct RootTabView: View {
 
         TabView(selection: tabSelection) {
             Tab("tab.azkar", systemImage: "hands.and.sparkles.fill", value: AppTab.azkar) {
+                // Шаг «Размер интерфейса» — на каждом экране стека, а не на `NavigationStack`:
+                // навбары остаются стандартного размера.
                 NavigationStack(path: $router.azkarPath) {
                     AzkarHomeView()
+                        .interfaceTextSize()
                         .navigationDestination(for: AzkarRoute.self) { route in
-                            switch route {
-                            case .list(let section): AzkarListView(section: section)
+                            Group {
+                                switch route {
+                                case .list(let section): AzkarListView(section: section)
+                                }
                             }
+                            .interfaceTextSize()
                         }
                 }
                 .tint(theme.palette.accentLight)
@@ -27,11 +33,15 @@ struct RootTabView: View {
             Tab("tab.hadith", systemImage: "book.closed.fill", value: AppTab.hadith) {
                 NavigationStack(path: $router.hadithPath) {
                     HadithHomeView()
+                        .interfaceTextSize()
                         .navigationDestination(for: HadithRoute.self) { route in
-                            switch route {
-                            case .list(let collection): HadithListView(collection: collection)
-                            case .detail(let id): HadithDetailView(id: id)
+                            Group {
+                                switch route {
+                                case .list(let collection): HadithListView(collection: collection)
+                                case .detail(let id): HadithDetailView(id: id)
+                                }
                             }
+                            .interfaceTextSize()
                         }
                 }
                 .tint(theme.palette.accentLight)
@@ -40,20 +50,27 @@ struct RootTabView: View {
             Tab("tab.makharij", systemImage: "character.ar", value: AppTab.makharij) {
                 NavigationStack {
                     MakharijHomeView()
+                        .interfaceTextSize()
                 }
                 .tint(theme.palette.accentLight)
             }
             Tab("tab.settings", systemImage: "gearshape.fill", value: AppTab.settings) {
                 NavigationStack(path: $router.settingsPath) {
+                    // Шаг интерфейса — внутри `SettingsView`, у строк: крупный заголовок
+                    // «Настройки» UIKit масштабирует по размеру всего списка.
                     SettingsView()
                         .navigationDestination(for: SettingsRoute.self) { route in
-                            switch route {
-                            case .azkar: AzkarSettingsView()
-                            case .hadith: HadithSettingsView()
-                            case .hadithOrder: HadithOrderSettingsView()
-                            case .appIcon: AppIconSettingsView()
-                            case .palette: PaletteSettingsView()
+                            Group {
+                                switch route {
+                                case .azkar: AzkarSettingsView()
+                                case .hadith: HadithSettingsView()
+                                case .hadithOrder: HadithOrderSettingsView()
+                                case .appIcon: AppIconSettingsView()
+                                case .palette: PaletteSettingsView()
+                                case .textSize: TextSizeSettingsView()
+                                }
                             }
+                            .interfaceTextSize()
                         }
                 }
                 .tint(theme.palette.accentLight)

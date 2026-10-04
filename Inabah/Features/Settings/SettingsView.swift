@@ -13,6 +13,7 @@ struct SettingsView: View {
                 rows(SettingsSection.appearance)
             } header: {
                 Text("settings.appearance.header")
+                    .interfaceTextSize()
             }
         }
         .settingsForm(background: theme.gradients.settingsBackground)
@@ -23,7 +24,10 @@ struct SettingsView: View {
     private func rows(_ sections: [SettingsSection]) -> some View {
         ForEach(sections, id: \.self) { section in
             NavigationLink(value: section.route) {
+                // Шаг интерфейса — у строк, а не у списка или экрана: крупный заголовок
+                // «Настройки» UIKit масштабирует по размеру списка, а заголовки не меняются.
                 SettingsSectionRow(section: section)
+                    .interfaceTextSize()
             }
             .settingsRow()
         }
@@ -35,18 +39,20 @@ private enum SettingsSection {
     case azkar
     case hadith
     case palette
+    case textSize
     case appIcon
 
     /// Настройки разделов приложения.
     static let content: [SettingsSection] = [.azkar, .hadith]
     /// Оформление.
-    static let appearance: [SettingsSection] = [.palette, .appIcon]
+    static let appearance: [SettingsSection] = [.palette, .textSize, .appIcon]
 
     var route: SettingsRoute {
         switch self {
         case .azkar: .azkar
         case .hadith: .hadith
         case .palette: .palette
+        case .textSize: .textSize
         case .appIcon: .appIcon
         }
     }
@@ -56,6 +62,7 @@ private enum SettingsSection {
         case .azkar: "settings.azkar.title"
         case .hadith: "settings.hadith.title"
         case .palette: "settings.palette.title"
+        case .textSize: "settings.textSize.title"
         case .appIcon: "settings.appIcon.title"
         }
     }
@@ -65,6 +72,7 @@ private enum SettingsSection {
         case .azkar: "settings.azkar.subtitle"
         case .hadith: "settings.hadith.subtitle"
         case .palette: "settings.palette.subtitle"
+        case .textSize: "settings.textSize.subtitle"
         case .appIcon: "settings.appIcon.subtitle"
         }
     }
@@ -74,6 +82,7 @@ private enum SettingsSection {
         case .azkar: "hands.and.sparkles.fill"
         case .hadith: "book.closed.fill"
         case .palette: "paintpalette.fill"
+        case .textSize: "textformat.size"
         case .appIcon: "app.badge.fill"
         }
     }
@@ -84,6 +93,7 @@ private enum SettingsSection {
         case .azkar: theme.gradients.morningCard
         case .hadith: theme.gradients.nawawiCard
         case .palette: theme.gradients.qudsiCard
+        case .textSize: theme.gradients.ajurriCard
         case .appIcon: theme.gradients.eveningCard
         }
     }
@@ -95,16 +105,15 @@ private struct SettingsSectionRow: View {
 
     @Environment(\.theme) private var theme
 
-    private enum Layout {
-        static let iconSize: CGFloat = 32
-    }
+    /// Плашка значка растёт вместе с текстом строки (размер интерфейса).
+    @ScaledMetric(relativeTo: .body) private var iconSize: CGFloat = 32
 
     var body: some View {
         HStack(spacing: Spacing.m) {
             Image(systemName: section.symbolName)
                 .font(.title3)
                 .foregroundStyle(theme.palette.onAccent)
-                .frame(width: Layout.iconSize, height: Layout.iconSize)
+                .frame(width: iconSize, height: iconSize)
                 .background(section.tint(in: theme).linear, in: .rect(cornerRadius: Radius.small))
                 .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: Spacing.xxxs) {

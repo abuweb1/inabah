@@ -8,10 +8,12 @@ struct HadithRow: View {
 
     @Environment(\.theme) private var theme
 
+    /// Бейдж номера и полоска растут вместе с текстом строки (размер интерфейса).
+    @ScaledMetric(relativeTo: .subheadline) private var accentMinHeight: CGFloat = 44
+    @ScaledMetric(relativeTo: .subheadline) private var badgeSize: CGFloat = 34
+    @ScaledMetric(relativeTo: .subheadline) private var badgeNumberSize: Double = 21
+
     private enum Layout {
-        static let accentMinHeight: CGFloat = 44
-        static let badgeSize: CGFloat = 34
-        static let badgeNumberSize: Double = 21
         static let previewLines = 2
         static let statusGlyphSize: CGFloat = 20
     }
@@ -21,7 +23,7 @@ struct HadithRow: View {
             Capsule()
                 .fill(status.stripe(in: theme))
                 .frame(width: Size.accentStripe)
-                .frame(minHeight: Layout.accentMinHeight)
+                .frame(minHeight: accentMinHeight)
 
             numberBadge
 
@@ -64,9 +66,9 @@ struct HadithRow: View {
     private var numberBadge: some View {
         // `verbatim`: `Text(_:format:)` подставляет локаль окружения и вернул бы латинские цифры.
         Text(verbatim: hadith.number.formatted(.arabicIndic))
-            .font(.arabic(size: Layout.badgeNumberSize))
+            .font(.arabic(size: badgeNumberSize))
             .foregroundStyle(status.tint(in: theme))
-            .frame(width: Layout.badgeSize, height: Layout.badgeSize)
+            .frame(width: badgeSize, height: badgeSize)
             .surface(status.badgeFill(in: theme), cornerRadius: Radius.control, border: status.badgeBorder(in: theme))
             .accessibilityLabel(Text("hadith.detail.number \(hadith.number)"))
     }

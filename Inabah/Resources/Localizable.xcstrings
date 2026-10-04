@@ -1182,12 +1182,12 @@
       }
     },
     "section.card.meta.original %@ %@" : {
-      "comment" : "Подпись карточки и название в оригинале (арабский — контент). Подпись первой — иначе строка выстраивается справа налево",
+      "comment" : "Подпись карточки и название в оригинале (арабский — контент). Подпись первой — иначе строка выстраивается справа налево Неразрывный пробел держит «·» на строке подписи; арабское название — в изоляте направления (U+2068…U+2069), чтобы при переносе точка не уходила к нему.",
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%1$@ · %2$@"
+            "value" : "%1$@ · ⁨%2$@⁩"
           }
         }
       }
@@ -1588,6 +1588,94 @@
         }
       }
     },
+    "settings.textSize.content.footer" : {
+      "comment" : "Размер текста: что меняет шаг переводов",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перевод, транскрипция и источники азкаров и хадисов."
+          }
+        }
+      }
+    },
+    "settings.textSize.content.header" : {
+      "comment" : "Размер текста: заголовок секции переводов",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Переводы"
+          }
+        }
+      }
+    },
+    "settings.textSize.content.label" : {
+      "comment" : "Размер текста: ползунок переводов (VoiceOver)",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Размер переводов"
+          }
+        }
+      }
+    },
+    "settings.textSize.interface.footer" : {
+      "comment" : "Размер текста: что меняет шаг интерфейса",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Карточки главных, списки, плеер и настройки. Заголовки экранов, вкладки, кнопки и всплывающие окна не меняются."
+          }
+        }
+      }
+    },
+    "settings.textSize.interface.header" : {
+      "comment" : "Размер текста: заголовок секции интерфейса",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Интерфейс"
+          }
+        }
+      }
+    },
+    "settings.textSize.interface.label" : {
+      "comment" : "Размер текста: ползунок интерфейса (VoiceOver)",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Размер интерфейса"
+          }
+        }
+      }
+    },
+    "settings.textSize.subtitle" : {
+      "comment" : "Настройки: подпись строки «Размер текста»",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Переводы и интерфейс"
+          }
+        }
+      }
+    },
+    "settings.textSize.title" : {
+      "comment" : "Настройки: экран и строка размера текста переводов и интерфейса",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Размер текста"
+          }
+        }
+      }
+    },
     "settings.title" : {
       "comment" : "Заголовок экрана настроек",
       "localizations" : {
@@ -1639,6 +1727,94 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Настройки"
+          }
+        }
+      }
+    },
+    "textSize.content.large" : {
+      "comment" : "Шаг размера переводов: 130 %",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Крупный"
+          }
+        }
+      }
+    },
+    "textSize.content.larger" : {
+      "comment" : "Шаг размера переводов: 115 %",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Крупнее"
+          }
+        }
+      }
+    },
+    "textSize.content.largest" : {
+      "comment" : "Шаг размера переводов: 150 %",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Очень крупный"
+          }
+        }
+      }
+    },
+    "textSize.content.smaller" : {
+      "comment" : "Шаг размера переводов: 90 %",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Мельче"
+          }
+        }
+      }
+    },
+    "textSize.content.standard" : {
+      "comment" : "Шаг размера переводов: 100 %",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Обычный"
+          }
+        }
+      }
+    },
+    "textSize.interface.larger" : {
+      "comment" : "Шаг размера интерфейса: средний",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Крупнее"
+          }
+        }
+      }
+    },
+    "textSize.interface.largest" : {
+      "comment" : "Шаг размера интерфейса: наибольший",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Крупный"
+          }
+        }
+      }
+    },
+    "textSize.interface.standard" : {
+      "comment" : "Шаг размера интерфейса: стандартный",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Обычный"
           }
         }
       }

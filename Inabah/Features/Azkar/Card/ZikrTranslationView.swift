@@ -1,10 +1,12 @@
 import SwiftUI
 
 /// Транслитерация, перевод и источник зикра (раскрывается кнопкой «Аа»).
+/// Размеры — общие с переводом хадиса (`ContentTextStyle`), шаг — из настройки «Размер текста».
 struct ZikrTranslationView: View {
     let translation: ZikrTranslation
 
     @Environment(\.theme) private var theme
+    @Environment(\.contentTextScale) private var scale
 
     private static let bubbleRadius: CGFloat = 8
 
@@ -12,11 +14,12 @@ struct ZikrTranslationView: View {
         VStack(alignment: .leading, spacing: Spacing.s) {
             if let transliteration = translation.transliteration {
                 Text(verbatim: transliteration)
-                    .font(.footnote.italic())
+                    .font(.content(.transliteration, scale: scale))
                     .foregroundStyle(theme.palette.textSecondary)
             }
             Text(verbatim: translation.text)
-                .font(.subheadline)
+                .font(.content(.translation, scale: scale))
+                .lineSpacing(ContentTextStyle.translationLineSpacing * scale)
                 .foregroundStyle(theme.palette.textPrimary)
                 .padding(.vertical, Spacing.s)
                 .padding(.horizontal, Spacing.m)
@@ -30,7 +33,7 @@ struct ZikrTranslationView: View {
                 }
             if let source = translation.source {
                 Text(verbatim: source)
-                    .font(.caption)
+                    .font(.content(.note, scale: scale))
                     .foregroundStyle(theme.palette.textTertiary)
             }
         }

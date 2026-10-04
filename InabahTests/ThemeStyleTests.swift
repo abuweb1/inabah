@@ -1,19 +1,7 @@
 import Foundation
-import Synchronization
 import Testing
 import UIKit
 @testable import Inabah
-
-/// Флаг «наблюдатель уведомлён»: `onChange` у `withObservationTracking` — `@Sendable`.
-private final class NotificationFlag: Sendable {
-    private let state = Mutex(false)
-
-    var value: Bool { state.withLock { $0 } }
-
-    func set() {
-        state.withLock { $0 = true }
-    }
-}
 
 /// Относительная яркость и контраст по WCAG 2.x — по значениям ассета в sRGB.
 private enum Contrast {

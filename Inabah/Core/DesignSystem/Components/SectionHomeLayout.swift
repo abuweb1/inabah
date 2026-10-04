@@ -163,8 +163,11 @@ struct SectionNavCard: View {
 
     @Environment(\.theme) private var theme
 
+    /// Значок растёт вместе с текстом карточки (размер интерфейса).
+    @ScaledMetric(relativeTo: .title3) private var iconSize: CGFloat = 30
+    @ScaledMetric(relativeTo: .title3) private var iconFrame: CGFloat = Size.navCardIcon
+
     private enum Layout {
-        static let iconSize: CGFloat = 30
         static let verticalPadding: CGFloat = 18
         static let statGlyphSize: CGFloat = 18
     }
@@ -173,9 +176,9 @@ struct SectionNavCard: View {
         HStack(alignment: .bottom) {
             VStack(alignment: .leading, spacing: Spacing.xxxs) {
                 Image(systemName: symbolName)
-                    .font(.system(size: Layout.iconSize))
+                    .font(.system(size: iconSize))
                     .foregroundStyle(iconColor)
-                    .frame(width: Size.navCardIcon, height: Size.navCardIcon, alignment: .leading)
+                    .frame(width: iconFrame, height: iconFrame, alignment: .leading)
                     .accessibilityHidden(true)
                 Spacer(minLength: Spacing.s)
                 Text(title)

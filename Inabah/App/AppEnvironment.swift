@@ -17,6 +17,8 @@ struct AppEnvironment {
     let audioPlayer: AudioPlayerController
     /// Палитра оформления — тема в окружении берётся из неё (`themed()`).
     let appearanceSettings: AppearanceSettings
+    /// Размер переводов и интерфейса — применяется к окружению в `appEnvironment`.
+    let textSizeSettings: TextSizeSettings
 
     init(
         repository: any ContentRepository = BundleContentRepository(),
@@ -39,6 +41,7 @@ struct AppEnvironment {
             nowPlaying: NowPlayingCoordinator()
         )
         appearanceSettings = AppearanceSettings(defaults: defaults)
+        textSizeSettings = TextSizeSettings(defaults: defaults)
     }
 
     /// Превью: контент в памяти, отметки — в отдельном наборе `UserDefaults`; плеер без
@@ -90,7 +93,40 @@ extension View {
             .environment(environment.appIconSettings)
             .environment(environment.audioPlayer)
             .environment(environment.appearanceSettings)
+            .environment(environment.textSizeSettings)
             .modifier(ThemedModifier(settings: environment.appearanceSettings))
+            .modifier(TextSizeModifier(settings: environment.textSizeSettings))
+    }
+}
+
+/// Размер текста: корень закреплён на стандартном размере — системный размер текста iOS не
+/// влияет ни на что, навбары (их рисует UIKit по размеру своего контейнера) и таб-бар не растут.
+/// Шаг интерфейса ставится на сами экраны вкладок (`interfaceTextSize()`), множитель
+/// переводов — для `Font.content`.
+private struct TextSizeModifier: ViewModifier {
+    let settings: TextSizeSettings
+
+    func body(content: Content) -> some View {
+        content
+            .fixedTextSize()
+            .environment(\.contentTextScale, settings.content.scale)
+    }
+}
+
+/// Шаг «Размер интерфейса» для содержимого экрана. Только этот модификатор следит за выбором.
+private struct InterfaceTextSizeModifier: ViewModifier {
+    @Environment(TextSizeSettings.self) private var settings
+
+    func body(content: Content) -> some View {
+        content.dynamicTypeSize(settings.interface.dynamicTypeSize)
+    }
+}
+
+extension View {
+    /// Содержимое экрана — по шагу «Размер интерфейса». Применяется к корню и к экранам стека
+    /// каждой вкладки, а не к `NavigationStack`: иначе вместе с содержимым росли бы навбары.
+    func interfaceTextSize() -> some View {
+        modifier(InterfaceTextSizeModifier())
     }
 }
 
