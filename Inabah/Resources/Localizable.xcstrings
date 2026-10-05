@@ -1787,7 +1787,7 @@
       }
     },
     "textSize.interface.larger" : {
-      "comment" : "Шаг размера интерфейса: средний",
+      "comment" : "Шаг размера интерфейса: крупнее стандартного",
       "localizations" : {
         "ru" : {
           "stringUnit" : {
@@ -1797,13 +1797,13 @@
         }
       }
     },
-    "textSize.interface.largest" : {
-      "comment" : "Шаг размера интерфейса: наибольший",
+    "textSize.interface.smaller" : {
+      "comment" : "Шаг размера интерфейса: меньше стандартного",
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Крупный"
+            "value" : "Мельче"
           }
         }
       }

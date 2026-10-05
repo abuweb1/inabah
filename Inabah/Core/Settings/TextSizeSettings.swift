@@ -27,19 +27,19 @@ nonisolated enum ContentTextSize: String, CaseIterable, Identifiable, Sendable {
 /// размер текста во всём приложении. Заголовки экранов, кнопки и таб-бар закреплены
 /// (`fixedTextSize()`), всплывающие окна остаются системными.
 nonisolated enum InterfaceTextSize: String, CaseIterable, Identifiable, Sendable {
+    case smaller
     case standard
     case larger
-    case largest
 
     var id: Self { self }
 
-    /// Для body: 17 / 19 / 23 pt. Размеры для доступности не используются — вёрстка
-    /// рассчитана на обычные.
+    /// Для body: 16 / 17 / 19 pt (решение пользователя 2026-10-04: прежние 17 / 19 / 23 —
+    /// крупноваты). «Обычный» — стандартный размер, на который рассчитана вёрстка.
     var dynamicTypeSize: DynamicTypeSize {
         switch self {
+        case .smaller: .medium
         case .standard: .large
         case .larger: .xLarge
-        case .largest: .xxxLarge
         }
     }
 }

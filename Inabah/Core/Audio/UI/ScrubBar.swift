@@ -26,6 +26,9 @@ struct ScrubBar: View {
 
     private static let thumbSize: CGFloat = 16
     private static let activeThumbScale: CGFloat = 1.5
+    /// Высота зоны касания: меньше 44 — плеер компактный (решение пользователя 2026-10-04),
+    /// но бегунок по-прежнему легко поймать пальцем.
+    private static let touchHeight: CGFloat = 30
 
     var body: some View {
         let shown = (dragFraction ?? fraction).clamped(to: 0...1)
@@ -46,7 +49,7 @@ struct ScrubBar: View {
                 .offset(x: width * shown - Self.thumbSize / 2)
         }
         // Зона касания выше самой полосы — по бегунку легко попасть пальцем.
-        .frame(maxWidth: .infinity, minHeight: Size.minTapTarget)
+        .frame(maxWidth: .infinity, minHeight: Self.touchHeight)
         .contentShape(.rect)
         .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { width = max($0, 1) }
         .gesture(

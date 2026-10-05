@@ -36,7 +36,14 @@ struct AzkarListView: View {
             .toolbarBackgroundVisibility(.visible, for: .navigationBar)
             .toolbarColorScheme(.dark, for: .navigationBar)
             .toolbar {
-                ToolbarItem(placement: .principal) { titleView }
+                // Заголовок — слева, сразу за «назад» (решение пользователя 2026-10-04, как в Android):
+                // по центру между «назад» и А−/А+ ему тесно. Без стеклянной подложки элемента.
+                if #available(iOS 26, *) {
+                    ToolbarItem(placement: .topBarLeading) { titleView }
+                        .sharedBackgroundVisibility(.hidden)
+                } else {
+                    ToolbarItem(placement: .topBarLeading) { titleView }
+                }
                 FontSizeControls(settings: settings)
             }
             .task { await store.load(section) }
@@ -68,7 +75,7 @@ struct AzkarListView: View {
     }
 
     private var titleView: some View {
-        VStack(spacing: 0) {
+        VStack(alignment: .leading, spacing: 0) {
             Text(section.title)
                 .font(.headline)
             Text(section.subtitle)
@@ -76,6 +83,8 @@ struct AzkarListView: View {
                 .foregroundStyle(theme.palette.onAccentSecondary)
         }
         .foregroundStyle(theme.palette.onAccent)
+        // Элемент слева навбар сжимает до многоточия — заголовку нужна его натуральная ширина.
+        .fixedSize()
         // Заголовок экрана не меняется с размером интерфейса.
         .fixedTextSize()
         .accessibilityElement(children: .combine)
