@@ -83,6 +83,8 @@ fun SettingsScaffold(
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
                 .then(if (topBar == null) Modifier.windowInsetsPadding(WindowInsets.statusBars) else Modifier)
+                // Под навбаром — отступ до первой группы, как в iOS (снимки android/docs/settings, ~20 pt).
+                .then(if (topBar != null) Modifier.padding(top = Spacing.xlPlus) else Modifier)
                 .padding(horizontal = Spacing.xl)
                 .padding(bottom = contentPadding.calculateBottomPadding() + Spacing.xl),
             verticalArrangement = Arrangement.spacedBy(GroupSpacing),

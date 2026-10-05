@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -70,6 +71,7 @@ private const val LIFTED_SCALE = 1.02f
 /** Ручка — значок 22 в sp: растёт со строкой (шаг интерфейса). */
 private const val HANDLE_SIZE = 22f
 private val DividerInset = 22.dp
+private val HandleTouchHeight = 40.dp
 
 /**
  * Место строки [index] при сдвиге пальца на [offset] от её места; [step] — шаг между строками.
@@ -250,10 +252,15 @@ private fun OrderRow(
                     .background(dividerColor),
             )
         }
+        // Компактная строка (решение пользователя 2026-10-05): поля над и под значком 12 вместо 20.
         SettingsRow(
+            compact = true,
             trailing = {
-                // Зона касания ручки — полные 48, значок — по центру.
-                Box(handleModifier.size(Size.minTapTarget), contentAlignment = Alignment.Center) {
+                // Зона касания ручки — ширина 48, высота — строка без полей; значок — по центру.
+                Box(
+                    handleModifier.width(Size.minTapTarget).height(HandleTouchHeight),
+                    contentAlignment = Alignment.Center,
+                ) {
                     Icon(painterResource(R.drawable.ic_drag_handle), contentDescription = null,
                         tint = palette.onAccentTertiary, modifier = Modifier.size(handleSize))
                 }

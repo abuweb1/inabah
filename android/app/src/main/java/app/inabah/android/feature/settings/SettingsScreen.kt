@@ -15,8 +15,8 @@ import app.inabah.android.core.designsystem.components.SettingsRowText
 import app.inabah.android.core.designsystem.components.SettingsScaffold
 
 /**
- * Корень «Настроек» (iOS `SettingsView`) на графитовом фоне: «Азкары», «Хадисы» и «Оформление →
- * Размер текста». «Палитра» — этап 6, «Иконка приложения» — 9 (решение пользователя 2026-10-04).
+ * Корень «Настроек» (iOS `SettingsView`) на графитовом фоне: «Азкары», «Хадисы» и «Оформление» —
+ * «Палитра», «Размер текста». «Иконка приложения» — этап 9 (решение пользователя 2026-10-04).
  */
 @Composable
 fun SettingsScreen(
@@ -53,18 +53,29 @@ fun SettingsScreen(
                 },
             ),
         )
-        // «Оформление»: пока только «Размер текста»; «Палитра» — этап 6, «Иконка приложения» — 9.
+        // «Оформление»: «Палитра» первой, как в iOS, затем «Размер текста»; «Иконка приложения» — этап 9.
         SettingsGroup(
             header = stringResource(R.string.settings_appearance_header),
-            rows = listOf {
-                SettingsRow(onClick = { onOpen(SettingsRoute.TextSize) }, trailing = { SettingsChevron() }) {
-                    SettingsIcon(R.drawable.ic_format_size, theme.gradients.ajurriCard)
-                    SettingsRowText(
-                        title = stringResource(R.string.settings_text_size_title),
-                        subtitle = stringResource(R.string.settings_text_size_subtitle),
-                    )
-                }
-            },
+            rows = listOf(
+                {
+                    SettingsRow(onClick = { onOpen(SettingsRoute.Palette) }, trailing = { SettingsChevron() }) {
+                        SettingsIcon(R.drawable.ic_palette, theme.gradients.qudsiCard)
+                        SettingsRowText(
+                            title = stringResource(R.string.settings_palette_title),
+                            subtitle = stringResource(R.string.settings_palette_subtitle),
+                        )
+                    }
+                },
+                {
+                    SettingsRow(onClick = { onOpen(SettingsRoute.TextSize) }, trailing = { SettingsChevron() }) {
+                        SettingsIcon(R.drawable.ic_format_size, theme.gradients.ajurriCard)
+                        SettingsRowText(
+                            title = stringResource(R.string.settings_text_size_title),
+                            subtitle = stringResource(R.string.settings_text_size_subtitle),
+                        )
+                    }
+                },
+            ),
         )
     }
 }
