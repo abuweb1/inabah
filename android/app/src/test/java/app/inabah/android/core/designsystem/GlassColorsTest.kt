@@ -45,6 +45,58 @@ class GlassColorsTest {
         assertClose(0xFF8334FF, glass.glowFar)
     }
 
+    // Эталоны 2026-10-05 (android/docs/mahraj-thema, settings-thema, azkar-thema): вечерние — тёмная шапка,
+    // хадисы и утренние — средняя; нажатие ↺ — над прозрачной шапкой настроек.
+
+    @Test
+    fun `Янтарная — над тёмной шапкой стекло светлее шапки, нажатие красно-оранжевое`() {
+        val glass = glassColors(tint = Color(0xFFE8A85A), barBackground = Color(0xFF231104), onAccent = white)
+        assertClose(0xFF351E0E, glass.fill)
+        assertClose(0xFF6B4930, glass.rim)
+        assertClose(0xFFFFFCEC, glass.icon)
+        assertClose(0xFFE47629, glass.pressedFill)
+        assertClose(0xFFFBFFFF, glass.pressedIcon)
+        assertClose(0xFFED7B25, glass.glowNear)
+        assertClose(0xFF522F19, glass.glowFar)
+    }
+
+    @Test
+    fun `Янтарная — над шапкой хадисов и прозрачной шапкой как в iOS`() {
+        val header = glassColors(tint = Color(0xFFE8A85A), barBackground = Color(0xFF754213), onAccent = white)
+        assertClose(0xFF713101, header.fill)
+        assertClose(0xFFD05C1F, header.rim)
+        assertClose(0xFFFFF6BC, header.icon)
+        val transparent = glassColors(tint = Color(0xFFE8A85A), barBackground = null, onAccent = white)
+        assertClose(0xFFFE7C00, transparent.pressedFill)
+        assertClose(0xFFFFEF43, transparent.pressedIcon)
+    }
+
+    @Test
+    fun `Графит — над тёмной шапкой и шапкой хадисов как в iOS`() {
+        val evening = glassColors(tint = Color(0xFF8FB4F0), barBackground = Color(0xFF0D1527), onAccent = white)
+        assertClose(0xFF182339, evening.fill)
+        assertClose(0xFF414F74, evening.rim)
+        assertClose(0xFFF7FFFF, evening.icon)
+        assertClose(0xFF5886F5, evening.pressedFill)
+        assertClose(0xFFFFFFFA, evening.pressedIcon)
+        assertClose(0xFF6097FE, evening.glowNear)
+        assertClose(0xFF2A3A5E, evening.glowFar)
+        val hadith = glassColors(tint = Color(0xFF8FB4F0), barBackground = Color(0xFF3A4E83), onAccent = white)
+        assertClose(0xFF253C80, hadith.fill)
+        assertClose(0xFF426DD3, hadith.rim)
+        assertClose(0xFFE8FFFF, hadith.icon)
+    }
+
+    @Test
+    fun `Нажатие над прозрачной шапкой — бледное у графита, пурпурное у фиолетовой`() {
+        val graphite = glassColors(tint = Color(0xFF8FB4F0), barBackground = null, onAccent = white)
+        assertClose(0xFF889DD4, graphite.pressedFill)
+        assertClose(0xFFFFFFFF, graphite.pressedIcon)
+        val violet = glassColors(tint = Color(0xFFB59BEA), barBackground = null, onAccent = white)
+        assertClose(0xFFE851FF, violet.pressedFill)
+        assertClose(0xFFFFFFFF, violet.pressedIcon)
+    }
+
     @Test
     fun `Прозрачный навбар — полупрозрачное стекло и белый значок`() {
         val tint = Color(0xFF8FB4F0)

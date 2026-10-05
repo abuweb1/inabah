@@ -17,6 +17,12 @@ internal data class OkLch(val l: Float, val c: Float, val h: Float) {
     fun shifted(dl: Float = 0f, dc: Float = 0f, dh: Float = 0f): OkLch =
         OkLch((l + dl).coerceIn(0f, 1f), (c + dc).coerceAtLeast(0f), h + dh)
 
+    /** Промежуточный цвет на доле [fraction] пути к [to]; оттенок — по короткой дуге. */
+    fun lerp(to: OkLch, fraction: Float): OkLch {
+        val dh = ((to.h - h) % FULL_TURN + FULL_TURN + HALF_TURN) % FULL_TURN - HALF_TURN
+        return OkLch(l + (to.l - l) * fraction, c + (to.c - c) * fraction, (h + dh * fraction + FULL_TURN) % FULL_TURN)
+    }
+
     /** В sRGB; цвет вне охвата sRGB обрезается по каналам. */
     fun toColor(): Color {
         val radians = Math.toRadians(h.toDouble())
@@ -32,5 +38,6 @@ internal data class OkLch(val l: Float, val c: Float, val h: Float) {
         }
 
         private const val FULL_TURN = 360f
+        private const val HALF_TURN = 180f
     }
 }
