@@ -41,26 +41,55 @@ nonisolated struct ThemeGradient: Hashable, Sendable {
 /// Градиенты темы: фоны разделов и карточки навигации.
 nonisolated struct ThemeGradients: Hashable, Sendable {
     var azkarBackground: ThemeGradient
+    /// Фон вечерних азкаров — в цветах карточки «Вечерние азкары» главной.
+    var eveningBackground: ThemeGradient
     var hadithBackground: ThemeGradient
+    /// Фон раздела «Настройки» — графит, нейтральный к фиолетовым азкарам и изумрудным хадисам.
+    var settingsBackground: ThemeGradient
+    /// Фон раздела «Махрадж» — янтарно-коричневый (прежний цвет карточки аль-Аджурри, приглушённый).
+    var makharijBackground: ThemeGradient
     var morningCard: ThemeGradient
     var eveningCard: ThemeGradient
+    var nawawiCard: ThemeGradient
+    var qudsiCard: ThemeGradient
+    var ajurriCard: ThemeGradient
     var progressFill: ThemeGradient
     var counterButton: ThemeGradient
     var counterButtonDone: ThemeGradient
     var parchment: ThemeGradient
+    /// Полоска по верхнему краю пергамента — полупрозрачная, проступает фон.
+    var parchmentStripe: ThemeGradient
 }
 
 nonisolated extension ThemeGradients {
+    /// Направление фонов разделов (градусы CSS, как в прототипе).
+    static let backgroundAngle: Double = 168
+
     static let inabah = ThemeGradients(
         azkarBackground: ThemeGradient.css(stops: [
             (.azkarBackgroundTop, 0),
             (.azkarBackgroundMid, 0.5),
             (.azkarBackgroundBottom, 1),
         ], cssAngle: 168),
+        eveningBackground: ThemeGradient.css(stops: [
+            (.eveningCardStart, 0),
+            (.eveningCardMid, 0.55),
+            (.eveningCardEnd, 1),
+        ], cssAngle: 168),
         hadithBackground: ThemeGradient.css(stops: [
             (.hadithBackgroundTop, 0),
             (.hadithBackgroundMid, 0.5),
             (.hadithBackgroundBottom, 1),
+        ], cssAngle: 168),
+        settingsBackground: ThemeGradient.css(stops: [
+            (.settingsBackgroundTop, 0),
+            (.settingsBackgroundMid, 0.5),
+            (.settingsBackgroundBottom, 1),
+        ], cssAngle: 168),
+        makharijBackground: ThemeGradient.css(stops: [
+            (.makharijBackgroundTop, 0),
+            (.makharijBackgroundMid, 0.5),
+            (.makharijBackgroundBottom, 1),
         ], cssAngle: 168),
         morningCard: ThemeGradient.css(stops: [
             (.morningCardStart, 0),
@@ -71,6 +100,21 @@ nonisolated extension ThemeGradients {
             (.eveningCardStart, 0),
             (.eveningCardMid, 0.55),
             (.eveningCardEnd, 1),
+        ], cssAngle: 135),
+        nawawiCard: ThemeGradient.css(stops: [
+            (.nawawiCardStart, 0),
+            (.nawawiCardMid, 0.6),
+            (.nawawiCardEnd, 1),
+        ], cssAngle: 135),
+        qudsiCard: ThemeGradient.css(stops: [
+            (.qudsiCardStart, 0),
+            (.qudsiCardMid, 0.55),
+            (.qudsiCardEnd, 1),
+        ], cssAngle: 135),
+        ajurriCard: ThemeGradient.css(stops: [
+            (.ajurriCardStart, 0),
+            (.ajurriCardMid, 0.55),
+            (.ajurriCardEnd, 1),
         ], cssAngle: 135),
         progressFill: ThemeGradient.css(stops: [
             (.successDeep, 0),
@@ -89,6 +133,15 @@ nonisolated extension ThemeGradients {
             (.gold, 0.45),
             (.parchmentMid, 0.75),
             (.parchmentDeep, 1),
-        ], cssAngle: 150)
+        ], cssAngle: 150),
+        parchmentStripe: ThemeGradient(
+            [
+                Gradient.Stop(color: Color(asset: .successDeep).opacity(0.6), location: 0),
+                Gradient.Stop(color: Color(asset: .success).opacity(0.6), location: 0.5),
+                Gradient.Stop(color: Color(asset: .successDeep).opacity(0.6), location: 1),
+            ],
+            startPoint: .leading,
+            endPoint: .trailing
+        )
     )
 }

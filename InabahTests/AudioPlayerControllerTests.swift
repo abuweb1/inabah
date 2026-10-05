@@ -8,6 +8,7 @@ import Testing
 private final class FakeAudioEngine: AudioEngine {
     var onFinish: ((_ successfully: Bool) -> Void)?
     var onError: ((AudioEngineError) -> Void)?
+    var onTimeCorrection: (() -> Void)?
     var currentTime: TimeInterval = 0
     var rate: Float = 1
     var duration: TimeInterval = 30
@@ -36,6 +37,13 @@ private final class FakeAudioEngine: AudioEngine {
 
     func preload(url: URL) async {
         preloadedURL = url
+    }
+
+    private(set) var discardedPreloads = 0
+
+    func discardPreloaded() {
+        preloadedURL = nil
+        discardedPreloads += 1
     }
 
     func startPreloaded(url: URL, after delay: TimeInterval) -> TimeInterval? {
@@ -435,6 +443,23 @@ struct AudioPlayerControllerTests {
         #expect(engine.isPlaying)
     }
 
+    @Test("Не запустилась подготовленная запись — тот же зикр загружается заново с паузой, а не пропускается")
+    func preparedTrackFailureReloadsSameItem() async {
+        await playAll([1, 1, 1], pause: .seconds(3))
+        await finish()
+        #expect(player.index == 1)
+
+        engine.onError?(.preparedTrackFailed)
+        await player.waitForLoading()
+
+        #expect(player.index == 1)
+        #expect(player.error == nil)
+        #expect(player.isPlaying)
+        // Второй зикр запущен повторно (после загрузки), третий не тронут.
+        #expect(engine.playedURLs.map(\.lastPathComponent) == ["morning_1.mp3", "morning_2.mp3", "morning_2.mp3"])
+        #expect(engine.lastStartDelay == 3)
+    }
+
     @Test("Следующая запись готовится заранее, пауза между зикрами — в аудиодорожке")
     func pauseBetweenItemsIsScheduledInEngine() async {
         await playAll([1, 1], pause: .seconds(3))
@@ -533,10 +558,11 @@ struct AudioPlayerControllerTests {
 @MainActor
 @Suite("Настройки «Прослушать все»")
 struct PlaylistSettingsTests {
-    private let defaults: UserDefaults
+    private let storage: IsolatedDefaults
+    private var defaults: UserDefaults { storage.defaults }
 
     init() throws {
-        defaults = try #require(UserDefaults(suiteName: "PlaylistSettingsTests.\(UUID().uuidString)"))
+        storage = try IsolatedDefaults("PlaylistSettingsTests")
     }
 
     @Test("Значения по умолчанию")

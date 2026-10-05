@@ -4,12 +4,37 @@ import Observation
 enum AppTab: Hashable {
     case azkar
     case hadith
+    case makharij
     case settings
 }
 
 /// Экраны внутри вкладки «Азкары». `Codable` — для будущих deep links (виджет, уведомления).
 nonisolated enum AzkarRoute: Hashable, Codable, Sendable {
     case list(AzkarSection)
+}
+
+/// Экраны внутри вкладки «Настройки».
+nonisolated enum SettingsRoute: Hashable, Codable, Sendable {
+    case azkar
+    case hadith
+    /// Порядок сборников на главной хадисов (из настроек хадисов).
+    case hadithOrder
+    /// Выбор иконки приложения.
+    case appIcon
+    /// Выбор палитры оформления.
+    case palette
+    /// Размер текста переводов и интерфейса.
+    case textSize
+    /// «О приложении»: источники, лицензии, политика конфиденциальности.
+    case about
+    /// Полный текст лицензии (из «О приложении»).
+    case license(LicenseDocument)
+}
+
+/// Экраны внутри вкладки «Хадисы».
+nonisolated enum HadithRoute: Hashable, Codable, Sendable {
+    case list(HadithCollection)
+    case detail(HadithID)
 }
 
 /// Навигация приложения: выбранная вкладка и типизированный стек каждой вкладки.
@@ -20,6 +45,8 @@ nonisolated enum AzkarRoute: Hashable, Codable, Sendable {
 final class AppRouter {
     var selectedTab: AppTab = .azkar
     var azkarPath: [AzkarRoute] = []
+    var hadithPath: [HadithRoute] = []
+    var settingsPath: [SettingsRoute] = []
 
     /// Выбор вкладки из таб-бара. Повторный выбор активной вкладки возвращает к её корню.
     /// `TabView` вызывает установку выбора и во время отрисовки (при запуске) — поэтому
@@ -37,13 +64,29 @@ final class AppRouter {
         switch tab {
         case .azkar:
             if !azkarPath.isEmpty { azkarPath.removeAll() }
-        case .hadith, .settings:
+        case .hadith:
+            if !hadithPath.isEmpty { hadithPath.removeAll() }
+        case .makharij:
+            // Пока раздел — одна главная (заглушка), стека нет.
             break
+        case .settings:
+            if !settingsPath.isEmpty { settingsPath.removeAll() }
         }
     }
 
     func open(_ route: AzkarRoute) {
         selectedTab = .azkar
         azkarPath = [route]
+    }
+
+    /// Хадис открывается поверх списка своего сборника — «назад» ведёт в список, как в приложении.
+    func open(_ route: HadithRoute) {
+        selectedTab = .hadith
+        switch route {
+        case .list:
+            hadithPath = [route]
+        case .detail(let id):
+            hadithPath = [.list(id.collection), route]
+        }
     }
 }

@@ -1,9 +1,18 @@
+import Foundation
 import Testing
 @testable import Inabah
 
 @MainActor
 @Suite("Счёт азкаров")
 struct AzkarStoreTests {
+    /// Отдельный набор на каждый тест: прогресс сохраняется в UserDefaults.
+    private let storage: IsolatedDefaults
+    private var defaults: UserDefaults { storage.defaults }
+
+    init() throws {
+        storage = try IsolatedDefaults("AzkarStoreTests")
+    }
+
     private static func zikr(_ number: Int, repetitions: Int, section: AzkarSection = .morning) -> Zikr {
         Zikr(
             id: ZikrID(section: section, number: number),
@@ -19,7 +28,7 @@ struct AzkarStoreTests {
             .morning: [Self.zikr(1, repetitions: 1), Self.zikr(2, repetitions: 3)],
             .evening: [Self.zikr(1, repetitions: 1, section: .evening)],
         ])
-        let store = AzkarStore(repository: repository)
+        let store = AzkarStore(repository: repository, defaults: defaults)
         await store.loadAll()
         return store
     }
@@ -66,6 +75,11 @@ struct AzkarStoreTests {
         (1...3).forEach { _ in sessions[1].increment() }
         #expect(store.progress(of: .morning).isFinished)
         #expect(store.progress(of: .morning).fraction == 1)
+
+        sessions[0].reset()
+        #expect(store.progress(of: .morning).completed == 1)
+        store.resetProgress(of: .morning)
+        #expect(store.progress(of: .morning) == SectionProgress(completed: 0, total: 2))
     }
 
     @Test("Разделы считаются независимо")
@@ -89,7 +103,7 @@ struct AzkarStoreTests {
 
     @Test("Ошибка загрузки — состояние failed, повторная попытка разрешена")
     func loadFailure() async {
-        let store = AzkarStore(repository: InMemoryContentRepository(error: .resourceMissing("azkar.json")))
+        let store = AzkarStore(repository: InMemoryContentRepository(error: .resourceMissing("azkar.json")), defaults: defaults)
 
         await store.load(.morning)
 

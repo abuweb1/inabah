@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// Общий каркас главных экранов разделов («Азкары», «Хадисы»):
-/// градиентный фон, звезда-орнамент, бренд-блок, аят и навигационные карточки.
+/// градиентный фон, бренд-блок, аят и навигационные карточки.
 struct SectionHomeLayout<Cards: View>: View {
     let background: ThemeGradient
     let brand: SectionBrand
@@ -22,8 +22,9 @@ struct SectionHomeLayout<Cards: View>: View {
                     brandBlock
                     verseBox
                         .padding(.horizontal, Spacing.xs)
-                        .padding(.top, Spacing.l)
-                    Spacer(minLength: Spacing.xxl)
+                        .padding(.top, verse.isFramed ? Spacing.l : Spacing.xs)
+                    // Без рамки цитата стоит ближе к карточкам — они не прижимаются к низу.
+                    Spacer(minLength: verse.isFramed ? Spacing.xxl : Spacing.m)
                     // Карточки в натуральной высоте — свободное место уходит в отступы вокруг них.
                     VStack(spacing: Spacing.m) { cards }
                         .fixedSize(horizontal: false, vertical: true)
@@ -35,24 +36,14 @@ struct SectionHomeLayout<Cards: View>: View {
             }
             .scrollBounceBehavior(.basedOnSize)
         }
-        .background { backgroundLayer }
-    }
-
-    private var backgroundLayer: some View {
-        background.linear
-            .overlay(alignment: .topTrailing) {
-                DecorativeStar()
-                    .foregroundStyle(theme.palette.subtleFill)
-                    .frame(width: Layout.starSize, height: Layout.starSize)
-                    .offset(Layout.starOffset)
-            }
-            .ignoresSafeArea()
+        .background { background.linear.ignoresSafeArea() }
     }
 
     private var brandBlock: some View {
         // У Scheherazade New высокая строка (запас под огласовки над и под буквами), поэтому
         // латинское название подтянуто к арабскому отрицательным интервалом — но не до хамзы под алифом.
-        VStack(spacing: -Spacing.l) {
+        // Нижний вынос (хвост «ج» в «مخارج») занимает этот запас — тогда строки не сближаем.
+        VStack(spacing: brand.arabicNameHasDescender ? 0 : -Spacing.l) {
             ArabicText(
                 text: brand.arabicName,
                 size: Layout.brandArabicSize,
@@ -63,13 +54,27 @@ struct SectionHomeLayout<Cards: View>: View {
             VStack(spacing: Spacing.xxs) {
                 // Латиница — системным шрифтом, как остальной интерфейс (засечки Scheherazade
                 // в латинском названии пользователю не понравились).
-                Text(brand.latinName)
-                    .font(.system(size: Layout.brandLatinSize, weight: .medium))
-                    .foregroundStyle(theme.palette.onAccentSecondary)
+                if let latinName = brand.latinName {
+                    Text(latinName)
+                        .font(.system(size: Layout.brandLatinSize, weight: .medium))
+                        .foregroundStyle(theme.palette.onAccentSecondary)
+                }
                 Text(brand.tagline)
                     .font(.caption)
-                    .tracking(0.8)
+                    .tracking(Tracking.caption)
                     .foregroundStyle(theme.palette.onAccentTertiary)
+                if let epigraph = brand.epigraph {
+                    VStack(spacing: Spacing.xxxs) {
+                        Text(epigraph.text)
+                            .font(.footnote.italic())
+                            .foregroundStyle(theme.palette.onAccentSecondary)
+                        Text(epigraph.source)
+                            .font(.caption2)
+                            .foregroundStyle(theme.palette.onAccentTertiary)
+                    }
+                    .padding(.top, Spacing.s)
+                    .padding(.horizontal, Spacing.xl)
+                }
             }
         }
         .multilineTextAlignment(.center)
@@ -83,7 +88,7 @@ struct SectionHomeLayout<Cards: View>: View {
             ArabicText(
                 text: verse.arabic,
                 size: ReadingSettings.defaultArabicFontSize,
-                color: theme.palette.onAccent.opacity(0.85),
+                color: theme.palette.onAccentStrong,
                 alignment: .center
             )
             Text(verse.translation)
@@ -95,17 +100,19 @@ struct SectionHomeLayout<Cards: View>: View {
                 .foregroundStyle(theme.palette.onAccentTertiary)
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, Spacing.m)
+        .padding(.vertical, verse.isFramed ? Spacing.m : 0)
         .padding(.horizontal, Spacing.xl)
-        .surface(theme.palette.subtleFill, cornerRadius: Radius.box, border: theme.palette.hairline)
+        .surface(
+            verse.isFramed ? theme.palette.subtleFill : .clear,
+            cornerRadius: Radius.box,
+            border: verse.isFramed ? theme.palette.hairline : .clear
+        )
         .accessibilityElement(children: .combine)
     }
 }
 
 /// Размеры главного экрана раздела (вне дженерика: хранимые статические свойства в нём запрещены).
 private enum SectionHomeLayoutMetrics {
-    static let starSize: CGFloat = 200
-    static let starOffset = CGSize(width: 30, height: -20)
     static let brandArabicSize: Double = 60
     static let brandLatinSize: Double = 28
 }
@@ -113,73 +120,142 @@ private enum SectionHomeLayoutMetrics {
 struct SectionBrand {
     /// Арабское название — контент, не переводится.
     let arabicName: String
-    let latinName: LocalizedStringResource
+    /// У названия есть буквы с нижним выносом (ج, ر, ن в конце) — подзаголовок не подтягивается вверх.
+    var arabicNameHasDescender = false
+    /// Название латиницей под арабским; `nil` — без него.
+    var latinName: LocalizedStringResource?
     let tagline: LocalizedStringResource
+    /// Цитата под подзаголовком и её источник мелким шрифтом (как иснад).
+    var epigraph: BrandEpigraph?
+}
+
+struct BrandEpigraph {
+    let text: LocalizedStringResource
+    let source: LocalizedStringResource
 }
 
 struct FeaturedVerse {
     let arabic: String
     let translation: LocalizedStringResource
     let reference: LocalizedStringResource
+    /// В рамке на подложке (главная азкаров) или свободным текстом (главная хадисов —
+    /// над ней уже цитата бренда, вторая рамка утяжеляет экран).
+    var isFramed = true
 }
 
 /// Навигационная карточка раздела: градиент, иконка, заголовок, подпись, стрелка.
 struct SectionNavCard: View {
     let title: LocalizedStringResource
     let meta: LocalizedStringResource?
+    /// Название в оригинале после подписи через «·» (арабское название сборника — контент,
+    /// не переводится и не хранится в каталоге строк).
+    var metaOriginal: String?
     let symbolName: String
     let iconColor: Color
     let gradient: ThemeGradient
     let shadow: ShadowToken
+    /// Показатели под подписью: у левого и у правого края (например, «прочитано» и «выучено»
+    /// сборника).
+    var leadingStat: NavCardStat?
+    var trailingStat: NavCardStat?
+    /// Кольцо прогресса справа (например, выполнение азкаров за сегодня).
+    var ring: NavCardRing?
 
     @Environment(\.theme) private var theme
 
+    /// Значок растёт вместе с текстом карточки (размер интерфейса). Размеры текста карточки
+    /// на ступень меньше прежних (title3 → headline и т. д.) — решение пользователя 2026-10-04:
+    /// крупные карточки не нужны ни на одном шаге размера интерфейса.
+    @ScaledMetric(relativeTo: .headline) private var iconSize: CGFloat = 26
+    @ScaledMetric(relativeTo: .headline) private var iconFrame: CGFloat = Size.navCardIcon
+
     private enum Layout {
-        static let iconSize: CGFloat = 30
-        static let decorationSize: CGFloat = 110
-        static let decorationOffset = CGSize(width: 30, height: -30)
-        static let verticalPadding: CGFloat = 18
+        static let verticalPadding: CGFloat = 16
+        static let statGlyphSize: CGFloat = 16
     }
 
     var body: some View {
         HStack(alignment: .bottom) {
             VStack(alignment: .leading, spacing: Spacing.xxxs) {
                 Image(systemName: symbolName)
-                    .font(.system(size: Layout.iconSize))
+                    .font(.system(size: iconSize))
                     .foregroundStyle(iconColor)
-                    .frame(width: Size.navCardIcon, height: Size.navCardIcon, alignment: .leading)
+                    .frame(width: iconFrame, height: iconFrame, alignment: .leading)
+                    .accessibilityHidden(true)
                 Spacer(minLength: Spacing.s)
                 Text(title)
-                    .font(.title3.bold())
+                    .font(.headline)
                     .foregroundStyle(theme.palette.onAccent)
                 if let meta {
-                    Text(meta)
-                        .font(.footnote)
+                    metaText(meta)
+                        .font(.caption)
                         .foregroundStyle(theme.palette.onAccentSecondary)
+                }
+                if leadingStat != nil || trailingStat != nil {
+                    HStack(spacing: Spacing.s) {
+                        if let leadingStat {
+                            statLabel(leadingStat)
+                        }
+                        Spacer(minLength: 0)
+                        if let trailingStat {
+                            statLabel(trailingStat)
+                        }
+                    }
+                    .font(.footnote.weight(.semibold))
+                    .monospacedDigit()
+                    .foregroundStyle(theme.palette.onAccent)
+                    .lineLimit(1)
+                    .padding(.top, Spacing.xxs)
                 }
             }
             Spacer(minLength: Spacing.s)
-            Image(systemName: "chevron.right")
-                .font(.title3.weight(.semibold))
-                .foregroundStyle(theme.palette.onAccentTertiary)
-                .frame(maxHeight: .infinity)
+            // Кольцо и стрелка — по центру карточки по вертикали.
+            HStack(spacing: Spacing.m) {
+                if let ring {
+                    NavCardProgressRing(fraction: ring.fraction, style: ring.style)
+                }
+                Image(systemName: "chevron.forward")
+                    .font(.headline)
+                    .foregroundStyle(theme.palette.onAccentTertiary)
+                    .accessibilityHidden(true)
+            }
+            .frame(maxHeight: .infinity)
         }
         .padding(.vertical, Layout.verticalPadding)
         .padding(.horizontal, Spacing.xlPlus)
         .frame(maxWidth: .infinity, minHeight: Size.navCardMinHeight, alignment: .leading)
         .surface(gradient.linear, cornerRadius: Radius.navCard, border: theme.palette.divider, shadow: shadow)
-        .overlay(alignment: .topTrailing) {
-            // Декоративный круг в углу, обрезается скруглением карточки.
-            Circle()
-                .fill(theme.palette.subtleFill)
-                .frame(width: Layout.decorationSize, height: Layout.decorationSize)
-                .offset(Layout.decorationOffset)
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
-                .clipShape(.rect(cornerRadius: Radius.navCard))
-                .allowsHitTesting(false)
-                .accessibilityHidden(true)
-        }
         .contentShape(.rect(cornerRadius: Radius.navCard))
         .accessibilityElement(children: .combine)
     }
+
+    private func metaText(_ meta: LocalizedStringResource) -> Text {
+        guard let metaOriginal else { return Text(meta) }
+        // Название в оригинале не разрывается между строками: при крупном тексте оно целиком
+        // переходит на следующую строку, а не делится пополам.
+        let unbroken = metaOriginal.replacing(" ", with: "\u{00A0}")
+        return Text("section.card.meta.original \(Text(meta)) \(Text(verbatim: unbroken))")
+    }
+
+    private func statLabel(_ stat: NavCardStat) -> some View {
+        HStack(spacing: Spacing.xs) {
+            StatusGlyph(stat.glyph, size: Layout.statGlyphSize, relativeTo: .footnote)
+            Text(stat.value)
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Text(stat.accessibilityLabel))
+    }
+}
+
+/// Кольцо прогресса на карточке раздела: доля выполнения и оформление.
+struct NavCardRing: Equatable {
+    let fraction: Double
+    let style: NavCardRingStyle
+}
+
+/// Показатель на карточке раздела: значок и короткое значение («3/50»); для VoiceOver — полная фраза.
+struct NavCardStat {
+    let glyph: StatusGlyph.Kind
+    let value: LocalizedStringResource
+    let accessibilityLabel: LocalizedStringResource
 }

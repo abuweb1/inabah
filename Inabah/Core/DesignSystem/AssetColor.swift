@@ -8,7 +8,7 @@ import SwiftUI
 /// Соответствие имён ассетам проверяет тест `AssetColorTests`.
 nonisolated enum AssetColor: String, CaseIterable, Sendable {
     // Surface
-    case appBackground, cardBackground, actionBackground, headerBackground, shadow
+    case appBackground, cardBackground, actionBackground, headerBackground, hadithHeaderBackground, shadow
     // Text
     case textPrimary, textSecondary, textTertiary, onAccent
     // Accent
@@ -24,6 +24,13 @@ nonisolated enum AssetColor: String, CaseIterable, Sendable {
     case morningCardStart, morningCardMid, morningCardEnd
     case eveningCardStart, eveningCardMid, eveningCardEnd
     case hadithBackgroundTop, hadithBackgroundMid, hadithBackgroundBottom
+    case settingsBackgroundTop, settingsBackgroundMid, settingsBackgroundBottom
+    case makharijBackgroundTop, makharijBackgroundMid, makharijBackgroundBottom
+    case nawawiCardStart, nawawiCardMid, nawawiCardEnd
+    case qudsiCardStart, qudsiCardMid, qudsiCardEnd
+    case ajurriCardStart, ajurriCardMid, ajurriCardEnd
+    // Tabs
+    case tabAzkar, tabHadith, tabMakharij, tabSettings
 }
 
 nonisolated extension Color {

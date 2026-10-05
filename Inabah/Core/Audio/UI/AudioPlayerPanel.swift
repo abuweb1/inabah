@@ -7,12 +7,17 @@ struct AudioPlayerPanel: View {
     @Environment(AudioPlayerController.self) private var player
     @Environment(\.theme) private var theme
 
+    /// Подпись под названием ужимается, а не обрезается, когда тесно.
+    private static let subtitleMinimumScale: CGFloat = 0.85
+    /// Значки перемотки ±10 с — мельче стандартных иконок без подложки: плеер компактный.
+    private static let skipFont = Font.title3.weight(.medium)
+
     var body: some View {
         if let item = player.currentItem {
-            VStack(spacing: Spacing.m) {
+            VStack(spacing: Spacing.s) {
                 // Свайп вниз скрывает плеер — только за ручку и заголовок: на всей панели
                 // жест перехватывал касания слайдера, и бегунок «застревал».
-                VStack(spacing: Spacing.m) {
+                VStack(spacing: Spacing.s) {
                     grabber
                     header(for: item)
                 }
@@ -23,7 +28,10 @@ struct AudioPlayerPanel: View {
             }
             .padding(.horizontal, Spacing.xl)
             .padding(.top, Spacing.s)
-            .padding(.bottom, Spacing.l)
+            .padding(.bottom, Spacing.m)
+            // Плеер компактный и одинаковый на любом шаге «Размера интерфейса» — на самом
+            // мелком (решение пользователя 2026-10-04): он не растёт и не отнимает высоту у ленты.
+            .dynamicTypeSize(InterfaceTextSize.smaller.dynamicTypeSize)
             .surface(
                 theme.palette.card,
                 cornerRadius: Radius.panel,
@@ -66,10 +74,10 @@ struct AudioPlayerPanel: View {
                 VStack(alignment: .leading, spacing: Spacing.xxxs) {
                     Text(verbatim: item.track.category)
                         .font(.caption2.weight(.bold))
-                        .tracking(0.8)
+                        .tracking(Tracking.caption)
                         .foregroundStyle(theme.palette.textSecondary)
                     Text(verbatim: item.track.title)
-                        .font(.headline)
+                        .font(.subheadline.weight(.semibold))
                         .foregroundStyle(theme.palette.textPrimary)
                         .lineLimit(1)
                 }
@@ -79,10 +87,10 @@ struct AudioPlayerPanel: View {
                 headerButtons
             }
             subtitle(for: item)
-                .font(.footnote)
+                .font(.caption)
                 .foregroundStyle(theme.palette.textSecondary)
                 .lineLimit(1)
-                .minimumScaleFactor(0.85)
+                .minimumScaleFactor(Self.subtitleMinimumScale)
         }
     }
 
@@ -128,7 +136,7 @@ struct AudioPlayerPanel: View {
             Button("audio.player.back10", systemImage: "gobackward.10") {
                 player.skip(by: -AudioPlayerController.skipInterval)
             }
-            .buttonStyle(BareIconButtonStyle(foreground: theme.palette.textPrimary))
+            .buttonStyle(BareIconButtonStyle(foreground: theme.palette.textPrimary, font: Self.skipFont))
             Spacer()
             Button(
                 player.isPlaying ? "audio.player.pause" : "audio.player.play",
@@ -141,7 +149,7 @@ struct AudioPlayerPanel: View {
             Button("audio.player.forward10", systemImage: "goforward.10") {
                 player.skip(by: AudioPlayerController.skipInterval)
             }
-            .buttonStyle(BareIconButtonStyle(foreground: theme.palette.textPrimary))
+            .buttonStyle(BareIconButtonStyle(foreground: theme.palette.textPrimary, font: Self.skipFont))
             Spacer()
             Button("audio.player.stop", systemImage: "stop.fill", action: player.stop)
                 .buttonStyle(squareStyle)

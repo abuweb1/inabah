@@ -52,11 +52,36 @@ extension AzkarSection {
         }
     }
 
-    func cardShadow(in theme: Theme) -> ShadowToken {
-        let color = switch self {
-        case .morning: theme.palette.accentShadow.opacity(0.35)
-        case .evening: theme.palette.shadow.opacity(0.4)
+    /// Фон экрана раздела: вечерние — в цветах своей карточки, чтобы разделы различались не только названием.
+    func background(in theme: Theme) -> ThemeGradient {
+        switch self {
+        case .morning: theme.gradients.azkarBackground
+        case .evening: theme.gradients.eveningBackground
         }
-        return ShadowToken(color: color, radius: 12, y: 8)
+    }
+
+    /// Цвет навбара и шапки прогресса раздела.
+    func headerColor(in theme: Theme) -> Color {
+        switch self {
+        case .morning: theme.palette.header
+        case .evening: theme.palette.eveningHeader
+        }
+    }
+
+    /// Кольцо прогресса на карточке: утро — солнечное на светлой карточке, вечер — золотое на тёмной.
+    func ringStyle(in theme: Theme) -> NavCardRingStyle {
+        switch self {
+        case .morning:
+            NavCardRingStyle(track: theme.palette.track, fill: theme.palette.sunRays, text: theme.palette.onAccent)
+        case .evening:
+            NavCardRingStyle(track: theme.palette.goldTrack, fill: theme.palette.gold, text: theme.palette.gold)
+        }
+    }
+
+    func cardShadow(in theme: Theme) -> ShadowToken {
+        switch self {
+        case .morning: .navCard(theme.palette.morningCardShadow, strength: .light)
+        case .evening: .navCard(theme.palette.shadow, strength: .medium)
+        }
     }
 }

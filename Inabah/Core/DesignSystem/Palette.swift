@@ -11,6 +11,10 @@ nonisolated struct Palette: Hashable, Sendable {
     var card: Color
     var actionBackground: Color
     var header: Color
+    /// Навбар и шапка вечерних азкаров — тёмный край карточки «Вечерние азкары».
+    var eveningHeader: Color
+    /// Навбар и шапки раздела «Хадисы».
+    var hadithHeader: Color
 
     // Текст
     var textPrimary: Color
@@ -22,6 +26,8 @@ nonisolated struct Palette: Hashable, Sendable {
     var onAccentSecondary: Color
     /// Третичный текст поверх акцента (ссылки, мелкие пометки).
     var onAccentTertiary: Color
+    /// Чуть приглушённый основной текст поверх акцента (аят на главных).
+    var onAccentStrong: Color
 
     // Линии и подложки поверх тёмных и градиентных поверхностей
     /// Тонкая рамка карточек и кнопок.
@@ -40,6 +46,16 @@ nonisolated struct Palette: Hashable, Sendable {
     var accentLight: Color
     var accentDim: Color
     var accentShadow: Color
+    /// Цветные тени светлых карточек навигации («Утренние азкары», ан-Навави).
+    var morningCardShadow: Color
+    var nawawiCardShadow: Color
+
+    // Выбранная вкладка — в тон фона раздела (общий сиреневый акцент на зелёном,
+    // янтарном и графитовом фоне уходил в розовый)
+    var tabAzkar: Color
+    var tabHadith: Color
+    var tabMakharij: Color
+    var tabSettings: Color
 
     // Статусы
     var success: Color
@@ -49,9 +65,16 @@ nonisolated struct Palette: Hashable, Sendable {
     /// Подложка и рамка зелёных плашек на пергаменте (бейдж «✦ N раз»).
     var successTint: Color
     var successBorder: Color
-    /// Заготовка этапа хадисов: статусы «прочитан» / «выучен».
+    /// Статусы хадисов «прочитан» / «выучен»: основной цвет, подложка бейджа и кнопки,
+    /// плотная подложка активной кнопки, рамка бейджа.
     var statusRead: Color
+    var statusReadTint: Color
+    var statusReadStrong: Color
+    var statusReadBorder: Color
     var statusMemorized: Color
+    var statusMemorizedTint: Color
+    var statusMemorizedStrong: Color
+    var statusMemorizedBorder: Color
 
     // Золото: кольцо счётчика, кнопка счёта, плеер
     var gold: Color
@@ -63,10 +86,14 @@ nonisolated struct Palette: Hashable, Sendable {
     var goldTrack: Color
     /// Ручка панели плеера.
     var goldMuted: Color
+    /// Подложка бейджа номера хадиса без статуса.
+    var goldTint: Color
     var sunRays: Color
 
     // Пергамент под арабским текстом — не зависит от темы интерфейса
     var parchmentLight: Color
+    /// Блик в углу пергамента.
+    var parchmentGlow: Color
     var parchmentInk: Color
 }
 
@@ -76,17 +103,22 @@ nonisolated extension Palette {
         let onAccent = Color(asset: .onAccent)
         let gold = Color(asset: .gold)
         let successDeep = Color(asset: .successDeep)
+        let statusRead = Color(asset: .statusRead)
+        let statusMemorized = Color(asset: .statusMemorized)
         return Palette(
             background: Color(asset: .appBackground),
             card: Color(asset: .cardBackground),
             actionBackground: Color(asset: .actionBackground),
             header: Color(asset: .headerBackground),
+            eveningHeader: Color(asset: .eveningCardStart),
+            hadithHeader: Color(asset: .hadithHeaderBackground),
             textPrimary: Color(asset: .textPrimary),
             textSecondary: Color(asset: .textSecondary),
             textTertiary: Color(asset: .textTertiary),
             onAccent: onAccent,
             onAccentSecondary: onAccent.opacity(0.6),
             onAccentTertiary: onAccent.opacity(0.4),
+            onAccentStrong: onAccent.opacity(0.85),
             hairline: onAccent.opacity(0.1),
             divider: onAccent.opacity(0.08),
             track: onAccent.opacity(0.15),
@@ -96,22 +128,36 @@ nonisolated extension Palette {
             accentLight: Color(asset: .accentPurpleLight),
             accentDim: Color(asset: .accentPurpleDim),
             accentShadow: Color(asset: .shadowPurple),
+            morningCardShadow: Color(asset: .shadowPurple),
+            nawawiCardShadow: successDeep,
+            tabAzkar: Color(asset: .tabAzkar),
+            tabHadith: Color(asset: .tabHadith),
+            tabMakharij: Color(asset: .tabMakharij),
+            tabSettings: Color(asset: .tabSettings),
             success: Color(asset: .success),
             successLight: Color(asset: .successLight),
             successDeep: successDeep,
             successDim: Color(asset: .successDim),
             successTint: successDeep.opacity(0.1),
             successBorder: successDeep.opacity(0.25),
-            statusRead: Color(asset: .statusRead),
-            statusMemorized: Color(asset: .statusMemorized),
+            statusRead: statusRead,
+            statusReadTint: statusRead.opacity(0.13),
+            statusReadStrong: statusRead.opacity(0.32),
+            statusReadBorder: statusRead.opacity(0.3),
+            statusMemorized: statusMemorized,
+            statusMemorizedTint: statusMemorized.opacity(0.12),
+            statusMemorizedStrong: statusMemorized.opacity(0.3),
+            statusMemorizedBorder: statusMemorized.opacity(0.3),
             gold: gold,
             goldLight: Color(asset: .goldLight),
             goldDeep: Color(asset: .goldDeep),
             goldBorder: gold.opacity(0.25),
             goldTrack: gold.opacity(0.12),
             goldMuted: gold.opacity(0.45),
+            goldTint: gold.opacity(0.13),
             sunRays: Color(asset: .sunRays),
             parchmentLight: Color(asset: .parchmentLight),
+            parchmentGlow: Color(asset: .parchmentLight).opacity(0.7),
             parchmentInk: Color(asset: .parchmentInk)
         )
     }()
@@ -131,4 +177,22 @@ nonisolated extension ShadowToken {
     static func floating(_ palette: Palette) -> ShadowToken { ShadowToken(color: palette.shadow.opacity(0.45), radius: 18, y: 6) }
     /// Золотые кнопки (счётчик, плей).
     static func goldButton(_ palette: Palette) -> ShadowToken { ShadowToken(color: palette.goldDeep.opacity(0.4), radius: 10, y: 4) }
+
+    /// Плотность тени навигационной карточки — подбирается под цвет карточки.
+    enum NavCardStrength {
+        case light, medium, strong
+
+        var opacity: Double {
+            switch self {
+            case .light: 0.35
+            case .medium: 0.4
+            case .strong: 0.45
+            }
+        }
+    }
+
+    /// Навигационные карточки главных экранов: цветная тень снизу.
+    static func navCard(_ color: Color, strength: NavCardStrength) -> ShadowToken {
+        ShadowToken(color: color.opacity(strength.opacity), radius: 12, y: 8)
+    }
 }

@@ -14,6 +14,8 @@ struct FontSizeControls: ToolbarContent {
             }
             .disabled(!settings.canDecreaseArabicFontSize)
             .accessibilityLabel(Text("reading.fontSize.decrease"))
+            // Кнопки навбара не меняются с размером интерфейса.
+            .fixedTextSize()
 
             Button {
                 withAnimation(Motion.fontSize) { settings.increaseArabicFontSize() }
@@ -22,6 +24,7 @@ struct FontSizeControls: ToolbarContent {
             }
             .disabled(!settings.canIncreaseArabicFontSize)
             .accessibilityLabel(Text("reading.fontSize.increase"))
+            .fixedTextSize()
         }
     }
 }

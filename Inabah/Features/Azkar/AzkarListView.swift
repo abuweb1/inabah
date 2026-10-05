@@ -18,22 +18,32 @@ struct AzkarListView: View {
     var body: some View {
         content
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .audioPlayerInset()
-            .background { theme.gradients.azkarBackground.linear.ignoresSafeArea() }
+            .background { section.background(in: theme).linear.ignoresSafeArea() }
             .overlay {
                 if showsCompletion {
                     AzkarCompletionView(section: section) { router.popToRoot(.azkar) }
                         .transition(.opacity)
+                        .accessibilityAddTraits(.isModal)
                 }
             }
             .animation(Motion.overlay, value: showsCompletion)
+            // После оверлея: мини-плеер остаётся над экраном завершения — последний зикр
+            // плейлиста может ещё звучать.
+            .audioPlayerInset()
             .background { AzkarCompletionWatcher(section: section, showsCompletion: $showsCompletion) }
             .navigationBarTitleDisplayMode(.inline)
-            .toolbarBackground(theme.palette.header, for: .navigationBar)
+            .toolbarBackground(section.headerColor(in: theme), for: .navigationBar)
             .toolbarBackgroundVisibility(.visible, for: .navigationBar)
             .toolbarColorScheme(.dark, for: .navigationBar)
             .toolbar {
-                ToolbarItem(placement: .principal) { titleView }
+                // Заголовок — слева, сразу за «назад» (решение пользователя 2026-10-04, как в Android):
+                // по центру между «назад» и А−/А+ ему тесно. Без стеклянной подложки элемента.
+                if #available(iOS 26, *) {
+                    ToolbarItem(placement: .topBarLeading) { titleView }
+                        .sharedBackgroundVisibility(.hidden)
+                } else {
+                    ToolbarItem(placement: .topBarLeading) { titleView }
+                }
                 FontSizeControls(settings: settings)
             }
             .task { await store.load(section) }
@@ -65,7 +75,7 @@ struct AzkarListView: View {
     }
 
     private var titleView: some View {
-        VStack(spacing: 0) {
+        VStack(alignment: .leading, spacing: 0) {
             Text(section.title)
                 .font(.headline)
             Text(section.subtitle)
@@ -73,6 +83,10 @@ struct AzkarListView: View {
                 .foregroundStyle(theme.palette.onAccentSecondary)
         }
         .foregroundStyle(theme.palette.onAccent)
+        // Элемент слева навбар сжимает до многоточия — заголовку нужна его натуральная ширина.
+        .fixedSize()
+        // Заголовок экрана не меняется с размером интерфейса.
+        .fixedTextSize()
         .accessibilityElement(children: .combine)
         .accessibilityAddTraits(.isHeader)
     }
@@ -185,7 +199,7 @@ private struct AzkarProgressHeader: View {
         .padding(.horizontal, Spacing.xl)
         .padding(.top, Spacing.xs)
         .padding(.bottom, Spacing.m)
-        .background(theme.palette.header)
+        .background(section.headerColor(in: theme))
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(Text("azkar.progress \(progress.completed) \(progress.total)"))
     }

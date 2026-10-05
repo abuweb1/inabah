@@ -9,6 +9,9 @@ struct ZikrCounterButton: View {
     @Environment(\.theme) private var theme
     @State private var flashTrigger = 0
 
+    /// Подпись «из N» ужимается, чтобы помещаться в круг.
+    private static let captionMinimumScale: CGFloat = 0.7
+
     private var isCompleted: Bool { count >= total }
     private var fraction: Double { Double(count) / Double(max(total, 1)) }
 
@@ -19,7 +22,7 @@ struct ZikrCounterButton: View {
                     fraction: fraction,
                     trackColor: theme.palette.goldTrack,
                     fillColor: isCompleted ? theme.palette.success : theme.palette.gold,
-                    lineWidth: 3
+                    lineWidth: Size.ringStroke
                 )
                 face
                     .padding(Spacing.xs)
@@ -40,7 +43,9 @@ struct ZikrCounterButton: View {
                     }
             }
         }
-        .buttonStyle(PressScaleButtonStyle(pressedScale: 0.91))
+        .buttonStyle(PressScaleButtonStyle(pressedScale: PressFeedback.counterScale))
+        // Кнопка не меняется с размером интерфейса: цифры — внутри круга фиксированного размера.
+        .fixedTextSize()
         .disabled(isCompleted)
         .onChange(of: isCompleted) { _, completed in
             if completed { flashTrigger += 1 }
@@ -73,7 +78,7 @@ struct ZikrCounterButton: View {
                     Text("zikr.counter.of \(total)")
                         .font(.caption2)
                         .dynamicTypeSize(...DynamicTypeSize.large)
-                        .minimumScaleFactor(0.7)
+                        .minimumScaleFactor(Self.captionMinimumScale)
                 }
                 .foregroundStyle(theme.palette.parchmentInk)
             }

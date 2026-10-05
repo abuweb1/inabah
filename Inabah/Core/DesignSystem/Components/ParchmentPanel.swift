@@ -1,17 +1,26 @@
 import SwiftUI
 
 /// «Пергамент» под арабским текстом: тёплый градиент, зелёная рамка, полоска сверху,
-/// орнаменты ✦ по углам. Цвета не зависят от темы интерфейса — текст одинаково читается в любой теме.
+/// орнаменты ✦ по углам. Цвета — токены пергамента темы: светлая подложка под тёмными чернилами
+/// одинакова на любом фоне раздела.
 struct ParchmentPanel<Content: View>: View {
     /// Скругление верхних углов: совпадает с карточкой, когда пергамент — её первый блок,
-    /// и 0, когда над ним заголовок выполненной карточки. Нижние углы всегда прямые.
+    /// и 0, когда над ним заголовок выполненной карточки.
     var topCornerRadius: CGFloat = Radius.card
+    /// Нижние углы: прямые, когда под пергаментом продолжается карточка (зикр), скруглённые —
+    /// когда пергамент отдельный блок (экран хадиса).
+    var bottomCornerRadius: CGFloat = 0
     @ViewBuilder let content: Content
 
     @Environment(\.theme) private var theme
 
     private var shape: UnevenRoundedRectangle {
-        UnevenRoundedRectangle(topLeadingRadius: topCornerRadius, topTrailingRadius: topCornerRadius)
+        UnevenRoundedRectangle(
+            topLeadingRadius: topCornerRadius,
+            bottomLeadingRadius: bottomCornerRadius,
+            bottomTrailingRadius: bottomCornerRadius,
+            topTrailingRadius: topCornerRadius
+        )
     }
 
     var body: some View {
@@ -23,7 +32,7 @@ struct ParchmentPanel<Content: View>: View {
             .background { background }
             .overlay { ornaments }
             .clipShape(shape)
-            .overlay { shape.strokeBorder(theme.palette.successDeep, lineWidth: 2) }
+            .overlay { shape.strokeBorder(theme.palette.successDeep, lineWidth: Size.parchmentBorder) }
     }
 
     private var background: some View {
@@ -31,17 +40,13 @@ struct ParchmentPanel<Content: View>: View {
             theme.gradients.parchment.linear
             // Блик в левом верхнем углу, как в прототипе.
             RadialGradient(
-                colors: [theme.palette.parchmentLight.opacity(0.7), .clear],
-                center: .init(x: 0.3, y: 0.2),
+                colors: [theme.palette.parchmentGlow, .clear],
+                center: ParchmentMetrics.highlightCenter,
                 startRadius: 0,
                 endRadius: ParchmentMetrics.highlightRadius
             )
-            LinearGradient(
-                colors: [theme.palette.successDeep, theme.palette.success, theme.palette.successDeep],
-                startPoint: .leading, endPoint: .trailing
-            )
-            .frame(height: Size.accentStripe)
-            .opacity(0.6)
+            theme.gradients.parchmentStripe.linear
+                .frame(height: Size.accentStripe)
         }
     }
 
@@ -63,4 +68,5 @@ struct ParchmentPanel<Content: View>: View {
 /// Размеры пергамента (вне дженерика: хранимые статические свойства в нём запрещены).
 private enum ParchmentMetrics {
     static let highlightRadius: CGFloat = 180
+    static let highlightCenter = UnitPoint(x: 0.3, y: 0.2)
 }

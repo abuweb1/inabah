@@ -13,12 +13,9 @@ nonisolated struct HadithID: Hashable, Codable, Sendable {
 }
 
 /// Хадис с уже выбранным переводом.
-///
-/// Заготовка этапа хадисов: сейчас слой (модель, DTO, `ContentRepository.hadiths(in:)`)
-/// используется только тестами данных — экраны хадисов появятся на этапе 2.
 nonisolated struct Hadith: Identifiable, Hashable, Sendable {
     let id: HadithID
-    /// Арабский текст; строки иснада разделены `\n`.
+    /// Арабский текст; может содержать `\n` (в ан-Навави — переносы строк исходного издания).
     let arabic: String
     let translation: HadithTranslation?
 

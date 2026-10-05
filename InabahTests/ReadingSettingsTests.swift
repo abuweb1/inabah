@@ -5,11 +5,11 @@ import Testing
 @MainActor
 @Suite("Размер арабского шрифта")
 struct ReadingSettingsTests {
-    /// Отдельный suite на каждый тест — тесты идут параллельно и не делят UserDefaults.
-    private let defaults: UserDefaults
+    private let storage: IsolatedDefaults
+    private var defaults: UserDefaults { storage.defaults }
 
     init() throws {
-        defaults = try #require(UserDefaults(suiteName: "ReadingSettingsTests.\(UUID().uuidString)"))
+        storage = try IsolatedDefaults("ReadingSettingsTests")
     }
 
     @Test("По умолчанию — 21")
