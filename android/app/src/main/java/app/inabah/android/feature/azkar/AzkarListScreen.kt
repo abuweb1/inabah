@@ -8,7 +8,10 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import android.os.SystemClock
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.interaction.collectIsDraggedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,10 +24,18 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.snapshotFlow
+import androidx.compose.ui.layout.onPlaced
+import androidx.compose.ui.layout.positionInParent
+import app.inabah.android.core.audio.AudioPlayerController
+import app.inabah.android.core.settings.PlaylistSettings
+import kotlinx.coroutines.flow.drop
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.runtime.setValue
@@ -84,6 +95,8 @@ fun AzkarListScreen(
     section: AzkarSection,
     store: AzkarStore,
     readingSettings: ReadingSettings,
+    player: AudioPlayerController,
+    playlistSettings: PlaylistSettings,
     onBack: () -> Unit,
     onGoHome: () -> Unit,
     contentPadding: PaddingValues,
@@ -134,7 +147,7 @@ fun AzkarListScreen(
                         .then(if (showsCompletion) Modifier.clearAndSetSemantics {} else Modifier),
                 ) {
                     AzkarProgressHeader(store, section)
-                    AzkarFeed(current.value, fontSize.toFloat(), contentPadding)
+                    AzkarFeed(section, current.value, fontSize.toFloat(), player, playlistSettings, contentPadding)
                 }
             }
             // Поверх шапки и ленты, навбар не закрывает (как в iOS). Полное имя — без ColumnScope-варианта.
@@ -189,23 +202,100 @@ private fun AzkarProgressHeader(store: AzkarStore, section: AzkarSection) {
     )
 }
 
-/** Лента — обычная колонка, не ленивая: соседи сдвигаются вместе со сворачиванием карточки. */
+/**
+ * Лента — обычная колонка, не ленивая: соседи сдвигаются вместе со сворачиванием карточки. Плеер
+ * читает только лента: карточкам — готовое [ZikrAudioState], позицию воспроизведения — никто.
+ */
 @Composable
-private fun AzkarFeed(sessions: List<ZikrSession>, arabicFontSize: Float, contentPadding: PaddingValues) {
+private fun AzkarFeed(
+    section: AzkarSection,
+    sessions: List<ZikrSession>,
+    arabicFontSize: Float,
+    player: AudioPlayerController,
+    playlistSettings: PlaylistSettings,
+    contentPadding: PaddingValues,
+) {
     val animatedSize by animateFloatAsState(arabicFontSize, Motion.fontSize(), label = "arabicSize")
+    val playerState by player.state.collectAsStateWithLifecycle()
+    val repeatsByCount by playlistSettings.repeatsByCount.collectAsStateWithLifecycle()
+    val pauseSeconds by playlistSettings.pauseBetween.collectAsStateWithLifecycle()
+    val rate by playlistSettings.rate.collectAsStateWithLifecycle()
+    val playlistId = section.playlistId
+    val isPlaylistActive = playerState.isPlaylistActive(playlistId)
+    val scrollState = rememberScrollState()
+    val cardTops = remember { mutableMapOf<String, Float>() }
+    AutoScrollToPlaying(scrollState, cardTops, trackId = playerState.track?.id.takeIf { isPlaylistActive })
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState())
+            .verticalScroll(scrollState)
             .padding(Spacing.l)
             .padding(bottom = contentPadding.calculateBottomPadding()),
         verticalArrangement = Arrangement.spacedBy(Spacing.l),
     ) {
         sessions.forEach { session ->
-            key(session.id) { ZikrCard(session, animatedSize) }
+            key(session.id) {
+                val track = session.zikr.toAudioTrack()
+                ZikrCard(
+                    session = session,
+                    arabicFontSize = animatedSize,
+                    audio = ZikrAudioState(
+                        isActive = playerState.isActive(track.id),
+                        isPlaylistCurrent = isPlaylistActive && playerState.track?.id == track.id,
+                    ),
+                    onPlay = { player.play(track) },
+                    modifier = Modifier.onPlaced { cardTops[track.id] = it.positionInParent().y },
+                )
+            }
+        }
+        val playlist = sessions.map { it.zikr.toAudioTrack(repeatsByCount) }
+        AzkarPlayAllCard(
+            isActive = isPlaylistActive,
+            repeatsByCount = repeatsByCount,
+            pauseSeconds = pauseSeconds,
+            rate = rate,
+            onRepeatsChange = playlistSettings::setRepeatsByCount,
+            onPauseChange = {
+                playlistSettings.setPauseBetween(it)
+                player.updatePlaylist(playlistId, rate, it)
+            },
+            onRateChange = {
+                playlistSettings.setRate(it)
+                player.updatePlaylist(playlistId, it, pauseSeconds)
+            },
+            onListen = { player.playAll(playlistId, playlist, rate, pauseSeconds) },
+            enabled = playlist.isNotEmpty(),
+        )
+    }
+}
+
+/**
+ * При смене звучащего зикра «Прослушать все» лента едет к его карточке (`Motion.collapse`) — если
+ * пользователь сейчас не листает и не листал последние 2 с (iOS `autoScrollCooldown`).
+ */
+@Composable
+private fun AutoScrollToPlaying(scrollState: ScrollState, cardTops: Map<String, Float>, trackId: String?) {
+    val dragged by scrollState.interactionSource.collectIsDraggedAsState()
+    var autoScrolling by remember { mutableStateOf(false) }
+    // Листание пальцем и его докрутка (не наша прокрутка к карточке).
+    val userScrolling by remember { derivedStateOf { dragged || (scrollState.isScrollInProgress && !autoScrolling) } }
+    val lastUserScroll = remember { longArrayOf(Long.MIN_VALUE / 2) }
+    // Время начала и конца листания: «не листал последние 2 с» считается от конца.
+    LaunchedEffect(Unit) { snapshotFlow { userScrolling }.drop(1).collect { lastUserScroll[0] = SystemClock.uptimeMillis() } }
+    LaunchedEffect(trackId) {
+        val target = trackId?.let(cardTops::get) ?: return@LaunchedEffect
+        val quietFor = SystemClock.uptimeMillis() - lastUserScroll[0]
+        if (userScrolling || quietFor < AUTO_SCROLL_COOLDOWN_MILLIS) return@LaunchedEffect
+        autoScrolling = true
+        try {
+            scrollState.animateScrollTo(target.toInt(), Motion.collapse())
+        } finally {
+            autoScrolling = false
         }
     }
 }
+
+private const val AUTO_SCROLL_COOLDOWN_MILLIS = 2_000L
 
 /** «مَا شَاءَ اللَّهُ» (iOS `AzkarCompletionView`); «← На главную» очищает стек вкладки. */
 @Composable

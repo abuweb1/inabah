@@ -7,6 +7,8 @@ import androidx.datastore.core.handlers.ReplaceFileCorruptionHandler
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.preferencesDataStoreFile
+import app.inabah.android.core.audio.AudioPlayerController
+import app.inabah.android.core.audio.MediaControllerEngine
 import app.inabah.android.core.content.AssetContentRepository
 import app.inabah.android.core.content.ContentLanguagePriority
 import app.inabah.android.core.content.ContentRepository
@@ -45,6 +47,7 @@ class AppServices(
     val hadithCollectionOrder: HadithCollectionOrder,
     val appearanceSettings: AppearanceSettings,
     val textSizeSettings: TextSizeSettings,
+    val audioPlayer: AudioPlayerController,
 )
 
 /**
@@ -92,6 +95,7 @@ class AppContainer(context: Context) {
             val services = createServices()
             _services.value = services
             appScope.launch { services.azkarStore.runResetTimer() }
+            appScope.launch { services.audioPlayer.run() }
             services.azkarStore.loadAll()
             services.hadithStore.loadAll()
             logContentFailures(services)
@@ -130,6 +134,8 @@ class AppContainer(context: Context) {
             hadithCollectionOrder = HadithCollectionOrder(storage),
             appearanceSettings = AppearanceSettings(storage),
             textSizeSettings = TextSizeSettings(storage),
+            // Служба воспроизведения подключается при первом звуке, не при запуске приложения.
+            audioPlayer = AudioPlayerController(MediaControllerEngine(appContext)),
         )
     }
 

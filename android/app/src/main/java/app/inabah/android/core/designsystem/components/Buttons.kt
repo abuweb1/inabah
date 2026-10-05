@@ -62,8 +62,8 @@ private const val ICON_FRACTION = 0.45f
 /** Значок без подложки — как символ title2 (22 pt) в iOS. */
 private val BareIconSize = 24.dp
 
-/** Значок на круглой кнопке плеера — как символ title (28 pt) bold. */
-private val ProminentIconSize = 30.dp
+/** Значок на круглой кнопке плеера 50 — как символ title2 bold (снимки android/docs/player). */
+private val ProminentIconSize = 28.dp
 
 /** Значок в кнопке на всю ширину — как символ body. */
 private val PrimaryIconSize = 20.dp
@@ -148,6 +148,8 @@ fun BareIconButton(
     foreground: Color,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
+    /** Видимый значок: по умолчанию — как символ title2; ±10 с плеера — крупнее (у значков Material поля). */
+    iconSize: Dp = BareIconSize,
 ) = FixedTextSize {
     val interaction = remember { MutableInteractionSource() }
     Box(
@@ -159,11 +161,11 @@ fun BareIconButton(
             .pressFeedback(interaction, opacity = PressFeedback.BARE_OPACITY, animation = PressAnimation.Instant),
         contentAlignment = Alignment.Center,
     ) {
-        Icon(icon, contentDescription, tint = foreground, modifier = Modifier.size(BareIconSize))
+        Icon(icon, contentDescription, tint = foreground, modifier = Modifier.size(iconSize))
     }
 }
 
-/** Главная круглая кнопка плеера (iOS `ProminentRoundButtonStyle`): 64 dp, золотой градиент и тень. */
+/** Главная круглая кнопка плеера (iOS `ProminentRoundButtonStyle`): 50 dp, золотой градиент и тень. */
 @Composable
 fun ProminentRoundButton(
     onClick: () -> Unit,
@@ -177,6 +179,7 @@ fun ProminentRoundButton(
     val interaction = remember { MutableInteractionSource() }
     Box(
         modifier = modifier
+            .minimumInteractiveComponentSize()
             .size(Size.playerMainButton)
             .clickable(interaction, indication = null, enabled = enabled, role = Role.Button, onClick = onClick)
             .disabledAlpha(enabled)

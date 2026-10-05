@@ -45,8 +45,10 @@ object Size {
     val primaryButtonHeight = 50.dp
     val accentStripe = 3.dp
     val miniButton = 38.dp
-    val playerButton = 42.dp
-    val playerMainButton = 64.dp
+    /** Компактный плеер (решение пользователя 2026-10-04, снимки android/docs/player): было 42 / 64. */
+    val playerButton = 34.dp
+    val playerMainButton = 50.dp
+    val scrubThumb = 16.dp
     val statusDot = 8.dp
     val grabberWidth = 40.dp
     val grabberHeight = 5.dp
