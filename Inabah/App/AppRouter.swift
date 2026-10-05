@@ -25,6 +25,10 @@ nonisolated enum SettingsRoute: Hashable, Codable, Sendable {
     case palette
     /// Размер текста переводов и интерфейса.
     case textSize
+    /// «О приложении»: источники, лицензии, политика конфиденциальности.
+    case about
+    /// Полный текст лицензии (из «О приложении»).
+    case license(LicenseDocument)
 }
 
 /// Экраны внутри вкладки «Хадисы».

@@ -49,4 +49,17 @@ struct BundledContentTests {
     func pendingIsNotBundled() {
         #expect(Bundle.main.url(forResource: "missing-texts", withExtension: "json") == nil)
     }
+
+    @Test("Текст лицензии для «О приложении» лежит в Bundle", arguments: LicenseDocument.allCases)
+    func licenseIsBundled(document: LicenseDocument) throws {
+        let text = try #require(document.text(), "нет файла \(document.resourceName).txt")
+        #expect(!text.isEmpty)
+    }
+
+    @Test("Текст лицензии: строки абзаца склеиваются, пустые строки и линии остаются")
+    func licenseReflow() {
+        let source = "Copyright line one\nline two\n\n----\nTITLE\n----\n\nSecond\nparagraph"
+
+        #expect(LicenseDocument.reflowed(source) == "Copyright line one line two\n\n----\nTITLE\n----\n\nSecond paragraph")
+    }
 }

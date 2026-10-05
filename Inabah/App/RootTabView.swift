@@ -70,6 +70,8 @@ struct RootTabView: View {
                                 case .appIcon: AppIconSettingsView()
                                 case .palette: PaletteSettingsView()
                                 case .textSize: TextSizeSettingsView()
+                                case .about: AboutView()
+                                case .license(let document): LicenseView(document: document)
                                 }
                             }
                             .interfaceTextSize()

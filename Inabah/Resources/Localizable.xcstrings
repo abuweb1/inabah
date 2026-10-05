@@ -1,6 +1,248 @@
 {
   "sourceLanguage" : "ru",
   "strings" : {
+    "about.app.footer" : {
+      "comment" : "О приложении: подпись группы ссылок",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Без рекламы, регистрации и сбора данных. Приложение работает без интернета."
+          }
+        }
+      }
+    },
+    "about.app.header" : {
+      "comment" : "О приложении: заголовок группы ссылок",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Приложение"
+          }
+        }
+      }
+    },
+    "about.appName" : {
+      "comment" : "О приложении: название под иконкой",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Инаба"
+          }
+        }
+      }
+    },
+    "about.license.material.subtitle" : {
+      "comment" : "О приложении: лицензия значков вкладок — подпись",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Значки вкладок · Google · Apache License 2.0"
+          }
+        }
+      }
+    },
+    "about.license.material.title" : {
+      "comment" : "О приложении: лицензия значков вкладок — заголовок",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Material Symbols"
+          }
+        }
+      }
+    },
+    "about.license.scheherazade.subtitle" : {
+      "comment" : "О приложении: лицензия арабского шрифта — подпись",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Арабский шрифт · SIL Global · SIL Open Font License 1.1"
+          }
+        }
+      }
+    },
+    "about.license.scheherazade.title" : {
+      "comment" : "О приложении: лицензия арабского шрифта — заголовок",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scheherazade New"
+          }
+        }
+      }
+    },
+    "about.licenses.header" : {
+      "comment" : "О приложении: заголовок группы лицензий",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Шрифт и значки"
+          }
+        }
+      }
+    },
+    "about.link.azkar" : {
+      "comment" : "О приложении: ссылка на azkar.ru",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "azkar.ru"
+          }
+        }
+      }
+    },
+    "about.link.issues" : {
+      "comment" : "О приложении: ссылка на Issues репозитория",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вопросы и предложения"
+          }
+        }
+      }
+    },
+    "about.link.privacy" : {
+      "comment" : "О приложении: ссылка на PRIVACY.md",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Политика конфиденциальности"
+          }
+        }
+      }
+    },
+    "about.link.repository" : {
+      "comment" : "О приложении: ссылка на репозиторий",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Исходный код на GitHub"
+          }
+        }
+      }
+    },
+    "about.link.sunnah" : {
+      "comment" : "О приложении: ссылка на sunnah.com",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "sunnah.com"
+          }
+        }
+      }
+    },
+    "about.sources.azkar.text" : {
+      "comment" : "О приложении: источник азкаров",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Тексты, транскрипция, перевод и аудиозаписи — по azkar.ru."
+          }
+        }
+      }
+    },
+    "about.sources.azkar.title" : {
+      "comment" : "О приложении: источник азкаров — заголовок",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Азкары"
+          }
+        }
+      }
+    },
+    "about.sources.footer" : {
+      "comment" : "О приложении: подпись группы источников",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Источник каждого зикра и хадиса указан под его переводом."
+          }
+        }
+      }
+    },
+    "about.sources.hadith.text" : {
+      "comment" : "О приложении: источник хадисов",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Классические сборники «40 хадисов» имама ан-Навави (с дополнением Ибн Раджаба), хадисы аль-Къудси и сборник имама аль-Аджурри. Арабский текст хадисов аль-Къудси — по sunnah.com."
+          }
+        }
+      }
+    },
+    "about.sources.hadith.title" : {
+      "comment" : "О приложении: источник хадисов — заголовок",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Хадисы"
+          }
+        }
+      }
+    },
+    "about.sources.header" : {
+      "comment" : "О приложении: заголовок группы источников",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Источники"
+          }
+        }
+      }
+    },
+    "about.subtitle" : {
+      "comment" : "Настройки: подпись строки «О приложении»",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Источники, лицензии, конфиденциальность"
+          }
+        }
+      }
+    },
+    "about.title" : {
+      "comment" : "Настройки: экран и строка «О приложении»",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "О приложении"
+          }
+        }
+      }
+    },
+    "about.version %@" : {
+      "comment" : "О приложении: версия и сборка, например «Версия 1.0.0 (1)»",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Версия %@"
+          }
+        }
+      }
+    },
     "appIcon.beads" : {
       "comment" : "Иконка приложения: кольцо бусин с кистью",
       "localizations" : {
