@@ -21,8 +21,23 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    // Ключ выпуска (docs/android/08): путь, псевдоним и пароли — свойства INABAH_* в ~/.gradle/gradle.properties,
+    // вне проекта. Нет свойств — release собирается без подписи выпуска, как до ключа.
+    val releaseKeystore = providers.gradleProperty("INABAH_KEYSTORE").orNull
+    if (releaseKeystore != null) {
+        fun requiredProperty(name: String): String = providers.gradleProperty(name).orNull
+            ?: error("$name не задано в ~/.gradle/gradle.properties (рядом с INABAH_KEYSTORE)")
+        signingConfigs.create("release") {
+            storeFile = file(releaseKeystore)
+            storePassword = requiredProperty("INABAH_KEYSTORE_PASSWORD")
+            keyAlias = requiredProperty("INABAH_KEY_ALIAS")
+            keyPassword = requiredProperty("INABAH_KEY_PASSWORD")
+        }
+    }
+
     buildTypes {
         release {
+            signingConfig = signingConfigs.findByName("release")
             // R8: сжатие и оптимизация кода и ресурсов (этап 7). Правила kotlinx.serialization, Media3,
             // Compose приходят из самих библиотек; свои — в proguard-rules.pro.
             isMinifyEnabled = true
@@ -35,7 +50,7 @@ android {
     }
 
     // Типы сборки плагина Baseline Profile (benchmarkRelease, nonMinifiedRelease) — копии release; ставятся
-    // на эмулятор и подписываются отладочным ключом. У самого release подписи в сборке нет (ключ выпуска — 08).
+    // на эмулятор и подписываются отладочным ключом, а не ключом выпуска.
     buildTypes.matching { it.name == "benchmarkRelease" || it.name == "nonMinifiedRelease" }.configureEach {
         signingConfig = signingConfigs.getByName("debug")
     }
