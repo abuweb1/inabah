@@ -77,13 +77,15 @@ private enum SettingsSection {
         }
     }
 
-    var symbolName: String {
+    /// Значок строки. У разделов приложения — те же значки, что на их вкладках (общие с Android,
+    /// `Assets.xcassets/TabIcons`), у оформления — SF Symbols.
+    var icon: SettingsSectionIcon {
         switch self {
-        case .azkar: "hands.and.sparkles.fill"
-        case .hadith: "book.closed.fill"
-        case .palette: "paintpalette.fill"
-        case .textSize: "textformat.size"
-        case .appIcon: "app.badge.fill"
+        case .azkar: .asset("tabIconAzkar")
+        case .hadith: .asset("tabIconHadith")
+        case .palette: .symbol("paintpalette.fill")
+        case .textSize: .symbol("textformat.size")
+        case .appIcon: .symbol("app.badge.fill")
         }
     }
 
@@ -107,11 +109,12 @@ private struct SettingsSectionRow: View {
 
     /// Плашка значка растёт вместе с текстом строки (размер интерфейса).
     @ScaledMetric(relativeTo: .body) private var iconSize: CGFloat = 32
+    /// Векторный значок из ассетов — по размеру глифа SF Symbol `title3` в той же плашке.
+    @ScaledMetric(relativeTo: .body) private var assetGlyphSize: CGFloat = 22
 
     var body: some View {
         HStack(spacing: Spacing.m) {
-            Image(systemName: section.symbolName)
-                .font(.title3)
+            glyph
                 .foregroundStyle(theme.palette.onAccent)
                 .frame(width: iconSize, height: iconSize)
                 .background(section.tint(in: theme).linear, in: .rect(cornerRadius: Radius.small))
@@ -126,6 +129,26 @@ private struct SettingsSectionRow: View {
         }
         .padding(.vertical, Spacing.xxs)
     }
+
+    @ViewBuilder
+    private var glyph: some View {
+        switch section.icon {
+        case .symbol(let name):
+            Image(systemName: name)
+                .font(.title3)
+        case .asset(let name):
+            Image(name)
+                .resizable()
+                .scaledToFit()
+                .frame(width: assetGlyphSize, height: assetGlyphSize)
+        }
+    }
+}
+
+/// Значок строки настроек: системный символ или векторный значок из ассетов.
+private enum SettingsSectionIcon {
+    case symbol(String)
+    case asset(String)
 }
 
 #Preview {

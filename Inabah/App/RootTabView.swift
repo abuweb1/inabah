@@ -13,7 +13,9 @@ struct RootTabView: View {
         @Bindable var router = router
 
         TabView(selection: tabSelection) {
-            Tab("tab.azkar", systemImage: "hands.and.sparkles.fill", value: AppTab.azkar) {
+            // Значки вкладок — общие с Android (Material Symbols и «ع» из Scheherazade New),
+            // `Assets.xcassets/TabIcons`: одинаковый вид на обеих платформах.
+            Tab("tab.azkar", image: "tabIconAzkar", value: AppTab.azkar) {
                 // Шаг «Размер интерфейса» — на каждом экране стека, а не на `NavigationStack`:
                 // навбары остаются стандартного размера.
                 NavigationStack(path: $router.azkarPath) {
@@ -30,7 +32,7 @@ struct RootTabView: View {
                 }
                 .tint(theme.palette.accentLight)
             }
-            Tab("tab.hadith", systemImage: "book.closed.fill", value: AppTab.hadith) {
+            Tab("tab.hadith", image: "tabIconHadith", value: AppTab.hadith) {
                 NavigationStack(path: $router.hadithPath) {
                     HadithHomeView()
                         .interfaceTextSize()
@@ -47,14 +49,14 @@ struct RootTabView: View {
                 .tint(theme.palette.accentLight)
             }
             // «ع» (айн) — гортанная буква, хрестоматийный пример махраджа.
-            Tab("tab.makharij", systemImage: "character.ar", value: AppTab.makharij) {
+            Tab("tab.makharij", image: "tabIconMakharij", value: AppTab.makharij) {
                 NavigationStack {
                     MakharijHomeView()
                         .interfaceTextSize()
                 }
                 .tint(theme.palette.accentLight)
             }
-            Tab("tab.settings", systemImage: "gearshape.fill", value: AppTab.settings) {
+            Tab("tab.settings", image: "tabIconSettings", value: AppTab.settings) {
                 NavigationStack(path: $router.settingsPath) {
                     // Шаг интерфейса — внутри `SettingsView`, у строк: крупный заголовок
                     // «Настройки» UIKit масштабирует по размеру всего списка.
