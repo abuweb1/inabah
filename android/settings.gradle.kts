@@ -21,3 +21,5 @@ dependencyResolutionManagement {
 
 rootProject.name = "Inabah"
 include(":app")
+// Генерация Baseline Profile и замеры запуска/кадров на эмуляторе или телефоне (этап 7).
+include(":baselineprofile")

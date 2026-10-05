@@ -7,27 +7,19 @@ import androidx.compose.ui.graphics.Color
 import app.inabah.android.R
 import app.inabah.android.core.designsystem.Theme
 
-/** Значок вкладки: вектор Material Symbols или буква (у «Махраджа» — «ع», как `character.ar` в iOS). */
-sealed interface TabIcon {
-    data class Drawable(@param:DrawableRes val resId: Int) : TabIcon
-    data class Glyph(val text: String) : TabIcon
-}
-
-/** «ع» (айн) — гортанная буква, хрестоматийный пример махраджа. Контент, не переводится. */
-private const val MAKHARIJ_GLYPH = "ع"
-
 /**
- * Вкладки корня (iOS `AppTab`). Значок «Азкаров» — `folded_hands` вместо iOS `hands.and.sparkles`
- * (у Material аналога нет); свой значок — открытое решение 4 (docs/android/08).
+ * Вкладки корня (iOS `AppTab`). Значки — векторы (решение 4, docs/android/08, 2026-10-05): «Азкары» —
+ * `auto_awesome` (сияние, как искры iOS `hands.and.sparkles`; выбор пользователя), «Махрадж» — «ع» контуром
+ * Scheherazade New, как iOS `character.ar`.
  */
 enum class AppTab(
     @param:StringRes val label: Int,
-    val icon: TabIcon,
+    @param:DrawableRes val icon: Int,
 ) {
-    Azkar(R.string.tab_azkar, TabIcon.Drawable(R.drawable.ic_folded_hands)),
-    Hadith(R.string.tab_hadith, TabIcon.Drawable(R.drawable.ic_book)),
-    Makharij(R.string.tab_makharij, TabIcon.Glyph(MAKHARIJ_GLYPH)),
-    Settings(R.string.tab_settings, TabIcon.Drawable(R.drawable.ic_settings));
+    Azkar(R.string.tab_azkar, R.drawable.ic_auto_awesome),
+    Hadith(R.string.tab_hadith, R.drawable.ic_book),
+    Makharij(R.string.tab_makharij, R.drawable.ic_ain),
+    Settings(R.string.tab_settings, R.drawable.ic_settings);
 
     /** Цвет выбранной вкладки — в тон своего раздела. */
     fun tint(theme: Theme): Color = when (this) {

@@ -25,6 +25,7 @@ import androidx.compose.ui.test.isEnabled
 import androidx.compose.ui.test.onNodeWithText
 import androidx.test.espresso.Espresso
 import app.inabah.android.feature.settings.AzkarSettingsScreen
+import androidx.compose.ui.test.junit4.accessibility.enableAccessibilityChecks
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -74,6 +75,8 @@ class AzkarListScreenTest {
 
     @Before
     fun openStorage() {
+        // Этап 7: каждое действие теста заодно проверяет экран на доступность (ATF).
+        compose.enableAccessibilityChecks()
         directory = File(context.cacheDir, "azkar-list-test-${System.nanoTime()}").apply { mkdirs() }
         val dataStore = PreferenceDataStoreFactory.create(scope = ioScope) { File(directory, "test.preferences_pb") }
         storage = PreferencesStorage(dataStore) { throw AssertionError("Ошибка хранилища", it) }

@@ -24,7 +24,8 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
 /** Прогресс раздела: сколько зикров выполнено из скольких. */
-data class SectionProgress(val completed: Int, val total: Int) {
+/** [isStarted] — есть хоть одно нажатие: «Сбросить» в настройках активна и при частичном счёте. */
+data class SectionProgress(val completed: Int, val total: Int, val isStarted: Boolean = completed > 0) {
     val fraction: Double get() = if (total > 0) completed.toDouble() / total else 0.0
     val isFinished: Boolean get() = total > 0 && completed == total
 }
@@ -77,7 +78,7 @@ class AzkarStore(
     fun sessions(section: AzkarSection): List<ZikrSession> =
         (sections.getValue(section).value as? Loadable.Loaded)?.value.orEmpty()
 
-    /** Меняется только при выполнении или сбросе зикра, а не на каждое нажатие. */
+    /** Меняется при выполнении или сбросе зикра и при первом нажатии в разделе, а не на каждое нажатие. */
     fun progress(section: AzkarSection): StateFlow<SectionProgress> = progressViews.getValue(section)
 
     /** Загружен или загружается — ничего; после ошибки — повторная попытка. Повторная загрузка не сбрасывает счёт. */
@@ -205,7 +206,11 @@ class AzkarStore(
     private fun updateProgress(section: AzkarSection) {
         val sessions = sessions(section)
         progressBySection.getValue(section).value =
-            SectionProgress(completed = sessions.count { it.isCompleted }, total = sessions.size)
+            SectionProgress(
+                completed = sessions.count { it.isCompleted },
+                total = sessions.size,
+                isStarted = sessions.any { it.count > 0 },
+            )
     }
 
     private fun scheduleNextRefresh() {

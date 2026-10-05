@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.baselineprofile)
 }
 
 android {
@@ -22,12 +23,21 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            // R8: сжатие и оптимизация кода и ресурсов (этап 7). Правила kotlinx.serialization, Media3,
+            // Compose приходят из самих библиотек; свои — в proguard-rules.pro.
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",
             )
         }
+    }
+
+    // Типы сборки плагина Baseline Profile (benchmarkRelease, nonMinifiedRelease) — копии release; ставятся
+    // на эмулятор и подписываются отладочным ключом. У самого release подписи в сборке нет (ключ выпуска — 08).
+    buildTypes.matching { it.name == "benchmarkRelease" || it.name == "nonMinifiedRelease" }.configureEach {
+        signingConfig = signingConfigs.getByName("debug")
     }
 
     compileOptions {
@@ -45,6 +55,15 @@ android {
         language {
             enableSplit = false
         }
+    }
+}
+
+// Отчёты компилятора Compose (стабильность параметров, пропускаемость) — только по запросу:
+// ./gradlew :app:compileReleaseKotlin -Pcompose.reports → app/build/compose_reports.
+composeCompiler {
+    if (providers.gradleProperty("compose.reports").isPresent) {
+        reportsDestination = layout.buildDirectory.dir("compose_reports")
+        metricsDestination = layout.buildDirectory.dir("compose_reports")
     }
 }
 
@@ -76,6 +95,11 @@ dependencies {
     implementation(libs.androidx.media3.exoplayer)
     implementation(libs.androidx.media3.session)
 
+    // Baseline Profile: ставит профиль при установке не из Play (APK) и отдаёт его Play; сам профиль —
+    // из модуля :baselineprofile (src/release/generated/baselineProfiles).
+    implementation(libs.androidx.profileinstaller)
+    baselineProfile(project(":baselineprofile"))
+
     testImplementation(libs.junit)
     testImplementation(libs.kotlin.test)
     testImplementation(libs.kotlinx.coroutines.test)
@@ -86,6 +110,8 @@ dependencies {
     androidTestImplementation(libs.androidx.test.runner)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
+    // Проверки доступности (ATF) в UI-тестах: размер касания, контраст, подписи — этап 7.
+    androidTestImplementation(libs.androidx.compose.ui.test.junit4.accessibility)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 }

@@ -7,6 +7,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
+import androidx.compose.ui.test.junit4.accessibility.enableAccessibilityChecks
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -50,6 +51,8 @@ class PaletteSettingsTest {
 
     @Before
     fun openStorage() {
+        // Этап 7: каждое действие теста заодно проверяет экран на доступность (ATF).
+        compose.enableAccessibilityChecks()
         directory = File(context.cacheDir, "palette-test-${System.nanoTime()}").apply { mkdirs() }
         val dataStore = PreferenceDataStoreFactory.create(scope = ioScope) { File(directory, "test.preferences_pb") }
         storage = PreferencesStorage(dataStore) { throw AssertionError("Ошибка хранилища", it) }
