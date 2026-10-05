@@ -25,7 +25,15 @@ class InabahApplication : Application() {
 
         ProcessLifecycleOwner.get().lifecycle.addObserver(
             object : DefaultLifecycleObserver {
-                override fun onStart(owner: LifecycleOwner) = refreshAzkarPeriods()
+                override fun onStart(owner: LifecycleOwner) {
+                    refreshAzkarPeriods()
+                    container.services.value?.audioPlayer?.onForeground()
+                }
+
+                // Одиночная запись в фоне — на паузу (как в iOS), плейлист играет дальше.
+                override fun onStop(owner: LifecycleOwner) {
+                    container.services.value?.audioPlayer?.onBackground()
+                }
             },
         )
         // Приёмник живёт столько же, сколько процесс: отписка не нужна.

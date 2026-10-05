@@ -1,7 +1,9 @@
 package app.inabah.android.feature.azkar
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -103,16 +105,25 @@ private val Whitespace = Regex("\\s+")
  * Карточка зикра (iOS `ZikrCardView`): пергамент, перевод, действия и счётчик. После выполнения
  * сверху раскрывается заголовок с ✓, а полное содержимое складывается под него; ⌄ раскладывает
  * обратно. Оба блока всегда в иерархии и меняют только высоту ([collapsible]) — соседи по ленте
- * сдвигаются в тех же кадрах. Перерисовывается только по состоянию своего [session].
+ * сдвигаются в тех же кадрах. Перерисовывается только по состоянию своего [session] и [audio]
+ * (значение от ленты — карточка не читает плеер); звучащий в «Прослушать все» — в золотой рамке.
  */
 @Composable
 fun ZikrCard(
     session: ZikrSession,
     arabicFontSize: Float,
     modifier: Modifier = Modifier,
+    audio: ZikrAudioState = ZikrAudioState.Idle,
+    onPlay: () -> Unit = {},
 ) {
     val palette = InabahTheme.palette
     val state by session.state.collectAsStateWithLifecycle()
+    val borderColor by animateColorAsState(
+        if (audio.isPlaylistCurrent) palette.gold else palette.hairline, Motion.highlight(), label = "cardBorder",
+    )
+    val borderWidth by animateDpAsState(
+        if (audio.isPlaylistCurrent) PLAYING_BORDER else Size.hairline, Motion.highlight(), label = "cardBorderWidth",
+    )
     val total = session.zikr.repetitions
     val isCompleted = state.count >= total
 
@@ -135,7 +146,7 @@ fun ZikrCard(
     Column(
         modifier
             .fillMaxWidth()
-            .surface(palette.card, Radius.card, border = palette.hairline, shadow = ShadowToken.card(palette))
+            .surface(palette.card, Radius.card, border = borderColor, lineWidth = borderWidth, shadow = ShadowToken.card(palette))
             .clip(RoundedCornerShape(Radius.card)),
     ) {
         ZikrMiniRow(
@@ -150,10 +161,15 @@ fun ZikrCard(
             state = state,
             arabicFontSize = arabicFontSize,
             isUnderHeader = collapsed,
+            isAudioActive = audio.isActive,
+            onPlay = onPlay,
             modifier = Modifier.collapsible(showsFullContent),
         )
     }
 }
+
+/** Рамка звучащего в «Прослушать все» зикра (iOS — gold 2 pt). */
+private val PLAYING_BORDER = 2.dp
 
 @Composable
 private fun ZikrFullContent(
@@ -161,6 +177,8 @@ private fun ZikrFullContent(
     state: ZikrState,
     arabicFontSize: Float,
     isUnderHeader: Boolean,
+    isAudioActive: Boolean,
+    onPlay: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val palette = InabahTheme.palette
@@ -183,6 +201,8 @@ private fun ZikrFullContent(
             )
         }
         ZikrActions(
+            isAudioActive = isAudioActive,
+            onPlay = onPlay,
             isTranslationVisible = state.isTranslationVisible,
             hasTranslation = zikr.translation != null,
             canReset = state.count > 0,
@@ -270,9 +290,14 @@ fun ZikrTranslationBlock(translation: ZikrTranslation, modifier: Modifier = Modi
     }
 }
 
-/** ▶ (неактивна до этапа 5 — аудио), «Аа», ↺ — по центру. */
+/**
+ * ▶, «Аа», ↺ — по центру. ▶ — запись зикра; выбрана в плеере и не доиграла — статичная волна
+ * на зелёном, «Открыть плеер» (нажатие показывает плеер, не ставит паузу).
+ */
 @Composable
 private fun ZikrActions(
+    isAudioActive: Boolean,
+    onPlay: () -> Unit,
     isTranslationVisible: Boolean,
     hasTranslation: Boolean,
     canReset: Boolean,
@@ -287,13 +312,12 @@ private fun ZikrActions(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         IconButton(
-            onClick = {},
-            icon = painterResource(R.drawable.ic_play_arrow),
-            contentDescription = stringResource(R.string.audio_zikr_listen),
-            foreground = palette.textSecondary,
-            background = palette.actionBackground,
-            border = palette.hairline,
-            enabled = false,
+            onClick = onPlay,
+            icon = painterResource(if (isAudioActive) R.drawable.ic_graphic_eq else R.drawable.ic_play_arrow),
+            contentDescription = stringResource(if (isAudioActive) R.string.audio_zikr_open_player else R.string.audio_zikr_listen),
+            foreground = if (isAudioActive) palette.onAccent else palette.textSecondary,
+            background = if (isAudioActive) palette.success else palette.actionBackground,
+            border = if (isAudioActive) palette.successLight else palette.hairline,
         )
         IconButton(
             onClick = onToggleTranslation,

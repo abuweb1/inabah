@@ -1,7 +1,13 @@
 package app.inabah.android.app
 
 import android.content.Context
+import android.content.Intent
 import android.graphics.Color
+import androidx.lifecycle.lifecycleScope
+import app.inabah.android.feature.azkar.azkarSectionOf
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
@@ -32,6 +38,8 @@ class MainActivity : ComponentActivity() {
             navigationBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
         )
         super.onCreate(savedInstanceState)
+        // Пересоздание активности приносит то же намерение — плеер уже открывали.
+        if (savedInstanceState == null) handleIntent(intent)
         setContent {
             val services by container.services.collectAsStateWithLifecycle()
             // До первого чтения настроек экран закрыт заставкой — рисовать нечего.
@@ -48,5 +56,26 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        handleIntent(intent)
+    }
+
+    /** Нажатие на медиауведомление: раздел звучащей записи с открытым плеером. */
+    private fun handleIntent(intent: Intent?) {
+        if (intent?.action != ACTION_OPEN_PLAYER) return
+        val container = (application as InabahApplication).container
+        lifecycleScope.launch {
+            val services = container.services.filterNotNull().first()
+            val player = services.audioPlayer
+            player.state.value.track?.id?.let(::azkarSectionOf)?.let { services.router.open(AzkarRoute.SectionList(it)) }
+            player.showPanel()
+        }
+    }
+
+    companion object {
+        const val ACTION_OPEN_PLAYER = "app.inabah.android.action.OPEN_PLAYER"
     }
 }

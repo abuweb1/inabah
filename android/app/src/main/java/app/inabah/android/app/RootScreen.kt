@@ -12,6 +12,7 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Scaffold
@@ -31,6 +32,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.inabah.android.core.designsystem.InterfaceTextScale
 import app.inabah.android.core.designsystem.LocalInabahTheme
 import app.inabah.android.core.designsystem.components.bottomOnly
+import app.inabah.android.core.audio.ui.AudioPlayerHost
 import app.inabah.android.feature.azkar.AzkarHomeScreen
 import app.inabah.android.feature.azkar.AzkarListScreen
 import app.inabah.android.feature.hadith.HadithDetailScreen
@@ -44,9 +46,9 @@ import app.inabah.android.feature.settings.SettingsScreen
 import app.inabah.android.feature.settings.TextSizeSettingsScreen
 
 /**
- * Корень (iOS `RootTabView`): вкладки, у «Азкаров» и «Настроек» — свой стек экранов (Navigation 3)
- * над стеком [AppRouter]. Стеки и вкладка переживают смерть процесса (снимок роутера в
- * сохранённом состоянии). Плеер над вкладками — этап 5; стек «Хадисов» — этап 4.
+ * Корень (iOS `RootTabView`): вкладки, у каждой (кроме «Махраджа») — свой стек экранов (Navigation 3)
+ * над стеком [AppRouter], мини-плеер над панелью вкладок — один на приложение. Стеки и вкладка
+ * переживают смерть процесса (снимок роутера в сохранённом состоянии).
  */
 @Composable
 fun RootScreen(services: AppServices, modifier: Modifier = Modifier) {
@@ -59,6 +61,7 @@ fun RootScreen(services: AppServices, modifier: Modifier = Modifier) {
         onSelectTab = router::select,
         onBack = { router.goBack() },
         modifier = modifier,
+        player = { AudioPlayerHost(services.audioPlayer) },
     ) { tab, contentPadding ->
         TabContent(tab, services, contentPadding)
     }
@@ -77,6 +80,8 @@ fun RootContent(
     onSelectTab: (AppTab) -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
+    /** Мини-плеер над панелью вкладок; его высота входит в нижний отступ содержимого. */
+    player: @Composable () -> Unit = {},
     content: @Composable (tab: AppTab, contentPadding: PaddingValues) -> Unit,
 ) {
     BackHandler(enabled = canGoBack, onBack = onBack)
@@ -88,7 +93,13 @@ fun RootContent(
     Box(modifier.fillMaxSize()) {
         Scaffold(
             containerColor = Color.Transparent,
-            bottomBar = { FloatingTabBar(selectedTab = selectedTab, onSelect = onSelectTab, backdrop = backdrop) },
+            bottomBar = {
+                // Панель вкладок — после плеера: рисуется поверх, плеер при скрытии уезжает под неё.
+                Column {
+                    player()
+                    FloatingTabBar(selectedTab = selectedTab, onSelect = onSelectTab, backdrop = backdrop)
+                }
+            },
         ) { innerPadding ->
             Box(
                 Modifier
@@ -130,6 +141,8 @@ private fun TabScreens(tab: AppTab, services: AppServices, contentPadding: Paddi
                     section = route.section,
                     store = services.azkarStore,
                     readingSettings = services.readingSettings,
+                    player = services.audioPlayer,
+                    playlistSettings = services.playlistSettings,
                     onBack = { router.pop(AppTab.Azkar) },
                     onGoHome = { router.popToRoot(AppTab.Azkar) },
                     contentPadding = contentPadding.bottomOnly(),

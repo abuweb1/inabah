@@ -1,12 +1,26 @@
 package app.inabah.android.feature.azkar
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performSemanticsAction
+import androidx.compose.ui.test.onAllNodesWithText
+import app.inabah.android.core.audio.AudioPlayerController
+import app.inabah.android.core.audio.TestAudioEngine
+import app.inabah.android.core.audio.ui.AudioPlayerHost
+import app.inabah.android.core.settings.PlaylistSettings
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.hasContentDescription
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isEnabled
 import androidx.compose.ui.test.onNodeWithText
 import androidx.test.espresso.Espresso
@@ -89,6 +103,74 @@ class AzkarListScreenTest {
     }
 
     private val defaultReading by lazy { ReadingSettings(storage) }
+    private val playlistSettings by lazy { PlaylistSettings(storage) }
+    private val defaultPlayer by lazy { AudioPlayerController(TestAudioEngine()) }
+
+    /** Экран раздела и плеер под ним, как в приложении; отражение движка — пока экран на месте. */
+    private fun showWithPlayer(store: AzkarStore, player: AudioPlayerController) {
+        compose.setContent {
+            LaunchedEffect(player) { player.run() }
+            Column(Modifier.fillMaxSize()) {
+                Box(Modifier.weight(1f)) { Screen(store, player = player) }
+                InabahTheme { AudioPlayerHost(player) }
+            }
+        }
+        compose.waitUntil(TIMEOUT_MILLIS) { counters().fetchSemanticsNodes().isNotEmpty() }
+    }
+
+    @Test
+    fun playOnCardOpensPlayerAndCloseReturnsPlayButton() {
+        val player = AudioPlayerController(TestAudioEngine())
+        showWithPlayer(store(1, 3), player)
+
+        compose.onAllNodesWithContentDescription("Прослушать")[0].performClick()
+        // Карточка — волна «Открыть плеер», плеер открыт на этом зикре.
+        compose.onNodeWithContentDescription("Открыть плеер").assertExists()
+        compose.onNodeWithText("Зикр №1").assertExists()
+
+        compose.onNodeWithContentDescription("Закрыть плеер").performClick()
+        compose.onNodeWithContentDescription("Открыть плеер").assertDoesNotExist()
+        compose.waitUntil(TIMEOUT_MILLIS) { compose.onAllNodesWithText("Зикр №1").fetchSemanticsNodes().isEmpty() }
+    }
+
+    @Test
+    fun listenStartsPlaylistAndTurnsIntoOpenPlayer() {
+        val player = AudioPlayerController(TestAudioEngine())
+        showWithPlayer(store(1, 3), player)
+
+        compose.onNodeWithText("Слушать").performScrollTo().performClick()
+        compose.onNodeWithText("Зикр 1 из 2").assertExists()
+        compose.onNodeWithText("Открыть плеер").assertExists()
+        compose.runOnIdle { check(player.state.value.isPlaylistActive("azkar.morning")) }
+    }
+
+    @Test
+    fun playAllControlsChangeSettings() {
+        showWithPlayer(store(1, 3), AudioPlayerController(TestAudioEngine()))
+
+        compose.onNodeWithText("3 с").performScrollTo().performClick()
+        // Без MainActivity язык конфигурации — системный (эмулятор en-US): разделитель «.» вместо «,».
+        compose.onNode(hasText("1,5×") or hasText("1.5×")).performScrollTo().performClick()
+        compose.onNodeWithText("Повторять по числу раз").performScrollTo().performClick()
+
+        compose.runOnIdle {
+            check(playlistSettings.pauseBetween.value == 3.0)
+            check(playlistSettings.rate.value == 1.5f)
+            check(!playlistSettings.repeatsByCount.value)
+        }
+    }
+
+    @Test
+    fun scrubBarSeeksThroughAccessibility() {
+        val player = AudioPlayerController(TestAudioEngine())
+        showWithPlayer(store(1, 3), player)
+        compose.onAllNodesWithContentDescription("Прослушать")[0].performClick()
+
+        compose.onNodeWithContentDescription("Позиция воспроизведения")
+            .performSemanticsAction(SemanticsActions.SetProgress) { it(0.5f) }
+
+        compose.runOnIdle { check(player.positionMs.value == 15_000L) { "позиция ${player.positionMs.value}" } }
+    }
 
     private fun counters() = compose.onAllNodesWithContentDescription("Счётчик")
 
@@ -193,12 +275,18 @@ class AzkarListScreenTest {
     }
 
     @androidx.compose.runtime.Composable
-    private fun Screen(store: AzkarStore, reading: ReadingSettings = defaultReading) {
+    private fun Screen(
+        store: AzkarStore,
+        reading: ReadingSettings = defaultReading,
+        player: AudioPlayerController = defaultPlayer,
+    ) {
         InabahTheme {
             AzkarListScreen(
                 section = AzkarSection.Morning,
                 store = store,
                 readingSettings = reading,
+                player = player,
+                playlistSettings = playlistSettings,
                 onBack = {},
                 onGoHome = {},
                 contentPadding = PaddingValues(),

@@ -1,5 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- Плеер в фоне и с заблокированным экраном (служба переднего плана Media3). Медиауведомлению
+         POST_NOTIFICATIONS не нужно: Android 13+ делает исключение для медиасессий. -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
 
     <!-- allowBackup — временно false: открытое решение 5 (Auto Backup против PRIVACY.md), docs/android/08. -->
     <application
@@ -14,6 +20,7 @@
         <activity
             android:name=".app.MainActivity"
             android:exported="true"
+            android:launchMode="singleTop"
             android:screenOrientation="portrait"
             android:theme="@style/Theme.Inabah.Starting">
             <intent-filter>
@@ -21,6 +28,19 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- Экспортирована: к сессии подключаются системные контроллеры (уведомление, экран блокировки,
+             Bluetooth) — разрешением их не ограничить (ExportedService). Посторонние приложения
+             отклоняет PlaybackService.SessionCallback.onConnect, записи — только из ассетов. -->
+        <service
+            android:name=".core.audio.PlaybackService"
+            android:exported="true"
+            android:foregroundServiceType="mediaPlayback"
+            tools:ignore="ExportedService">
+            <intent-filter>
+                <action android:name="androidx.media3.session.MediaSessionService" />
+            </intent-filter>
+        </service>
     </application>
 
 </manifest>
