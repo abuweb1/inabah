@@ -17,25 +17,38 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.CustomAccessibilityAction
+import androidx.compose.ui.semantics.ProgressBarRangeInfo
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.customActions
+import androidx.compose.ui.semantics.progressBarRangeInfo
+import androidx.compose.ui.semantics.setProgress
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import app.inabah.android.R
 import app.inabah.android.core.designsystem.InabahTheme
 import app.inabah.android.core.designsystem.InabahType
 import app.inabah.android.core.designsystem.Spacing
 import app.inabah.android.core.designsystem.monospacedDigits
 import kotlin.math.abs
 import kotlin.math.min
+import kotlin.math.roundToInt
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.launch
 
 // Барабан выбора, как UIPickerView iOS: значения по кругу (…58, 59, 00, 01…), выбранная строка —
 // на подсвеченной полосе посередине, дальние строки бледнее и сжаты. Значение сообщается, когда
@@ -48,6 +61,9 @@ private val ColumnWidth = 60.dp
 private val SelectionRadius = 12.dp
 private val ColumnGap = 8.dp
 private const val SELECTION_ALPHA = 0.12f
+
+/** Нет прокрутки, начатой действием TalkBack. */
+private const val NO_PENDING = -1
 
 /** «Бесконечный» список: столько повторов, чтобы до края не долистать. */
 private const val LOOPS = 2_000
@@ -92,10 +108,27 @@ fun WheelPicker(
         derivedStateOf { wheelValue(state.centeredIndex(fallback = firstIndex + VISIBLE_ROWS / 2), count) }
     }
     val currentOnChange by rememberUpdatedState(onValueChange)
+    val scope = rememberCoroutineScope()
+    // Строка, к которой уже едет барабан по действию TalkBack (-1 — не едет): быстрое второе действие
+    // считается от неё, а не от недоехавшей середины — два «Больше» подряд дают +2, а не +1.
+    var pendingIndex by remember { mutableIntStateOf(NO_PENDING) }
+    fun currentIndex() = if (pendingIndex != NO_PENDING) pendingIndex else state.centeredIndex(fallback = firstIndex + VISIBLE_ROWS / 2)
+    // TalkBack: сдвиг барабана на [delta] значений — та же прокрутка, значение уйдёт по её окончании.
+    fun step(delta: Int) {
+        if (delta == 0) return
+        val center = currentIndex() + delta
+        pendingIndex = center
+        scope.launch { state.animateScrollToItem(center - VISIBLE_ROWS / 2) }
+    }
+    val increase = stringResource(R.string.common_increase)
+    val decrease = stringResource(R.string.common_decrease)
     LaunchedEffect(state) {
         snapshotFlow { state.isScrollInProgress }
             .filter { !it }
-            .collect { currentOnChange(selected) }
+            .collect {
+                pendingIndex = NO_PENDING
+                currentOnChange(selected)
+            }
     }
     // Закрыли посреди прокрутки — применить то, что сейчас на полосе.
     DisposableEffect(state) {
@@ -105,7 +138,21 @@ fun WheelPicker(
         modifier = modifier
             .width(ColumnWidth)
             .height(RowHeight * VISIBLE_ROWS)
-            .semantics { contentDescription = "$description ${label(selected)}" },
+            // Для TalkBack — один регулируемый элемент вместо тысяч строк списка: «Часы, 17»,
+            // жесты вверх/вниз и действия «Больше»/«Меньше» листают на одно значение.
+            .clearAndSetSemantics {
+                contentDescription = description
+                stateDescription = label(selected)
+                progressBarRangeInfo = ProgressBarRangeInfo(selected.toFloat(), 0f..(count - 1).toFloat(), steps = count - 2)
+                setProgress { target ->
+                    step(target.roundToInt().coerceIn(0, count - 1) - wheelValue(currentIndex(), count))
+                    true
+                }
+                customActions = listOf(
+                    CustomAccessibilityAction(increase) { step(1); true },
+                    CustomAccessibilityAction(decrease) { step(-1); true },
+                )
+            },
         contentAlignment = Alignment.Center,
     ) {
         LazyColumn(

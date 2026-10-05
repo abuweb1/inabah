@@ -51,7 +51,8 @@ fun AzkarSettingsScreen(
     val resetTimes by resetSettings.resetTimes.collectAsStateWithLifecycle()
     var editingTime by remember { mutableStateOf<AzkarSection?>(null) }
     var pendingReset by remember { mutableStateOf<AzkarSection?>(null) }
-    // hasProgress — не поток: пересчитывается при смене прогресса разделов и после сброса отсюда.
+    // hasProgress — не поток: пересчитывается при смене прогресса разделов (в т. ч. isStarted — обнуление
+    // по времени при частичном счёте) и после сброса отсюда.
     var resets by remember { mutableIntStateOf(0) }
     val progress = AzkarSection.entries.map { store.progress(it).collectAsStateWithLifecycle().value }
 

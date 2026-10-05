@@ -33,8 +33,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.text.font.FontWeight
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.inabah.android.R
@@ -186,7 +188,11 @@ private fun HadithPagerControls(pager: PagerState) {
             Modifier
                 .surface(SolidColor(palette.track), CircleShape)
                 .padding(horizontal = Spacing.m, vertical = Spacing.xxs)
-                .clearAndSetSemantics { contentDescription = counter },
+                // Листание свайпом TalkBack озвучит само: «3 из 50» — вежливая живая область.
+                .clearAndSetSemantics {
+                    contentDescription = counter
+                    liveRegion = LiveRegionMode.Polite
+                },
         ) {
             AnimatedDigits(counter, increasing)
         }

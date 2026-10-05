@@ -35,7 +35,7 @@ fun SettingsScreen(
             rows = listOf(
                 {
                     SettingsRow(onClick = { onOpen(SettingsRoute.Azkar) }, trailing = { SettingsChevron() }) {
-                        SettingsIcon(R.drawable.ic_folded_hands, theme.gradients.morningCard)
+                        SettingsIcon(R.drawable.ic_auto_awesome, theme.gradients.morningCard)
                         SettingsRowText(
                             title = stringResource(R.string.settings_azkar_title),
                             subtitle = stringResource(R.string.settings_azkar_subtitle),

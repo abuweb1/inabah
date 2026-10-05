@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Что уходит в резервную копию и при переносе на новый телефон: только DataStore приложения
+     (AppContainer.PREFERENCES_NAME = "inabah" → files/datastore/inabah.preferences_pb). Остальное
+     (кэш, файлы плеера) не копируется. Решение 5, docs/android/08. -->
+<data-extraction-rules>
+    <cloud-backup>
+        <include domain="file" path="datastore/inabah.preferences_pb" />
+    </cloud-backup>
+    <device-transfer>
+        <include domain="file" path="datastore/inabah.preferences_pb" />
+    </device-transfer>
+</data-extraction-rules>

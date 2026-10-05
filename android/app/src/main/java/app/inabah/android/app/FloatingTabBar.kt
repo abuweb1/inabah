@@ -21,7 +21,6 @@ import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -58,16 +57,13 @@ import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import app.inabah.android.core.designsystem.InabahType
 import app.inabah.android.core.designsystem.LocalInabahTheme
 import app.inabah.android.core.designsystem.Motion
 import app.inabah.android.core.designsystem.ShadowToken
 import app.inabah.android.core.designsystem.Spacing
-import app.inabah.android.core.designsystem.components.ScheherazadeNew
 import app.inabah.android.core.designsystem.components.fixedSp
 import app.inabah.android.core.designsystem.components.surface
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -89,9 +85,8 @@ private val BarBottomMargin = 4.dp
 private val PillInset = 4.dp
 private val TabIconSize = 26.dp
 
-/** Кегль подписи (medium, как `UITabBarAppearance` iOS) и буквы «ع»; панель не растёт ни с системным шрифтом, ни с шагом интерфейса. */
+/** Кегль подписи (medium, как `UITabBarAppearance` iOS); панель не растёт ни с системным шрифтом, ни с шагом интерфейса. */
 private const val LABEL_SIZE = 10f
-private const val GLYPH_SIZE = 21f
 
 /**
  * Подложка капсулы — светлое стекло: лёгкая белая дымка, подкрашенная цветом раздела, — тон панели
@@ -112,9 +107,6 @@ private val BarBlur = HazeBlurStyle {
 
 /** Доля цвета раздела в невыбранных значках и подписях. */
 private const val IDLE_TINT = 0.18f
-
-/** Буква «ع» в насхе сидит низко (большая нижняя дуга) — поднять к центру значка. */
-private val GlyphLift = (-5).dp
 
 /** Обводка капсулы и «пилюля» выбранной вкладки — цвет вкладки с прозрачностью. */
 private const val BAR_RIM_ALPHA = 0.45f
@@ -419,24 +411,7 @@ private fun TabItem(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(Spacing.xxxs, Alignment.CenterVertically),
     ) {
-        Box(Modifier.size(TabIconSize), contentAlignment = Alignment.Center) {
-            when (val icon = tab.icon) {
-                is TabIcon.Drawable -> Icon(painterResource(icon.resId), contentDescription = null, tint = color,
-                    modifier = Modifier.size(TabIconSize))
-                // Буква — встроенным Scheherazade, без увеличенной строки ArabicText: значок, не абзац.
-                // Высокая строка шрифта не должна сжимать букву в рамке значка — без ограничения по высоте.
-                is TabIcon.Glyph -> Text(
-                    icon.text,
-                    color = color,
-                    maxLines = 1,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier
-                        .wrapContentSize(unbounded = true)
-                        .graphicsLayer { translationY = GlyphLift.toPx() },
-                    style = TextStyle(fontFamily = ScheherazadeNew, fontWeight = FontWeight.Bold, fontSize = fixedSp(GLYPH_SIZE)),
-                )
-            }
-        }
+        Icon(painterResource(tab.icon), contentDescription = null, tint = color, modifier = Modifier.size(TabIconSize))
         Text(
             stringResource(tab.label),
             color = color,

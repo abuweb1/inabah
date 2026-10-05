@@ -11,6 +11,7 @@ import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertIsOff
 import androidx.compose.ui.test.assertIsOn
+import androidx.compose.ui.test.junit4.accessibility.enableAccessibilityChecks
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onAllNodesWithText
@@ -65,6 +66,8 @@ class HadithScreensTest {
 
     @Before
     fun openStorage() {
+        // Этап 7: каждое действие теста заодно проверяет экран на доступность (ATF).
+        compose.enableAccessibilityChecks()
         directory = File(context.cacheDir, "hadith-test-${System.nanoTime()}").apply { mkdirs() }
         val dataStore = PreferenceDataStoreFactory.create(scope = ioScope) { File(directory, "test.preferences_pb") }
         storage = PreferencesStorage(dataStore) { throw AssertionError("Ошибка хранилища", it) }

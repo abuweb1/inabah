@@ -16,6 +16,7 @@ import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.drawOutline
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.inset
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.toArgb
@@ -29,6 +30,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
@@ -473,6 +475,8 @@ fun FontSizeControls(
     val colors = glassColors(tint)
     Row(
         modifier = modifier
+            // Зоны касания шире капсулы на CapsuleTouchInset с каждого края — капсула стоит там же, где без них.
+            .offset(x = CapsuleTouchInset)
             .graphicsLayer {
                 // Капсула лишь чуть подаётся вперёд — меньше круглой кнопки.
                 val scale = 1f + (CAPSULE_PRESS_SCALE - 1f) * maxOf(decreasePressed.value, increasePressed.value)
@@ -481,22 +485,27 @@ fun FontSizeControls(
             }
             .height(GlassButtonSize)
             .drawBehind {
-                drawRoundRect(colors.fill, cornerRadius = androidx.compose.ui.geometry.CornerRadius(size.height / 2))
-                drawSideGlow(colors, decreasePressed.value, fromStart = true)
-                drawSideGlow(colors, increasePressed.value, fromStart = false)
-                drawGlassRim(colors, maxOf(decreasePressed.value, increasePressed.value), CircleShape)
+                inset(horizontal = CapsuleTouchInset.toPx()) {
+                    drawRoundRect(colors.fill, cornerRadius = androidx.compose.ui.geometry.CornerRadius(size.height / 2))
+                    drawSideGlow(colors, decreasePressed.value, fromStart = true)
+                    drawSideGlow(colors, increasePressed.value, fromStart = false)
+                    drawGlassRim(colors, maxOf(decreasePressed.value, increasePressed.value), CircleShape)
+                }
             },
         verticalAlignment = Alignment.CenterVertically,
     ) {
         CapsuleTextButton(stringResource(R.string.reading_font_size_decrease_short),
-            stringResource(R.string.reading_font_size_decrease), canDecrease, decrease, onDecrease)
+            stringResource(R.string.reading_font_size_decrease), canDecrease, decrease, onDecrease, outerStart = true)
         CapsuleTextButton(stringResource(R.string.reading_font_size_increase_short),
-            stringResource(R.string.reading_font_size_increase), canIncrease, increase, onIncrease)
+            stringResource(R.string.reading_font_size_increase), canIncrease, increase, onIncrease, outerStart = false)
     }
 }
 
 /** Половина капсулы: 2 × 44 = 88 при высоте 40 — пропорции iOS (96 × 43). */
 private val CapsuleButtonWidth = 44.dp
+
+/** Добавка к зоне касания с наружного края половины: 44 + 4 = 48 dp — минимум касания Android (проверка ATF). */
+private val CapsuleTouchInset = (Size.minTapTarget - CapsuleButtonWidth)
 
 /**
  * Свет капсулы — с нажатой стороны: ярко у пальца, к противоположному краю темнее
@@ -528,10 +537,12 @@ private fun CapsuleTextButton(
     enabled: Boolean,
     interaction: MutableInteractionSource,
     onClick: () -> Unit,
+    /** Наружный край половины — с начала капсулы (А−) или с конца (А+): там прозрачная добавка зоны касания. */
+    outerStart: Boolean,
 ) {
     Box(
         modifier = Modifier
-            .widthIn(min = CapsuleButtonWidth)
+            .widthIn(min = CapsuleButtonWidth + CapsuleTouchInset)
             .fillMaxHeight()
             .clickable(interaction, indication = null, enabled = enabled, onClick = onClick)
             .clearAndSetSemantics {
@@ -539,6 +550,8 @@ private fun CapsuleTextButton(
                 role = Role.Button
                 if (!enabled) disabled()
             }
+            // Подпись — по центру видимой половины капсулы, не всей зоны касания.
+            .padding(start = if (outerStart) CapsuleTouchInset else 0.dp, end = if (outerStart) 0.dp else CapsuleTouchInset)
             .alpha(if (enabled) 1f else PressFeedback.DISABLED_OPACITY),
         contentAlignment = Alignment.Center,
     ) {

@@ -46,6 +46,8 @@
     <string name="azkar_progress">Выполнено: %1$d из %2$d</string>
     <string name="common_back">Назад</string>
     <string name="common_cancel">Отмена</string>
+    <string name="common_decrease">Меньше</string>
+    <string name="common_increase">Больше</string>
     <string name="common_ok">Готово</string>
     <string name="content_error_message">Попробуйте ещё раз.</string>
     <string name="content_error_retry">Повторить</string>

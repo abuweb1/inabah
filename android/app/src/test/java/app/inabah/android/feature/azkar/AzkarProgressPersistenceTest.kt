@@ -104,6 +104,23 @@ class AzkarProgressPersistenceTest {
             assertTrue(reopened.shouldPresentCompletion(morning))
         }
 
+    // Хвост этапа 3: «Сбросить» в настройках не гасла после обнуления по времени при частичном счёте —
+    // поток прогресса не менялся (ни один зикр не был выполнен).
+    @Test
+    fun `Обнуление по времени при частичном счёте — прогресс раздела сообщает, что сбрасывать нечего`() =
+        TestStorage.run { storage ->
+            val store = makeStore(storage)
+            store.sessions(morning)[0].increment()
+            assertTrue(store.progress(morning).value.isStarted)
+            assertEquals(0, store.progress(morning).value.completed)
+
+            clock.now = date(2026, 10, 3, 17, 0)
+            store.refreshPeriods()
+
+            assertFalse(store.progress(morning).value.isStarted)
+            assertFalse(store.hasProgress(morning))
+        }
+
     @Test
     fun `Новый период при запуске снимает пометку оверлея`() = TestStorage.run { storage ->
         val store = makeStore(storage)
