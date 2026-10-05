@@ -7,6 +7,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.LinearGradientShader
 import androidx.compose.ui.graphics.Shader
 import androidx.compose.ui.graphics.ShaderBrush
+import androidx.compose.ui.graphics.lerp as lerpColor
+import androidx.compose.ui.util.lerp as lerpFloat
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -27,6 +29,18 @@ class AngledGradient(
     fun withColors(colors: List<Color>): AngledGradient {
         require(colors.size == stops.size) { "Нужно ${stops.size} цвета, передано ${colors.size}" }
         return AngledGradient(angleDegrees, stops.zip(colors) { (position, _), color -> position to color })
+    }
+
+    /**
+     * Промежуточный градиент для смены палитры: цвета, положения стопов и угол — на долю [fraction]
+     * пути к [to]. Разное число стопов (так у тем не бывает) — сразу [to].
+     */
+    fun lerp(to: AngledGradient, fraction: Float): AngledGradient {
+        if (to.stops.size != stops.size) return to
+        val stopsBetween = stops.zip(to.stops) { (fromAt, fromColor), (toAt, toColor) ->
+            lerpFloat(fromAt, toAt, fraction) to lerpColor(fromColor, toColor, fraction)
+        }
+        return AngledGradient(lerpFloat(angleDegrees, to.angleDegrees, fraction), stopsBetween)
     }
 
     /** Начало и конец градиента в фигуре [size]: dx = sin(угол)/2, dy = −cos(угол)/2 от центра. */

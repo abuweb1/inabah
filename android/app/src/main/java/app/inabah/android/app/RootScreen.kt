@@ -2,6 +2,8 @@ package app.inabah.android.app
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.Crossfade
+import app.inabah.android.core.designsystem.Motion
 import androidx.compose.animation.ContentTransform
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
@@ -42,6 +44,7 @@ import app.inabah.android.feature.makharij.MakharijHomeScreen
 import app.inabah.android.feature.settings.AzkarSettingsScreen
 import app.inabah.android.feature.settings.HadithOrderSettingsScreen
 import app.inabah.android.feature.settings.HadithSettingsScreen
+import app.inabah.android.feature.settings.PaletteSettingsScreen
 import app.inabah.android.feature.settings.SettingsScreen
 import app.inabah.android.feature.settings.TextSizeSettingsScreen
 
@@ -71,7 +74,7 @@ fun RootScreen(services: AppServices, modifier: Modifier = Modifier) {
  * Фон раздела до краёв экрана и плавающая панель вкладок, как в iOS: содержимое прокручивается
  * под панелью (нижний отступ содержимого — высота панели). Системная «Назад»: экран вкладки
  * снимает её `NavDisplay`, с корня вкладки — на «Азкары», с корня «Азкаров» — выход (docs/android/02).
- * Вкладки переключаются без анимации; состояние экранов невыбранной вкладки сохраняется.
+ * Вкладки сменяются перетеканием за 300 мс; состояние экранов невыбранной вкладки сохраняется.
  */
 @Composable
 fun RootContent(
@@ -107,8 +110,12 @@ fun RootContent(
                     .hazeSource(backdrop)
                     .background(selectedTab.background(theme)),
             ) {
-                tabStates.SaveableStateProvider(selectedTab.name) {
-                    content(selectedTab, innerPadding)
+                // Смена вкладки — перетеканием за 300 мс, как смена палитры: в «По умолчанию» у каждого
+                // раздела свой цвет, и он плавно переходит в цвет следующего (решение пользователя 2026-10-05).
+                Crossfade(targetState = selectedTab, animationSpec = Motion.highlight(), label = "tab") { tab ->
+                    tabStates.SaveableStateProvider(tab.name) {
+                        content(tab, innerPadding)
+                    }
                 }
             }
         }
@@ -206,6 +213,13 @@ private fun TabScreens(tab: AppTab, services: AppServices, contentPadding: Paddi
             entry<SettingsRoute.HadithOrder> {
                 HadithOrderSettingsScreen(
                     order = services.hadithCollectionOrder,
+                    onBack = { router.pop(AppTab.Settings) },
+                    contentPadding = contentPadding.bottomOnly(),
+                )
+            }
+            entry<SettingsRoute.Palette> {
+                PaletteSettingsScreen(
+                    settings = services.appearanceSettings,
                     onBack = { router.pop(AppTab.Settings) },
                     contentPadding = contentPadding.bottomOnly(),
                 )

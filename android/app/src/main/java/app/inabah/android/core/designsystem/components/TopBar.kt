@@ -56,6 +56,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import app.inabah.android.R
 import app.inabah.android.core.designsystem.FixedTextSize
@@ -77,8 +78,11 @@ private val BarHeight = 56.dp
  * (решение пользователя 2026-10-04): с ростом ×1,38 круг 40 → 55 не выходит за шапку 56.
  */
 private val GlassButtonSize = 40.dp
-/** У значка Material большие поля: стрелка ~0,47 значка — во весь круг она 0,47 круга, как в iOS. */
-private val GlassIconSize = 40.dp
+/** У значка «‹» Material большие поля: стрелка ~0,47 значка — во весь круг она 0,47 круга, как в iOS. */
+val GlassChevronSize = 40.dp
+
+/** Обычный значок в стеклянном круге (↺ «Восстановить») — как символ iOS в круге 43 (снимок IMG_9743). */
+val GlassSymbolSize = 22.dp
 
 /** Сбоку от заголовка — место под кнопки, чтобы длинный заголовок не наезжал на них. */
 private val SideSlotWidth = 104.dp
@@ -295,6 +299,7 @@ private fun TopBarLayout(
             contentDescription = stringResource(R.string.common_back),
             tint = tint,
             modifier = backModifier,
+            iconSize = GlassChevronSize,
         )
     }
     val barModifier = modifier
@@ -324,7 +329,10 @@ fun TopBarSubtitle(text: String) {
     Text(text, color = InabahTheme.palette.onAccentSecondary, maxLines = 1, style = InabahType.caption2)
 }
 
-/** Круглая «стеклянная» кнопка навбара: круг 40 (зона касания 48), стрелка — как в iOS. */
+/**
+ * Круглая «стеклянная» кнопка навбара: круг 40 (зона касания 48). [iconSize] — значок Material:
+ * обычные значки (↺ «Восстановить») — [GlassSymbolSize]; у «‹» поля шире — она передаёт [GlassChevronSize].
+ */
 @Composable
 fun GlassIconButton(
     onClick: () -> Unit,
@@ -333,6 +341,7 @@ fun GlassIconButton(
     tint: Color,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
+    iconSize: Dp = GlassSymbolSize,
 ) {
     val interaction = remember { MutableInteractionSource() }
     val pressed = rememberPressProgress(interaction, glassPressSpec(), glassReleaseSpec())
@@ -365,7 +374,7 @@ fun GlassIconButton(
                 painterResource(iconRes),
                 contentDescription,
                 modifier = Modifier
-                    .size(GlassIconSize)
+                    .size(iconSize)
                     .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
                     .drawWithContent {
                         drawContent()
