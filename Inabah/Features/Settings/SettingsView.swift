@@ -15,9 +15,12 @@ struct SettingsView: View {
                 Text("settings.appearance.header")
                     .interfaceTextSize()
             }
-            Section {
-                rows(SettingsSection.app)
-            }
+        }
+        // «О приложении» нужно редко — не строкой-разделом, а мелкой ссылкой у нижнего края
+        // экрана, над панелью вкладок (решение пользователя 2026-10-05).
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            AboutFooterLink()
+                .interfaceTextSize()
         }
         .settingsForm(background: theme.gradients.settingsBackground)
         .navigationTitle(Text("settings.title"))
@@ -44,14 +47,11 @@ private enum SettingsSection {
     case palette
     case textSize
     case appIcon
-    case about
 
     /// Настройки разделов приложения.
     static let content: [SettingsSection] = [.azkar, .hadith]
     /// Оформление.
     static let appearance: [SettingsSection] = [.palette, .textSize, .appIcon]
-    /// О приложении — отдельной группой внизу.
-    static let app: [SettingsSection] = [.about]
 
     var route: SettingsRoute {
         switch self {
@@ -60,7 +60,6 @@ private enum SettingsSection {
         case .palette: .palette
         case .textSize: .textSize
         case .appIcon: .appIcon
-        case .about: .about
         }
     }
 
@@ -71,7 +70,6 @@ private enum SettingsSection {
         case .palette: "settings.palette.title"
         case .textSize: "settings.textSize.title"
         case .appIcon: "settings.appIcon.title"
-        case .about: "about.title"
         }
     }
 
@@ -82,7 +80,6 @@ private enum SettingsSection {
         case .palette: "settings.palette.subtitle"
         case .textSize: "settings.textSize.subtitle"
         case .appIcon: "settings.appIcon.subtitle"
-        case .about: "about.subtitle"
         }
     }
 
@@ -95,7 +92,6 @@ private enum SettingsSection {
         case .palette: .symbol("paintpalette.fill")
         case .textSize: .symbol("textformat.size")
         case .appIcon: .symbol("app.badge.fill")
-        case .about: .symbol("info.circle.fill")
         }
     }
 
@@ -107,8 +103,25 @@ private enum SettingsSection {
         case .palette: theme.gradients.qudsiCard
         case .textSize: theme.gradients.ajurriCard
         case .appIcon: theme.gradients.eveningCard
-        case .about: theme.gradients.settingsBackground
         }
+    }
+}
+
+/// «Инаба 1.0.0 · О приложении» — мелкая ссылка по центру у нижнего края экрана.
+private struct AboutFooterLink: View {
+    @Environment(\.theme) private var theme
+
+    var body: some View {
+        NavigationLink(value: SettingsRoute.about) {
+            Text("settings.about.footer \(AppVersion.marketing)")
+                .font(.caption)
+                .foregroundStyle(theme.palette.onAccentTertiary)
+                .frame(maxWidth: .infinity, minHeight: Size.minTapTarget)
+                .padding(.bottom, Spacing.xs)
+                .contentShape(.rect)
+        }
+        .buttonStyle(PressDimButtonStyle())
+        .accessibilityLabel(Text("about.title"))
     }
 }
 
