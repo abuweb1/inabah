@@ -31,6 +31,7 @@ struct ToggleTileButtonStyle: ButtonStyle {
             .scaleEffect(configuration.isPressed ? PressFeedback.cardScale : 1)
             .animation(Motion.press, value: configuration.isPressed)
             .animation(Motion.highlight, value: isOn)
+            .fixedTextSize()
     }
 }
 
@@ -91,22 +92,25 @@ struct IconButtonStyle: ButtonStyle {
             .opacity(isEnabled ? 1 : PressFeedback.disabledOpacity)
             .scaleEffect(configuration.isPressed ? PressFeedback.iconScale : 1)
             .animation(Motion.press, value: configuration.isPressed)
+            .fixedTextSize()
     }
 }
 
 /// Иконка без подложки (перемотка ±10 с в плеере).
 struct BareIconButtonStyle: ButtonStyle {
     var foreground: Color
+    var font: Font = .title2.weight(.medium)
 
     @Environment(\.isEnabled) private var isEnabled
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(.title2.weight(.medium))
+            .font(font)
             .foregroundStyle(foreground)
             .frame(width: Size.minTapTarget, height: Size.minTapTarget)
             .contentShape(.circle)
             .opacity(isEnabled ? (configuration.isPressed ? PressFeedback.bareOpacity : 1) : PressFeedback.disabledOpacity)
+            .fixedTextSize()
     }
 }
 
@@ -116,7 +120,7 @@ struct ProminentRoundButtonStyle: ButtonStyle {
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(.title.weight(.bold))
+            .font(.title2.weight(.bold))
             .foregroundStyle(theme.palette.parchmentInk)
             .frame(width: Size.playerMainButton, height: Size.playerMainButton)
             .surface(
@@ -126,6 +130,7 @@ struct ProminentRoundButtonStyle: ButtonStyle {
             )
             .scaleEffect(configuration.isPressed ? PressFeedback.roundScale : 1)
             .animation(Motion.press, value: configuration.isPressed)
+            .fixedTextSize()
     }
 }
 
@@ -144,5 +149,6 @@ struct PrimaryButtonStyle: ButtonStyle {
             .opacity(isEnabled ? (configuration.isPressed ? PressFeedback.wideOpacity : 1) : PressFeedback.disabledOpacity)
             .scaleEffect(configuration.isPressed ? PressFeedback.wideScale : 1)
             .animation(Motion.press, value: configuration.isPressed)
+            .fixedTextSize()
     }
 }

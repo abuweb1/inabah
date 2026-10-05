@@ -13,6 +13,10 @@ struct SettingsView: View {
                 rows(SettingsSection.appearance)
             } header: {
                 Text("settings.appearance.header")
+                    .interfaceTextSize()
+            }
+            Section {
+                rows(SettingsSection.app)
             }
         }
         .settingsForm(background: theme.gradients.settingsBackground)
@@ -23,7 +27,10 @@ struct SettingsView: View {
     private func rows(_ sections: [SettingsSection]) -> some View {
         ForEach(sections, id: \.self) { section in
             NavigationLink(value: section.route) {
+                // Шаг интерфейса — у строк, а не у списка или экрана: крупный заголовок
+                // «Настройки» UIKit масштабирует по размеру списка, а заголовки не меняются.
                 SettingsSectionRow(section: section)
+                    .interfaceTextSize()
             }
             .settingsRow()
         }
@@ -35,19 +42,25 @@ private enum SettingsSection {
     case azkar
     case hadith
     case palette
+    case textSize
     case appIcon
+    case about
 
     /// Настройки разделов приложения.
     static let content: [SettingsSection] = [.azkar, .hadith]
     /// Оформление.
-    static let appearance: [SettingsSection] = [.palette, .appIcon]
+    static let appearance: [SettingsSection] = [.palette, .textSize, .appIcon]
+    /// О приложении — отдельной группой внизу.
+    static let app: [SettingsSection] = [.about]
 
     var route: SettingsRoute {
         switch self {
         case .azkar: .azkar
         case .hadith: .hadith
         case .palette: .palette
+        case .textSize: .textSize
         case .appIcon: .appIcon
+        case .about: .about
         }
     }
 
@@ -56,7 +69,9 @@ private enum SettingsSection {
         case .azkar: "settings.azkar.title"
         case .hadith: "settings.hadith.title"
         case .palette: "settings.palette.title"
+        case .textSize: "settings.textSize.title"
         case .appIcon: "settings.appIcon.title"
+        case .about: "about.title"
         }
     }
 
@@ -65,16 +80,22 @@ private enum SettingsSection {
         case .azkar: "settings.azkar.subtitle"
         case .hadith: "settings.hadith.subtitle"
         case .palette: "settings.palette.subtitle"
+        case .textSize: "settings.textSize.subtitle"
         case .appIcon: "settings.appIcon.subtitle"
+        case .about: "about.subtitle"
         }
     }
 
-    var symbolName: String {
+    /// Значок строки. У разделов приложения — те же значки, что на их вкладках (общие с Android,
+    /// `Assets.xcassets/TabIcons`), у оформления — SF Symbols.
+    var icon: SettingsSectionIcon {
         switch self {
-        case .azkar: "hands.and.sparkles.fill"
-        case .hadith: "book.closed.fill"
-        case .palette: "paintpalette.fill"
-        case .appIcon: "app.badge.fill"
+        case .azkar: .asset("tabIconAzkar")
+        case .hadith: .asset("tabIconHadith")
+        case .palette: .symbol("paintpalette.fill")
+        case .textSize: .symbol("textformat.size")
+        case .appIcon: .symbol("app.badge.fill")
+        case .about: .symbol("info.circle.fill")
         }
     }
 
@@ -84,7 +105,9 @@ private enum SettingsSection {
         case .azkar: theme.gradients.morningCard
         case .hadith: theme.gradients.nawawiCard
         case .palette: theme.gradients.qudsiCard
+        case .textSize: theme.gradients.ajurriCard
         case .appIcon: theme.gradients.eveningCard
+        case .about: theme.gradients.settingsBackground
         }
     }
 }
@@ -95,16 +118,16 @@ private struct SettingsSectionRow: View {
 
     @Environment(\.theme) private var theme
 
-    private enum Layout {
-        static let iconSize: CGFloat = 32
-    }
+    /// Плашка значка растёт вместе с текстом строки (размер интерфейса).
+    @ScaledMetric(relativeTo: .body) private var iconSize: CGFloat = 32
+    /// Векторный значок из ассетов — по размеру глифа SF Symbol `title3` в той же плашке.
+    @ScaledMetric(relativeTo: .body) private var assetGlyphSize: CGFloat = 22
 
     var body: some View {
         HStack(spacing: Spacing.m) {
-            Image(systemName: section.symbolName)
-                .font(.title3)
+            glyph
                 .foregroundStyle(theme.palette.onAccent)
-                .frame(width: Layout.iconSize, height: Layout.iconSize)
+                .frame(width: iconSize, height: iconSize)
                 .background(section.tint(in: theme).linear, in: .rect(cornerRadius: Radius.small))
                 .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: Spacing.xxxs) {
@@ -117,6 +140,26 @@ private struct SettingsSectionRow: View {
         }
         .padding(.vertical, Spacing.xxs)
     }
+
+    @ViewBuilder
+    private var glyph: some View {
+        switch section.icon {
+        case .symbol(let name):
+            Image(systemName: name)
+                .font(.title3)
+        case .asset(let name):
+            Image(name)
+                .resizable()
+                .scaledToFit()
+                .frame(width: assetGlyphSize, height: assetGlyphSize)
+        }
+    }
+}
+
+/// Значок строки настроек: системный символ или векторный значок из ассетов.
+private enum SettingsSectionIcon {
+    case symbol(String)
+    case asset(String)
 }
 
 #Preview {

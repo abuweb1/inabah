@@ -6,6 +6,7 @@ struct InabahApp: App {
 
     init() {
         AppFont.registerBundledFonts()
+        TabBarAppearance.apply()
     }
 
     var body: some Scene {

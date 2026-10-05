@@ -36,15 +36,16 @@ private struct ComingSoonCard: View {
 
     var body: some View {
         VStack(spacing: Spacing.s) {
+            // Размеры — как у карточек главных (на ступень меньше прежних).
             Image(systemName: "hourglass")
-                .font(.title2)
+                .font(.title3)
                 .foregroundStyle(theme.palette.gold)
                 .accessibilityHidden(true)
             Text("makharij.soon.title")
-                .font(.title3.bold())
+                .font(.headline)
                 .foregroundStyle(theme.palette.onAccent)
             Text("makharij.soon.message")
-                .font(.footnote)
+                .font(.caption)
                 .multilineTextAlignment(.center)
                 .foregroundStyle(theme.palette.onAccentSecondary)
         }

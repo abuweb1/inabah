@@ -1,6 +1,248 @@
 {
   "sourceLanguage" : "ru",
   "strings" : {
+    "about.app.footer" : {
+      "comment" : "О приложении: подпись группы ссылок",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Без рекламы, регистрации и сбора данных. Приложение работает без интернета."
+          }
+        }
+      }
+    },
+    "about.app.header" : {
+      "comment" : "О приложении: заголовок группы ссылок",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Приложение"
+          }
+        }
+      }
+    },
+    "about.appName" : {
+      "comment" : "О приложении: название под иконкой",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Инаба"
+          }
+        }
+      }
+    },
+    "about.license.material.subtitle" : {
+      "comment" : "О приложении: лицензия значков вкладок — подпись",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Значки вкладок · Google · Apache License 2.0"
+          }
+        }
+      }
+    },
+    "about.license.material.title" : {
+      "comment" : "О приложении: лицензия значков вкладок — заголовок",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Material Symbols"
+          }
+        }
+      }
+    },
+    "about.license.scheherazade.subtitle" : {
+      "comment" : "О приложении: лицензия арабского шрифта — подпись",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Арабский шрифт · SIL Global · SIL Open Font License 1.1"
+          }
+        }
+      }
+    },
+    "about.license.scheherazade.title" : {
+      "comment" : "О приложении: лицензия арабского шрифта — заголовок",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scheherazade New"
+          }
+        }
+      }
+    },
+    "about.licenses.header" : {
+      "comment" : "О приложении: заголовок группы лицензий",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Шрифт и значки"
+          }
+        }
+      }
+    },
+    "about.link.azkar" : {
+      "comment" : "О приложении: ссылка на azkar.ru",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "azkar.ru"
+          }
+        }
+      }
+    },
+    "about.link.issues" : {
+      "comment" : "О приложении: ссылка на Issues репозитория",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вопросы и предложения"
+          }
+        }
+      }
+    },
+    "about.link.privacy" : {
+      "comment" : "О приложении: ссылка на PRIVACY.md",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Политика конфиденциальности"
+          }
+        }
+      }
+    },
+    "about.link.repository" : {
+      "comment" : "О приложении: ссылка на репозиторий",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Исходный код на GitHub"
+          }
+        }
+      }
+    },
+    "about.link.sunnah" : {
+      "comment" : "О приложении: ссылка на sunnah.com",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "sunnah.com"
+          }
+        }
+      }
+    },
+    "about.sources.azkar.text" : {
+      "comment" : "О приложении: источник азкаров",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Тексты, транскрипция, перевод и аудиозаписи — по azkar.ru."
+          }
+        }
+      }
+    },
+    "about.sources.azkar.title" : {
+      "comment" : "О приложении: источник азкаров — заголовок",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Азкары"
+          }
+        }
+      }
+    },
+    "about.sources.footer" : {
+      "comment" : "О приложении: подпись группы источников",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Источник каждого зикра и хадиса указан под его переводом."
+          }
+        }
+      }
+    },
+    "about.sources.hadith.text" : {
+      "comment" : "О приложении: источник хадисов",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Классические сборники «40 хадисов» имама ан-Навави (с дополнением Ибн Раджаба), хадисы аль-Къудси и сборник имама аль-Аджурри. Арабский текст хадисов аль-Къудси — по sunnah.com."
+          }
+        }
+      }
+    },
+    "about.sources.hadith.title" : {
+      "comment" : "О приложении: источник хадисов — заголовок",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Хадисы"
+          }
+        }
+      }
+    },
+    "about.sources.header" : {
+      "comment" : "О приложении: заголовок группы источников",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Источники"
+          }
+        }
+      }
+    },
+    "about.subtitle" : {
+      "comment" : "Настройки: подпись строки «О приложении»",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Источники, лицензии, конфиденциальность"
+          }
+        }
+      }
+    },
+    "about.title" : {
+      "comment" : "Настройки: экран и строка «О приложении»",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "О приложении"
+          }
+        }
+      }
+    },
+    "about.version %@" : {
+      "comment" : "О приложении: версия и сборка, например «Версия 1.0.0 (1)»",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Версия %@"
+          }
+        }
+      }
+    },
     "appIcon.beads" : {
       "comment" : "Иконка приложения: кольцо бусин с кистью",
       "localizations" : {
@@ -1182,12 +1424,12 @@
       }
     },
     "section.card.meta.original %@ %@" : {
-      "comment" : "Подпись карточки и название в оригинале (арабский — контент). Подпись первой — иначе строка выстраивается справа налево",
+      "comment" : "Подпись карточки и название в оригинале (арабский — контент). Подпись первой — иначе строка выстраивается справа налево Неразрывный пробел держит «·» на строке подписи; арабское название — в изоляте направления (U+2068…U+2069), чтобы при переносе точка не уходила к нему.",
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%1$@ · %2$@"
+            "value" : "%1$@ · ⁨%2$@⁩"
           }
         }
       }
@@ -1588,6 +1830,94 @@
         }
       }
     },
+    "settings.textSize.content.footer" : {
+      "comment" : "Размер текста: что меняет шаг переводов",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перевод, транскрипция и источники азкаров и хадисов."
+          }
+        }
+      }
+    },
+    "settings.textSize.content.header" : {
+      "comment" : "Размер текста: заголовок секции переводов",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Переводы"
+          }
+        }
+      }
+    },
+    "settings.textSize.content.label" : {
+      "comment" : "Размер текста: ползунок переводов (VoiceOver)",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Размер переводов"
+          }
+        }
+      }
+    },
+    "settings.textSize.interface.footer" : {
+      "comment" : "Размер текста: что меняет шаг интерфейса",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Карточки главных, списки, плеер и настройки. Заголовки экранов, вкладки, кнопки и всплывающие окна не меняются."
+          }
+        }
+      }
+    },
+    "settings.textSize.interface.header" : {
+      "comment" : "Размер текста: заголовок секции интерфейса",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Интерфейс"
+          }
+        }
+      }
+    },
+    "settings.textSize.interface.label" : {
+      "comment" : "Размер текста: ползунок интерфейса (VoiceOver)",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Размер интерфейса"
+          }
+        }
+      }
+    },
+    "settings.textSize.subtitle" : {
+      "comment" : "Настройки: подпись строки «Размер текста»",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Переводы и интерфейс"
+          }
+        }
+      }
+    },
+    "settings.textSize.title" : {
+      "comment" : "Настройки: экран и строка размера текста переводов и интерфейса",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Размер текста"
+          }
+        }
+      }
+    },
     "settings.title" : {
       "comment" : "Заголовок экрана настроек",
       "localizations" : {
@@ -1639,6 +1969,94 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Настройки"
+          }
+        }
+      }
+    },
+    "textSize.content.large" : {
+      "comment" : "Шаг размера переводов: 130 %",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Крупный"
+          }
+        }
+      }
+    },
+    "textSize.content.larger" : {
+      "comment" : "Шаг размера переводов: 115 %",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Крупнее"
+          }
+        }
+      }
+    },
+    "textSize.content.largest" : {
+      "comment" : "Шаг размера переводов: 150 %",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Очень крупный"
+          }
+        }
+      }
+    },
+    "textSize.content.smaller" : {
+      "comment" : "Шаг размера переводов: 90 %",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Мельче"
+          }
+        }
+      }
+    },
+    "textSize.content.standard" : {
+      "comment" : "Шаг размера переводов: 100 %",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Обычный"
+          }
+        }
+      }
+    },
+    "textSize.interface.larger" : {
+      "comment" : "Шаг размера интерфейса: крупнее стандартного",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Крупнее"
+          }
+        }
+      }
+    },
+    "textSize.interface.smaller" : {
+      "comment" : "Шаг размера интерфейса: меньше стандартного",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Мельче"
+          }
+        }
+      }
+    },
+    "textSize.interface.standard" : {
+      "comment" : "Шаг размера интерфейса: стандартный",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Обычный"
           }
         }
       }

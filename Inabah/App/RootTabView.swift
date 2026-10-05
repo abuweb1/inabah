@@ -13,47 +13,68 @@ struct RootTabView: View {
         @Bindable var router = router
 
         TabView(selection: tabSelection) {
-            Tab("tab.azkar", systemImage: "hands.and.sparkles.fill", value: AppTab.azkar) {
+            // Значки вкладок — общие с Android (Material Symbols и «ع» из Scheherazade New),
+            // `Assets.xcassets/TabIcons`: одинаковый вид на обеих платформах.
+            Tab("tab.azkar", image: "tabIconAzkar", value: AppTab.azkar) {
+                // Шаг «Размер интерфейса» — на каждом экране стека, а не на `NavigationStack`:
+                // навбары остаются стандартного размера.
                 NavigationStack(path: $router.azkarPath) {
                     AzkarHomeView()
+                        .interfaceTextSize()
                         .navigationDestination(for: AzkarRoute.self) { route in
-                            switch route {
-                            case .list(let section): AzkarListView(section: section)
+                            Group {
+                                switch route {
+                                case .list(let section): AzkarListView(section: section)
+                                }
                             }
+                            .interfaceTextSize()
                         }
                 }
                 .tint(theme.palette.accentLight)
             }
-            Tab("tab.hadith", systemImage: "book.closed.fill", value: AppTab.hadith) {
+            Tab("tab.hadith", image: "tabIconHadith", value: AppTab.hadith) {
                 NavigationStack(path: $router.hadithPath) {
                     HadithHomeView()
+                        .interfaceTextSize()
                         .navigationDestination(for: HadithRoute.self) { route in
-                            switch route {
-                            case .list(let collection): HadithListView(collection: collection)
-                            case .detail(let id): HadithDetailView(id: id)
+                            Group {
+                                switch route {
+                                case .list(let collection): HadithListView(collection: collection)
+                                case .detail(let id): HadithDetailView(id: id)
+                                }
                             }
+                            .interfaceTextSize()
                         }
                 }
                 .tint(theme.palette.accentLight)
             }
             // «ع» (айн) — гортанная буква, хрестоматийный пример махраджа.
-            Tab("tab.makharij", systemImage: "character.ar", value: AppTab.makharij) {
+            Tab("tab.makharij", image: "tabIconMakharij", value: AppTab.makharij) {
                 NavigationStack {
                     MakharijHomeView()
+                        .interfaceTextSize()
                 }
                 .tint(theme.palette.accentLight)
             }
-            Tab("tab.settings", systemImage: "gearshape.fill", value: AppTab.settings) {
+            Tab("tab.settings", image: "tabIconSettings", value: AppTab.settings) {
                 NavigationStack(path: $router.settingsPath) {
+                    // Шаг интерфейса — внутри `SettingsView`, у строк: крупный заголовок
+                    // «Настройки» UIKit масштабирует по размеру всего списка.
                     SettingsView()
                         .navigationDestination(for: SettingsRoute.self) { route in
-                            switch route {
-                            case .azkar: AzkarSettingsView()
-                            case .hadith: HadithSettingsView()
-                            case .hadithOrder: HadithOrderSettingsView()
-                            case .appIcon: AppIconSettingsView()
-                            case .palette: PaletteSettingsView()
+                            Group {
+                                switch route {
+                                case .azkar: AzkarSettingsView()
+                                case .hadith: HadithSettingsView()
+                                case .hadithOrder: HadithOrderSettingsView()
+                                case .appIcon: AppIconSettingsView()
+                                case .palette: PaletteSettingsView()
+                                case .textSize: TextSizeSettingsView()
+                                case .about: AboutView()
+                                case .license(let document): LicenseView(document: document)
+                                }
                             }
+                            .interfaceTextSize()
                         }
                 }
                 .tint(theme.palette.accentLight)
