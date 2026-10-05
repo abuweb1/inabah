@@ -80,12 +80,7 @@ private struct AboutHeader: View {
     private static let iconCornerRatio: CGFloat = 0.2237
     private static let arabicNameSize: Double = 28
 
-    private var version: String {
-        let info = Bundle.main.infoDictionary
-        let marketing = info?["CFBundleShortVersionString"] as? String ?? ""
-        let build = info?["CFBundleVersion"] as? String ?? ""
-        return "\(marketing) (\(build))"
-    }
+    private var version: String { "\(AppVersion.marketing) (\(AppVersion.build))" }
 
     var body: some View {
         VStack(spacing: Spacing.s) {
@@ -149,6 +144,17 @@ private struct AboutLinkLabel: View {
                 .foregroundStyle(theme.palette.onAccentTertiary)
                 .accessibilityHidden(true)
         }
+    }
+}
+
+/// Версия приложения из Info.plist: «1.0.0» и номер сборки.
+enum AppVersion {
+    static var marketing: String {
+        Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? ""
+    }
+
+    static var build: String {
+        Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? ""
     }
 }
 

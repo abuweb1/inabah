@@ -210,17 +210,6 @@
         }
       }
     },
-    "about.subtitle" : {
-      "comment" : "Настройки: подпись строки «О приложении»",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Источники, лицензии, конфиденциальность"
-          }
-        }
-      }
-    },
     "about.title" : {
       "comment" : "Настройки: экран и строка «О приложении»",
       "localizations" : {
@@ -1452,6 +1441,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Выполнено на %lld %%"
+          }
+        }
+      }
+    },
+    "settings.about.footer %@" : {
+      "comment" : "Настройки: мелкая ссылка внизу на «О приложении», %@ — версия («1.0.0»)",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Инаба %@ · О приложении"
           }
         }
       }
