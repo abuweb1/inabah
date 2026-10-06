@@ -11,8 +11,9 @@ import kotlinx.coroutines.flow.update
  * Время азкаров «с — до» для каждого раздела (iOS `AzkarWindowSettings`): по умолчанию утренние —
  * 5:00–12:00, вечерние — 17:00–02:00. Хранится в минутах от полуночи.
  *
- * Стор на изменения не подписан: новое время он применяет при уходе с экрана настроек
- * (`AzkarStore.reconcile`) — прокрутка колеса времени не стирает прочитанное.
+ * Экран настроек правит черновик и сохраняет его целиком ([set]) при уходе с экрана или в фон, затем
+ * сверяет прогресс (`AzkarStore.reconcile`): сверка по таймеру или при возврате в приложение не увидит
+ * полуготовое окно (аудит iOS 2026-10-06, §5.2). Стор на изменения не подписан.
  */
 class AzkarWindowSettings(private val storage: PreferencesStorage) {
     private val _windows: MutableStateFlow<Map<AzkarSection, AzkarWindow>>
@@ -29,13 +30,9 @@ class AzkarWindowSettings(private val storage: PreferencesStorage) {
 
     fun window(section: AzkarSection): AzkarWindow = _windows.value.getValue(section)
 
-    /** Начало, совпадающее с концом, не сохраняется: у окна не было бы длины. */
-    fun setStart(time: DayTime, section: AzkarSection) = update(window(section).copy(start = time), section)
-
-    fun setEnd(time: DayTime, section: AzkarSection) = update(window(section).copy(end = time), section)
-
-    private fun update(window: AzkarWindow, section: AzkarSection) {
-        if (window.start == window.end || window == window(section)) return
+    /** Окно целиком; без длины ([AzkarWindow.isValid]) или без изменений — ничего не делает. */
+    fun set(window: AzkarWindow, section: AzkarSection) {
+        if (!window.isValid || window == window(section)) return
         _windows.update { it + (section to window) }
         storage.edit {
             it[key(section, Edge.Start)] = window.start.minutesSinceMidnight
@@ -48,7 +45,7 @@ class AzkarWindowSettings(private val storage: PreferencesStorage) {
         val fallback = defaultWindow(section)
         val start = storage.snapshot[key(section, Edge.Start)]?.let(DayTime::fromMinutes) ?: fallback.start
         val end = storage.snapshot[key(section, Edge.End)]?.let(DayTime::fromMinutes) ?: fallback.end
-        return if (start == end) fallback else AzkarWindow(start, end)
+        return AzkarWindow(start, end).takeIf { it.isValid } ?: fallback
     }
 
     private enum class Edge(val key: String) { Start("start"), End("end") }
