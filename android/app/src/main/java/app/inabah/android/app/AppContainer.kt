@@ -15,10 +15,12 @@ import app.inabah.android.core.content.ContentRepository
 import app.inabah.android.core.content.Loadable
 import app.inabah.android.core.content.model.AzkarSection
 import app.inabah.android.core.content.model.HadithCollection
+import app.inabah.android.core.settings.AppIconSettings
 import app.inabah.android.core.settings.AppearanceSettings
 import app.inabah.android.core.settings.AzkarResetSettings
 import app.inabah.android.core.settings.HadithCollectionOrder
 import app.inabah.android.core.settings.HadithProgress
+import app.inabah.android.core.settings.PackageManagerAppIconSwitcher
 import app.inabah.android.core.settings.PlaylistSettings
 import app.inabah.android.core.settings.PreferencesStorage
 import app.inabah.android.core.settings.ReadingSettings
@@ -47,6 +49,7 @@ class AppServices(
     val hadithCollectionOrder: HadithCollectionOrder,
     val appearanceSettings: AppearanceSettings,
     val textSizeSettings: TextSizeSettings,
+    val appIconSettings: AppIconSettings,
     val audioPlayer: AudioPlayerController,
 )
 
@@ -96,6 +99,7 @@ class AppContainer(context: Context) {
             _services.value = services
             appScope.launch { services.azkarStore.runResetTimer() }
             appScope.launch { services.audioPlayer.run() }
+            appScope.launch { services.appIconSettings.refresh() }
             services.azkarStore.loadAll()
             services.hadithStore.loadAll()
             logContentFailures(services)
@@ -134,6 +138,11 @@ class AppContainer(context: Context) {
             hadithCollectionOrder = HadithCollectionOrder(storage),
             appearanceSettings = AppearanceSettings(storage),
             textSizeSettings = TextSizeSettings(storage),
+            appIconSettings = AppIconSettings(
+                switcher = PackageManagerAppIconSwitcher(appContext),
+                ioDispatcher = Dispatchers.IO,
+                onUnreadable = { error -> Log.e(TAG, "Не прочитана включённая иконка — отмечена «Классическая»", error) },
+            ),
             // Служба воспроизведения подключается при первом звуке, не при запуске приложения.
             audioPlayer = AudioPlayerController(MediaControllerEngine(appContext)),
         )

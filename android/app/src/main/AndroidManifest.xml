@@ -19,17 +19,61 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Inabah">
 
+        <!-- Запуск из лаунчера — только через алиасы ниже; сама активность открывается явными интентами
+             (уведомление плеера). -->
         <activity
             android:name=".app.MainActivity"
-            android:exported="true"
+            android:exported="false"
             android:launchMode="singleTop"
             android:screenOrientation="portrait"
-            android:theme="@style/Theme.Inabah.Starting">
+            android:theme="@style/Theme.Inabah.Starting" />
+
+        <!-- Смена иконки (этап 9, docs/android/08): по алиасу на вариант, включён ровно один — его значок
+             в лаунчере и на заставке. Имена — AppIconOption.aliasName; переключает PackageManagerAppIconSwitcher. -->
+        <activity-alias
+            android:name=".app.IconClassic"
+            android:enabled="true"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher"
+            android:targetActivity=".app.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity>
+        </activity-alias>
+        <activity-alias
+            android:name=".app.IconNiche"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_niche"
+            android:targetActivity=".app.MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+        <activity-alias
+            android:name=".app.IconBeads"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_beads"
+            android:targetActivity=".app.MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+        <activity-alias
+            android:name=".app.IconDawn"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_dawn"
+            android:targetActivity=".app.MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
 
         <!-- Экспортирована: к сессии подключаются системные контроллеры (уведомление, экран блокировки,
              Bluetooth) — разрешением их не ограничить (ExportedService). Посторонние приложения

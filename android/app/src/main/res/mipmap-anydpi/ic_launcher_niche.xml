@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Иконка «Ниша в нише» (этап 9, iOS AppIcon-Niche) — значок activity-alias .app.IconNiche. -->
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+    <background android:drawable="@drawable/ic_launcher_niche_background" />
+    <foreground android:drawable="@drawable/ic_launcher_niche_foreground" />
+    <monochrome android:drawable="@drawable/ic_launcher_niche_monochrome" />
+</adaptive-icon>

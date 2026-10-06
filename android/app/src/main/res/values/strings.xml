@@ -106,7 +106,7 @@
     <string name="section_progress_percent">Выполнено на %d %%</string>
     <string name="settings_app_icon_error">Не удалось сменить иконку</string>
     <string name="settings_app_icon_error_ok">Понятно</string>
-    <string name="settings_app_icon_footer">Иконка на экране «Домой» сменится сразу.</string>
+    <string name="settings_app_icon_footer">Иконка на рабочем столе сменится через несколько секунд. На некоторых телефонах приложение при этом закроется — просто откройте его снова.</string>
     <string name="settings_app_icon_subtitle">Классическая и ещё три варианта</string>
     <string name="settings_app_icon_title">Иконка приложения</string>
     <string name="settings_app_icon_unsupported">Смена иконки недоступна на этом устройстве.</string>

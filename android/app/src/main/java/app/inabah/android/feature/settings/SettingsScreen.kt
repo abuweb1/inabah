@@ -16,7 +16,7 @@ import app.inabah.android.core.designsystem.components.SettingsScaffold
 
 /**
  * Корень «Настроек» (iOS `SettingsView`) на графитовом фоне: «Азкары», «Хадисы» и «Оформление» —
- * «Палитра», «Размер текста». «Иконка приложения» — этап 9 (решение пользователя 2026-10-04).
+ * «Палитра», «Размер текста», «Иконка приложения».
  */
 @Composable
 fun SettingsScreen(
@@ -53,7 +53,7 @@ fun SettingsScreen(
                 },
             ),
         )
-        // «Оформление»: «Палитра» первой, как в iOS, затем «Размер текста»; «Иконка приложения» — этап 9.
+        // «Оформление» — порядок iOS: «Палитра», «Размер текста», «Иконка приложения».
         SettingsGroup(
             header = stringResource(R.string.settings_appearance_header),
             rows = listOf(
@@ -72,6 +72,15 @@ fun SettingsScreen(
                         SettingsRowText(
                             title = stringResource(R.string.settings_text_size_title),
                             subtitle = stringResource(R.string.settings_text_size_subtitle),
+                        )
+                    }
+                },
+                {
+                    SettingsRow(onClick = { onOpen(SettingsRoute.AppIcon) }, trailing = { SettingsChevron() }) {
+                        SettingsIcon(R.drawable.ic_apps, theme.gradients.eveningCard)
+                        SettingsRowText(
+                            title = stringResource(R.string.settings_app_icon_title),
+                            subtitle = stringResource(R.string.settings_app_icon_subtitle),
                         )
                     }
                 },
