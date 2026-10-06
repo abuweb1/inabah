@@ -176,6 +176,8 @@
     <string name="settings_reset_time_hour">Часы</string>
     <string name="settings_reset_time_minute">Минуты</string>
     <string name="settings_title">Настройки</string>
+    <string name="share_action">Поделиться</string>
+    <string name="share_hadith_header">%1$s · Хадис %2$d</string>
     <string name="settings_window_evening_end">Конец вечерних азкаров</string>
     <string name="settings_window_evening_start">Начало вечерних азкаров</string>
     <string name="settings_window_footer">Прогресс и отметка на главной — только в это время. В конце времени счётчики обнуляются; вне его азкары можно читать, но в прогресс это не идёт.</string>

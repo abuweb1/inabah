@@ -1929,6 +1929,28 @@
         }
       }
     },
+    "share.action" : {
+      "comment" : "Кнопка «Поделиться» зикром или хадисом (VoiceOver); на iOS пока не используется — фича сделана на Android, см. docs/02-screen-azkar.md",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Поделиться"
+          }
+        }
+      }
+    },
+    "share.hadith.header %@ %lld" : {
+      "comment" : "«Поделиться» хадисом: первая строка текста — сборник и номер; на iOS пока не используется — см. docs/02-screen-azkar.md",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · Хадис %2$lld"
+          }
+        }
+      }
+    },
     "tab.azkar" : {
       "comment" : "Вкладка: утренние и вечерние азкары",
       "localizations" : {
