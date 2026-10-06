@@ -23,6 +23,9 @@ nonisolated struct DayTime: Codable, Hashable, Sendable {
 nonisolated struct AzkarWindow: Hashable, Sendable {
     let start: DayTime
     let end: DayTime
+
+    /// Начало, совпадающее с концом, — окно без длины; такое не сохраняется.
+    var isValid: Bool { start != end }
 }
 
 /// Отрезок времени, к которому относится прогресс раздела: само время азкаров или промежуток
@@ -79,9 +82,14 @@ nonisolated struct AzkarWindowSchedule: Sendable {
         return AzkarPeriod(kind: .gap, day: dayKey(of: nextStart), validUntil: nextStart)
     }
 
-    /// Дата в календаре расписания (`yyyy-MM-dd`) — ключ окна в истории.
+    /// Григорианская дата (`yyyy-MM-dd`) в часовом поясе расписания — ключ окна в истории
+    /// и признак «того же отрезка». Не в календаре пользователя: с хиджрой или японским
+    /// календарём в настройках iPhone ключ был бы «1448-04-25», а смена календаря посреди
+    /// окна обнуляла бы счёт (аудит 2026-10-06, §5.1).
     func dayKey(of date: Date) -> String {
-        let components = calendar.dateComponents([.year, .month, .day], from: date)
+        var gregorian = Calendar(identifier: .gregorian)
+        gregorian.timeZone = calendar.timeZone
+        let components = gregorian.dateComponents([.year, .month, .day], from: date)
         return String(format: "%04d-%02d-%02d", components.year ?? 0, components.month ?? 0, components.day ?? 0)
     }
 

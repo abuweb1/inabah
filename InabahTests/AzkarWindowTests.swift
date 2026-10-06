@@ -83,6 +83,42 @@ struct AzkarWindowScheduleTests {
         #expect(inBerlin.isSameSpan(as: inMoscow))
         #expect(inBerlin.validUntil == date(2026, 10, 3, 12))
     }
+
+    @Test("Хиджра в настройках iPhone: ключ дня григорианский, границы те же", arguments: [
+        Calendar.Identifier.islamicUmmAlQura, .japanese, .buddhist, .chinese,
+    ])
+    func dayKeyIgnoresUserCalendar(identifier: Calendar.Identifier) {
+        var userCalendar = Calendar(identifier: identifier)
+        userCalendar.timeZone = berlin.timeZone
+        let schedule = AzkarWindowSchedule(window: window(17, 2), calendar: userCalendar)
+
+        let period = schedule.period(at: date(2026, 10, 4, 0, 30))
+
+        #expect(period == evening.period(at: date(2026, 10, 4, 0, 30)))
+        #expect(period.day == "2026-10-03")
+    }
+}
+
+@Suite("Время суток для показа и колеса")
+struct DayTimeDateTests {
+    @Test("Туда и обратно — те же часы и минуты, и в часы перевода часов", arguments: [
+        DayTime(hour: 0, minute: 0), DayTime(hour: 2, minute: 0), DayTime(hour: 2, minute: 30),
+        DayTime(hour: 12, minute: 0), DayTime(hour: 23, minute: 59),
+    ])
+    func roundTrip(time: DayTime) {
+        let date = time.date(in: berlin)
+        #expect(DayTime(date, in: berlin) == time)
+    }
+
+    @Test("Опорный день не зависит от календаря пользователя")
+    func referenceDayIsGregorian() {
+        var hijri = Calendar(identifier: .islamicUmmAlQura)
+        hijri.timeZone = berlin.timeZone
+        let time = DayTime(hour: 2, minute: 30)
+
+        #expect(time.date(in: hijri) == time.date(in: berlin))
+        #expect(DayTime(time.date(in: hijri), in: hijri) == time)
+    }
 }
 
 @MainActor
@@ -105,20 +141,36 @@ struct AzkarWindowSettingsTests {
     @Test("Новое время сохраняется между запусками")
     func persists() {
         let settings = AzkarWindowSettings(defaults: defaults)
-        settings.setStart(DayTime(hour: 4, minute: 30), for: .morning)
-        settings.setEnd(DayTime(hour: 11, minute: 0), for: .morning)
+        let edited = AzkarWindow(start: DayTime(hour: 4, minute: 30), end: DayTime(hour: 11, minute: 0))
+        settings.set(edited, for: .morning)
 
-        let restored = AzkarWindowSettings(defaults: defaults).window(for: .morning)
-        #expect(restored == AzkarWindow(start: DayTime(hour: 4, minute: 30), end: DayTime(hour: 11, minute: 0)))
+        #expect(AzkarWindowSettings(defaults: defaults).window(for: .morning) == edited)
+        #expect(settings.window(for: .evening) == window(17, 2))
     }
 
     @Test("Начало, совпадающее с концом, не сохраняется")
     func rejectsEmptyWindow() {
         let settings = AzkarWindowSettings(defaults: defaults)
-        settings.setStart(DayTime(hour: 12, minute: 0), for: .morning)
+        settings.set(window(12, 12), for: .morning)
 
+        #expect(!window(12, 12).isValid)
         #expect(settings.window(for: .morning) == window(5, 12))
         #expect(AzkarWindowSettings(defaults: defaults).window(for: .morning) == window(5, 12))
+    }
+
+    @Test("Повторное сохранение того же окна не уведомляет наблюдателей")
+    func sameWindowDoesNotNotify() {
+        let settings = AzkarWindowSettings(defaults: defaults)
+        let notified = NotificationFlag()
+        withObservationTracking {
+            _ = settings.window(for: .morning)
+        } onChange: {
+            notified.set()
+        }
+
+        settings.set(window(5, 12), for: .morning)
+
+        #expect(!notified.value)
     }
 
     @Test("Время обнуления версии 1.0.0 не переносится и удаляется")
@@ -264,16 +316,14 @@ struct AzkarProgressPersistenceTests {
         #expect(restored.sessions(in: .morning)[0].count == 0)
     }
 
-    @Test("Смена времени: важна только итоговая граница, промежуточные значения колеса ничего не стирают")
-    func changingWindowIsPathIndependent() async {
+    @Test("Продлили окно (сохранённый черновик) — счёт остаётся до новой границы")
+    func extendingWindowKeepsProgress() async {
         let settings = AzkarWindowSettings(defaults: defaults)
         let store = await makeStore(windowSettings: settings)
         store.sessions(in: .morning)[0].increment()
 
         clock.now = date(2026, 10, 3, 11)
-        for hour in [10, 9, 13] {
-            settings.setEnd(DayTime(hour: hour, minute: 0), for: .morning)
-        }
+        settings.set(window(5, 13), for: .morning)
         store.reconcile()
         #expect(store.sessions(in: .morning)[0].count == 1)
 
@@ -293,7 +343,7 @@ struct AzkarProgressPersistenceTests {
         store.sessions(in: .morning)[0].increment()
 
         clock.now = date(2026, 10, 3, 11)
-        settings.setEnd(DayTime(hour: 10, minute: 0), for: .morning)
+        settings.set(window(5, 10), for: .morning)
         store.reconcile()
 
         #expect(!store.isInWindow(.morning))
