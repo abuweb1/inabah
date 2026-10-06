@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!-- Значок заставки — оба слоя иконки (без отдельного фона значка): круг заставки показывает тот же
-     градиент и рисунок, что и иконка на рабочем столе (docs/android/07, 7.5). -->
-<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:drawable="@drawable/ic_launcher_background" />
-    <item android:drawable="@drawable/ic_launcher_foreground" />
-</layer-list>

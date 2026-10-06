@@ -5,10 +5,12 @@
         <item name="android:windowBackground">@color/window_background</item>
     </style>
 
-    <!-- Системная заставка: держится, пока не прочитаны настройки (docs/android/02). -->
+    <!-- Системная заставка: держится, пока не прочитаны настройки (docs/android/02). Значок не задан
+         (@null поверх sym_def_app_icon из core-splashscreen) — система берёт иконку запущенного алиаса,
+         то есть выбранную в «Иконке приложения» (этап 9). -->
     <style name="Theme.Inabah.Starting" parent="Theme.SplashScreen">
         <item name="windowSplashScreenBackground">@color/window_background</item>
-        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_splash</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@null</item>
         <item name="postSplashScreenTheme">@style/Theme.Inabah</item>
     </style>
 </resources>
