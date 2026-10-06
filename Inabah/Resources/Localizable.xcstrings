@@ -750,6 +750,39 @@
         }
       }
     },
+    "azkar.window.notice.evening %@ %@" : {
+      "comment" : "Экран вечерних азкаров вне их времени, %@ — начало и конец",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Время вечерних азкаров — с %1$@ до %2$@"
+          }
+        }
+      }
+    },
+    "azkar.window.notice.morning %@ %@" : {
+      "comment" : "Экран утренних азкаров вне их времени, %@ — начало и конец",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Время утренних азкаров — с %1$@ до %2$@"
+          }
+        }
+      }
+    },
+    "azkar.window.range %@ %@" : {
+      "comment" : "Главная азкаров: время азкаров на карточке вне его, %@ — начало и конец («5:00», «12:00»)",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@–%2$@"
+          }
+        }
+      }
+    },
     "content.error.message" : {
       "localizations" : {
         "ru" : {
@@ -1539,7 +1572,7 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Обнуление и сброс прогресса"
+            "value" : "Время азкаров и сброс прогресса"
           }
         }
       }
@@ -1720,50 +1753,6 @@
         }
       }
     },
-    "settings.reset.evening" : {
-      "comment" : "Настройки: время обнуления вечерних азкаров",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Вечерние — после"
-          }
-        }
-      }
-    },
-    "settings.reset.footer" : {
-      "comment" : "Настройки: пояснение под временем обнуления",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Каждый день в это время прогресс чтения раздела обнуляется. Если новое время сегодня уже прошло, ближайшее обнуление — в прежнее время."
-          }
-        }
-      }
-    },
-    "settings.reset.header" : {
-      "comment" : "Настройки: заголовок секции времени обнуления прогресса",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Обнуление азкаров"
-          }
-        }
-      }
-    },
-    "settings.reset.morning" : {
-      "comment" : "Настройки: время обнуления утренних азкаров",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Утренние — после"
-          }
-        }
-      }
-    },
     "settings.reset.now.confirm.action" : {
       "comment" : "Подтверждение ручного сброса азкаров: кнопка",
       "localizations" : {
@@ -1814,7 +1803,7 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Счётчики раздела обнулятся сразу, не дожидаясь времени обнуления."
+            "value" : "Счётчики раздела обнулятся сразу, не дожидаясь конца времени азкаров."
           }
         }
       }
@@ -1925,6 +1914,94 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Настройки"
+          }
+        }
+      }
+    },
+    "settings.window.evening.end" : {
+      "comment" : "VoiceOver: выбор конца времени вечерних азкаров",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Конец вечерних азкаров"
+          }
+        }
+      }
+    },
+    "settings.window.evening.start" : {
+      "comment" : "VoiceOver: выбор начала времени вечерних азкаров",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Начало вечерних азкаров"
+          }
+        }
+      }
+    },
+    "settings.window.footer" : {
+      "comment" : "Настройки азкаров: пояснение под временем азкаров",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Прогресс и отметка на главной — только в это время. В конце времени счётчики обнуляются; вне его азкары можно читать, но в прогресс это не идёт."
+          }
+        }
+      }
+    },
+    "settings.window.from" : {
+      "comment" : "Настройки азкаров: «с» перед временем начала",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "с"
+          }
+        }
+      }
+    },
+    "settings.window.header" : {
+      "comment" : "Настройки азкаров: заголовок секции времени азкаров",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Время азкаров"
+          }
+        }
+      }
+    },
+    "settings.window.morning.end" : {
+      "comment" : "VoiceOver: выбор конца времени утренних азкаров",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Конец утренних азкаров"
+          }
+        }
+      }
+    },
+    "settings.window.morning.start" : {
+      "comment" : "VoiceOver: выбор начала времени утренних азкаров",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Начало утренних азкаров"
+          }
+        }
+      }
+    },
+    "settings.window.to" : {
+      "comment" : "Настройки азкаров: «до» перед временем конца",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "до"
           }
         }
       }

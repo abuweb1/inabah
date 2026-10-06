@@ -158,8 +158,10 @@ struct SectionNavCard: View {
     /// сборника).
     var leadingStat: NavCardStat?
     var trailingStat: NavCardStat?
-    /// Кольцо прогресса справа (например, выполнение азкаров за сегодня).
+    /// Кольцо прогресса справа (например, выполнение азкаров во время азкаров).
     var ring: NavCardRing?
+    /// Тихая подпись справа, когда кольца нет (например, время азкаров «5:00–12:00»).
+    var trailingNote: Text?
 
     @Environment(\.theme) private var theme
 
@@ -213,6 +215,13 @@ struct SectionNavCard: View {
             HStack(spacing: Spacing.m) {
                 if let ring {
                     NavCardProgressRing(fraction: ring.fraction, style: ring.style)
+                } else if let trailingNote {
+                    trailingNote
+                        .font(.caption)
+                        .monospacedDigit()
+                        .foregroundStyle(theme.palette.onAccentTertiary)
+                        .lineLimit(1)
+                        .fixedSize()
                 }
                 Image(systemName: "chevron.forward")
                     .font(.headline)

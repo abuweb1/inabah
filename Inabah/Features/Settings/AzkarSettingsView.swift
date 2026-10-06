@@ -1,8 +1,7 @@
 import SwiftUI
 
-/// Настройки азкаров: время ежедневного обнуления и ручной сброс прогресса раздела.
+/// Настройки азкаров: время азкаров («с — до») и ручной сброс прогресса раздела.
 struct AzkarSettingsView: View {
-    @Environment(AzkarResetSettings.self) private var resetSettings
     @Environment(AzkarStore.self) private var store
     @Environment(\.theme) private var theme
 
@@ -13,17 +12,13 @@ struct AzkarSettingsView: View {
         Form {
             Section {
                 ForEach(AzkarSection.allCases, id: \.self) { section in
-                    DatePicker(
-                        section.resetTimeLabel,
-                        selection: resetTime(for: section),
-                        displayedComponents: .hourAndMinute
-                    )
-                    .settingsRow()
+                    AzkarWindowRow(section: section)
+                        .settingsRow()
                 }
             } header: {
-                Text("settings.reset.header")
+                Text("settings.window.header")
             } footer: {
-                Text("settings.reset.footer")
+                Text("settings.window.footer")
                     .foregroundStyle(theme.palette.onAccentSecondary)
             }
 
@@ -55,30 +50,76 @@ struct AzkarSettingsView: View {
             perform: { store.resetProgress(of: $0) }
         )
         .audioPlayerInset()
+        // Новое время применяется к прогрессу при уходе с экрана, а не на каждом шаге колеса:
+        // прокрутка через «сейчас» не стирает прочитанное.
+        .onDisappear { store.reconcile() }
+    }
+}
+
+/// «Утренние  с [5:00] до [12:00]». При крупном тексте выбор времени уходит под название.
+private struct AzkarWindowRow: View {
+    let section: AzkarSection
+
+    @Environment(AzkarWindowSettings.self) private var windowSettings
+    @Environment(AzkarStore.self) private var store
+
+    var body: some View {
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: Spacing.s) {
+                Text(section.title)
+                Spacer(minLength: Spacing.s)
+                pickers
+            }
+            VStack(alignment: .leading, spacing: Spacing.xs) {
+                Text(section.title)
+                pickers
+            }
+        }
+    }
+
+    private var pickers: some View {
+        HStack(spacing: Spacing.xs) {
+            Text("settings.window.from")
+            DatePicker(section.windowStartLabel, selection: start, displayedComponents: .hourAndMinute)
+                .labelsHidden()
+            Text("settings.window.to")
+            DatePicker(section.windowEndLabel, selection: end, displayedComponents: .hourAndMinute)
+                .labelsHidden()
+        }
+        .fixedSize()
     }
 
     /// Время суток как дата сегодняшнего дня — для `DatePicker`; сохраняются только часы и минуты.
-    /// Календарь — тот же, что у расписания обнуления.
-    private func resetTime(for section: AzkarSection) -> Binding<Date> {
-        let calendar = store.calendar
-        return Binding {
-            let time = resetSettings.resetTime(for: section)
-            return calendar.date(bySettingHour: time.hour, minute: time.minute, second: 0, of: .now) ?? .now
+    /// Календарь — тот же, что у расписания азкаров.
+    private var start: Binding<Date> {
+        Binding {
+            windowSettings.window(for: section).start.date(in: store.calendar)
         } set: { date in
-            let components = calendar.dateComponents([.hour, .minute], from: date)
-            resetSettings.setResetTime(
-                DayTime(hour: components.hour ?? 0, minute: components.minute ?? 0),
-                for: section
-            )
+            windowSettings.setStart(DayTime(date, in: store.calendar), for: section)
+        }
+    }
+
+    private var end: Binding<Date> {
+        Binding {
+            windowSettings.window(for: section).end.date(in: store.calendar)
+        } set: { date in
+            windowSettings.setEnd(DayTime(date, in: store.calendar), for: section)
         }
     }
 }
 
 private extension AzkarSection {
-    var resetTimeLabel: LocalizedStringResource {
+    var windowStartLabel: LocalizedStringResource {
         switch self {
-        case .morning: "settings.reset.morning"
-        case .evening: "settings.reset.evening"
+        case .morning: "settings.window.morning.start"
+        case .evening: "settings.window.evening.start"
+        }
+    }
+
+    var windowEndLabel: LocalizedStringResource {
+        switch self {
+        case .morning: "settings.window.morning.end"
+        case .evening: "settings.window.evening.end"
         }
     }
 
