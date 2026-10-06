@@ -26,7 +26,7 @@ class ReadingSettingsTest {
 
         repeat(20) { settings.increaseArabicFontSize() }
         assertEquals(40.0, settings.arabicFontSize.value)
-        assertFalse(settings.canIncreaseArabicFontSize)
+        assertFalse(ReadingSettings.canIncrease(settings.arabicFontSize.value))
     }
 
     @Test
@@ -35,8 +35,8 @@ class ReadingSettingsTest {
 
         repeat(10) { settings.decreaseArabicFontSize() }
         assertEquals(14.0, settings.arabicFontSize.value)
-        assertFalse(settings.canDecreaseArabicFontSize)
-        assertTrue(settings.canIncreaseArabicFontSize)
+        assertFalse(ReadingSettings.canDecrease(settings.arabicFontSize.value))
+        assertTrue(ReadingSettings.canIncrease(settings.arabicFontSize.value))
     }
 
     @Test

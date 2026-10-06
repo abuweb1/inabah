@@ -33,9 +33,7 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.performClick
-import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import androidx.test.platform.app.InstrumentationRegistry
 import app.inabah.android.core.content.ContentRepository
 import app.inabah.android.core.content.model.AzkarSection
 import app.inabah.android.core.content.model.Hadith
@@ -47,17 +45,11 @@ import app.inabah.android.core.settings.AzkarHistory
 import app.inabah.android.core.settings.AzkarWindowSettings
 import app.inabah.android.core.settings.DayTime
 import app.inabah.android.core.settings.PreferencesStorage
+import app.inabah.android.core.settings.TestDataStoreRule
 import app.inabah.android.core.settings.ReadingSettings
-import java.io.File
 import java.time.Instant
 import java.time.ZoneId
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -73,29 +65,19 @@ private val OUTSIDE_WINDOW: Instant = Instant.parse("2026-10-03T11:00:00Z")
 /** Экран раздела целиком: стор, настройки и DataStore во временном файле, без остального приложения. */
 @RunWith(AndroidJUnit4::class)
 class AzkarListScreenTest {
-    @get:Rule
+    // Хранилище — внешнее правило: закрывается после Compose (экран при уходе ещё пишет в него).
+    @get:Rule(order = 0)
+    val dataStore = TestDataStoreRule()
+
+    @get:Rule(order = 1)
     val compose = createComposeRule()
 
-    private val context = InstrumentationRegistry.getInstrumentation().targetContext
-    private val ioScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-    private lateinit var directory: File
-    private lateinit var storage: PreferencesStorage
+    private val storage: PreferencesStorage get() = dataStore.storage
 
     @Before
-    fun openStorage() {
+    fun enableChecks() {
         // Этап 7: каждое действие теста заодно проверяет экран на доступность (ATF).
         compose.enableAccessibilityChecks()
-        directory = File(context.cacheDir, "azkar-list-test-${System.nanoTime()}").apply { mkdirs() }
-        val dataStore = PreferenceDataStoreFactory.create(scope = ioScope) { File(directory, "test.preferences_pb") }
-        storage = PreferencesStorage(dataStore) { throw AssertionError("Ошибка хранилища", it) }
-        runBlocking { storage.load() }
-        ioScope.launch { storage.runWriter() }
-    }
-
-    @After
-    fun closeStorage() {
-        ioScope.cancel()
-        directory.deleteRecursively()
     }
 
     private fun store(vararg repetitions: Int): AzkarStore {
@@ -106,7 +88,7 @@ class AzkarListScreenTest {
             repository = FixedRepository(azkar),
             storage = storage,
             windowSettings = windowSettings,
-            history = AzkarHistory(storage),
+            history = AzkarHistory(storage) { throw AssertionError(it) },
             // По умолчанию — 08:00 в Берлине, внутри утреннего окна 5:00–12:00: не зависит от часов устройства.
             now = { now },
             zone = { FIXED_ZONE },
@@ -229,6 +211,46 @@ class AzkarListScreenTest {
         compose.waitUntil(TIMEOUT_MILLIS) { compose.onAllNodesWithContentDescription("Развернуть").fetchSemanticsNodes().size == 2 }
         compose.mainClock.advanceTimeBy(2_000)
         compose.onNodeWithContentDescription("Машаа Аллах!").assertDoesNotExist()
+    }
+
+    // Аудит 2026-10-06: правило «ушли раньше 0,6 с — поздравим при следующем открытии» не проверялось.
+    @Test
+    fun leavingBeforeCompletionDelayShowsOverlayNextTime() {
+        val store = store(1)
+        var shown by mutableStateOf(true)
+        compose.setContent { if (shown) Screen(store) }
+        compose.waitUntil(TIMEOUT_MILLIS) { counters().fetchSemanticsNodes().size == 1 }
+
+        // Выполнили и ушли через 0,3 с — оверлей ещё не появился, раздел не «поздравлен».
+        compose.mainClock.autoAdvance = false
+        counters()[0].performClick()
+        compose.mainClock.advanceTimeBy(300)
+        shown = false
+        compose.mainClock.advanceTimeByFrame()
+        compose.mainClock.autoAdvance = true
+        compose.waitForIdle()
+        compose.runOnIdle { check(store.shouldPresentCompletion(AzkarSection.Morning)) { "раздел выполнен и ещё не поздравлен" } }
+
+        shown = true
+        waitForNode("Машаа Аллах!")
+    }
+
+    // Аудит 2026-10-06: главная вне времени азкаров проверялась только вручную.
+    @Test
+    fun homeOutsideWindowShowsWindowTimeInsteadOfRing() {
+        now = OUTSIDE_WINDOW
+        val store = store(1, 3)
+        compose.runOnIdle { runBlocking { store.loadAll() } }
+        compose.setContent {
+            InabahTheme { AzkarHomeScreen(store, windowSettings, onOpenSection = {}, contentPadding = PaddingValues()) }
+        }
+
+        // 13:00 — вне окна оба раздела: у утренних время окна (в любом формате системы есть «12:00»),
+        // колец с процентом нет ни у одного.
+        compose.waitUntil(TIMEOUT_MILLIS) {
+            compose.onAllNodesWithText("12:00", substring = true).fetchSemanticsNodes().isNotEmpty()
+        }
+        compose.onAllNodesWithContentDescription("Выполнено на", substring = true).assertCountEquals(0)
     }
 
     @Test

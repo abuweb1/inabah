@@ -12,9 +12,7 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
-import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import androidx.test.platform.app.InstrumentationRegistry
 import app.inabah.android.core.designsystem.InabahTheme
 import app.inabah.android.core.designsystem.LocalInabahTheme
 import app.inabah.android.core.designsystem.ParchmentStyle
@@ -26,15 +24,8 @@ import app.inabah.android.core.designsystem.ThemeStyle
 import app.inabah.android.core.designsystem.animateTheme
 import app.inabah.android.core.settings.AppearanceSettings
 import app.inabah.android.core.settings.PreferencesStorage
+import app.inabah.android.core.settings.TestDataStoreRule
 import app.inabah.android.feature.makharij.MakharijHomeScreen
-import java.io.File
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
-import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -45,29 +36,19 @@ private const val HALF_TRANSITION_MILLIS = 150L
 /** «Палитра»: выбор сохраняется и перекрашивает приложение; «Махрадж» — карточка «Скоро» одним элементом. */
 @RunWith(AndroidJUnit4::class)
 class PaletteSettingsTest {
-    @get:Rule
+    // Хранилище — внешнее правило: закрывается после Compose (экран при уходе ещё пишет в него).
+    @get:Rule(order = 0)
+    val dataStore = TestDataStoreRule()
+
+    @get:Rule(order = 1)
     val compose = createComposeRule()
 
-    private val context = InstrumentationRegistry.getInstrumentation().targetContext
-    private val ioScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-    private lateinit var directory: File
-    private lateinit var storage: PreferencesStorage
+    private val storage: PreferencesStorage get() = dataStore.storage
 
     @Before
-    fun openStorage() {
+    fun enableChecks() {
         // Этап 7: каждое действие теста заодно проверяет экран на доступность (ATF).
         compose.enableAccessibilityChecks()
-        directory = File(context.cacheDir, "palette-test-${System.nanoTime()}").apply { mkdirs() }
-        val dataStore = PreferenceDataStoreFactory.create(scope = ioScope) { File(directory, "test.preferences_pb") }
-        storage = PreferencesStorage(dataStore) { throw AssertionError("Ошибка хранилища", it) }
-        runBlocking { storage.load() }
-        ioScope.launch { storage.runWriter() }
-    }
-
-    @After
-    fun closeStorage() {
-        ioScope.cancel()
-        directory.deleteRecursively()
     }
 
     @Test

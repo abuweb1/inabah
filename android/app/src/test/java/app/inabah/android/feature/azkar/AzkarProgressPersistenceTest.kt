@@ -61,7 +61,7 @@ class AzkarProgressPersistenceTest {
         section: AzkarSection = morning,
         now: () -> Instant = { clock.now },
     ): AzkarStore {
-        history = AzkarHistory(storage.storage)
+        history = AzkarHistory(storage.storage) { throw AssertionError(it) }
         return AzkarStore(
             repository,
             storage.storage,
@@ -286,7 +286,7 @@ class AzkarProgressPersistenceTest {
         store.reconcile()
         storage.restart()
 
-        assertEquals(AzkarDayRecord(1, 2), AzkarHistory(storage.storage).record(morning, october3))
+        assertEquals(AzkarDayRecord(1, 2), AzkarHistory(storage.storage) { throw AssertionError(it) }.record(morning, october3))
     }
 
     @Test
@@ -468,4 +468,37 @@ class AzkarProgressPersistenceTest {
             runCurrent()
             assertEquals(0, store.sessions(morning)[0].count, "12:00 по Берлину")
         }
+
+    // Аудит 2026-10-06: таймер проверялся только с одним разделом.
+    @Test
+    fun `Таймер с двумя разделами — каждый обнуляется на своей границе, другой не трогается`() =
+        TestStorage.run { storage ->
+            val virtual = VirtualClock(this, date(2026, 10, 3, 8))
+            val store = makeStore(storage, now = virtual::now)
+            store.load(evening)
+            backgroundScope.launch { store.runBoundaryTimer() }
+            store.sessions(morning)[0].increment()
+            store.sessions(evening)[0].increment()
+
+            advanceTimeBy(4.hours + 1.minutes)
+            runCurrent()
+            assertEquals(0, store.sessions(morning)[0].count, "12:00 — конец утреннего окна")
+            assertEquals(1, store.sessions(evening)[0].count, "у вечерних граница ещё не наступила")
+
+            advanceTimeBy(5.hours)
+            runCurrent()
+            assertEquals(0, store.sessions(evening)[0].count, "17:00 — начало вечернего окна")
+            assertTrue(store.isInWindow(evening).value)
+        }
+
+    @Test
+    fun `История — сброс единственной выполненной карточки в окне убирает запись дня`() = TestStorage.run { storage ->
+        val store = makeStore(storage)
+        repeat(3) { store.sessions(morning)[0].increment() }
+        assertEquals(AzkarDayRecord(1, 2), history.record(morning, october3))
+
+        store.sessions(morning)[0].reset()
+
+        assertNull(history.record(morning, october3))
+    }
 }

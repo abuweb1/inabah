@@ -1,11 +1,6 @@
 package app.inabah.android.app
 
 import android.app.Application
-import android.content.BroadcastReceiver
-import android.content.Context
-import android.content.Intent
-import android.content.IntentFilter
-import androidx.core.content.ContextCompat
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
@@ -23,10 +18,11 @@ class InabahApplication : Application() {
         container = AppContainer(this)
         container.start()
 
-        ProcessLifecycleOwner.get().lifecycle.addObserver(
+        val processLifecycle = ProcessLifecycleOwner.get().lifecycle
+        AzkarReconcileTriggers(::reconcileAzkar).install(this, processLifecycle)
+        processLifecycle.addObserver(
             object : DefaultLifecycleObserver {
                 override fun onStart(owner: LifecycleOwner) {
-                    reconcileAzkar()
                     container.services.value?.audioPlayer?.onForeground()
                 }
 
@@ -35,18 +31,6 @@ class InabahApplication : Application() {
                     container.services.value?.audioPlayer?.onBackground()
                 }
             },
-        )
-        // Приёмник живёт столько же, сколько процесс: отписка не нужна.
-        ContextCompat.registerReceiver(
-            this,
-            object : BroadcastReceiver() {
-                override fun onReceive(context: Context, intent: Intent) = reconcileAzkar()
-            },
-            IntentFilter().apply {
-                addAction(Intent.ACTION_TIME_CHANGED)
-                addAction(Intent.ACTION_TIMEZONE_CHANGED)
-            },
-            ContextCompat.RECEIVER_NOT_EXPORTED,
         )
     }
 

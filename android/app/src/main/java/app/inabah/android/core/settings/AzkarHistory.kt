@@ -18,14 +18,24 @@ data class AzkarDayRecord(val completed: Int, val total: Int)
  * закрытое системой приложение ничего не теряет. Ключ `azkar.history` — JSON
  * `{ "2026-10-03": { "morning": { "completed": 12, "total": 16 } } }`.
  */
-class AzkarHistory(private val storage: PreferencesStorage) {
-    /** Дата окна (`yyyy-MM-dd`) → раздел → запись. Нечитаемое сохранение — пустая история. */
+class AzkarHistory(
+    private val storage: PreferencesStorage,
+    /** Сохранённая история испорчена — дальше пишется новая; сообщить в лог. */
+    onUnreadable: (Exception) -> Unit,
+) {
+    /**
+     * Дата окна (`yyyy-MM-dd`) → раздел → запись. Нечитаемое сохранение — пустая история, а прежний
+     * текст один раз откладывается под [corruptKey]: первая новая запись не уничтожает его без следа
+     * (аудит 2026-10-06 — это основа будущего календаря).
+     */
     private var records: Map<String, Map<String, AzkarDayRecord>> =
         storage.snapshot[key]?.let { text ->
             try {
                 json.decodeFromString<Map<String, Map<String, AzkarDayRecord>>>(text)
-            } catch (_: IllegalArgumentException) {
+            } catch (error: IllegalArgumentException) {
                 // SerializationException — подкласс IllegalArgumentException.
+                onUnreadable(error)
+                if (corruptKey !in storage.snapshot) storage.edit { it[corruptKey] = text }
                 null
             }
         }.orEmpty()
@@ -48,6 +58,9 @@ class AzkarHistory(private val storage: PreferencesStorage) {
 
     private companion object {
         val key = stringPreferencesKey("azkar.history")
+
+        /** Отложенная нечитаемая история — для ручного восстановления. */
+        val corruptKey = stringPreferencesKey("azkar.history.corrupt")
         val json = Json { ignoreUnknownKeys = true }
     }
 }
