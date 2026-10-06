@@ -16,10 +16,14 @@ data class Zikr(
     val arabic: String,
     /** Сколько раз читать, не меньше 1. */
     val repetitions: Int,
-    val audioFileName: String,
+    /** Файл записи в `assets/audio/`; записей пока нет (2026-10-06) — `null`, на экране «Аудио скоро». */
+    val audioFileName: String? = null,
     val translation: ZikrTranslation?,
 ) {
     val section: AzkarSection get() = id.section
+
+    /** Есть запись — ▶ и «Прослушать все» активны; нет — «Аудио скоро» (iOS `hasAudio`). */
+    val hasAudio: Boolean get() = audioFileName != null
     val number: Int get() = id.number
 }
 

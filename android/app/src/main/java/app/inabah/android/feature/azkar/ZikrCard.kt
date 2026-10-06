@@ -208,6 +208,7 @@ private fun ZikrFullContent(
         val repetitions = pluralStringResource(R.plurals.zikr_repetitions, zikr.repetitions, zikr.repetitions)
         val storeLinks = storeLinksBlock()
         ZikrActions(
+            hasAudio = zikr.hasAudio,
             isAudioActive = isAudioActive,
             onPlay = onPlay,
             isTranslationVisible = state.isTranslationVisible,
@@ -300,10 +301,12 @@ fun ZikrTranslationBlock(translation: ZikrTranslation, modifier: Modifier = Modi
 
 /**
  * ▶, «Аа», ↺, «Поделиться» — по центру. ▶ — запись зикра; выбрана в плеере и не доиграла — статичная
- * волна на зелёном, «Открыть плеер» (нажатие показывает плеер, не ставит паузу).
+ * волна на зелёном, «Открыть плеер» (нажатие показывает плеер, не ставит паузу). Записи нет —
+ * ▶ неактивна, TalkBack «Аудио скоро» (2026-10-06: записей в приложении пока нет).
  */
 @Composable
 private fun ZikrActions(
+    hasAudio: Boolean,
     isAudioActive: Boolean,
     onPlay: () -> Unit,
     isTranslationVisible: Boolean,
@@ -323,10 +326,17 @@ private fun ZikrActions(
         IconButton(
             onClick = onPlay,
             icon = painterResource(if (isAudioActive) R.drawable.ic_graphic_eq else R.drawable.ic_play_arrow),
-            contentDescription = stringResource(if (isAudioActive) R.string.audio_zikr_open_player else R.string.audio_zikr_listen),
+            contentDescription = stringResource(
+                when {
+                    !hasAudio -> R.string.audio_soon
+                    isAudioActive -> R.string.audio_zikr_open_player
+                    else -> R.string.audio_zikr_listen
+                },
+            ),
             foreground = if (isAudioActive) palette.onAccent else palette.textSecondary,
             background = if (isAudioActive) palette.success else palette.actionBackground,
             border = if (isAudioActive) palette.successLight else palette.hairline,
+            enabled = hasAudio,
         )
         IconButton(
             onClick = onToggleTranslation,

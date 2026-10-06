@@ -50,7 +50,6 @@ fun AzkarPlayAllCard(
     onRateChange: (Float) -> Unit,
     onListen: () -> Unit,
     modifier: Modifier = Modifier,
-    enabled: Boolean = true,
 ) {
     val palette = InabahTheme.palette
     val locale = LocalConfiguration.current.locales[0]
@@ -102,7 +101,6 @@ fun AzkarPlayAllCard(
             onClick = onListen,
             text = stringResource(if (isActive) R.string.audio_play_all_open else R.string.audio_play_all_start),
             leadingIcon = painterResource(if (isActive) R.drawable.ic_bottom_panel_open else R.drawable.ic_play_arrow),
-            enabled = enabled,
         )
     }
 }

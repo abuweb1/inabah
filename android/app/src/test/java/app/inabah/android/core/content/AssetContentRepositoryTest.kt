@@ -42,16 +42,15 @@ class AssetContentRepositoryTest {
         }
     }
 
+    // 2026-10-06: аудиозаписи были чужими — удалены; свои подключатся полем audio в данных.
     @Test
-    fun `Аудиофайл зикра лежит в ассетах`() = runTest {
+    fun `Записей азкаров в сборке нет — у зикров нет аудио, в ассетах нет audio`() = runTest {
         val repository = repository(dispatcher = StandardTestDispatcher(testScheduler))
         for (section in AzkarSection.entries) {
-            val missing = repository.azkar(section)
-                .filterNot { File(assetsDir, "audio/${it.audioFileName}").isFile }
-                .map { it.audioFileName }
-
-            assertEquals(emptyList(), missing, "нет аудио в разделе $section")
+            assertTrue(repository.azkar(section).none { it.hasAudio }, "запись у зикра в разделе $section")
         }
+        val bundled = File(assetsDir, "audio").listFiles().orEmpty()
+        assertEquals(emptyList(), bundled.map { it.name })
     }
 
     @Test

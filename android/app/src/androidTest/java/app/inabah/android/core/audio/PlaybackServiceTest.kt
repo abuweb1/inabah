@@ -17,11 +17,13 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 
-private const val TIMEOUT_MILLIS = 15_000L
+/** Тон — 8 с; плейлист из двух на 1,5× с паузой — около 12 с. */
+private const val TIMEOUT_MILLIS = 30_000L
 
 /**
  * Настоящий путь звука: контроллер → MediaControllerEngine → служба PlaybackService с ExoPlayer и
- * записями из ассетов. Ловит то, чего не видят тесты на подделке: события плеера не доходят до
+ * записями из ассетов — тестовыми тонами (`test-tone-*.wav`, только в debug-сборке: своих записей
+ * в приложении пока нет). Ловит то, чего не видят тесты на подделке: события плеера не доходят до
  * приложения, служба не подключается, пауза-тишина не играет.
  */
 @RunWith(AndroidJUnit4::class)
@@ -30,10 +32,10 @@ class PlaybackServiceTest {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private val player = AudioPlayerController(MediaControllerEngine(context))
 
-    /** Короткая запись (~3 с): утренний зикр №3. */
-    private fun shortTrack(number: Int = 3) = AudioTrack(
+    /** Тестовый тон (8 с, общий с тестами iOS) под видом утреннего зикра. */
+    private fun shortTrack(number: Int = 1) = AudioTrack(
         id = "azkar.morning.$number",
-        assetFile = "morning_%02d.mp3".format(number),
+        assetFile = "test-tone-$number.wav",
         title = "Зикр №$number",
         subtitle = "Утренние азкары",
         category = "АЗКАРЫ",
@@ -64,7 +66,7 @@ class PlaybackServiceTest {
         onMain {
             scope.launch { player.run() }
             // Пауза 1 с — элемент-тишина между зикрами: после него — второй зикр.
-            player.playAll("azkar.morning", listOf(shortTrack(3), shortTrack(3)), rate = 1.5f, pauseSeconds = 1.0)
+            player.playAll("azkar.morning", listOf(shortTrack(1), shortTrack(2)), rate = 1.5f, pauseSeconds = 1.0)
         }
         withTimeout(TIMEOUT_MILLIS) { player.state.first { it.zikrIndex == 1 && it.isPlaying } }
         val finished = withTimeout(TIMEOUT_MILLIS) { player.state.first { it.isFinished } }

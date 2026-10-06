@@ -22,7 +22,6 @@ class ShareTextTest {
         id = ZikrId(AzkarSection.Morning, 3),
         arabic = "سُبْحَانَ اللَّهِ وَ بِحَمْدِهِ",
         repetitions = 100,
-        audioFileName = "morning_03.mp3",
         translation = translation,
     )
 

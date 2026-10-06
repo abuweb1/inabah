@@ -27,7 +27,6 @@ fun zikr(number: Int, repetitions: Int, section: AzkarSection = AzkarSection.Mor
     id = ZikrId(section, number),
     arabic = "سُبْحَانَ اللَّهِ",
     repetitions = repetitions,
-    audioFileName = "${section.key}_$number.mp3",
     translation = null,
 )
 

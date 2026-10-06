@@ -69,6 +69,7 @@ import app.inabah.android.core.designsystem.Radius
 import app.inabah.android.core.designsystem.Size
 import app.inabah.android.core.designsystem.Spacing
 import app.inabah.android.core.designsystem.components.ArabicText
+import app.inabah.android.core.designsystem.components.AudioSoonPlaceholder
 import app.inabah.android.core.designsystem.components.FontSizeControls
 import app.inabah.android.core.designsystem.components.GlassIconButton
 import app.inabah.android.core.designsystem.components.InabahTopBar
@@ -282,37 +283,43 @@ private fun AzkarFeed(
     ) {
         sessions.forEach { session ->
             key(session.id) {
+                val trackId = session.zikr.audioTrackId
+                // Записи нет — трека нет: ▶ на карточке неактивна, «Аудио скоро».
                 val track = session.zikr.toAudioTrack()
                 ZikrCard(
                     session = session,
                     arabicFontSize = animatedSize,
                     audio = ZikrAudioState(
-                        isActive = playerState.isActive(track.id),
-                        isPlaylistCurrent = isPlaylistActive && playerState.track?.id == track.id,
+                        isActive = playerState.isActive(trackId),
+                        isPlaylistCurrent = isPlaylistActive && playerState.track?.id == trackId,
                     ),
-                    onPlay = { player.play(track) },
-                    modifier = Modifier.onPlaced { cardTops[track.id] = it.positionInParent().y },
+                    onPlay = { track?.let(player::play) },
+                    modifier = Modifier.onPlaced { cardTops[trackId] = it.positionInParent().y },
                 )
             }
         }
-        val playlist = sessions.map { it.zikr.toAudioTrack(repeatsByCount) }
-        AzkarPlayAllCard(
-            isActive = isPlaylistActive,
-            repeatsByCount = repeatsByCount,
-            pauseSeconds = pauseSeconds,
-            rate = rate,
-            onRepeatsChange = playlistSettings::setRepeatsByCount,
-            onPauseChange = {
-                playlistSettings.setPauseBetween(it)
-                player.updatePlaylist(playlistId, rate, it)
-            },
-            onRateChange = {
-                playlistSettings.setRate(it)
-                player.updatePlaylist(playlistId, it, pauseSeconds)
-            },
-            onListen = { player.playAll(playlistId, playlist, rate, pauseSeconds) },
-            enabled = playlist.isNotEmpty(),
-        )
+        val playlist = sessions.mapNotNull { it.zikr.toAudioTrack(repeatsByCount) }
+        // Записей нет (2026-10-06) — вместо «Прослушать все» заглушка, как у хадиса.
+        if (playlist.isEmpty()) {
+            AudioSoonPlaceholder(stringResource(R.string.audio_play_all_title))
+        } else {
+            AzkarPlayAllCard(
+                isActive = isPlaylistActive,
+                repeatsByCount = repeatsByCount,
+                pauseSeconds = pauseSeconds,
+                rate = rate,
+                onRepeatsChange = playlistSettings::setRepeatsByCount,
+                onPauseChange = {
+                    playlistSettings.setPauseBetween(it)
+                    player.updatePlaylist(playlistId, rate, it)
+                },
+                onRateChange = {
+                    playlistSettings.setRate(it)
+                    player.updatePlaylist(playlistId, it, pauseSeconds)
+                },
+                onListen = { player.playAll(playlistId, playlist, rate, pauseSeconds) },
+            )
+        }
     }
 }
 

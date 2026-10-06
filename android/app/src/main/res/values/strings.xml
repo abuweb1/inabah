@@ -12,15 +12,13 @@
     <string name="about_license_scheherazade_subtitle">Арабский шрифт · SIL Global · SIL Open Font License 1.1</string>
     <string name="about_license_scheherazade_title">Scheherazade New</string>
     <string name="about_licenses_header">Шрифт и значки</string>
-    <string name="about_link_azkar">azkar.ru</string>
     <string name="about_link_issues">Вопросы и предложения</string>
     <string name="about_link_privacy">Политика конфиденциальности</string>
     <string name="about_link_repository">Исходный код на GitHub</string>
-    <string name="about_link_sunnah">sunnah.com</string>
-    <string name="about_sources_azkar_text">Тексты, транскрипция, перевод и аудиозаписи — по azkar.ru.</string>
+    <string name="about_sources_azkar_text">Утренние и вечерние азкары из Сунны — арабский текст, транскрипция и перевод.</string>
     <string name="about_sources_azkar_title">Азкары</string>
     <string name="about_sources_footer">Источник каждого зикра и хадиса указан под его переводом.</string>
-    <string name="about_sources_hadith_text">Классические сборники «40 хадисов» имама ан-Навави (с дополнением Ибн Раджаба), хадисы аль-Къудси и сборник имама аль-Аджурри. Арабский текст хадисов аль-Къудси — по sunnah.com.</string>
+    <string name="about_sources_hadith_text">Классические сборники «40 хадисов» имама ан-Навави (с дополнением Ибн Раджаба), хадисы аль-Къудси и сборник имама аль-Аджурри.</string>
     <string name="about_sources_hadith_title">Хадисы</string>
     <string name="about_sources_header">Источники</string>
     <string name="about_title">О приложении</string>
@@ -40,6 +38,7 @@
     <string name="audio_play_all_start">Слушать</string>
     <string name="audio_play_all_subtitle">Все записи по порядку — можно слушать с заблокированным экраном</string>
     <string name="audio_play_all_title">Прослушать все азкары</string>
+    <string name="audio_soon">Аудио скоро</string>
     <string name="audio_player_back10">Назад на 10 секунд</string>
     <string name="audio_player_close">Закрыть плеер</string>
     <string name="audio_player_error">Не удалось воспроизвести запись</string>
@@ -80,7 +79,6 @@
     <string name="content_error_retry">Повторить</string>
     <string name="content_error_title">Не удалось загрузить</string>
     <string name="hadith_ajurri_title">40 хадисов аль-Аджурри</string>
-    <string name="hadith_audio_soon">Аудио скоро</string>
     <string name="hadith_audio_title">Аудио · Хадис %d</string>
     <string name="hadith_detail_counter">%1$d из %2$d</string>
     <string name="hadith_detail_narrator">Передал: %s</string>

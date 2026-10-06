@@ -61,8 +61,6 @@ private const val ARABIC_NAME = "إنابة"
 
 /** Внешние адреса экрана (iOS `AboutLinks`). */
 internal object AboutLinks {
-    const val AZKAR = "https://azkar.ru"
-    const val SUNNAH = "https://sunnah.com"
     const val REPOSITORY = "https://github.com/abuweb1/inabah"
     const val PRIVACY = "https://github.com/abuweb1/inabah/blob/main/PRIVACY.md"
     const val ISSUES = "https://github.com/abuweb1/inabah/issues"
@@ -72,7 +70,7 @@ internal object AboutLinks {
 internal val appVersion: String get() = "${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})"
 
 /**
- * «О приложении» (iOS `AboutView`): иконка, название и версия; источники текстов и записей; лицензии
+ * «О приложении» (iOS `AboutView`): иконка, название и версия; откуда тексты (без ссылок на сайты); лицензии
  * шрифтов и значков ([onOpenLicense] — полный текст); политика конфиденциальности и репозиторий.
  */
 @Composable
@@ -97,8 +95,6 @@ fun AboutScreen(
             rows = listOf(
                 { AboutTextRow(R.string.about_sources_azkar_title, R.string.about_sources_azkar_text) },
                 { AboutTextRow(R.string.about_sources_hadith_title, R.string.about_sources_hadith_text) },
-                { AboutLinkRow(R.string.about_link_azkar) { uriHandler.openSafely(AboutLinks.AZKAR) } },
-                { AboutLinkRow(R.string.about_link_sunnah) { uriHandler.openSafely(AboutLinks.SUNNAH) } },
             ),
         )
         SettingsGroup(
