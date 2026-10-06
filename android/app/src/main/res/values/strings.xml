@@ -193,6 +193,7 @@
     <string name="settings_window_header">Время азкаров</string>
     <string name="settings_window_morning_end">Конец утренних азкаров</string>
     <string name="settings_window_morning_start">Начало утренних азкаров</string>
+    <string name="settings_window_same_time">Начало и конец совпадают — для этого раздела останется прежнее время.</string>
     <string name="settings_window_to">до</string>
     <string name="settings_text_size_title">Размер текста</string>
     <string name="settings_text_size_subtitle">Переводы и интерфейс</string>

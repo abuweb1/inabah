@@ -24,6 +24,8 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.inabah.android.R
 import app.inabah.android.core.content.model.AzkarSection
@@ -41,6 +43,7 @@ import app.inabah.android.core.designsystem.components.SettingsScaffold
 import app.inabah.android.core.designsystem.components.SettingsValueChip
 import app.inabah.android.core.designsystem.components.TimePickerPopover
 import app.inabah.android.core.designsystem.components.pressFeedback
+import app.inabah.android.core.settings.AzkarWindow
 import app.inabah.android.core.settings.AzkarWindowSettings
 import app.inabah.android.core.settings.DayTime
 import app.inabah.android.feature.azkar.AzkarStore
@@ -48,8 +51,8 @@ import app.inabah.android.feature.azkar.rememberDayTimeFormatter
 import app.inabah.android.feature.azkar.title
 
 /**
- * Настройки азкаров (iOS `AzkarSettingsView`): время азкаров «с — до» — барабан под капсулой времени,
- * сохраняется сразу, а к прогрессу применяется при уходе с экрана; ручной сброс раздела —
+ * Настройки азкаров (iOS `AzkarSettingsView`): время азкаров «с — до» — барабан под капсулой времени
+ * правит черновик, он сохраняется и применяется к прогрессу при уходе с экрана или в фон; ручной сброс раздела —
  * с подтверждением над строкой.
  */
 @Composable
@@ -62,15 +65,24 @@ fun AzkarSettingsScreen(
 ) {
     val theme = LocalInabahTheme.current
     val tint = theme.palette.tabAzkar
-    val windows by windowSettings.windows.collectAsStateWithLifecycle()
+    // Черновик времени: колесо меняет только его. Сохраняется целиком и применяется к прогрессу при уходе
+    // с экрана («Назад», смена вкладки) и уходе приложения в фон — сверка при возврате в приложение или
+    // по таймеру не увидит полуготовое окно (аудит iOS 2026-10-06, §5.2). Повторное сохранение без
+    // изменений ничего не делает. Черновик читается из State в момент сохранения: барабан, ушедший посреди
+    // прокрутки, дописывает его в своём onDispose прямо перед этим, без рекомпозиции.
+    var drafts by remember { mutableStateOf(windowSettings.windows.value) }
+    val commitDrafts: () -> Unit = {
+        drafts.forEach { (section, window) -> windowSettings.set(window, section) }
+        store.reconcile()
+    }
+    DisposableEffect(store, windowSettings) { onDispose(commitDrafts) }
+    LifecycleEventEffect(Lifecycle.Event.ON_STOP, onEvent = commitDrafts)
     var editingTime by remember { mutableStateOf<WindowEdge?>(null) }
     var pendingReset by remember { mutableStateOf<AzkarSection?>(null) }
     // hasProgress — не поток: пересчитывается при смене прогресса разделов (в т. ч. isStarted — обнуление
     // по времени при частичном счёте) и после сброса отсюда.
     var resets by remember { mutableIntStateOf(0) }
     val progress = AzkarSection.entries.map { store.progress(it).collectAsStateWithLifecycle().value }
-    // Как iOS `.onDisappear`: пока крутят колесо, прочитанное не стирается — важно только итоговое время.
-    DisposableEffect(store) { onDispose { store.reconcile() } }
 
     SettingsScaffold(
         background = theme.gradients.azkarBackground,
@@ -81,9 +93,15 @@ fun AzkarSettingsScreen(
         SettingsGroup(
             header = stringResource(R.string.settings_window_header),
             footer = stringResource(R.string.settings_window_footer),
+            // Начало = концу не сохранится — у раздела останется прежнее время.
+            notice = if (drafts.values.any { !it.isValid }) stringResource(R.string.settings_window_same_time) else null,
             rows = AzkarSection.entries.map { section ->
                 {
-                    val window = windows.getValue(section)
+                    val window = drafts.getValue(section)
+                    // От текущего черновика, не от снимка композиции: два шага колеса подряд не теряются.
+                    val edit = { change: (AzkarWindow) -> AzkarWindow ->
+                        drafts = drafts + (section to change(drafts.getValue(section)))
+                    }
                     // Время — второй строкой под названием: две капсулы рядом с ним не помещаются
                     // (iOS `ViewThatFits` уходит в ту же раскладку уже на обычном размере).
                     SettingsRow {
@@ -100,7 +118,7 @@ fun AzkarSettingsScreen(
                                     isEditing = editingTime == WindowEdge(section, isStart = true),
                                     tint = tint,
                                     onEdit = { editingTime = WindowEdge(section, isStart = true) },
-                                    onChange = { windowSettings.setStart(it, section) },
+                                    onChange = { time -> edit { it.copy(start = time) } },
                                     onDismiss = { editingTime = null },
                                 )
                                 WindowEdgeLabel(stringResource(R.string.settings_window_to))
@@ -110,7 +128,7 @@ fun AzkarSettingsScreen(
                                     isEditing = editingTime == WindowEdge(section, isStart = false),
                                     tint = tint,
                                     onEdit = { editingTime = WindowEdge(section, isStart = false) },
-                                    onChange = { windowSettings.setEnd(it, section) },
+                                    onChange = { time -> edit { it.copy(end = time) } },
                                     onDismiss = { editingTime = null },
                                 )
                             }

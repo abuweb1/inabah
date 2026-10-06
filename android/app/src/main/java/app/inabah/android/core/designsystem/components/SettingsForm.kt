@@ -144,12 +144,16 @@ private fun SettingsScrollColumn(
     }
 }
 
-/** Группа строк с жирным заголовком [header] и подписью [footer]; строки — [rows], разделители — сами. */
+/**
+ * Группа строк с жирным заголовком [header] и подписью [footer]; строки — [rows], разделители — сами.
+ * [notice] — предупреждение над подписью, ярче её (iOS — первый текст в footer секции).
+ */
 @Composable
 fun SettingsGroup(
     modifier: Modifier = Modifier,
     header: String? = null,
     footer: String? = null,
+    notice: String? = null,
     rows: List<@Composable () -> Unit>,
 ) {
     val palette = InabahTheme.palette
@@ -175,6 +179,10 @@ fun SettingsGroup(
                 }
                 row()
             }
+        }
+        notice?.let {
+            Text(it, color = palette.onAccent, style = InabahType.footnote,
+                modifier = Modifier.padding(horizontal = RowHorizontalPadding))
         }
         footer?.let {
             Text(it, color = palette.onAccentSecondary, style = InabahType.footnote,
