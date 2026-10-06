@@ -20,6 +20,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import app.inabah.android.core.designsystem.FixedTextSize
 import app.inabah.android.core.designsystem.InabahTheme
 import app.inabah.android.core.designsystem.animateTheme
+import app.inabah.android.core.designsystem.withParchment
 import app.inabah.android.core.designsystem.LocalContentTextScale
 
 class MainActivity : ComponentActivity() {
@@ -46,9 +47,10 @@ class MainActivity : ComponentActivity() {
             // До первого чтения настроек экран закрыт заставкой — рисовать нечего.
             services?.let { ready ->
                 val style by ready.appearanceSettings.style.collectAsStateWithLifecycle()
+                val parchment by ready.parchmentSettings.style.collectAsStateWithLifecycle()
                 val contentSize by ready.textSizeSettings.content.collectAsStateWithLifecycle()
-                // Выбор палитры — плавно, ко всему приложению сразу (300 мс).
-                InabahTheme(theme = animateTheme(style.theme)) {
+                // Выбор палитры и фона под арабским текстом — плавно, ко всему приложению сразу (300 мс).
+                InabahTheme(theme = animateTheme(style.theme.withParchment(parchment))) {
                     // Системный размер шрифта не влияет ни на что (как в iOS): свои шаги — в настройках.
                     FixedTextSize {
                         CompositionLocalProvider(LocalContentTextScale provides contentSize.scale) {

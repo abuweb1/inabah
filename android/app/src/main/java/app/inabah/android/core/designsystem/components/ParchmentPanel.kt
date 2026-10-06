@@ -30,7 +30,7 @@ private val GlowRadius = 180.dp
 
 /**
  * Пергамент (iOS `ParchmentPanel`): градиент, радиальный блик, полоса 3 dp сверху, «✦» по углам,
- * рамка successDeep 2 dp. В карточке зикра — скругление сверху 18 (0 под свёрнутым заголовком),
+ * рамка parchmentAccent 2 dp (по умолчанию successDeep; цвета — по выбранному фону, `ParchmentStyle`). В карточке зикра — скругление сверху 18 (0 под свёрнутым заголовком),
  * снизу 0; на экране хадиса — все 18. Отступы содержимого: сверху 22, снизу 14, по бокам 22.
  */
 @Composable
@@ -67,7 +67,7 @@ fun ParchmentPanel(
                     drawRect(gradients.parchmentStripe, size = size.copy(height = stripeHeight))
                 }
             }
-            .border(Size.parchmentBorder, palette.successDeep, shape),
+            .border(Size.parchmentBorder, palette.parchmentAccent, shape),
     ) {
         Box(
             modifier = Modifier
@@ -76,7 +76,7 @@ fun ParchmentPanel(
             content = content,
         )
         // Поверх содержимого, как overlay в iOS.
-        Ornaments(palette.successDeep)
+        Ornaments(palette.parchmentAccent)
     }
 }
 

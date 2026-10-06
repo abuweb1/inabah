@@ -84,10 +84,10 @@ private fun ArabicPanel(hadith: Hadith, arabicFontSize: Float) {
         Column(verticalArrangement = Arrangement.spacedBy(Spacing.m)) {
             Text(
                 stringResource(R.string.hadith_detail_number, hadith.number).uppercase(),
-                color = palette.parchmentInk,
+                color = palette.parchmentText,
                 style = InabahType.caption2.copy(fontWeight = FontWeight.Bold, letterSpacing = Tracking.label),
             )
-            ArabicText(hadith.arabicDisplayText, arabicFontSize, palette.parchmentInk, Modifier.fillMaxWidth())
+            ArabicText(hadith.arabicDisplayText, arabicFontSize, palette.parchmentText, Modifier.fillMaxWidth())
         }
     }
 }
