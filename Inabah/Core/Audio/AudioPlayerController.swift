@@ -49,6 +49,14 @@ final class AudioPlayerController {
     @ObservationIgnored private var tickerTask: Task<Void, Never>?
     @ObservationIgnored private var loadTask: Task<Void, Never>?
     @ObservationIgnored private var loadGeneration = 0
+    /// Поколение загрузки, которая ещё идёт или ждёт активации сессии. «Играть» в это время
+    /// не стартует звук само — это сделает загрузка (иначе запись запускалась дважды и до
+    /// активации, аудит 2026-10-06 §3.1). Новая загрузка, «стоп» или «закрыть» меняют
+    /// `loadGeneration` — флаг сам становится недействительным.
+    @ObservationIgnored private var startingGeneration: Int?
+    private var isLoading: Bool { startingGeneration == loadGeneration }
+    /// Старт после явной активации сессии (`startAfterActivation`).
+    @ObservationIgnored private var startTask: Task<Void, Never>?
     @ObservationIgnored private var sessionTask: Task<Void, any Error>?
     @ObservationIgnored private var idleTask: Task<Void, Never>?
     /// Запись доиграла, пока плеер стоял на паузе (сигнал пришёл после нажатия «пауза»):
@@ -162,6 +170,7 @@ final class AudioPlayerController {
         loadTask?.cancel()
         loadGeneration += 1
         let generation = loadGeneration
+        startingGeneration = generation
         setPlaying(true)
         loadTask = Task { [weak self] in
             await self?.performLoad(of: item, generation: generation, startAfter: delay)
@@ -169,13 +178,20 @@ final class AudioPlayerController {
     }
 
     private func performLoad(of item: AudioQueueItem, generation: Int, startAfter delay: TimeInterval) async {
+        defer {
+            if startingGeneration == generation { startingGeneration = nil }
+        }
         do {
             let loadedDuration = try await engine.load(url: item.track.url)
             guard generation == loadGeneration else { return }
             assign(\.duration, loadedDuration)
-            try await enqueueSessionOperation { try await $0.activate() }.value
-            guard generation == loadGeneration else { return }
-            if isPlaying { engine.play(after: delay) }
+            // На паузе к концу загрузки сессию не активируем — музыка пользователя не
+            // прерывается зря; активирует «играть» (`resume`).
+            if isPlaying {
+                try await enqueueSessionOperation { try await $0.activate() }.value
+                guard generation == loadGeneration else { return }
+                if isPlaying { engine.play(after: delay) }
+            }
             nowPlaying?.trackDidChange()
             await preloadNextIfNeeded()
         } catch is CancellationError {
@@ -237,7 +253,12 @@ final class AudioPlayerController {
         if let step = pendingStep {
             pendingStep = nil
             setPlaying(true)
-            perform(step)
+            startAfterActivation { [weak self] in self?.perform(step) }
+            return
+        }
+        // Запись ещё грузится — звук запустит сама загрузка, когда сессия станет активной.
+        if isLoading {
+            setPlaying(true)
             return
         }
         // Запись не загружена (загрузку прервали «стопом») — загрузить заново со стартом.
@@ -245,9 +266,32 @@ final class AudioPlayerController {
             loadAndPlayCurrent()
             return
         }
-        cancelIdleDeactivation()
         setPlaying(true)
-        engine.play()
+        startAfterActivation { [weak self] in self?.engine.play() }
+    }
+
+    /// Любое продолжение — только после явной активации сессии: после звонка, простоя или
+    /// Siri неявная активация `AVAudioPlayer` ненадёжна, и сбой приходил как `.playbackFailed`
+    /// (аудит 2026-10-06, §3.2). Пауза, пока сессия активируется, отменяет старт.
+    private func startAfterActivation(_ action: @escaping () -> Void) {
+        cancelIdleDeactivation()
+        startTask?.cancel()
+        // Без аудиосессии (превью, тесты) — сразу.
+        guard session != nil else {
+            action()
+            return
+        }
+        let generation = loadGeneration
+        let activation = enqueueSessionOperation { try await $0.activate() }
+        startTask = Task { [weak self] in
+            let result = await activation.result
+            guard !Task.isCancelled, let self, generation == self.loadGeneration, self.isPlaying else { return }
+            if case .failure = result {
+                self.handleFailure(.sessionUnavailable)
+                return
+            }
+            action()
+        }
     }
 
     /// Остановить: позиция в начало записи (с первого повтора), плеер остаётся открытым.
@@ -456,16 +500,18 @@ final class AudioPlayerController {
         }
     }
 
-    /// Ошибка записи: показать её; в плейлисте — перейти к следующей записи.
-    /// Не запустилась заранее подготовленная запись — это не повод пропускать зикр:
-    /// он загружается заново с той же паузой.
+    /// Ошибка записи: показать её; в плейлисте битый файл пропускается — переход к следующей
+    /// записи. Не запустилась заранее подготовленная запись — это не повод пропускать зикр:
+    /// он загружается заново с той же паузой. Сбой старта (`.playbackFailed`) и недоступная
+    /// сессия — дело среды (звонок, другое приложение), а не файла: плейлист встаёт на паузу
+    /// на том же зикре, «играть» продолжит его (аудит 2026-10-06, §5.3).
     private func handleFailure(_ failure: AudioEngineError) {
         if failure == .preparedTrackFailed {
             loadAndPlayCurrent(startAfter: pauseBetweenItems)
             return
         }
         assign(\.error, failure)
-        if mode == .playlist, playback.hasNext, failure != .sessionUnavailable {
+        if mode == .playlist, playback.hasNext, case .cannotLoad = failure {
             advanceToNext(after: 0)
             return
         }
@@ -490,7 +536,12 @@ final class AudioPlayerController {
         idleTask = Task { [weak self] in
             try? await Task.sleep(for: Self.idleDeactivationDelay)
             guard !Task.isCancelled, let self, !self.isPlaying else { return }
-            self.enqueueSessionOperation { try await $0.deactivate() }
+            // Очередь сессии может выполнить деактивацию позже — если к тому моменту
+            // пользователь снова нажал «играть», сессию не отпускаем.
+            self.enqueueSessionOperation { [weak self] session in
+                guard self?.isPlaying == false else { return }
+                try await session.deactivate()
+            }
         }
     }
 

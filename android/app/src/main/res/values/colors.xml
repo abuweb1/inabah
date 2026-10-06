@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Цвет окна (до Compose). Цвета интерфейса — в core/designsystem/Palette.kt. -->
+<resources>
+    <color name="window_background">#1C1630</color>
+</resources>

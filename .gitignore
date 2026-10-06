@@ -20,3 +20,18 @@ docs/
 # Claude Code — локальные настройки
 .claude
 CLAUDE.md
+# Скиллы агентов (исходники и lock-файл установщика)
+.agents/
+android/skills-lock.json
+# Android (android/ — проект Android Studio)
+android/.gradle/
+android/.kotlin/
+android/local.properties
+android/captures/
+android/**/build/
+*.iml
+
+# Ключи подписи — только вне репозитория
+*.jks
+*.keystore
+*.p12

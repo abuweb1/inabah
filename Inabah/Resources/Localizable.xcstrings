@@ -89,17 +89,6 @@
         }
       }
     },
-    "about.link.azkar" : {
-      "comment" : "О приложении: ссылка на azkar.ru",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "azkar.ru"
-          }
-        }
-      }
-    },
     "about.link.issues" : {
       "comment" : "О приложении: ссылка на Issues репозитория",
       "localizations" : {
@@ -133,24 +122,13 @@
         }
       }
     },
-    "about.link.sunnah" : {
-      "comment" : "О приложении: ссылка на sunnah.com",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "sunnah.com"
-          }
-        }
-      }
-    },
     "about.sources.azkar.text" : {
       "comment" : "О приложении: источник азкаров",
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Тексты, транскрипция, перевод и аудиозаписи — по azkar.ru."
+            "value" : "Утренние и вечерние азкары из Сунны — арабский текст, транскрипция и перевод."
           }
         }
       }
@@ -183,7 +161,7 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Классические сборники «40 хадисов» имама ан-Навави (с дополнением Ибн Раджаба), хадисы аль-Къудси и сборник имама аль-Аджурри. Арабский текст хадисов аль-Къудси — по sunnah.com."
+            "value" : "Классические сборники «40 хадисов» имама ан-Навави (с дополнением Ибн Раджаба), хадисы аль-Къудси и сборник имама аль-Аджурри."
           }
         }
       }
@@ -541,6 +519,17 @@
         }
       }
     },
+    "audio.soon" : {
+      "comment" : "Заглушка вместо аудио, пока записей нет (хадис, «Прослушать все» азкаров, VoiceOver у ▶ на карточке зикра)",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Аудио скоро"
+          }
+        }
+      }
+    },
     "audio.zikr.listen" : {
       "comment" : "Кнопка ▶ на карточке зикра",
       "localizations" : {
@@ -750,6 +739,39 @@
         }
       }
     },
+    "azkar.window.notice.evening %@ %@" : {
+      "comment" : "Экран вечерних азкаров вне их времени, %@ — начало и конец",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Время вечерних азкаров — с %1$@ до %2$@"
+          }
+        }
+      }
+    },
+    "azkar.window.notice.morning %@ %@" : {
+      "comment" : "Экран утренних азкаров вне их времени, %@ — начало и конец",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Время утренних азкаров — с %1$@ до %2$@"
+          }
+        }
+      }
+    },
+    "azkar.window.range %@ %@" : {
+      "comment" : "Главная азкаров: время азкаров на карточке вне его, %@ — начало и конец («5:00», «12:00»)",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@–%2$@"
+          }
+        }
+      }
+    },
     "content.error.message" : {
       "localizations" : {
         "ru" : {
@@ -822,17 +844,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "40 хадисов аль-Аджурри"
-          }
-        }
-      }
-    },
-    "hadith.audio.soon" : {
-      "comment" : "Заглушка: записей хадисов пока нет",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Аудио скоро"
           }
         }
       }
@@ -1347,6 +1358,83 @@
         }
       }
     },
+    "parchment.amber" : {
+      "comment" : "Фон арабского текста: медово-коричневый",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Янтарь"
+          }
+        }
+      }
+    },
+    "parchment.amethyst" : {
+      "comment" : "Фон арабского текста: приглушённый лиловый",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Аметист"
+          }
+        }
+      }
+    },
+    "parchment.classic" : {
+      "comment" : "Фон арабского текста: золотой пергамент (по умолчанию)",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пергамент"
+          }
+        }
+      }
+    },
+    "parchment.jade" : {
+      "comment" : "Фон арабского текста: глубокий зелёный",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Нефрит"
+          }
+        }
+      }
+    },
+    "parchment.night" : {
+      "comment" : "Фон арабского текста: тёмный, для чтения в темноте",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ночной"
+          }
+        }
+      }
+    },
+    "parchment.sepia" : {
+      "comment" : "Фон арабского текста: тёплая старая бумага",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сепия"
+          }
+        }
+      }
+    },
+    "parchment.smoky" : {
+      "comment" : "Фон арабского текста: серо-голубой",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Дымчатый"
+          }
+        }
+      }
+    },
     "placeholder.soon" : {
       "comment" : "Заголовок заглушки раздела в разработке",
       "extractionState" : "stale",
@@ -1408,6 +1496,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "А+"
+          }
+        }
+      }
+    },
+    "reminder.action" : {
+      "comment" : "Кнопка «Сделать напоминание»: значок в шапке списка азкаров (VoiceOver) и кнопка на экране «Машаа Аллах»; на iOS пока не используется — «Сделать напоминание» сделано на Android, см. docs/02-screen-azkar.md",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сделать напоминание"
           }
         }
       }
@@ -1539,7 +1638,7 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Обнуление и сброс прогресса"
+            "value" : "Время азкаров и сброс прогресса"
           }
         }
       }
@@ -1720,46 +1819,24 @@
         }
       }
     },
-    "settings.reset.evening" : {
-      "comment" : "Настройки: время обнуления вечерних азкаров",
+    "settings.parchment.footer" : {
+      "comment" : "Палитра: подпись секции фона под арабским текстом",
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Вечерние — после"
+            "value" : "Фон под арабским текстом азкаров и хадисов."
           }
         }
       }
     },
-    "settings.reset.footer" : {
-      "comment" : "Настройки: пояснение под временем обнуления",
+    "settings.parchment.header" : {
+      "comment" : "Палитра: заголовок секции фона под арабским текстом",
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Каждый день в это время прогресс чтения раздела обнуляется. Если новое время сегодня уже прошло, ближайшее обнуление — в прежнее время."
-          }
-        }
-      }
-    },
-    "settings.reset.header" : {
-      "comment" : "Настройки: заголовок секции времени обнуления прогресса",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Обнуление азкаров"
-          }
-        }
-      }
-    },
-    "settings.reset.morning" : {
-      "comment" : "Настройки: время обнуления утренних азкаров",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Утренние — после"
+            "value" : "Фон арабского текста"
           }
         }
       }
@@ -1814,7 +1891,7 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Счётчики раздела обнулятся сразу, не дожидаясь времени обнуления."
+            "value" : "Счётчики раздела обнулятся сразу, не дожидаясь конца времени азкаров."
           }
         }
       }
@@ -1925,6 +2002,226 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Настройки"
+          }
+        }
+      }
+    },
+    "settings.window.evening.end" : {
+      "comment" : "VoiceOver: выбор конца времени вечерних азкаров",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Конец вечерних азкаров"
+          }
+        }
+      }
+    },
+    "settings.window.evening.start" : {
+      "comment" : "VoiceOver: выбор начала времени вечерних азкаров",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Начало вечерних азкаров"
+          }
+        }
+      }
+    },
+    "settings.window.footer" : {
+      "comment" : "Настройки азкаров: пояснение под временем азкаров",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Прогресс и отметка на главной — только в это время. В конце времени счётчики обнуляются; вне его азкары можно читать, но в прогресс это не идёт."
+          }
+        }
+      }
+    },
+    "settings.window.from" : {
+      "comment" : "Настройки азкаров: «с» перед временем начала",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "с"
+          }
+        }
+      }
+    },
+    "settings.window.header" : {
+      "comment" : "Настройки азкаров: заголовок секции времени азкаров",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Время азкаров"
+          }
+        }
+      }
+    },
+    "settings.window.morning.end" : {
+      "comment" : "VoiceOver: выбор конца времени утренних азкаров",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Конец утренних азкаров"
+          }
+        }
+      }
+    },
+    "settings.window.morning.start" : {
+      "comment" : "VoiceOver: выбор начала времени утренних азкаров",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Начало утренних азкаров"
+          }
+        }
+      }
+    },
+    "settings.window.sameTime" : {
+      "comment" : "Настройки азкаров: в черновике начало совпало с концом — такое время не сохранится",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Начало и конец совпадают — для этого раздела останется прежнее время."
+          }
+        }
+      }
+    },
+    "settings.window.to" : {
+      "comment" : "Настройки азкаров: «до» перед временем конца",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "до"
+          }
+        }
+      }
+    },
+    "share.action" : {
+      "comment" : "Кнопка «Поделиться» зикром или хадисом (VoiceOver); на iOS пока не используется — фича сделана на Android, см. docs/02-screen-azkar.md",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Поделиться"
+          }
+        }
+      }
+    },
+    "share.hadith.header %@ %lld" : {
+      "comment" : "«Поделиться» хадисом: первая строка текста — сборник и номер; на iOS пока не используется — см. docs/02-screen-azkar.md",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · Хадис %2$lld"
+          }
+        }
+      }
+    },
+    "share.text.reminder.evening.call" : {
+      "comment" : "Текст напоминания: призыв, вечерние; на iOS пока не используется — «Сделать напоминание» сделано на Android, см. docs/02-screen-azkar.md",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "О рабы Аллаха, защитите себя и свою семью от сглаза, зависти и колдовства — прочитайте вечерние азкары."
+          }
+        }
+      }
+    },
+    "share.text.reminder.evening.time" : {
+      "comment" : "Текст напоминания: лучшее время, вечерние; на iOS пока не используется — «Сделать напоминание» сделано на Android, см. docs/02-screen-azkar.md",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "❗ Лучшее время для чтения вечерних азкаров — с Асра до Магриба."
+          }
+        }
+      }
+    },
+    "share.text.reminder.evening.title" : {
+      "comment" : "Текст напоминания: заголовок вечерних; на iOS пока не используется — «Сделать напоминание» сделано на Android, см. docs/02-screen-azkar.md",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "‼️ Вечерние азкары ‼️"
+          }
+        }
+      }
+    },
+    "share.text.reminder.morning.call" : {
+      "comment" : "Текст напоминания: призыв, утренние; на iOS пока не используется — «Сделать напоминание» сделано на Android, см. docs/02-screen-azkar.md",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "О рабы Аллаха, защитите себя и свою семью от сглаза, зависти и колдовства — прочитайте утренние азкары."
+          }
+        }
+      }
+    },
+    "share.text.reminder.morning.time" : {
+      "comment" : "Текст напоминания: лучшее время, утренние; на iOS пока не используется — «Сделать напоминание» сделано на Android, см. docs/02-screen-azkar.md",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "❗ Лучшее время для чтения утренних азкаров — с Фаджра до восхода солнца."
+          }
+        }
+      }
+    },
+    "share.text.reminder.morning.title" : {
+      "comment" : "Текст напоминания (уходит в мессенджер, в приложении не показывается): заголовок утренних; на iOS пока не используется — «Сделать напоминание» сделано на Android, см. docs/02-screen-azkar.md",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "‼️ Утренние азкары ‼️"
+          }
+        }
+      }
+    },
+    "share.text.reminder.quote.intro" : {
+      "comment" : "Текст напоминания: перед словами Абу ад-Дарды; на iOS пока не используется — «Сделать напоминание» сделано на Android, см. docs/02-screen-azkar.md",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Абу ад-Дарда сказал:"
+          }
+        }
+      }
+    },
+    "share.text.reminder.quote.source" : {
+      "comment" : "Текст напоминания: источник слов Абу ад-Дарды; на iOS пока не используется — «Сделать напоминание» сделано на Android, см. docs/02-screen-azkar.md",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ахмад в «аз-Зухд», 726"
+          }
+        }
+      }
+    },
+    "share.text.reminder.quote.translation" : {
+      "comment" : "Текст напоминания: перевод слов Абу ад-Дарды (арабский — константа в коде); на iOS пока не используется — «Сделать напоминание» сделано на Android, см. docs/02-screen-azkar.md",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "«Те, чьи языки влажные от поминания Аллаха, войдут в Рай смеясь»."
           }
         }
       }

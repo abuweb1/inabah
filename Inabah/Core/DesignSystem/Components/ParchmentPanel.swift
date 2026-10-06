@@ -1,8 +1,8 @@
 import SwiftUI
 
-/// «Пергамент» под арабским текстом: тёплый градиент, зелёная рамка, полоска сверху,
-/// орнаменты ✦ по углам. Цвета — токены пергамента темы: светлая подложка под тёмными чернилами
-/// одинакова на любом фоне раздела.
+/// «Пергамент» под арабским текстом: градиент, рамка, полоска сверху, орнаменты ✦ по углам.
+/// Цвета — токены пергамента темы (`parchmentText`, `parchmentAccent`, `gradients.parchment`),
+/// их задаёт «Фон арабского текста» (`ParchmentStyle`); полоска сверху — общая.
 struct ParchmentPanel<Content: View>: View {
     /// Скругление верхних углов: совпадает с карточкой, когда пергамент — её первый блок,
     /// и 0, когда над ним заголовок выполненной карточки.
@@ -32,7 +32,7 @@ struct ParchmentPanel<Content: View>: View {
             .background { background }
             .overlay { ornaments }
             .clipShape(shape)
-            .overlay { shape.strokeBorder(theme.palette.successDeep, lineWidth: Size.parchmentBorder) }
+            .overlay { shape.strokeBorder(theme.palette.parchmentAccent, lineWidth: Size.parchmentBorder) }
     }
 
     private var background: some View {
@@ -56,7 +56,7 @@ struct ParchmentPanel<Content: View>: View {
             ForEach(corners.indices, id: \.self) { index in
                 Text(verbatim: "✦")
                     .font(.system(size: Size.ornament))
-                    .foregroundStyle(theme.palette.successDeep)
+                    .foregroundStyle(theme.palette.parchmentAccent)
                     .padding(Spacing.s)
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: corners[index])
             }

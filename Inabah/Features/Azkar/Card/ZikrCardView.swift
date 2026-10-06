@@ -103,7 +103,7 @@ struct ZikrCardView: View {
                     ArabicText(
                         text: session.zikr.arabic,
                         size: settings.arabicFontSize,
-                        color: theme.palette.parchmentInk
+                        color: theme.palette.parchmentText
                     )
                     repetitionsBadge
                 }
@@ -141,23 +141,25 @@ struct ZikrCardView: View {
             Text("zikr.repetitions \(session.zikr.repetitions)")
         }
         .font(.caption2.weight(.semibold))
-        .foregroundStyle(theme.palette.successDeep)
+        .foregroundStyle(theme.palette.parchmentAccent)
         .padding(.vertical, Spacing.xxxs)
         .padding(.horizontal, Spacing.s)
-        .surface(theme.palette.successTint, cornerRadius: Radius.small, border: theme.palette.successBorder)
+        .surface(theme.palette.parchmentAccentTint, cornerRadius: Radius.small, border: theme.palette.parchmentAccentBorder)
     }
 
     private var actions: some View {
         HStack(spacing: Spacing.l) {
             // Пока запись звучит — волна вместо ▶: повторное нажатие открывает плеер, а не ставит паузу.
             // Волна статичная: непрерывная анимация была единственной покадровой работой в ленте.
+            // Записи нет — ▶ неактивна, VoiceOver: «Аудио скоро».
             Button {
                 if let track = session.zikr.audioTrack() { player.play(track) }
             } label: {
                 Image(systemName: isAudioActive ? "waveform" : "play.fill")
             }
             .buttonStyle(audioStyle)
-            .accessibilityLabel(Text(isAudioActive ? "audio.zikr.openPlayer" : "audio.zikr.listen"))
+            .disabled(!session.zikr.hasAudio)
+            .accessibilityLabel(Text(audioLabel))
 
             Button {
                 withAnimation(Motion.collapse) { session.isTranslationVisible.toggle() }
@@ -174,7 +176,19 @@ struct ZikrCardView: View {
                 .labelStyle(.iconOnly)
                 .buttonStyle(actionStyle(isActive: false))
                 .disabled(session.count == 0)
+
+            ShareButton(iconSize: Self.shareIconSize) { session.zikr.shareText }
+                .buttonStyle(actionStyle(isActive: false))
         }
+    }
+
+    /// Свой значок «Поделиться» — картинка, а не символ: размер задаётся рамкой, на глаз
+    /// вровень с символами ряда (они — шрифтом `IconButtonStyle`).
+    private static let shareIconSize: CGFloat = 21
+
+    private var audioLabel: LocalizedStringResource {
+        guard session.zikr.hasAudio else { return "audio.soon" }
+        return isAudioActive ? "audio.zikr.openPlayer" : "audio.zikr.listen"
     }
 
     /// Как в прототипе: звучащая запись — зелёная кнопка.

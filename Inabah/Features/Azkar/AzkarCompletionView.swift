@@ -10,6 +10,7 @@ struct AzkarCompletionView: View {
 
     private static let titleSize: Double = 52
     private static let arabicSize: Double = 24
+    private static let reminderIconSize: CGFloat = 20
     private static let pulsePhases: [CGFloat] = [1, 1.05]
     private static let restingPhase: [CGFloat] = [1]
 
@@ -36,7 +37,7 @@ struct AzkarCompletionView: View {
             ArabicText(
                 text: "الحمد لله رب العالمين",
                 size: Self.arabicSize,
-                color: theme.palette.parchmentInk,
+                color: theme.palette.parchmentText,
                 alignment: .center
             )
             .padding(.vertical, Spacing.m)
@@ -44,7 +45,7 @@ struct AzkarCompletionView: View {
             .surface(
                 theme.gradients.parchment.linear,
                 cornerRadius: Radius.control,
-                border: theme.palette.successDeep,
+                border: theme.palette.parchmentAccent,
                 lineWidth: Size.parchmentBorder
             )
             .accessibilityLabel(Text("azkar.completion.hamd"))
@@ -53,6 +54,12 @@ struct AzkarCompletionView: View {
                 .font(.subheadline)
                 .multilineTextAlignment(.center)
                 .foregroundStyle(theme.palette.textSecondary)
+
+            // «Сделать напоминание» — над «На главную» (решение пользователя 2026-10-06).
+            ShareButton(title: "reminder.action", showsTitle: true, iconSize: Self.reminderIconSize) {
+                section.reminderText
+            }
+            .buttonStyle(PrimaryButtonStyle())
 
             Button(action: onGoHome) {
                 Label("azkar.completion.home", systemImage: "arrow.left")

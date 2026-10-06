@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Аудиозаписей в приложении пока нет (2026-10-06): служба воспроизведения (PlaybackService,
+         foregroundServiceType="mediaPlayback") и разрешения FOREGROUND_SERVICE / _MEDIA_PLAYBACK не
+         объявлены — фоновый звук без звука вызывал бы вопросы Google Play. Код плеера на месте: со своими
+         записями вернуть сюда блок из src/debug/AndroidManifest.xml (там он — для теста службы). -->
+
+    <!-- Резервная копия Google (решение 5, docs/android/08, 2026-10-05): только файл настроек и прогресса
+         DataStore — отметки хадисов, счётчики, палитра переживают смену телефона, как iCloud-копия на iOS. -->
+    <application
+        android:name=".app.InabahApplication"
+        android:allowBackup="true"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:enableOnBackInvokedCallback="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.Inabah">
+
+        <!-- Запуск из лаунчера — только через алиасы ниже; сама активность открывается явными интентами
+             (уведомление плеера). -->
+        <activity
+            android:name=".app.MainActivity"
+            android:exported="false"
+            android:launchMode="singleTop"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.Inabah.Starting" />
+
+        <!-- Смена иконки (этап 9, docs/android/08): по алиасу на вариант, включён ровно один — его значок
+             в лаунчере и на заставке. Имена — AppIconOption.aliasName; переключает PackageManagerAppIconSwitcher. -->
+        <activity-alias
+            android:name=".app.IconClassic"
+            android:enabled="true"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher"
+            android:targetActivity=".app.MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+        <activity-alias
+            android:name=".app.IconNiche"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_niche"
+            android:targetActivity=".app.MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+        <activity-alias
+            android:name=".app.IconBeads"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_beads"
+            android:targetActivity=".app.MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+        <activity-alias
+            android:name=".app.IconDawn"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_dawn"
+            android:targetActivity=".app.MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+    </application>
+
+</manifest>

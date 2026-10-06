@@ -1,0 +1,10 @@
+<!-- Ручка перетаскивания: три полосы со скруглёнными концами, как значок перестановки iOS (≡). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="960"
+    android:viewportHeight="960">
+  <path
+      android:fillColor="@android:color/white"
+      android:pathData="M200,284L760,284A40,40 0,0 1,760 364L200,364A40,40 0,0 1,200 284Z M200,440L760,440A40,40 0,0 1,760 520L200,520A40,40 0,0 1,200 440Z M200,596L760,596A40,40 0,0 1,760 676L200,676A40,40 0,0 1,200 596Z"/>
+</vector>

@@ -90,11 +90,33 @@ nonisolated struct Palette: Hashable, Sendable {
     var goldTint: Color
     var sunRays: Color
 
-    // Пергамент под арабским текстом — не зависит от темы интерфейса
+    // Пергамент под арабским текстом — не зависит от палитры, меняется «Фоном арабского текста»
+    // (`ParchmentStyle`, `Theme.withParchment`).
     var parchmentLight: Color
     /// Блик в углу пергамента.
     var parchmentGlow: Color
+    /// Текст на пергаменте: арабский, «ХАДИС N», «الحمد لله». Не путать с `parchmentInk`.
+    var parchmentText: Color
+    /// Рамка, «✦» и значок «N раз» на пергаменте.
+    var parchmentAccent: Color
+    /// Подложка значка «N раз».
+    var parchmentAccentTint: Color
+    /// Рамка значка «N раз».
+    var parchmentAccentBorder: Color
+    /// Тёмные «чернила» на золотых кнопках (счётчик, плеер) — от фона пергамента не зависят.
     var parchmentInk: Color
+}
+
+nonisolated extension Palette {
+    /// Цвета пергамента из варианта «Фона арабского текста».
+    mutating func applyParchment(_ colors: ParchmentColors) {
+        parchmentLight = colors.light
+        parchmentGlow = colors.light.opacity(0.7)
+        parchmentText = colors.text
+        parchmentAccent = colors.accent
+        parchmentAccentTint = colors.accent.opacity(0.1)
+        parchmentAccentBorder = colors.accent.opacity(0.25)
+    }
 }
 
 nonisolated extension Palette {
@@ -105,7 +127,7 @@ nonisolated extension Palette {
         let successDeep = Color(asset: .successDeep)
         let statusRead = Color(asset: .statusRead)
         let statusMemorized = Color(asset: .statusMemorized)
-        return Palette(
+        var palette = Palette(
             background: Color(asset: .appBackground),
             card: Color(asset: .cardBackground),
             actionBackground: Color(asset: .actionBackground),
@@ -156,10 +178,17 @@ nonisolated extension Palette {
             goldMuted: gold.opacity(0.45),
             goldTint: gold.opacity(0.13),
             sunRays: Color(asset: .sunRays),
-            parchmentLight: Color(asset: .parchmentLight),
-            parchmentGlow: Color(asset: .parchmentLight).opacity(0.7),
+            parchmentLight: .clear,
+            parchmentGlow: .clear,
+            parchmentText: .clear,
+            parchmentAccent: .clear,
+            parchmentAccentTint: .clear,
+            parchmentAccentBorder: .clear,
             parchmentInk: Color(asset: .parchmentInk)
         )
+        // Пергамент по умолчанию — тем же путём, что и выбранный вариант (`Theme.withParchment`).
+        palette.applyParchment(ParchmentStyle.classic.colors)
+        return palette
     }()
 }
 

@@ -1,29 +1,33 @@
 import Foundation
 import Observation
 
-/// Азкары и прогресс их чтения в текущем периоде.
+/// Азкары и прогресс их чтения.
 ///
-/// Прогресс сохраняется между запусками и обнуляется каждый день во время из
-/// `AzkarResetSettings` (утренние — 17:00, вечерние — 02:00 по умолчанию). Период раздела
-/// (`AzkarPeriod`) действует до ближайшего обнуления; сохранённый счёт истёкшего периода
-/// не восстанавливается.
+/// Прогресс относится к отрезку времени (`AzkarPeriod`): времени азкаров из
+/// `AzkarWindowSettings` (утренние 5:00–12:00, вечерние 17:00–02:00 по умолчанию) или промежутку
+/// до него. На каждой границе счётчики обнуляются — строго, даже посреди чтения. Отметка
+/// на главной, оверлей завершения и история (`AzkarHistory`) — только во время азкаров;
+/// вне его счёт работает, но никуда не идёт и к началу окна обнуляется.
 ///
 /// Живёт на уровне приложения, поэтому счёт не теряется при переходе между экранами.
 @Observable
 final class AzkarStore {
-    /// Календарь расписания — им же экран настроек переводит время в дату для `DatePicker`.
+    /// Календарь расписания — им же экраны переводят время суток в дату для показа и `DatePicker`.
     @ObservationIgnored let calendar: Calendar
     @ObservationIgnored private let repository: any ContentRepository
     @ObservationIgnored private let defaults: UserDefaults
-    @ObservationIgnored private let resetSettings: AzkarResetSettings
+    @ObservationIgnored private let windowSettings: AzkarWindowSettings
+    @ObservationIgnored private let history: AzkarHistory
     @ObservationIgnored private let now: () -> Date
     private(set) var sections: [AzkarSection: Loadable<[ZikrSession]>] = [:]
     /// Выполнение разделов. Хранится, а не вычисляется из сессий: читатели (главная, шапка
     /// списка) зависят только от него и не перерисовываются на каждое нажатие счётчика —
     /// значение меняется, лишь когда зикр выполнен или сброшен.
     private var progressBySection: [AzkarSection: SectionProgress] = [:]
+    /// Разделы, у которых сейчас время азкаров. Меняется только на границах.
+    private var sectionsInWindow: Set<AzkarSection> = []
 
-    /// Период, к которому относится загруженный прогресс раздела.
+    /// Отрезок, к которому относится загруженный прогресс раздела.
     @ObservationIgnored private var periods: [AzkarSection: AzkarPeriod] = [:]
     @ObservationIgnored private var refreshTask: Task<Void, Never>?
     @ObservationIgnored private var timeChangeTasks: [Task<Void, Never>] = []
@@ -33,16 +37,17 @@ final class AzkarStore {
     init(
         repository: any ContentRepository,
         defaults: UserDefaults = .standard,
-        resetSettings: AzkarResetSettings? = nil,
+        windowSettings: AzkarWindowSettings? = nil,
+        history: AzkarHistory? = nil,
         now: @escaping () -> Date = Date.init,
         calendar: Calendar = .autoupdatingCurrent
     ) {
         self.repository = repository
         self.defaults = defaults
-        self.resetSettings = resetSettings ?? AzkarResetSettings(defaults: defaults)
+        self.windowSettings = windowSettings ?? AzkarWindowSettings(defaults: defaults)
+        self.history = history ?? AzkarHistory(defaults: defaults)
         self.now = now
         self.calendar = calendar
-        self.resetSettings.onResetTimeChange { [weak self] in self?.adoptNewResetTimes() }
         observeSystemTimeChanges()
     }
 
@@ -71,7 +76,7 @@ final class AzkarStore {
                     self?.countDidChange(in: section)
                 }
             }
-            periods[section] = restored.period
+            adopt(restored.period, for: section)
             if restored.completionShown {
                 acknowledgedCompletions.insert(section)
             }
@@ -96,18 +101,26 @@ final class AzkarStore {
         progressBySection[section] ?? SectionProgress(completed: 0, total: 0)
     }
 
+    /// Сейчас время азкаров раздела: прогресс идёт в отметку на главной и в историю.
+    func isInWindow(_ section: AzkarSection) -> Bool {
+        sectionsInWindow.contains(section)
+    }
+
     private func countDidChange(in section: AzkarSection) {
         updateProgress(of: section)
         save(section)
     }
 
     /// Пересчёт выполнения раздела; запись — только при изменении (`@Observable` уведомляет
-    /// и о записи того же значения).
+    /// и о записи того же значения). Во время азкаров выполнение уходит в историю.
     private func updateProgress(of section: AzkarSection) {
         let sessions = sessions(in: section)
         let progress = SectionProgress(completed: sessions.count(where: \.isCompleted), total: sessions.count)
         if progressBySection[section] != progress {
             progressBySection[section] = progress
+        }
+        if let period = periods[section], period.isWindow, progress.total > 0 {
+            history.record(progress, of: section, on: period.day)
         }
     }
 
@@ -133,52 +146,50 @@ final class AzkarStore {
         }
     }
 
-    // MARK: - Обнуление по времени
+    // MARK: - Время азкаров
 
-    /// Время обнуления изменили в настройках: текущий прогресс сохраняется, граница периода
-    /// переносится по правилам `AzkarPeriod.reschedule` — ближайшее обнуление не пропускается,
-    /// а прокрутка колеса времени через «сейчас» не стирает прочитанное.
-    private func adoptNewResetTimes() {
-        let current = now()
-        for section in AzkarSection.allCases {
-            guard var period = periods[section] else { continue }
-            period.reschedule(to: schedule(for: section), at: current)
-            guard period != periods[section] else { continue }
-            periods[section] = period
-            save(section)
-        }
-        scheduleNextRefresh()
-    }
-
-    /// Обнуляет разделы, у которых истёк период, и переносит границы при смене часового пояса.
-    /// Вызывается по таймеру, при возврате приложения на экран, при смене системного времени
-    /// или часового пояса.
-    func refreshPeriods() {
+    /// Сверяет отрезок каждого раздела с расписанием на сейчас. Тот же отрезок (окно или
+    /// промежуток с той же датой) — счёт сохраняется, обновляется только граница; другой —
+    /// счётчики и флаг оверлея обнуляются.
+    ///
+    /// Вызывается по таймеру на границе, при возврате приложения на экран, при смене системного
+    /// времени или часового пояса и при уходе с экрана настроек времени — так прокрутка колеса
+    /// времени не стирает прочитанное, а результат зависит только от итогового значения.
+    func reconcile() {
         let current = now()
         for section in AzkarSection.allCases {
             guard let loaded = periods[section] else { continue }
-            let schedule = schedule(for: section)
-            var period = loaded
-            period.relocate(to: schedule, at: current)
-            if period.isExpired(at: current) {
-                period = AzkarPeriod(startingAt: current, schedule: schedule)
+            let expected = schedule(for: section).period(at: current)
+            guard expected != loaded else { continue }
+            adopt(expected, for: section)
+            if !expected.isSameSpan(as: loaded) {
                 sessions(in: section).forEach { $0.discardProgress() }
-                updateProgress(of: section)
                 acknowledgedCompletions.remove(section)
+                updateProgress(of: section)
             }
-            guard period != loaded else { continue }
-            periods[section] = period
             save(section)
         }
         scheduleNextRefresh()
     }
 
-    private func schedule(for section: AzkarSection) -> AzkarResetSchedule {
-        AzkarResetSchedule(time: resetSettings.resetTime(for: section), calendar: calendar)
+    private func adopt(_ period: AzkarPeriod, for section: AzkarSection) {
+        periods[section] = period
+        let isInWindow = period.isWindow
+        if sectionsInWindow.contains(section) != isInWindow {
+            if isInWindow {
+                sectionsInWindow.insert(section)
+            } else {
+                sectionsInWindow.remove(section)
+            }
+        }
     }
 
-    /// Задача спит до ближайшего обнуления среди загруженных разделов. Пока приложение
-    /// приостановлено, она не срабатывает — тогда период пересчитывается при возврате на экран.
+    private func schedule(for section: AzkarSection) -> AzkarWindowSchedule {
+        AzkarWindowSchedule(window: windowSettings.window(for: section), calendar: calendar)
+    }
+
+    /// Задача спит до ближайшей границы среди загруженных разделов. Пока приложение
+    /// приостановлено, она не срабатывает — тогда отрезок сверяется при возврате на экран.
     private func scheduleNextRefresh() {
         refreshTask?.cancel()
         guard let next = periods.values.map(\.validUntil).min() else { return }
@@ -186,17 +197,17 @@ final class AzkarStore {
         refreshTask = Task { [weak self] in
             try? await Task.sleep(for: .seconds(delay))
             guard !Task.isCancelled else { return }
-            self?.refreshPeriods()
+            self?.reconcile()
         }
     }
 
-    /// Ручная смена времени или часового пояса — период мог истечь или его граница — сместиться.
-    /// Переход на летнее время мгновений не меняет: таймер спит до абсолютного момента обнуления.
+    /// Ручная смена времени или часового пояса — отрезок мог смениться или его граница — сместиться.
+    /// Переход на летнее время мгновений не меняет: таймер спит до абсолютного момента границы.
     private func observeSystemTimeChanges() {
         for name in [Notification.Name.NSSystemClockDidChange, .NSSystemTimeZoneDidChange] {
             timeChangeTasks.append(Task { [weak self] in
                 for await _ in NotificationCenter.default.notifications(named: name).map({ _ in () }) {
-                    self?.refreshPeriods()
+                    self?.reconcile()
                 }
             })
         }
@@ -204,13 +215,12 @@ final class AzkarStore {
 
     // MARK: - Хранение
 
-    /// Прогресс раздела: период, счёт по номерам зикров, показан ли оверлей завершения.
+    /// Прогресс раздела: отрезок, счёт по номерам зикров, показан ли оверлей завершения.
+    /// Сохранение версии 1.0.0 (другой формат периода) не декодируется — прогресс начинается заново.
     private nonisolated struct StoredProgress: Codable {
-        var period: AzkarPeriod?
-        /// Формат до 2026-10-03: вместо периода — его начало.
-        var periodStart: Date?
+        var period: AzkarPeriod
         var counts: [Int: Int]
-        var completionShown: Bool?
+        var completionShown: Bool
     }
 
     /// Что восстановить при загрузке раздела.
@@ -218,7 +228,7 @@ final class AzkarStore {
         var period: AzkarPeriod
         var counts: [Int: Int] = [:]
         var completionShown = false
-        /// Период новый или изменён (истёк, старый формат, другой часовой пояс) — записать.
+        /// Отрезок новый или его граница сдвинулась — записать.
         var needsSave = true
     }
 
@@ -232,21 +242,15 @@ final class AzkarStore {
     }
 
     private func restoredProgress(of section: AzkarSection) -> RestoredProgress {
-        let current = now()
-        let schedule = schedule(for: section)
-        let fresh = RestoredProgress(period: AzkarPeriod(startingAt: current, schedule: schedule))
-        guard let stored = storedProgress(of: section),
-              let storedPeriod = stored.period
-                ?? stored.periodStart.map({ AzkarPeriod(legacyPeriodStart: $0, schedule: schedule) })
-        else { return fresh }
-        var period = storedPeriod
-        period.relocate(to: schedule, at: current)
-        guard !period.isExpired(at: current) else { return fresh }
+        let expected = schedule(for: section).period(at: now())
+        guard let stored = storedProgress(of: section), stored.period.isSameSpan(as: expected) else {
+            return RestoredProgress(period: expected)
+        }
         return RestoredProgress(
-            period: period,
+            period: expected,
             counts: stored.counts,
-            completionShown: stored.completionShown ?? false,
-            needsSave: period != stored.period
+            completionShown: stored.completionShown,
+            needsSave: stored.period != expected
         )
     }
 
@@ -267,14 +271,14 @@ final class AzkarStore {
 
     // MARK: - Оверлей завершения
 
-    /// Разделы, для которых «مَا شَاءَ اللَّهُ» уже показан в этом периоде. Сохраняется вместе
+    /// Разделы, для которых «مَا شَاءَ اللَّهُ» уже показан в этом окне. Сохраняется вместе
     /// с прогрессом — после перезапуска выполненный раздел не поздравляет снова. Читается только
     /// из задач, не из `body`, — наблюдение не нужно.
     @ObservationIgnored private var acknowledgedCompletions: Set<AzkarSection> = []
 
-    /// Показать оверлей завершения — один раз за прохождение раздела, а не при каждом открытии.
+    /// Показать оверлей завершения — один раз за окно и только во время азкаров.
     func shouldPresentCompletion(of section: AzkarSection) -> Bool {
-        progress(of: section).isFinished && !acknowledgedCompletions.contains(section)
+        isInWindow(section) && progress(of: section).isFinished && !acknowledgedCompletions.contains(section)
     }
 
     func acknowledgeCompletion(of section: AzkarSection) {

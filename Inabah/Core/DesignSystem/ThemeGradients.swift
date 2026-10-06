@@ -128,12 +128,7 @@ nonisolated extension ThemeGradients {
             (.successLight, 0),
             (.success, 1),
         ], cssAngle: 160),
-        parchment: ThemeGradient.css(stops: [
-            (.parchmentLight, 0),
-            (.gold, 0.45),
-            (.parchmentMid, 0.75),
-            (.parchmentDeep, 1),
-        ], cssAngle: 150),
+        parchment: parchment(ParchmentStyle.classic.colors),
         parchmentStripe: ThemeGradient(
             [
                 Gradient.Stop(color: Color(asset: .successDeep).opacity(0.6), location: 0),
@@ -144,4 +139,14 @@ nonisolated extension ThemeGradients {
             endPoint: .trailing
         )
     )
+
+    /// Градиент пергамента из цветов варианта: светлый · блик 0,45 · середина 0,75 · тёмный, 150°.
+    static func parchment(_ colors: ParchmentColors) -> ThemeGradient {
+        ThemeGradient([
+            Gradient.Stop(color: colors.light, location: 0),
+            Gradient.Stop(color: colors.highlight, location: 0.45),
+            Gradient.Stop(color: colors.mid, location: 0.75),
+            Gradient.Stop(color: colors.deep, location: 1),
+        ], cssAngle: 150)
+    }
 }

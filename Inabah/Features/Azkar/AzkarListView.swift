@@ -15,6 +15,9 @@ struct AzkarListView: View {
 
     @State private var showsCompletion = false
 
+    private static let reminderIconSize: CGFloat = 20
+    private static let titleSize: CGFloat = 16
+
     var body: some View {
         content
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -44,7 +47,19 @@ struct AzkarListView: View {
                 } else {
                     ToolbarItem(placement: .topBarLeading) { titleView }
                 }
-                FontSizeControls(settings: settings)
+                // «Сделать напоминание» — отдельной круглой кнопкой слева от «А− А+» (решение
+                // пользователя 2026-10-06). Чтобы на узких iPhone (390 pt) «А− А+» не уходили
+                // в меню «…», их капсула компактная, а заголовок — чуть меньше `headline`.
+                ToolbarItem(placement: .topBarTrailing) {
+                    ShareButton(title: "reminder.action", iconSize: Self.reminderIconSize) {
+                        section.reminderText
+                    }
+                    .fixedTextSize()
+                }
+                if #available(iOS 26, *) {
+                    ToolbarSpacer(.fixed, placement: .topBarTrailing)
+                }
+                FontSizeControls(settings: settings, compact: true)
             }
             .task { await store.load(section) }
     }
@@ -69,15 +84,17 @@ struct AzkarListView: View {
         case .loaded(let sessions):
             AzkarFeed(section: section, sessions: sessions)
                 .safeAreaInset(edge: .top, spacing: 0) {
-                    AzkarProgressHeader(section: section)
+                    AzkarTopPanel(section: section)
                 }
         }
     }
 
     private var titleView: some View {
         VStack(alignment: .leading, spacing: 0) {
+            // Чуть меньше `headline` (17): рядом с «Сделать напоминание» и «А− А+» на узких
+            // iPhone (390 pt) иначе «А− А+» уходят в меню «…» (решение пользователя 2026-10-06).
             Text(section.title)
-                .font(.headline)
+                .font(.system(size: Self.titleSize, weight: .semibold))
             Text(section.subtitle)
                 .font(.caption2)
                 .foregroundStyle(theme.palette.onAccentSecondary)
@@ -116,7 +133,12 @@ private struct AzkarFeed: View {
                         ZikrCardView(session: session, audio: player.audioState(of: session.zikr))
                             .id(session.zikr.audioTrackID)
                     }
-                    AzkarPlayAllCard(section: section, azkar: sessions.map(\.zikr))
+                    // Записей нет — вместо «Прослушать все» заглушка «Аудио скоро».
+                    if sessions.contains(where: { $0.zikr.hasAudio }) {
+                        AzkarPlayAllCard(section: section, azkar: sessions.map(\.zikr))
+                    } else {
+                        AudioSoonPlaceholder(title: Text("audio.playAll.title"))
+                    }
                 }
                 .padding(Spacing.l)
             }
@@ -167,6 +189,46 @@ private struct AzkarCompletionWatcher: View {
                 showsCompletion = true
             }
             .accessibilityHidden(true)
+    }
+}
+
+/// Под навбаром: во время азкаров — прогресс, вне его — когда время азкаров.
+/// Меняется только на границах времени, счётчики не читает.
+private struct AzkarTopPanel: View {
+    let section: AzkarSection
+
+    @Environment(AzkarStore.self) private var store
+
+    var body: some View {
+        if store.isInWindow(section) {
+            AzkarProgressHeader(section: section)
+        } else {
+            AzkarWindowNotice(section: section)
+        }
+    }
+}
+
+/// «Время утренних азкаров — с 5:00 до 12:00»: счёт работает, но в прогресс не идёт.
+private struct AzkarWindowNotice: View {
+    let section: AzkarSection
+
+    @Environment(AzkarStore.self) private var store
+    @Environment(AzkarWindowSettings.self) private var windowSettings
+    @Environment(\.theme) private var theme
+
+    var body: some View {
+        Label {
+            section.windowNotice(windowSettings.window(for: section), in: store.calendar)
+        } icon: {
+            Image(systemName: "clock")
+        }
+        .font(.caption)
+        .foregroundStyle(theme.palette.onAccentSecondary)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, Spacing.xl)
+        .padding(.top, Spacing.xs)
+        .padding(.bottom, Spacing.m)
+        .background(section.headerColor(in: theme))
     }
 }
 
