@@ -48,6 +48,7 @@ import app.inabah.android.core.designsystem.components.ToggleTile
 import app.inabah.android.core.designsystem.components.surface
 import app.inabah.android.core.settings.HadithStatus
 import app.inabah.android.core.share.shareText
+import app.inabah.android.core.share.storeLinksBlock
 import kotlin.math.roundToInt
 
 /** ▶ заглушки аудио — как символ headline, в sp (растёт с шагом интерфейса); круг 44 — постоянный, как в iOS. */
@@ -99,7 +100,8 @@ private fun hadithShareAction(hadith: Hadith): () -> Unit {
     val header = stringResource(R.string.share_hadith_header, stringResource(hadith.id.collection.title), hadith.number)
     val narrator = hadith.translation?.narrator?.let { stringResource(R.string.hadith_detail_narrator, it) }
     val source = hadith.translation?.source?.let { stringResource(R.string.hadith_detail_source, it) }
-    return { context.shareText(hadithShareText(hadith, header, narrator, source)) }
+    val storeLinks = storeLinksBlock()
+    return { context.shareText(hadithShareText(hadith, header, narrator, source, storeLinks)) }
 }
 
 /** Значок «Поделиться» без подложки — в правом нижнем углу хадиса (решение пользователя 2026-10-06). */

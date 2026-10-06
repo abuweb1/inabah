@@ -5,7 +5,7 @@ package app.inabah.android.core.share
 
 /**
  * Текст для отправки: блоки через пустую строку в порядке экрана; отсутствующие и пустые пропускаются.
- * Ссылку на приложение в магазине добавить последним блоком, когда она появится.
+ * Последний блок — ссылки на приложение (`storeLinksBlock`).
  */
 fun shareBlocks(vararg blocks: String?): String =
     blocks.mapNotNull { block -> block?.trim()?.takeIf(String::isNotEmpty) }.joinToString(BLOCK_SEPARATOR)

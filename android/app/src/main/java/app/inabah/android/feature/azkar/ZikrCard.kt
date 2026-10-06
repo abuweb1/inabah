@@ -62,6 +62,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.inabah.android.R
 import app.inabah.android.core.share.shareText
+import app.inabah.android.core.share.storeLinksBlock
 import app.inabah.android.core.content.model.ZikrTranslation
 import app.inabah.android.core.designsystem.FixedTextSize
 import app.inabah.android.core.designsystem.InabahTheme
@@ -205,6 +206,7 @@ private fun ZikrFullContent(
         val context = LocalContext.current
         val sectionTitle = stringResource(zikr.section.title)
         val repetitions = pluralStringResource(R.plurals.zikr_repetitions, zikr.repetitions, zikr.repetitions)
+        val storeLinks = storeLinksBlock()
         ZikrActions(
             isAudioActive = isAudioActive,
             onPlay = onPlay,
@@ -213,7 +215,7 @@ private fun ZikrFullContent(
             canReset = state.count > 0,
             onToggleTranslation = { session.setTranslationVisible(!state.isTranslationVisible) },
             onReset = session::reset,
-            onShare = { context.shareText(zikrShareText(zikr, sectionTitle, repetitions)) },
+            onShare = { context.shareText(zikrShareText(zikr, sectionTitle, repetitions, storeLinks)) },
             modifier = Modifier.padding(vertical = Spacing.l),
         )
         CardDivider()

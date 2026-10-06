@@ -32,26 +32,36 @@ class ShareTextTest {
         translation = translation,
     )
 
+    private val links = "https://apps.apple.com/app/id6819638881"
+
     @Test
-    fun `Зикр — раздел, арабский, «N раз», транскрипция, перевод, источник`() {
+    fun `Зикр — раздел, арабский, «N раз», транскрипция, перевод, источник, ссылки на приложение`() {
         val text = zikrShareText(
             zikr(ZikrTranslation(ru, "Пречист Аллах и хвала Ему.", "Субхана-Ллахи ва би-хамди-хи.", "Муслим")),
             sectionTitle = "Утренние азкары",
             repetitions = "100 раз",
+            storeLinks = links,
         )
 
         assertEquals(
             "Утренние азкары\n\nسُبْحَانَ اللَّهِ وَ بِحَمْدِهِ\n\n100 раз\n\n" +
-                "Субхана-Ллахи ва би-хамди-хи.\n\nПречист Аллах и хвала Ему.\n\nМуслим",
+                "Субхана-Ллахи ва би-хамди-хи.\n\nПречист Аллах и хвала Ему.\n\nМуслим\n\n$links",
             text,
         )
     }
 
     @Test
     fun `Зикр без перевода — раздел, арабский и «N раз», без пустых строк`() {
-        val text = zikrShareText(zikr(translation = null), sectionTitle = "Утренние азкары", repetitions = "100 раз")
+        val text = zikrShareText(zikr(translation = null), sectionTitle = "Утренние азкары", repetitions = "100 раз", storeLinks = null)
 
         assertEquals("Утренние азкары\n\nسُبْحَانَ اللَّهِ وَ بِحَمْدِهِ\n\n100 раз", text)
+    }
+
+    @Test
+    fun `Ссылки на приложение — одна без подписи, две — с названиями магазинов`() {
+        assertEquals(links, storeLinksBlock())
+        assertEquals("https://g", storeLinksBlock(appStore = null, googlePlay = "https://g"))
+        assertEquals("App Store: https://a\nGoogle Play: https://g", storeLinksBlock(appStore = "https://a", googlePlay = "https://g"))
     }
 
     @Test
@@ -61,11 +71,12 @@ class ShareTextTest {
             header = "40 хадисов ан-Навави · Хадис 2",
             narratorLine = "Передал: Умар ибн аль-Хаттаб",
             sourceLine = "Приводится: Муслим (№ 8)",
+            storeLinks = links,
         )
 
         assertEquals(
             "40 хадисов ан-Навави · Хадис 2\n\nعَنْ عُمَرَ قَالَ: بَيْنَمَا نَحْنُ\n\nПередал: Умар ибн аль-Хаттаб\n\n" +
-                "«Приход Джибриля…»\n\nПриводится: Муслим (№ 8)",
+                "«Приход Джибриля…»\n\nПриводится: Муслим (№ 8)\n\n$links",
             text,
         )
     }
@@ -74,9 +85,9 @@ class ShareTextTest {
     fun `Хадис без передатчика, источника и перевода — только то, что есть`() {
         val withoutNotes = hadithShareText(
             hadith(HadithTranslation(ru, narrator = null, text = "Перевод", source = null)),
-            header = "Хадис 2", narratorLine = null, sourceLine = null,
+            header = "Хадис 2", narratorLine = null, sourceLine = null, storeLinks = null,
         )
-        val withoutTranslation = hadithShareText(hadith(null), header = "Хадис 2", narratorLine = null, sourceLine = null)
+        val withoutTranslation = hadithShareText(hadith(null), header = "Хадис 2", narratorLine = null, sourceLine = null, storeLinks = null)
 
         assertEquals("Хадис 2\n\nعَنْ عُمَرَ قَالَ: بَيْنَمَا نَحْنُ\n\nПеревод", withoutNotes)
         assertEquals("Хадис 2\n\nعَنْ عُمَرَ قَالَ: بَيْنَمَا نَحْنُ", withoutTranslation)
