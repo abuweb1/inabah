@@ -18,6 +18,8 @@ struct AppEnvironment {
     let audioPlayer: AudioPlayerController
     /// Палитра оформления — тема в окружении берётся из неё (`themed()`).
     let appearanceSettings: AppearanceSettings
+    /// Фон под арабским текстом — накладывается на тему палитры (`Theme.withParchment`).
+    let parchmentSettings: ParchmentSettings
     /// Размер переводов и интерфейса — применяется к окружению в `appEnvironment`.
     let textSizeSettings: TextSizeSettings
 
@@ -48,6 +50,7 @@ struct AppEnvironment {
             nowPlaying: NowPlayingCoordinator()
         )
         appearanceSettings = AppearanceSettings(defaults: defaults)
+        parchmentSettings = ParchmentSettings(defaults: defaults)
         textSizeSettings = TextSizeSettings(defaults: defaults)
     }
 
@@ -100,8 +103,9 @@ extension View {
             .environment(environment.appIconSettings)
             .environment(environment.audioPlayer)
             .environment(environment.appearanceSettings)
+            .environment(environment.parchmentSettings)
             .environment(environment.textSizeSettings)
-            .modifier(ThemedModifier(settings: environment.appearanceSettings))
+            .modifier(ThemedModifier(settings: environment.appearanceSettings, parchment: environment.parchmentSettings))
             .modifier(TextSizeModifier(settings: environment.textSizeSettings))
     }
 }
@@ -137,15 +141,16 @@ extension View {
     }
 }
 
-/// Тема в окружении — из выбранной палитры. Только этот модификатор следит за выбором:
-/// смена палитры один раз перерисовывает дерево с новой темой. Окнам — акцент палитры,
-/// чтобы системные диалоги тоже были в её цвет.
+/// Тема в окружении — из выбранной палитры и фона арабского текста. Только этот модификатор
+/// следит за выбором: смена палитры или фона один раз перерисовывает дерево с новой темой.
+/// Окнам — акцент палитры, чтобы системные диалоги тоже были в её цвет.
 private struct ThemedModifier: ViewModifier {
     let settings: AppearanceSettings
+    let parchment: ParchmentSettings
 
     func body(content: Content) -> some View {
         content
-            .environment(\.theme, settings.style.theme)
+            .environment(\.theme, settings.style.theme.withParchment(parchment.style))
             .onChange(of: settings.style, initial: true) { _, style in
                 WindowTint.apply(style.theme.palette.accentLight)
             }

@@ -35,11 +35,11 @@ struct HadithPage: View {
                     .font(.caption2.weight(.bold))
                     .textCase(.uppercase)
                     .tracking(Tracking.label)
-                    .foregroundStyle(theme.palette.parchmentInk)
+                    .foregroundStyle(theme.palette.parchmentText)
                 ArabicText(
                     text: hadith.arabicDisplayText,
                     size: settings.arabicFontSize,
-                    color: theme.palette.parchmentInk
+                    color: theme.palette.parchmentText
                 )
             }
         }
