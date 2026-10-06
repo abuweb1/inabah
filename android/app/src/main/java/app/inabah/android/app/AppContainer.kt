@@ -132,7 +132,9 @@ class AppContainer(context: Context) {
                 repository = repository,
                 storage = storage,
                 windowSettings = azkarWindowSettings,
-                history = AzkarHistory(storage),
+                history = AzkarHistory(storage) { error ->
+                    Log.w(TAG, "История азкаров не читается — начата заново (первая испорченная — в azkar.history.corrupt)", error)
+                },
                 now = Instant::now,
                 zone = ZoneId::systemDefault,
                 onUnreadableProgress = { section, error ->

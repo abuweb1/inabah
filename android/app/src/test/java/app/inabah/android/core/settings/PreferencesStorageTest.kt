@@ -65,6 +65,28 @@ class PreferencesStorageTest {
         assertEquals("1", dataStore.disk[key])
     }
 
+    // Регрессия (аудит 2026-10-06): после последней неудачи писатель ещё 30 с ждал впустую,
+    // и следующая правка ложилась на диск только через полминуты.
+    @Test
+    fun `Все повторы не удались — следующая правка пишется сразу`() = runTest {
+        val dataStore = FlakyDataStore(failWrites = 4)
+        val errors = mutableListOf<IOException>()
+        val storage = PreferencesStorage(dataStore) { errors += it }
+        storage.load()
+        backgroundScope.launch { storage.runWriter() }
+
+        storage.edit { it[key] = "1" }
+        // Первая попытка и повторы через 1, 5 и 30 с — все неудачны.
+        advanceTimeBy(36_001)
+        runCurrent()
+        assertEquals(4, errors.size)
+        assertNull(dataStore.disk[key])
+
+        storage.edit { it[key] = "2" }
+        runCurrent()
+        assertEquals("2", dataStore.disk[key])
+    }
+
     @Test
     fun `Несколько правок подряд — одна запись всего снимка`() = runTest {
         val dataStore = FlakyDataStore(initial = emptyPreferences().toMutablePreferences().apply { this[key] = "старое" })

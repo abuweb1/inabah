@@ -140,8 +140,8 @@ fun AzkarListScreen(
                 tint = theme.palette.tabAzkar,
             )
             FontSizeControls(
-                canDecrease = fontSize > ReadingSettings.MIN_SIZE,
-                canIncrease = fontSize < ReadingSettings.MAX_SIZE,
+                canDecrease = ReadingSettings.canDecrease(fontSize),
+                canIncrease = ReadingSettings.canIncrease(fontSize),
                 onDecrease = readingSettings::decreaseArabicFontSize,
                 onIncrease = readingSettings::increaseArabicFontSize,
                 tint = theme.palette.tabAzkar,

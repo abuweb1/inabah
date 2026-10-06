@@ -21,9 +21,7 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.onLast
 import androidx.compose.ui.test.performScrollTo
-import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import androidx.test.platform.app.InstrumentationRegistry
 import app.inabah.android.core.content.ContentLanguage
 import app.inabah.android.core.content.ContentRepository
 import app.inabah.android.core.content.model.AzkarSection
@@ -37,17 +35,10 @@ import app.inabah.android.core.settings.HadithCollectionOrder
 import app.inabah.android.core.settings.HadithProgress
 import app.inabah.android.core.settings.HadithStatus
 import app.inabah.android.core.settings.PreferencesStorage
+import app.inabah.android.core.settings.TestDataStoreRule
 import app.inabah.android.core.settings.ReadingSettings
 import app.inabah.android.feature.settings.HadithOrderSettingsScreen
 import app.inabah.android.feature.settings.HadithSettingsScreen
-import java.io.File
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
-import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -59,29 +50,19 @@ private const val TIMEOUT_MILLIS = 5_000L
 /** Экраны хадисов: отметки, листание, порядок сборников, сброс (критерии этапа 4, docs/android/09). */
 @RunWith(AndroidJUnit4::class)
 class HadithScreensTest {
-    @get:Rule
+    // Хранилище — внешнее правило: закрывается после Compose (экран при уходе ещё пишет в него).
+    @get:Rule(order = 0)
+    val dataStore = TestDataStoreRule()
+
+    @get:Rule(order = 1)
     val compose = createComposeRule()
 
-    private val context = InstrumentationRegistry.getInstrumentation().targetContext
-    private val ioScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-    private lateinit var directory: File
-    private lateinit var storage: PreferencesStorage
+    private val storage: PreferencesStorage get() = dataStore.storage
 
     @Before
-    fun openStorage() {
+    fun enableChecks() {
         // Этап 7: каждое действие теста заодно проверяет экран на доступность (ATF).
         compose.enableAccessibilityChecks()
-        directory = File(context.cacheDir, "hadith-test-${System.nanoTime()}").apply { mkdirs() }
-        val dataStore = PreferenceDataStoreFactory.create(scope = ioScope) { File(directory, "test.preferences_pb") }
-        storage = PreferencesStorage(dataStore) { throw AssertionError("Ошибка хранилища", it) }
-        runBlocking { storage.load() }
-        ioScope.launch { storage.runWriter() }
-    }
-
-    @After
-    fun closeStorage() {
-        ioScope.cancel()
-        directory.deleteRecursively()
     }
 
     private enum class Screen { Detail, List, Home }

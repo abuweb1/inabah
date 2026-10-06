@@ -12,9 +12,6 @@ class ReadingSettings(private val storage: PreferencesStorage) {
     )
     val arabicFontSize: StateFlow<Double> = _arabicFontSize.asStateFlow()
 
-    val canIncreaseArabicFontSize: Boolean get() = _arabicFontSize.value < MAX_SIZE
-    val canDecreaseArabicFontSize: Boolean get() = _arabicFontSize.value > MIN_SIZE
-
     fun increaseArabicFontSize() = setArabicFontSize(_arabicFontSize.value + STEP)
 
     fun decreaseArabicFontSize() = setArabicFontSize(_arabicFontSize.value - STEP)
@@ -31,6 +28,12 @@ class ReadingSettings(private val storage: PreferencesStorage) {
         const val MIN_SIZE = 14.0
         const val MAX_SIZE = 40.0
         const val STEP = 2.0
+
+        /** «А+» активна — кегль ещё не на верхней границе. Одно правило для всех экранов. */
+        fun canIncrease(size: Double): Boolean = size < MAX_SIZE
+
+        /** «А−» активна — кегль ещё не на нижней границе. */
+        fun canDecrease(size: Double): Boolean = size > MIN_SIZE
 
         private val KEY = doublePreferencesKey("reading.arabicFontSize")
     }

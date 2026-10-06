@@ -53,23 +53,29 @@ class PreferencesStorage(
 
     /**
      * Пишет текущий снимок после каждого изменения, пока хранилище не закрыто ([close])
-     * или корутина не отменена. Ошибка записи сообщается [onError] и повторяется с паузой
-     * ([RETRY_DELAYS_MS]); не удалось — запишет следующее изменение.
+     * или корутина не отменена. Ошибка записи сообщается [onError] и повторяется через
+     * [RETRY_DELAYS_MS] (1, 5, 30 с); все попытки не удались — запишет следующее изменение, сразу,
+     * без паузы после последней (аудит 2026-10-06: следующая правка ждала лишние 30 с).
      */
     suspend fun runWriter() {
         for (signal in pendingWrite) {
+            if (write()) continue
             for (retryDelay in RETRY_DELAYS_MS) {
-                val target = snapshot
-                val written = try {
-                    dataStore.updateData { target }
-                    true
-                } catch (error: IOException) {
-                    onError(error)
-                    false
-                }
-                if (written) break
                 delay(retryDelay)
+                if (write()) break
             }
+        }
+    }
+
+    /** Записать текущий снимок; ошибка диска — в [onError] и `false`. */
+    private suspend fun write(): Boolean {
+        val target = snapshot
+        return try {
+            dataStore.updateData { target }
+            true
+        } catch (error: IOException) {
+            onError(error)
+            false
         }
     }
 

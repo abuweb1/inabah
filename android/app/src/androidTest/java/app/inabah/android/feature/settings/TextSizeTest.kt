@@ -21,9 +21,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.unit.Density
-import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import androidx.test.platform.app.InstrumentationRegistry
 import app.inabah.android.core.content.ContentRepository
 import app.inabah.android.core.content.model.AzkarSection
 import app.inabah.android.core.content.model.Hadith
@@ -38,19 +36,12 @@ import app.inabah.android.core.settings.AzkarWindowSettings
 import app.inabah.android.core.settings.ContentTextSize
 import app.inabah.android.core.settings.InterfaceTextSize as InterfaceStep
 import app.inabah.android.core.settings.PreferencesStorage
+import app.inabah.android.core.settings.TestDataStoreRule
 import app.inabah.android.core.settings.TextSizeSettings
 import app.inabah.android.feature.azkar.AzkarStore
 import app.inabah.android.feature.hadith.HadithStore
-import java.io.File
 import java.time.Instant
 import java.time.ZoneId
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
-import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -61,36 +52,26 @@ private const val SETTLE_MILLIS = 300L
 /** «Размер текста»: ползунки и закреплённый навбар. */
 @RunWith(AndroidJUnit4::class)
 class TextSizeTest {
-    @get:Rule
+    // Хранилище — внешнее правило: закрывается после Compose (экран при уходе ещё пишет в него).
+    @get:Rule(order = 0)
+    val dataStore = TestDataStoreRule()
+
+    @get:Rule(order = 1)
     val compose = createComposeRule()
 
-    private val context = InstrumentationRegistry.getInstrumentation().targetContext
-    private val ioScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-    private lateinit var directory: File
-    private lateinit var storage: PreferencesStorage
+    private val storage: PreferencesStorage get() = dataStore.storage
 
     @Before
-    fun openStorage() {
+    fun enableChecks() {
         // Этап 7: каждое действие теста заодно проверяет экран на доступность (ATF).
         compose.enableAccessibilityChecks()
-        directory = File(context.cacheDir, "text-size-test-${System.nanoTime()}").apply { mkdirs() }
-        val dataStore = PreferenceDataStoreFactory.create(scope = ioScope) { File(directory, "test.preferences_pb") }
-        storage = PreferencesStorage(dataStore) { throw AssertionError("Ошибка хранилища", it) }
-        runBlocking { storage.load() }
-        ioScope.launch { storage.runWriter() }
-    }
-
-    @After
-    fun closeStorage() {
-        ioScope.cancel()
-        directory.deleteRecursively()
     }
 
     @Test
     fun tapAtTrackEndSelectsLargestAndAccessibilityStepSelectsSmaller() {
         val settings = TextSizeSettings(storage)
         val repository = EmptyRepository()
-        val azkar = AzkarStore(repository, storage, AzkarWindowSettings(storage), AzkarHistory(storage),{ Instant.EPOCH }, { ZoneId.of("UTC") }, { _, e -> throw AssertionError(e) })
+        val azkar = AzkarStore(repository, storage, AzkarWindowSettings(storage), AzkarHistory(storage) { throw AssertionError(it) },{ Instant.EPOCH }, { ZoneId.of("UTC") }, { _, e -> throw AssertionError(e) })
         compose.setContent {
             InabahTheme {
                 TextSizeSettingsScreen(settings, azkar, HadithStore(repository), onBack = {}, contentPadding = PaddingValues())
@@ -118,7 +99,7 @@ class TextSizeTest {
     fun draggingInterfaceSliderUnderItsOwnScaleReachesEveryStep() {
         val settings = TextSizeSettings(storage)
         val repository = EmptyRepository()
-        val azkar = AzkarStore(repository, storage, AzkarWindowSettings(storage), AzkarHistory(storage),{ Instant.EPOCH }, { ZoneId.of("UTC") }, { _, e -> throw AssertionError(e) })
+        val azkar = AzkarStore(repository, storage, AzkarWindowSettings(storage), AzkarHistory(storage) { throw AssertionError(it) },{ Instant.EPOCH }, { ZoneId.of("UTC") }, { _, e -> throw AssertionError(e) })
         compose.setContent {
             InabahTheme {
                 // Как в приложении: экран под шагом интерфейса — смена шага меняет плотность под пальцем.

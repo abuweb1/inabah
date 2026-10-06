@@ -147,8 +147,8 @@ private fun HadithTopBar(readingSettings: ReadingSettings, onBack: () -> Unit, p
         centerTitle = true,
         actions = {
             FontSizeControls(
-                canDecrease = fontSize > ReadingSettings.MIN_SIZE,
-                canIncrease = fontSize < ReadingSettings.MAX_SIZE,
+                canDecrease = ReadingSettings.canDecrease(fontSize),
+                canIncrease = ReadingSettings.canIncrease(fontSize),
                 onDecrease = readingSettings::decreaseArabicFontSize,
                 onIncrease = readingSettings::increaseArabicFontSize,
                 tint = palette.tabHadith,

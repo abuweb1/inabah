@@ -91,6 +91,10 @@ class MediaControllerEngine(private val context: Context) : AudioEngine {
     override fun clear() {
         _state.update { EngineState(errorCount = it.errorCount, errorItem = it.errorItem) }
         pending.clear()
+        // ✕ во время подключения: подключение отменить, иначе контроллер подключится позже и будет
+        // держать службу (аудит 2026-10-06).
+        connecting?.let { MediaController.releaseFuture(it) }
+        connecting = null
         val connected = controller ?: return
         connected.stop()
         connected.clearMediaItems()
@@ -117,6 +121,11 @@ class MediaControllerEngine(private val context: Context) : AudioEngine {
         connecting = future
         future.addListener(
             {
+                // Подключение отменили ([clear]) или уже начато новое — это не нужно.
+                if (connecting !== future) {
+                    MediaController.releaseFuture(future)
+                    return@addListener
+                }
                 connecting = null
                 val connected = try {
                     future.get()
