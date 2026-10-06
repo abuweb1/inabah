@@ -47,6 +47,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -60,6 +61,8 @@ import androidx.compose.ui.text.intl.LocaleList
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.inabah.android.R
+import app.inabah.android.core.share.shareText
+import app.inabah.android.core.share.storeLinksBlock
 import app.inabah.android.core.content.model.ZikrTranslation
 import app.inabah.android.core.designsystem.FixedTextSize
 import app.inabah.android.core.designsystem.InabahTheme
@@ -200,6 +203,10 @@ private fun ZikrFullContent(
                     .padding(top = Spacing.l),
             )
         }
+        val context = LocalContext.current
+        val sectionTitle = stringResource(zikr.section.title)
+        val repetitions = pluralStringResource(R.plurals.zikr_repetitions, zikr.repetitions, zikr.repetitions)
+        val storeLinks = storeLinksBlock()
         ZikrActions(
             isAudioActive = isAudioActive,
             onPlay = onPlay,
@@ -208,6 +215,7 @@ private fun ZikrFullContent(
             canReset = state.count > 0,
             onToggleTranslation = { session.setTranslationVisible(!state.isTranslationVisible) },
             onReset = session::reset,
+            onShare = { context.shareText(zikrShareText(zikr, sectionTitle, repetitions, storeLinks)) },
             modifier = Modifier.padding(vertical = Spacing.l),
         )
         CardDivider()
@@ -291,8 +299,8 @@ fun ZikrTranslationBlock(translation: ZikrTranslation, modifier: Modifier = Modi
 }
 
 /**
- * ▶, «Аа», ↺ — по центру. ▶ — запись зикра; выбрана в плеере и не доиграла — статичная волна
- * на зелёном, «Открыть плеер» (нажатие показывает плеер, не ставит паузу).
+ * ▶, «Аа», ↺, «Поделиться» — по центру. ▶ — запись зикра; выбрана в плеере и не доиграла — статичная
+ * волна на зелёном, «Открыть плеер» (нажатие показывает плеер, не ставит паузу).
  */
 @Composable
 private fun ZikrActions(
@@ -303,6 +311,7 @@ private fun ZikrActions(
     canReset: Boolean,
     onToggleTranslation: () -> Unit,
     onReset: () -> Unit,
+    onShare: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val palette = InabahTheme.palette
@@ -341,6 +350,14 @@ private fun ZikrActions(
             background = palette.actionBackground,
             border = palette.hairline,
             enabled = canReset,
+        )
+        IconButton(
+            onClick = onShare,
+            icon = painterResource(R.drawable.ic_share),
+            contentDescription = stringResource(R.string.share_action),
+            foreground = palette.textSecondary,
+            background = palette.actionBackground,
+            border = palette.hairline,
         )
     }
 }

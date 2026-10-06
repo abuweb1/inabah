@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -19,12 +20,14 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.LastBaseline
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.intl.LocaleList
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.sp
 import app.inabah.android.R
@@ -37,15 +40,22 @@ import app.inabah.android.core.designsystem.Size
 import app.inabah.android.core.designsystem.Spacing
 import app.inabah.android.core.designsystem.Tracking
 import app.inabah.android.core.designsystem.components.ArabicText
+import app.inabah.android.core.designsystem.components.BareIconButton
 import app.inabah.android.core.designsystem.components.ParchmentPanel
 import app.inabah.android.core.designsystem.components.StatusGlyph
 import app.inabah.android.core.designsystem.components.StatusGlyphKind
 import app.inabah.android.core.designsystem.components.ToggleTile
 import app.inabah.android.core.designsystem.components.surface
 import app.inabah.android.core.settings.HadithStatus
+import app.inabah.android.core.share.shareText
+import app.inabah.android.core.share.storeLinksBlock
+import kotlin.math.roundToInt
 
 /** ▶ заглушки аудио — как символ headline, в sp (растёт с шагом интерфейса); круг 44 — постоянный, как в iOS. */
 private const val AUDIO_ICON_SIZE = 20f
+
+/** Значок «Поделиться» — как ▶ заглушки аудио: в sp, растёт с шагом интерфейса. */
+private const val SHARE_ICON_SIZE = 20f
 
 /**
  * Страница экрана хадиса (iOS `HadithPage`): арабский текст на пергаменте, отметки, заглушка аудио,
@@ -72,8 +82,41 @@ fun HadithPage(
         ArabicPanel(hadith, arabicFontSize)
         HadithStatusButtons(status, onToggleRead, onToggleMemorized)
         HadithAudioPlaceholder(hadith.number)
-        hadith.translation?.let { HadithTranslationCard(it) }
+        val onShare = hadithShareAction(hadith)
+        val translation = hadith.translation
+        if (translation != null) {
+            HadithTranslationCard(translation, onShare)
+        } else {
+            // Без перевода — кнопка одна, справа внизу страницы.
+            Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) { HadithShareButton(onShare) }
+        }
     }
+}
+
+/** «Поделиться» хадисом: подписи — из ресурсов в композиции, текст собирается по нажатию. */
+@Composable
+private fun hadithShareAction(hadith: Hadith): () -> Unit {
+    val context = LocalContext.current
+    val header = stringResource(R.string.share_hadith_header, stringResource(hadith.id.collection.title), hadith.number)
+    val narrator = hadith.translation?.narrator?.let { stringResource(R.string.hadith_detail_narrator, it) }
+    val source = hadith.translation?.source?.let { stringResource(R.string.hadith_detail_source, it) }
+    val storeLinks = storeLinksBlock()
+    return { context.shareText(hadithShareText(hadith, header, narrator, source, storeLinks)) }
+}
+
+/** Значок «Поделиться» без подложки — в правом нижнем углу хадиса (решение пользователя 2026-10-06). */
+@Composable
+private fun HadithShareButton(onShare: () -> Unit, modifier: Modifier = Modifier) {
+    val iconSize = with(LocalDensity.current) { SHARE_ICON_SIZE.sp.toDp() }
+    BareIconButton(
+        onClick = onShare,
+        icon = painterResource(R.drawable.ic_share),
+        contentDescription = stringResource(R.string.share_action),
+        foreground = InabahTheme.palette.onAccentSecondary,
+        iconSize = iconSize,
+        // Значок — вровень с краем текста; лишняя зона касания уходит в поле карточки.
+        modifier = modifier.offset(x = (Size.visibleTapTarget - iconSize) / 2),
+    )
 }
 
 /** «ХАДИС 3» и арабский текст одним абзацем. */
@@ -145,9 +188,12 @@ private fun HadithAudioPlaceholder(number: Int) {
     }
 }
 
-/** «Передал: …», перевод и «Приводится: …» — стили переводов (настройка «Размер текста»). */
+/**
+ * «Передал: …», перевод и «Приводится: …» — стили переводов (настройка «Размер текста»);
+ * справа от источника, в правом нижнем углу, — «Поделиться».
+ */
 @Composable
-private fun HadithTranslationCard(translation: HadithTranslation) {
+private fun HadithTranslationCard(translation: HadithTranslation, onShare: () -> Unit) {
     val palette = InabahTheme.palette
     // Язык перевода — только для его текста (переносы); подписи — на языке интерфейса.
     val locale = LocaleList(translation.language.code)
@@ -163,17 +209,35 @@ private fun HadithTranslationCard(translation: HadithTranslation) {
                 style = InabahType.contentNote.copy(fontWeight = FontWeight.SemiBold))
         }
         Text(translation.text, color = palette.onAccent, style = InabahType.contentTranslation.copy(localeList = locale))
-        translation.source?.let {
+        val source = translation.source
+        if (source == null) {
+            // Без источника — линии нет (нечего отделять), «Поделиться» одна справа внизу.
+            HadithShareButton(onShare, Modifier.align(Alignment.End))
+        } else {
             // Линия над источником, под ней отступ 8 (iOS: overlay сверху у padding(.top)).
             Column {
                 Box(Modifier.fillMaxWidth().height(Size.hairline).background(palette.hairline))
-                Text(
-                    stringResource(R.string.hadith_detail_source, it),
-                    color = palette.onAccentTertiary,
-                    style = InabahType.contentNote.copy(fontStyle = FontStyle.Italic),
-                    modifier = Modifier.padding(top = Spacing.s),
-                )
+                SourceWithShare(stringResource(R.string.hadith_detail_source, source), onShare)
             }
         }
     }
 }
+
+/**
+ * «Приводится: …» и справа «Поделиться» — значок на уровне последней строки источника (их бывает 3–4),
+ * в правом нижнем углу карточки; отступ 8 под линией — как без кнопки.
+ */
+@Composable
+private fun SourceWithShare(text: String, onShare: () -> Unit) {
+    val style = InabahType.contentNote.copy(fontStyle = FontStyle.Italic)
+    // Середина значка — на середине строчных букв последней строки: выше базовой линии на ~треть кегля.
+    val baselineToCenter = with(LocalDensity.current) { (style.fontSize.toPx() * X_HEIGHT_CENTER).roundToInt() }
+    Row(Modifier.fillMaxWidth().padding(top = Spacing.s)) {
+        Text(text, color = InabahTheme.palette.onAccentTertiary, style = style,
+            modifier = Modifier.weight(1f).alignBy(LastBaseline))
+        HadithShareButton(onShare, Modifier.alignBy { it.measuredHeight / 2 + baselineToCenter })
+    }
+}
+
+/** Середина строчных букв над базовой линией — доля кегля (x-height Inter ≈ 0,55 → половина). */
+private const val X_HEIGHT_CENTER = 0.27f

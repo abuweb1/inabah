@@ -18,6 +18,9 @@ import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.test.onLast
+import androidx.compose.ui.test.performScrollTo
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
@@ -136,6 +139,41 @@ class HadithScreensTest {
     }
 
     @Test
+    fun detailHasShareButtonAtBottomOfTranslation() {
+        val store = HadithStore(FixedRepository())
+        compose.setContent {
+            InabahTheme {
+                HadithDetailScreen(HadithId(HadithCollection.Nawawi, 1), store, HadithProgress(storage),
+                    ReadingSettings(storage), onBack = {}, contentPadding = PaddingValues())
+            }
+        }
+        waitForNode("1 из $NAWAWI_COUNT")
+
+        // Прокрутка — действие: заодно проверка доступности (зона касания, подпись).
+        compose.onAllNodesWithContentDescription("Поделиться")[0].performScrollTo().assertIsEnabled()
+    }
+
+    // Ревью: без источника и без перевода кнопка тоже на месте (линия над источником — только при нём).
+    @Test
+    fun shareButtonWithoutSourceAndWithoutTranslation() {
+        val store = HadithStore(PartialRepository())
+        compose.setContent {
+            InabahTheme {
+                HadithDetailScreen(HadithId(HadithCollection.Nawawi, 1), store, HadithProgress(storage),
+                    ReadingSettings(storage), onBack = {}, contentPadding = PaddingValues())
+            }
+        }
+        waitForNode("1 из 2")
+        compose.onAllNodesWithText("Приводится:", substring = true).assertCountEquals(0)
+        compose.onAllNodesWithContentDescription("Поделиться")[0].performScrollTo().assertIsEnabled()
+
+        compose.onNodeWithContentDescription("Следующий хадис").performClick()
+        waitForNode("2 из 2")
+        // Пейджер может держать и соседнюю страницу — вторая страница в дереве последняя.
+        compose.onAllNodesWithContentDescription("Поделиться").onLast().performScrollTo().assertIsEnabled()
+    }
+
+    @Test
     fun accessibilityActionsReorderAndRestoreRevertsOrder() {
         val order = HadithCollectionOrder(storage)
         compose.setContent {
@@ -191,6 +229,17 @@ class HadithScreensTest {
             compose.onAllNodesWithContentDescription(description).fetchSemanticsNodes().isNotEmpty()
         }
     }
+}
+
+/** Два хадиса ан-Навави: первый — без источника, второй — без перевода. */
+private class PartialRepository : ContentRepository {
+    override suspend fun azkar(section: AzkarSection): List<Zikr> = emptyList()
+
+    override suspend fun hadiths(collection: HadithCollection): List<Hadith> = listOf(
+        Hadith(HadithId(collection, 1), "إِنَّمَا الْأَعْمَالُ بِالنِّيَّاتِ",
+            HadithTranslation(ContentLanguage.Base, narrator = null, text = "Перевод 1", source = null)),
+        Hadith(HadithId(collection, 2), "إِنَّمَا الْأَعْمَالُ بِالنِّيَّاتِ", translation = null),
+    )
 }
 
 /** Три хадиса ан-Навави, по одному в других сборниках. */

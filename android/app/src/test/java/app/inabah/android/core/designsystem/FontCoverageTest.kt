@@ -29,10 +29,19 @@ class FontCoverageTest {
     fun `Тексты интерфейса и переводы покрыты Inter и Scheherazade`() {
         val text = buildString {
             appendData { key -> key != "arabic" && key != "audio" }
-            append(File("src/main/res/values/strings.xml").readText().replace(Regex("<[^>]+>"), ""))
+            append(interfaceStrings())
         }
         assertEquals(emptyList(), missing(text, inter + scheherazade))
     }
+
+    /**
+     * Строки ресурсов, которые показывает приложение. `share_text_*` — только уходят из приложения
+     * (текст «Сделать напоминание»): их рисует мессенджер своими шрифтами, эмодзи «‼️ ❗» там нужны.
+     */
+    private fun interfaceStrings(): String =
+        File("src/main/res/values/strings.xml").readText()
+            .replace(Regex("""<string name="share_text_[^"]*">[^<]*</string>"""), "")
+            .replace(Regex("<[^>]+>"), "")
 
     @Test
     fun `Тексты лицензий покрыты Inter`() {

@@ -19,10 +19,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isEnabled
+import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.onNodeWithText
 import androidx.test.espresso.Espresso
 import app.inabah.android.feature.settings.AzkarSettingsScreen
@@ -217,6 +219,8 @@ class AzkarListScreenTest {
         compose.waitUntil(TIMEOUT_MILLIS) { counters().fetchSemanticsNodes().size == 1 }
         counters()[0].performClick()
         waitForNode("Машаа Аллах!")
+        // «Сделать напоминание» на оверлее — кнопка с текстом (в шапке — значок с той же подписью для TalkBack).
+        compose.onNodeWithText("Сделать напоминание").assertIsEnabled()
 
         // Экран создаётся заново (как после пересоздания активности): стор помнит, что оверлей показан.
         shown = false
@@ -225,6 +229,19 @@ class AzkarListScreenTest {
         compose.waitUntil(TIMEOUT_MILLIS) { compose.onAllNodesWithContentDescription("Развернуть").fetchSemanticsNodes().size == 2 }
         compose.mainClock.advanceTimeBy(2_000)
         compose.onNodeWithContentDescription("Машаа Аллах!").assertDoesNotExist()
+    }
+
+    @Test
+    fun everyCardHasShareButton() {
+        val store = store(1, 3)
+        compose.setContent { Screen(store) }
+        compose.waitUntil(TIMEOUT_MILLIS) { counters().fetchSemanticsNodes().size == 2 }
+
+        // Четвёртая кнопка ряда; прокрутка — действие, заодно проверка доступности.
+        compose.onAllNodesWithContentDescription("Поделиться").assertCountEquals(2)
+        compose.onAllNodesWithContentDescription("Поделиться")[1].performScrollTo()
+        // В шапке — «Сделать напоминание» (значок без текста, подпись для TalkBack).
+        compose.onNodeWithContentDescription("Сделать напоминание").assertIsEnabled()
     }
 
     @Test
