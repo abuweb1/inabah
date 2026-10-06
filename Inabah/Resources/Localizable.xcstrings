@@ -1358,6 +1358,83 @@
         }
       }
     },
+    "parchment.amber" : {
+      "comment" : "Фон арабского текста: медово-коричневый",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Янтарь"
+          }
+        }
+      }
+    },
+    "parchment.amethyst" : {
+      "comment" : "Фон арабского текста: приглушённый лиловый",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Аметист"
+          }
+        }
+      }
+    },
+    "parchment.classic" : {
+      "comment" : "Фон арабского текста: золотой пергамент (по умолчанию)",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пергамент"
+          }
+        }
+      }
+    },
+    "parchment.jade" : {
+      "comment" : "Фон арабского текста: глубокий зелёный",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Нефрит"
+          }
+        }
+      }
+    },
+    "parchment.night" : {
+      "comment" : "Фон арабского текста: тёмный, для чтения в темноте",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ночной"
+          }
+        }
+      }
+    },
+    "parchment.sepia" : {
+      "comment" : "Фон арабского текста: тёплая старая бумага",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сепия"
+          }
+        }
+      }
+    },
+    "parchment.smoky" : {
+      "comment" : "Фон арабского текста: серо-голубой",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Дымчатый"
+          }
+        }
+      }
+    },
     "placeholder.soon" : {
       "comment" : "Заголовок заглушки раздела в разработке",
       "extractionState" : "stale",
@@ -1738,6 +1815,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Палитра"
+          }
+        }
+      }
+    },
+    "settings.parchment.footer" : {
+      "comment" : "Палитра: подпись секции фона под арабским текстом",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Фон под арабским текстом азкаров и хадисов."
+          }
+        }
+      }
+    },
+    "settings.parchment.header" : {
+      "comment" : "Палитра: заголовок секции фона под арабским текстом",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Фон арабского текста"
           }
         }
       }

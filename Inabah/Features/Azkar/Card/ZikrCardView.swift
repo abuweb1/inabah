@@ -103,7 +103,7 @@ struct ZikrCardView: View {
                     ArabicText(
                         text: session.zikr.arabic,
                         size: settings.arabicFontSize,
-                        color: theme.palette.parchmentInk
+                        color: theme.palette.parchmentText
                     )
                     repetitionsBadge
                 }
@@ -141,10 +141,10 @@ struct ZikrCardView: View {
             Text("zikr.repetitions \(session.zikr.repetitions)")
         }
         .font(.caption2.weight(.semibold))
-        .foregroundStyle(theme.palette.successDeep)
+        .foregroundStyle(theme.palette.parchmentAccent)
         .padding(.vertical, Spacing.xxxs)
         .padding(.horizontal, Spacing.s)
-        .surface(theme.palette.successTint, cornerRadius: Radius.small, border: theme.palette.successBorder)
+        .surface(theme.palette.parchmentAccentTint, cornerRadius: Radius.small, border: theme.palette.parchmentAccentBorder)
     }
 
     private var actions: some View {

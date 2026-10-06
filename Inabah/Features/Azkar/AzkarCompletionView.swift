@@ -37,7 +37,7 @@ struct AzkarCompletionView: View {
             ArabicText(
                 text: "الحمد لله رب العالمين",
                 size: Self.arabicSize,
-                color: theme.palette.parchmentInk,
+                color: theme.palette.parchmentText,
                 alignment: .center
             )
             .padding(.vertical, Spacing.m)
@@ -45,7 +45,7 @@ struct AzkarCompletionView: View {
             .surface(
                 theme.gradients.parchment.linear,
                 cornerRadius: Radius.control,
-                border: theme.palette.successDeep,
+                border: theme.palette.parchmentAccent,
                 lineWidth: Size.parchmentBorder
             )
             .accessibilityLabel(Text("azkar.completion.hamd"))
