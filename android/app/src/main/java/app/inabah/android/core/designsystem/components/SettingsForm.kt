@@ -66,6 +66,8 @@ private val ChevronSize = 22.dp
 /**
  * Каркас экрана настроек: градиент раздела до краёв, сверху — [topBar] (навбар с «‹») или крупный
  * заголовок [largeTitle] (корень), группы прокручиваются; снизу — [contentPadding] (панель вкладок).
+ * [bottomContent] — закреплён под группами, над панелью вкладок, не прокручивается (iOS `safeAreaInset`
+ * у нижнего края: ссылка «О приложении» в корне).
  */
 @Composable
 fun SettingsScaffold(
@@ -74,19 +76,23 @@ fun SettingsScaffold(
     modifier: Modifier = Modifier,
     largeTitle: String? = null,
     topBar: (@Composable () -> Unit)? = null,
+    bottomContent: (@Composable () -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
+    // Отступ панели вкладок — у самого нижнего элемента: у закреплённого, если он есть, иначе у прокрутки.
+    val tabBarPadding = contentPadding.calculateBottomPadding()
     Column(modifier.fillMaxSize().background(background)) {
         topBar?.invoke()
         Column(
             modifier = Modifier
-                .fillMaxSize()
+                .weight(1f)
+                .fillMaxWidth()
                 .verticalScroll(rememberScrollState())
                 .then(if (topBar == null) Modifier.windowInsetsPadding(WindowInsets.statusBars) else Modifier)
                 // Под навбаром — отступ до первой группы, как в iOS (снимки android/docs/settings, ~20 pt).
                 .then(if (topBar != null) Modifier.padding(top = Spacing.xlPlus) else Modifier)
                 .padding(horizontal = Spacing.xl)
-                .padding(bottom = contentPadding.calculateBottomPadding() + Spacing.xl),
+                .padding(bottom = (if (bottomContent == null) tabBarPadding else 0.dp) + Spacing.xl),
             verticalArrangement = Arrangement.spacedBy(GroupSpacing),
         ) {
             // Крупный заголовок закреплён, как заголовки навбара; строки — с шагом интерфейса.
@@ -102,6 +108,7 @@ fun SettingsScaffold(
             }
             content()
         }
+        bottomContent?.let { Box(Modifier.fillMaxWidth().padding(bottom = tabBarPadding)) { it() } }
     }
 }
 

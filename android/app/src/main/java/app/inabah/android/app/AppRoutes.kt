@@ -1,5 +1,6 @@
 package app.inabah.android.app
 
+import app.inabah.android.core.content.LicenseDocument
 import app.inabah.android.core.content.model.AzkarSection
 import app.inabah.android.core.content.model.HadithCollection
 import app.inabah.android.core.content.model.HadithId
@@ -46,4 +47,12 @@ sealed interface SettingsRoute {
     /** Размер текста: переводы и интерфейс. */
     @Serializable
     data object TextSize : SettingsRoute
+
+    /** «О приложении» — ссылка внизу корня настроек. */
+    @Serializable
+    data object About : SettingsRoute
+
+    /** Полный текст лицензии шрифта или значков (из «О приложении»). */
+    @Serializable
+    data class License(val document: LicenseDocument) : SettingsRoute
 }

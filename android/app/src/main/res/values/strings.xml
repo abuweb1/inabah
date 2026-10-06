@@ -1,6 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Строки интерфейса (ru — язык по умолчанию). Источник: docs/android/07-resources.md ← iOS Localizable.xcstrings. -->
 <resources>
+    <string name="about_app_footer">Без рекламы, регистрации и сбора данных. Приложение работает без интернета.</string>
+    <string name="about_app_header">Приложение</string>
+    <string name="about_app_name">Инаба</string>
+    <string name="about_license_inter_subtitle">Шрифт интерфейса · Rasmus Andersson · SIL Open Font License 1.1</string>
+    <string name="about_license_inter_title">Inter</string>
+    <string name="about_license_material_subtitle">Значки вкладок · Google · Apache License 2.0</string>
+    <string name="about_license_material_title">Material Symbols</string>
+    <string name="about_license_scheherazade_subtitle">Арабский шрифт · SIL Global · SIL Open Font License 1.1</string>
+    <string name="about_license_scheherazade_title">Scheherazade New</string>
+    <string name="about_licenses_header">Шрифт и значки</string>
+    <string name="about_link_azkar">azkar.ru</string>
+    <string name="about_link_issues">Вопросы и предложения</string>
+    <string name="about_link_privacy">Политика конфиденциальности</string>
+    <string name="about_link_repository">Исходный код на GitHub</string>
+    <string name="about_link_sunnah">sunnah.com</string>
+    <string name="about_sources_azkar_text">Тексты, транскрипция, перевод и аудиозаписи — по azkar.ru.</string>
+    <string name="about_sources_azkar_title">Азкары</string>
+    <string name="about_sources_footer">Источник каждого зикра и хадиса указан под его переводом.</string>
+    <string name="about_sources_hadith_text">Классические сборники «40 хадисов» имама ан-Навави (с дополнением Ибн Раджаба), хадисы аль-Къудси и сборник имама аль-Аджурри. Арабский текст хадисов аль-Къудси — по sunnah.com.</string>
+    <string name="about_sources_hadith_title">Хадисы</string>
+    <string name="about_sources_header">Источники</string>
+    <string name="about_title">О приложении</string>
+    <string name="about_version">Версия %1$s</string>
     <string name="app_icon_beads">Чётки</string>
     <string name="app_icon_classic">Классическая</string>
     <string name="app_icon_dawn">Рассвет в михрабе</string>
@@ -104,6 +127,7 @@
     <string name="section_card_meta_original">%1$s · ⁨%2$s⁩</string>
     <string name="section_progress_done">Выполнено полностью</string>
     <string name="section_progress_percent">Выполнено на %d %%</string>
+    <string name="settings_about_footer">Инаба %1$s · О приложении</string>
     <string name="settings_app_icon_error">Не удалось сменить иконку</string>
     <string name="settings_app_icon_error_ok">Понятно</string>
     <string name="settings_app_icon_footer">Иконка на рабочем столе сменится через несколько секунд. На некоторых телефонах приложение при этом закроется — просто откройте его снова.</string>

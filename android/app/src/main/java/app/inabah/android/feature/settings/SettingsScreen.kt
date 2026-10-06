@@ -16,7 +16,7 @@ import app.inabah.android.core.designsystem.components.SettingsScaffold
 
 /**
  * Корень «Настроек» (iOS `SettingsView`) на графитовом фоне: «Азкары», «Хадисы» и «Оформление» —
- * «Палитра», «Размер текста», «Иконка приложения».
+ * «Палитра», «Размер текста», «Иконка приложения»; внизу — ссылка «О приложении».
  */
 @Composable
 fun SettingsScreen(
@@ -30,6 +30,8 @@ fun SettingsScreen(
         contentPadding = contentPadding,
         largeTitle = stringResource(R.string.settings_title),
         modifier = modifier,
+        // «О приложении» нужно редко — не строкой-разделом, а мелкой ссылкой у нижнего края (iOS, 2026-10-05).
+        bottomContent = { AboutFooterLink(onClick = { onOpen(SettingsRoute.About) }) },
     ) {
         SettingsGroup(
             rows = listOf(

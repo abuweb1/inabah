@@ -41,7 +41,9 @@ import app.inabah.android.feature.hadith.HadithDetailScreen
 import app.inabah.android.feature.hadith.HadithHomeScreen
 import app.inabah.android.feature.hadith.HadithListScreen
 import app.inabah.android.feature.makharij.MakharijHomeScreen
+import app.inabah.android.feature.settings.AboutScreen
 import app.inabah.android.feature.settings.AppIconSettingsScreen
+import app.inabah.android.feature.settings.LicenseScreen
 import app.inabah.android.feature.settings.AzkarSettingsScreen
 import app.inabah.android.feature.settings.HadithOrderSettingsScreen
 import app.inabah.android.feature.settings.HadithSettingsScreen
@@ -228,6 +230,21 @@ private fun TabScreens(tab: AppTab, services: AppServices, contentPadding: Paddi
             entry<SettingsRoute.AppIcon> {
                 AppIconSettingsScreen(
                     settings = services.appIconSettings,
+                    onBack = { router.pop(AppTab.Settings) },
+                    contentPadding = contentPadding.bottomOnly(),
+                )
+            }
+            entry<SettingsRoute.About> {
+                AboutScreen(
+                    onOpenLicense = { router.push(SettingsRoute.License(it)) },
+                    onBack = { router.pop(AppTab.Settings) },
+                    contentPadding = contentPadding.bottomOnly(),
+                )
+            }
+            entry<SettingsRoute.License> { route ->
+                LicenseScreen(
+                    document = route.document,
+                    texts = services.licenseTexts,
                     onBack = { router.pop(AppTab.Settings) },
                     contentPadding = contentPadding.bottomOnly(),
                 )

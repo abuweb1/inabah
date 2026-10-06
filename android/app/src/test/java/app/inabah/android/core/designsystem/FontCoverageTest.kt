@@ -1,5 +1,6 @@
 package app.inabah.android.core.designsystem
 
+import app.inabah.android.core.content.LicenseDocument
 import java.io.File
 import java.nio.ByteBuffer
 import kotlin.test.assertEquals
@@ -31,6 +32,18 @@ class FontCoverageTest {
             append(File("src/main/res/values/strings.xml").readText().replace(Regex("<[^>]+>"), ""))
         }
         assertEquals(emptyList(), missing(text, inter + scheherazade))
+    }
+
+    @Test
+    fun `Тексты лицензий покрыты Inter`() {
+        // Лицензии показываются шрифтом интерфейса («О приложении»): Scheherazade копирует сборка, остальные — в src.
+        val text = LicenseDocument.entries.joinToString("\n") { document ->
+            val file = listOf(File(assetsDir, "licenses"), File("src/main/assets/licenses"))
+                .map { File(it, document.assetName) }
+                .firstOrNull { it.exists() }
+            requireNotNull(file) { "нет лицензии ${document.assetName} в ассетах" }.readText()
+        }
+        assertEquals(emptyList(), missing(text, inter))
     }
 
     @Test
