@@ -69,7 +69,7 @@ struct AzkarListView: View {
         case .loaded(let sessions):
             AzkarFeed(section: section, sessions: sessions)
                 .safeAreaInset(edge: .top, spacing: 0) {
-                    AzkarProgressHeader(section: section)
+                    AzkarTopPanel(section: section)
                 }
         }
     }
@@ -167,6 +167,46 @@ private struct AzkarCompletionWatcher: View {
                 showsCompletion = true
             }
             .accessibilityHidden(true)
+    }
+}
+
+/// Под навбаром: во время азкаров — прогресс, вне его — когда время азкаров.
+/// Меняется только на границах времени, счётчики не читает.
+private struct AzkarTopPanel: View {
+    let section: AzkarSection
+
+    @Environment(AzkarStore.self) private var store
+
+    var body: some View {
+        if store.isInWindow(section) {
+            AzkarProgressHeader(section: section)
+        } else {
+            AzkarWindowNotice(section: section)
+        }
+    }
+}
+
+/// «Время утренних азкаров — с 5:00 до 12:00»: счёт работает, но в прогресс не идёт.
+private struct AzkarWindowNotice: View {
+    let section: AzkarSection
+
+    @Environment(AzkarStore.self) private var store
+    @Environment(AzkarWindowSettings.self) private var windowSettings
+    @Environment(\.theme) private var theme
+
+    var body: some View {
+        Label {
+            section.windowNotice(windowSettings.window(for: section), in: store.calendar)
+        } icon: {
+            Image(systemName: "clock")
+        }
+        .font(.caption)
+        .foregroundStyle(theme.palette.onAccentSecondary)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, Spacing.xl)
+        .padding(.top, Spacing.xs)
+        .padding(.bottom, Spacing.m)
+        .background(section.headerColor(in: theme))
     }
 }
 

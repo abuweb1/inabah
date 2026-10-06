@@ -3,6 +3,7 @@ import SwiftUI
 /// Главная раздела «Азкары»: бренд, аят Аз-Зумар 39:54 и переход к утренним/вечерним азкарам.
 struct AzkarHomeView: View {
     @Environment(AzkarStore.self) private var store
+    @Environment(AzkarWindowSettings.self) private var windowSettings
     @Environment(\.theme) private var theme
 
     private static let brand = SectionBrand(
@@ -32,7 +33,8 @@ struct AzkarHomeView: View {
                         iconColor: section.iconColor(in: theme),
                         gradient: section.cardGradient(in: theme),
                         shadow: section.cardShadow(in: theme),
-                        ring: ring(for: section)
+                        ring: ring(for: section),
+                        trailingNote: windowNote(for: section)
                     )
                 }
                 .buttonStyle(PressScaleButtonStyle())
@@ -42,11 +44,17 @@ struct AzkarHomeView: View {
         .toolbarVisibility(.hidden, for: .navigationBar)
     }
 
-    /// Выполнение раздела за текущий период; до загрузки кольца нет.
+    /// Выполнение раздела — только во время азкаров; до загрузки кольца нет.
     private func ring(for section: AzkarSection) -> NavCardRing? {
         let progress = store.progress(of: section)
-        guard progress.total > 0 else { return nil }
+        guard progress.total > 0, store.isInWindow(section) else { return nil }
         return NavCardRing(fraction: progress.fraction, style: section.ringStyle(in: theme))
+    }
+
+    /// Вне времени азкаров вместо кольца — само время («5:00–12:00»).
+    private func windowNote(for section: AzkarSection) -> Text? {
+        guard store.state(of: section).value != nil, !store.isInWindow(section) else { return nil }
+        return windowSettings.window(for: section).rangeText(in: store.calendar)
     }
 
     /// Количество зикров известно после загрузки; до неё карточка без подписи.
