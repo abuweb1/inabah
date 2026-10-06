@@ -26,7 +26,7 @@ class InabahApplication : Application() {
         ProcessLifecycleOwner.get().lifecycle.addObserver(
             object : DefaultLifecycleObserver {
                 override fun onStart(owner: LifecycleOwner) {
-                    refreshAzkarPeriods()
+                    reconcileAzkar()
                     container.services.value?.audioPlayer?.onForeground()
                 }
 
@@ -40,7 +40,7 @@ class InabahApplication : Application() {
         ContextCompat.registerReceiver(
             this,
             object : BroadcastReceiver() {
-                override fun onReceive(context: Context, intent: Intent) = refreshAzkarPeriods()
+                override fun onReceive(context: Context, intent: Intent) = reconcileAzkar()
             },
             IntentFilter().apply {
                 addAction(Intent.ACTION_TIME_CHANGED)
@@ -50,8 +50,8 @@ class InabahApplication : Application() {
         )
     }
 
-    /** До первого чтения настроек сторов ещё нет — периоды проверит их загрузка. */
-    private fun refreshAzkarPeriods() {
-        container.services.value?.azkarStore?.refreshPeriods()
+    /** До первого чтения настроек сторов ещё нет — отрезки проверит их загрузка. */
+    private fun reconcileAzkar() {
+        container.services.value?.azkarStore?.reconcile()
     }
 }

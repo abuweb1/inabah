@@ -144,12 +144,18 @@ private fun TabScreens(tab: AppTab, services: AppServices, contentPadding: Paddi
     when (tab) {
         AppTab.Azkar -> TabNavDisplay(router.azkarStack, onBack = { router.pop(AppTab.Azkar) }) {
             entry<TabRoot> {
-                AzkarHomeScreen(services.azkarStore, onOpenSection = { router.push(AzkarRoute.SectionList(it)) }, contentPadding)
+                AzkarHomeScreen(
+                    services.azkarStore,
+                    services.azkarWindowSettings,
+                    onOpenSection = { router.push(AzkarRoute.SectionList(it)) },
+                    contentPadding,
+                )
             }
             entry<AzkarRoute.SectionList> { route ->
                 AzkarListScreen(
                     section = route.section,
                     store = services.azkarStore,
+                    windowSettings = services.azkarWindowSettings,
                     readingSettings = services.readingSettings,
                     player = services.audioPlayer,
                     playlistSettings = services.playlistSettings,
@@ -198,7 +204,7 @@ private fun TabScreens(tab: AppTab, services: AppServices, contentPadding: Paddi
             entry<SettingsRoute.Azkar> {
                 AzkarSettingsScreen(
                     store = services.azkarStore,
-                    resetSettings = services.azkarResetSettings,
+                    windowSettings = services.azkarWindowSettings,
                     onBack = { router.pop(AppTab.Settings) },
                     contentPadding = contentPadding.bottomOnly(),
                 )

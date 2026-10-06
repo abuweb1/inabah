@@ -16,8 +16,14 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Icon
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
@@ -71,6 +77,7 @@ import app.inabah.android.core.designsystem.components.ProgressHeader
 import app.inabah.android.core.designsystem.components.TopBarSubtitle
 import app.inabah.android.core.designsystem.components.surface
 import app.inabah.android.core.formatting.formatPercent
+import app.inabah.android.core.settings.AzkarWindowSettings
 import app.inabah.android.core.settings.ReadingSettings
 import kotlin.math.floor
 
@@ -94,6 +101,7 @@ private const val HALF = 0.5
 fun AzkarListScreen(
     section: AzkarSection,
     store: AzkarStore,
+    windowSettings: AzkarWindowSettings,
     readingSettings: ReadingSettings,
     player: AudioPlayerController,
     playlistSettings: PlaylistSettings,
@@ -146,7 +154,7 @@ fun AzkarListScreen(
                         .fillMaxSize()
                         .then(if (showsCompletion) Modifier.clearAndSetSemantics {} else Modifier),
                 ) {
-                    AzkarProgressHeader(store, section)
+                    AzkarTopPanel(store, windowSettings, section)
                     AzkarFeed(section, current.value, fontSize.toFloat(), player, playlistSettings, contentPadding)
                 }
             }
@@ -184,6 +192,36 @@ private fun CompletionWatcher(store: AzkarStore, section: AzkarSection, onShow: 
         delay(Motion.COMPLETION_DELAY_MILLIS)
         store.acknowledgeCompletion(section)
         onShow(true)
+    }
+}
+
+/** Во время азкаров — шапка прогресса, вне его — плашка со временем; на границе сменяют друг друга. */
+@Composable
+private fun AzkarTopPanel(store: AzkarStore, windowSettings: AzkarWindowSettings, section: AzkarSection) {
+    val isInWindow by store.isInWindow(section).collectAsStateWithLifecycle()
+    if (isInWindow) AzkarProgressHeader(store, section) else AzkarWindowNotice(windowSettings, section)
+}
+
+/** «Время утренних азкаров — с 05:00 до 12:00»: счёт работает, но в прогресс не идёт. Цвет и отступы — шапки. */
+@Composable
+private fun AzkarWindowNotice(windowSettings: AzkarWindowSettings, section: AzkarSection) {
+    val theme = LocalInabahTheme.current
+    val windows by windowSettings.windows.collectAsStateWithLifecycle()
+    val style = InabahType.caption
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(section.headerColor(theme))
+            .padding(horizontal = Spacing.xl)
+            .padding(top = Spacing.xs, bottom = Spacing.m)
+            .semantics(mergeDescendants = true) {},
+        horizontalArrangement = Arrangement.spacedBy(Spacing.xs),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        // Значок — как символ подписи (iOS `Label` с caption), в sp: растёт с шагом интерфейса.
+        Icon(painterResource(R.drawable.ic_schedule), contentDescription = null, tint = theme.palette.onAccentSecondary,
+            modifier = Modifier.size(with(LocalDensity.current) { style.fontSize.toDp() }))
+        Text(section.windowNotice(windows.getValue(section)), color = theme.palette.onAccentSecondary, style = style)
     }
 }
 

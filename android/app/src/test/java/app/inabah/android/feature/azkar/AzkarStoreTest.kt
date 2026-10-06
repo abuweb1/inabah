@@ -8,7 +8,8 @@ import app.inabah.android.core.content.Loadable
 import app.inabah.android.core.content.model.AzkarSection
 import app.inabah.android.core.content.model.Zikr
 import app.inabah.android.core.content.model.ZikrId
-import app.inabah.android.core.settings.AzkarResetSettings
+import app.inabah.android.core.settings.AzkarHistory
+import app.inabah.android.core.settings.AzkarWindowSettings
 import app.inabah.android.core.settings.TestStorage
 import app.inabah.android.core.settings.berlin
 import app.inabah.android.core.settings.date
@@ -43,7 +44,8 @@ class AzkarCountingTest {
         AzkarStore(
             repository = repository,
             storage = storage.storage,
-            resetSettings = AzkarResetSettings(storage.storage),
+            windowSettings = AzkarWindowSettings(storage.storage),
+            history = AzkarHistory(storage.storage),
             now = { date(2026, 10, 3, 8) },
             zone = { berlin },
             onUnreadableProgress = { section, error -> throw AssertionError("Прогресс $section не читается", error) },
@@ -143,7 +145,8 @@ class AzkarCountingTest {
                 }
             },
             storage = storage.storage,
-            resetSettings = AzkarResetSettings(storage.storage),
+            windowSettings = AzkarWindowSettings(storage.storage),
+            history = AzkarHistory(storage.storage),
             now = { date(2026, 10, 3, 8) },
             zone = { berlin },
             onUnreadableProgress = { _, error -> throw AssertionError(error) },

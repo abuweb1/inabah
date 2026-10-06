@@ -18,7 +18,8 @@ import app.inabah.android.core.content.model.AzkarSection
 import app.inabah.android.core.content.model.HadithCollection
 import app.inabah.android.core.settings.AppIconSettings
 import app.inabah.android.core.settings.AppearanceSettings
-import app.inabah.android.core.settings.AzkarResetSettings
+import app.inabah.android.core.settings.AzkarHistory
+import app.inabah.android.core.settings.AzkarWindowSettings
 import app.inabah.android.core.settings.HadithCollectionOrder
 import app.inabah.android.core.settings.HadithProgress
 import app.inabah.android.core.settings.PackageManagerAppIconSwitcher
@@ -44,7 +45,7 @@ class AppServices(
     val router: AppRouter,
     val readingSettings: ReadingSettings,
     val playlistSettings: PlaylistSettings,
-    val azkarResetSettings: AzkarResetSettings,
+    val azkarWindowSettings: AzkarWindowSettings,
     val azkarStore: AzkarStore,
     val hadithStore: HadithStore,
     val hadithProgress: HadithProgress,
@@ -101,7 +102,7 @@ class AppContainer(context: Context) {
             appScope.launch { storage.runWriter() }
             val services = createServices()
             _services.value = services
-            appScope.launch { services.azkarStore.runResetTimer() }
+            appScope.launch { services.azkarStore.runBoundaryTimer() }
             appScope.launch { services.audioPlayer.run() }
             appScope.launch { services.appIconSettings.refresh() }
             services.azkarStore.loadAll()
@@ -121,20 +122,21 @@ class AppContainer(context: Context) {
 
     // Порядок — как в iOS AppEnvironment: настройки, затем сторы, которые от них зависят.
     private fun createServices(): AppServices {
-        val azkarResetSettings = AzkarResetSettings(storage)
+        val azkarWindowSettings = AzkarWindowSettings(storage)
         return AppServices(
             router = AppRouter(),
             readingSettings = ReadingSettings(storage),
             playlistSettings = PlaylistSettings(storage),
-            azkarResetSettings = azkarResetSettings,
+            azkarWindowSettings = azkarWindowSettings,
             azkarStore = AzkarStore(
                 repository = repository,
                 storage = storage,
-                resetSettings = azkarResetSettings,
+                windowSettings = azkarWindowSettings,
+                history = AzkarHistory(storage),
                 now = Instant::now,
                 zone = ZoneId::systemDefault,
                 onUnreadableProgress = { section, error ->
-                    Log.w(TAG, "Прогресс «${section.key}» не читается — новый период", error)
+                    Log.w(TAG, "Прогресс «${section.key}» не читается — отрезок заново", error)
                 },
             ),
             hadithStore = HadithStore(repository),

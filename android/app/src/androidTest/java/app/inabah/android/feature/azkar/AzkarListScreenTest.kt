@@ -19,6 +19,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isEnabled
@@ -40,7 +41,9 @@ import app.inabah.android.core.content.model.HadithCollection
 import app.inabah.android.core.content.model.Zikr
 import app.inabah.android.core.content.model.ZikrId
 import app.inabah.android.core.designsystem.InabahTheme
-import app.inabah.android.core.settings.AzkarResetSettings
+import app.inabah.android.core.settings.AzkarHistory
+import app.inabah.android.core.settings.AzkarWindowSettings
+import app.inabah.android.core.settings.DayTime
 import app.inabah.android.core.settings.PreferencesStorage
 import app.inabah.android.core.settings.ReadingSettings
 import java.io.File
@@ -61,6 +64,9 @@ import org.junit.runner.RunWith
 private const val TIMEOUT_MILLIS = 5_000L
 private val FIXED_ZONE: ZoneId = ZoneId.of("Europe/Berlin")
 private val FIXED_NOW: Instant = Instant.parse("2026-10-03T06:00:00Z")
+
+/** 13:00 в Берлине — после утреннего окна 5:00–12:00. */
+private val OUTSIDE_WINDOW: Instant = Instant.parse("2026-10-03T11:00:00Z")
 
 /** Экран раздела целиком: стор, настройки и DataStore во временном файле, без остального приложения. */
 @RunWith(AndroidJUnit4::class)
@@ -97,14 +103,19 @@ class AzkarListScreenTest {
         return AzkarStore(
             repository = FixedRepository(azkar),
             storage = storage,
-            resetSettings = AzkarResetSettings(storage),
-            // Утро в Берлине — далеко от обнулений (17:00 и 02:00), результат не зависит от часов устройства.
-            now = { FIXED_NOW },
+            windowSettings = windowSettings,
+            history = AzkarHistory(storage),
+            // По умолчанию — 08:00 в Берлине, внутри утреннего окна 5:00–12:00: не зависит от часов устройства.
+            now = { now },
             zone = { FIXED_ZONE },
             onUnreadableProgress = { _, error -> throw AssertionError(error) },
         )
     }
 
+    /** «Сейчас» для стора; тест может перенести его вне окна. */
+    private var now: Instant = FIXED_NOW
+
+    private val windowSettings by lazy { AzkarWindowSettings(storage) }
     private val defaultReading by lazy { ReadingSettings(storage) }
     private val playlistSettings by lazy { PlaylistSettings(storage) }
     private val defaultPlayer by lazy { AudioPlayerController(TestAudioEngine()) }
@@ -217,6 +228,49 @@ class AzkarListScreenTest {
     }
 
     @Test
+    fun outsideWindowShowsTimeNoticeAndNoCompletionOverlay() {
+        now = OUTSIDE_WINDOW
+        val store = store(1)
+        compose.setContent { Screen(store) }
+        compose.waitUntil(TIMEOUT_MILLIS) { counters().fetchSemanticsNodes().size == 1 }
+
+        // Время — в формате устройства, поэтому только начало фразы.
+        compose.onNodeWithText("Время утренних азкаров", substring = true).assertExists()
+        compose.onNodeWithContentDescription("Выполнено: 0 из 1").assertDoesNotExist()
+
+        // Счёт работает, но поздравления вне времени азкаров нет.
+        counters()[0].performClick()
+        compose.waitUntil(TIMEOUT_MILLIS) { counters().fetchSemanticsNodes().isEmpty() }
+        compose.mainClock.advanceTimeBy(2_000)
+        compose.onNodeWithContentDescription("Машаа Аллах!").assertDoesNotExist()
+    }
+
+    @Test
+    fun newWindowAppliesToProgressOnlyWhenSettingsScreenLeaves() {
+        val store = store(1, 3)
+        compose.runOnIdle {
+            runBlocking { store.loadAll() }
+            store.sessions(AzkarSection.Morning)[1].increment()
+        }
+        var shown by mutableStateOf(true)
+        compose.setContent {
+            InabahTheme {
+                if (shown) AzkarSettingsScreen(store, windowSettings, onBack = {}, contentPadding = PaddingValues())
+            }
+        }
+        compose.onNodeWithContentDescription("Начало утренних азкаров").assertExists()
+        compose.onNodeWithContentDescription("Конец вечерних азкаров").assertExists()
+
+        // Конец утренних — на уже прошедшие 07:00: пока экран открыт, прочитанное на месте.
+        compose.runOnIdle { windowSettings.setEnd(DayTime.of(7, 0), AzkarSection.Morning) }
+        compose.runOnIdle { check(store.hasProgress(AzkarSection.Morning)) }
+
+        // Ушли с экрана — окно закончилось, счётчики обнулены.
+        shown = false
+        compose.runOnIdle { check(!store.hasProgress(AzkarSection.Morning)) }
+    }
+
+    @Test
     fun increasingFontSizeToMaximumDisablesIncrease() {
         val store = store(1)
         val reading = ReadingSettings(storage)
@@ -259,22 +313,25 @@ class AzkarListScreenTest {
         }
         compose.setContent {
             InabahTheme {
-                AzkarSettingsScreen(store, AzkarResetSettings(storage), onBack = {}, contentPadding = PaddingValues())
+                AzkarSettingsScreen(store, windowSettings, onBack = {}, contentPadding = PaddingValues())
             }
         }
 
+        // «Утренние азкары» — и в строке времени, и в строке сброса: нужна строка-кнопка.
+        val resetRow = compose.onNode(hasText("Утренние азкары") and hasClickAction())
+
         // Закрыли подтверждение «Назад» — прогресс на месте.
-        compose.onNodeWithText("Утренние азкары").performClick()
+        resetRow.performClick()
         compose.onNodeWithText("Сбросить").assertExists()
         Espresso.pressBack()
         compose.onNodeWithText("Сбросить").assertDoesNotExist()
         compose.runOnIdle { check(store.hasProgress(AzkarSection.Morning)) }
 
         // Подтвердили — счёт обнулён, строка выключена.
-        compose.onNodeWithText("Утренние азкары").performClick()
+        resetRow.performClick()
         compose.onNodeWithText("Сбросить").performClick()
         compose.runOnIdle { check(!store.hasProgress(AzkarSection.Morning)) }
-        compose.onNodeWithText("Утренние азкары").assertIsNotEnabled()
+        resetRow.assertIsNotEnabled()
     }
 
     @androidx.compose.runtime.Composable
@@ -287,6 +344,7 @@ class AzkarListScreenTest {
             AzkarListScreen(
                 section = AzkarSection.Morning,
                 store = store,
+                windowSettings = windowSettings,
                 readingSettings = reading,
                 player = player,
                 playlistSettings = playlistSettings,

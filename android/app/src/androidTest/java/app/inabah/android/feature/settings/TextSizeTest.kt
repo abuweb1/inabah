@@ -33,7 +33,8 @@ import app.inabah.android.core.designsystem.FixedTextSize
 import app.inabah.android.core.designsystem.InabahTheme
 import app.inabah.android.core.designsystem.InterfaceTextScale
 import app.inabah.android.core.designsystem.components.InabahTopBar
-import app.inabah.android.core.settings.AzkarResetSettings
+import app.inabah.android.core.settings.AzkarHistory
+import app.inabah.android.core.settings.AzkarWindowSettings
 import app.inabah.android.core.settings.ContentTextSize
 import app.inabah.android.core.settings.InterfaceTextSize as InterfaceStep
 import app.inabah.android.core.settings.PreferencesStorage
@@ -89,7 +90,7 @@ class TextSizeTest {
     fun tapAtTrackEndSelectsLargestAndAccessibilityStepSelectsSmaller() {
         val settings = TextSizeSettings(storage)
         val repository = EmptyRepository()
-        val azkar = AzkarStore(repository, storage, AzkarResetSettings(storage), { Instant.EPOCH }, { ZoneId.of("UTC") }, { _, e -> throw AssertionError(e) })
+        val azkar = AzkarStore(repository, storage, AzkarWindowSettings(storage), AzkarHistory(storage),{ Instant.EPOCH }, { ZoneId.of("UTC") }, { _, e -> throw AssertionError(e) })
         compose.setContent {
             InabahTheme {
                 TextSizeSettingsScreen(settings, azkar, HadithStore(repository), onBack = {}, contentPadding = PaddingValues())
@@ -117,7 +118,7 @@ class TextSizeTest {
     fun draggingInterfaceSliderUnderItsOwnScaleReachesEveryStep() {
         val settings = TextSizeSettings(storage)
         val repository = EmptyRepository()
-        val azkar = AzkarStore(repository, storage, AzkarResetSettings(storage), { Instant.EPOCH }, { ZoneId.of("UTC") }, { _, e -> throw AssertionError(e) })
+        val azkar = AzkarStore(repository, storage, AzkarWindowSettings(storage), AzkarHistory(storage),{ Instant.EPOCH }, { ZoneId.of("UTC") }, { _, e -> throw AssertionError(e) })
         compose.setContent {
             InabahTheme {
                 // Как в приложении: экран под шагом интерфейса — смена шага меняет плотность под пальцем.

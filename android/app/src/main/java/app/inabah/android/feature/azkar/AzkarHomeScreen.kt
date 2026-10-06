@@ -17,6 +17,7 @@ import app.inabah.android.core.designsystem.components.NavCardRing
 import app.inabah.android.core.designsystem.components.SectionBrand
 import app.inabah.android.core.designsystem.components.SectionHomeLayout
 import app.inabah.android.core.designsystem.components.SectionNavCard
+import app.inabah.android.core.settings.AzkarWindowSettings
 
 // Арабский контент главной — не переводится.
 private const val BRAND_ARABIC = "إنابة"
@@ -26,6 +27,7 @@ private const val VERSE_ARABIC = "وَأَنِيبُوا إِلَىٰ رَبِّ
 @Composable
 fun AzkarHomeScreen(
     store: AzkarStore,
+    windowSettings: AzkarWindowSettings,
     onOpenSection: (AzkarSection) -> Unit,
     contentPadding: PaddingValues,
     modifier: Modifier = Modifier,
@@ -47,18 +49,21 @@ fun AzkarHomeScreen(
         modifier = modifier,
     ) {
         AzkarSection.entries.forEach { section ->
-            AzkarSectionCard(store, section, onClick = { onOpenSection(section) })
+            AzkarSectionCard(store, windowSettings, section, onClick = { onOpenSection(section) })
         }
     }
 }
 
 @Composable
-private fun AzkarSectionCard(store: AzkarStore, section: AzkarSection, onClick: () -> Unit) {
+private fun AzkarSectionCard(store: AzkarStore, windowSettings: AzkarWindowSettings, section: AzkarSection, onClick: () -> Unit) {
     val theme = LocalInabahTheme.current
     val state by store.state(section).collectAsStateWithLifecycle()
     val progress by store.progress(section).collectAsStateWithLifecycle()
+    val isInWindow by store.isInWindow(section).collectAsStateWithLifecycle()
+    val windows by windowSettings.windows.collectAsStateWithLifecycle()
     // Число зикров известно после загрузки; до неё — без подписи и кольца.
     val count = (state as? Loadable.Loaded)?.value?.size ?: 0
+    val isLoaded = progress.total > 0
     SectionNavCard(
         title = stringResource(section.title),
         icon = painterResource(section.icon),
@@ -67,6 +72,8 @@ private fun AzkarSectionCard(store: AzkarStore, section: AzkarSection, onClick: 
         shadow = section.cardShadow(theme),
         onClick = onClick,
         meta = if (count > 0) pluralStringResource(section.cardMeta, count, count) else null,
-        ring = if (progress.total > 0) NavCardRing(progress.fraction, section.ringStyle(theme)) else null,
+        // Кольцо — только во время азкаров; вне его — время окна.
+        ring = if (isLoaded && isInWindow) NavCardRing(progress.fraction, section.ringStyle(theme)) else null,
+        trailingNote = if (isLoaded && !isInWindow) windows.getValue(section).rangeText() else null,
     )
 }
