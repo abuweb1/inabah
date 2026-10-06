@@ -15,6 +15,9 @@ struct AzkarListView: View {
 
     @State private var showsCompletion = false
 
+    private static let reminderIconSize: CGFloat = 20
+    private static let titleSize: CGFloat = 16
+
     var body: some View {
         content
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -44,7 +47,19 @@ struct AzkarListView: View {
                 } else {
                     ToolbarItem(placement: .topBarLeading) { titleView }
                 }
-                FontSizeControls(settings: settings)
+                // «Сделать напоминание» — отдельной круглой кнопкой слева от «А− А+» (решение
+                // пользователя 2026-10-06). Чтобы на узких iPhone (390 pt) «А− А+» не уходили
+                // в меню «…», их капсула компактная, а заголовок — чуть меньше `headline`.
+                ToolbarItem(placement: .topBarTrailing) {
+                    ShareButton(title: "reminder.action", iconSize: Self.reminderIconSize) {
+                        section.reminderText
+                    }
+                    .fixedTextSize()
+                }
+                if #available(iOS 26, *) {
+                    ToolbarSpacer(.fixed, placement: .topBarTrailing)
+                }
+                FontSizeControls(settings: settings, compact: true)
             }
             .task { await store.load(section) }
     }
@@ -76,8 +91,10 @@ struct AzkarListView: View {
 
     private var titleView: some View {
         VStack(alignment: .leading, spacing: 0) {
+            // Чуть меньше `headline` (17): рядом с «Сделать напоминание» и «А− А+» на узких
+            // iPhone (390 pt) иначе «А− А+» уходят в меню «…» (решение пользователя 2026-10-06).
             Text(section.title)
-                .font(.headline)
+                .font(.system(size: Self.titleSize, weight: .semibold))
             Text(section.subtitle)
                 .font(.caption2)
                 .foregroundStyle(theme.palette.onAccentSecondary)

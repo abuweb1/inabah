@@ -16,7 +16,11 @@ struct HadithPage: View {
                 HadithStatusButtons(id: hadith.id, status: status)
                 HadithAudioPlaceholder(number: hadith.number)
                 if let translation = hadith.translation {
-                    HadithTranslationCard(translation: translation)
+                    HadithTranslationCard(hadith: hadith, translation: translation)
+                } else {
+                    // Перевода нет — «Поделиться» справа внизу страницы.
+                    HadithShareButton(hadith: hadith)
+                        .frame(maxWidth: .infinity, alignment: .trailing)
                 }
             }
             .padding(Spacing.m)
@@ -128,8 +132,10 @@ private struct HadithAudioPlaceholder: View {
     }
 }
 
-/// «Передал: …», перевод и «Приводится: …».
+/// «Передал: …», перевод и «Приводится: …»; «Поделиться» — справа на уровне последней
+/// строки источника (решение пользователя 2026-10-06), без источника — справа внизу карточки.
 private struct HadithTranslationCard: View {
+    let hadith: Hadith
     let translation: HadithTranslation
 
     @Environment(\.theme) private var theme
@@ -154,18 +160,58 @@ private struct HadithTranslationCard: View {
                 Text("hadith.detail.source \(source)")
                     .font(.content(.note, scale: scale).italic())
                     .foregroundStyle(theme.palette.onAccentTertiary)
-                    .padding(.top, Spacing.s)
+                    // Место под значок справа: сам значок — в наложении и вёрстку не раздвигает.
+                    .padding(.trailing, HadithShareButton.iconSize(scale: scale) + Spacing.s)
                     .frame(maxWidth: .infinity, alignment: .leading)
+                    .overlay(alignment: Self.lastLineTrailing) {
+                        let iconCenterAboveBaseline = ContentTextStyle.note.baseSize * scale * Self.xHeightRatio
+                        let iconInset = (Size.minTapTarget - HadithShareButton.iconSize(scale: scale)) / 2
+                        HadithShareButton(hadith: hadith)
+                            // Центр значка — на середине строчных букв последней строки.
+                            .alignmentGuide(.lastTextBaseline) { dimensions in
+                                dimensions[VerticalAlignment.center] + iconCenterAboveBaseline
+                            }
+                            // Значок — вровень с правым краем текста; зона нажатия выходит в поля карточки.
+                            .offset(x: iconInset)
+                    }
+                    .padding(.top, Spacing.s)
                     .overlay(alignment: .top) {
                         Rectangle()
                             .fill(theme.palette.hairline)
                             .frame(height: Size.hairline)
                     }
+            } else {
+                HadithShareButton(hadith: hadith)
+                    .frame(maxWidth: .infinity, alignment: .trailing)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.vertical, Spacing.l)
         .padding(.horizontal, Spacing.xl)
         .surface(theme.palette.subtleFill, cornerRadius: Radius.box)
+    }
+
+    private static let lastLineTrailing = Alignment(horizontal: .trailing, vertical: .lastTextBaseline)
+    /// Половина высоты строчных букв относительно кегля.
+    private static let xHeightRatio: CGFloat = 0.27
+}
+
+/// «Поделиться» хадисом: значок без подложки цвета подписей; растёт вместе с переводом
+/// (шаг «Размер текста»), а не по системному размеру.
+private struct HadithShareButton: View {
+    let hadith: Hadith
+
+    @Environment(\.theme) private var theme
+    @Environment(\.contentTextScale) private var scale
+
+    static func iconSize(scale: Double) -> CGFloat {
+        baseIconSize * scale
+    }
+
+    private static let baseIconSize: CGFloat = 19
+
+    var body: some View {
+        ShareButton(iconSize: Self.iconSize(scale: scale)) { hadith.shareText }
+            .buttonStyle(BareIconButtonStyle(foreground: theme.palette.onAccentSecondary))
     }
 }

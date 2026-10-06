@@ -174,8 +174,15 @@ struct ZikrCardView: View {
                 .labelStyle(.iconOnly)
                 .buttonStyle(actionStyle(isActive: false))
                 .disabled(session.count == 0)
+
+            ShareButton(iconSize: Self.shareIconSize) { session.zikr.shareText }
+                .buttonStyle(actionStyle(isActive: false))
         }
     }
+
+    /// Свой значок «Поделиться» — картинка, а не символ: размер задаётся рамкой, на глаз
+    /// вровень с символами ряда (они — шрифтом `IconButtonStyle`).
+    private static let shareIconSize: CGFloat = 21
 
     /// Как в прототипе: звучащая запись — зелёная кнопка.
     private var audioStyle: IconButtonStyle {
