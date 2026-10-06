@@ -133,7 +133,12 @@ private struct AzkarFeed: View {
                         ZikrCardView(session: session, audio: player.audioState(of: session.zikr))
                             .id(session.zikr.audioTrackID)
                     }
-                    AzkarPlayAllCard(section: section, azkar: sessions.map(\.zikr))
+                    // Записей нет — вместо «Прослушать все» заглушка «Аудио скоро».
+                    if sessions.contains(where: { $0.zikr.hasAudio }) {
+                        AzkarPlayAllCard(section: section, azkar: sessions.map(\.zikr))
+                    } else {
+                        AudioSoonPlaceholder(title: Text("audio.playAll.title"))
+                    }
                 }
                 .padding(Spacing.l)
             }

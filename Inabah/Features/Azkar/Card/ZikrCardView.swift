@@ -151,13 +151,15 @@ struct ZikrCardView: View {
         HStack(spacing: Spacing.l) {
             // Пока запись звучит — волна вместо ▶: повторное нажатие открывает плеер, а не ставит паузу.
             // Волна статичная: непрерывная анимация была единственной покадровой работой в ленте.
+            // Записи нет — ▶ неактивна, VoiceOver: «Аудио скоро».
             Button {
                 if let track = session.zikr.audioTrack() { player.play(track) }
             } label: {
                 Image(systemName: isAudioActive ? "waveform" : "play.fill")
             }
             .buttonStyle(audioStyle)
-            .accessibilityLabel(Text(isAudioActive ? "audio.zikr.openPlayer" : "audio.zikr.listen"))
+            .disabled(!session.zikr.hasAudio)
+            .accessibilityLabel(Text(audioLabel))
 
             Button {
                 withAnimation(Motion.collapse) { session.isTranslationVisible.toggle() }
@@ -183,6 +185,11 @@ struct ZikrCardView: View {
     /// Свой значок «Поделиться» — картинка, а не символ: размер задаётся рамкой, на глаз
     /// вровень с символами ряда (они — шрифтом `IconButtonStyle`).
     private static let shareIconSize: CGFloat = 21
+
+    private var audioLabel: LocalizedStringResource {
+        guard session.zikr.hasAudio else { return "audio.soon" }
+        return isAudioActive ? "audio.zikr.openPlayer" : "audio.zikr.listen"
+    }
 
     /// Как в прототипе: звучащая запись — зелёная кнопка.
     private var audioStyle: IconButtonStyle {

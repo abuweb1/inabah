@@ -13,7 +13,6 @@ struct ShareTextTests {
             id: ZikrID(section: .morning, number: 1),
             arabic: "سُبْحَانَ اللَّهِ",
             repetitions: 100,
-            audioFileName: "morning_01.mp3",
             translation: translation
         )
     }

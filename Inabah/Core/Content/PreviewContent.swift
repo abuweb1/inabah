@@ -33,7 +33,6 @@ nonisolated extension InMemoryContentRepository {
                 id: ZikrID(section: .morning, number: 1),
                 arabic: "اللَّهُمَّ أَنْتَ رَبِّي لَا إِلَٰهَ إِلَّا أَنْتَ، خَلَقْتَنِي وَأَنَا عَبْدُكَ",
                 repetitions: 1,
-                audioFileName: "morning_01.mp3",
                 translation: ZikrTranslation(
                     language: .base,
                     text: "О Аллах, Ты — Господь мой, и нет бога, кроме Тебя. Ты создал меня, а я — Твой раб.",
@@ -45,7 +44,6 @@ nonisolated extension InMemoryContentRepository {
                 id: ZikrID(section: .morning, number: 2),
                 arabic: "سُبْحَانَ اللَّهِ وَبِحَمْدِهِ",
                 repetitions: 3,
-                audioFileName: "morning_02.mp3",
                 translation: ZikrTranslation(
                     language: .base,
                     text: "Пречист Аллах и хвала Ему.",

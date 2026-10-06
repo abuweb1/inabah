@@ -18,7 +18,6 @@ struct AzkarStoreTests {
             id: ZikrID(section: section, number: number),
             arabic: "سُبْحَانَ اللَّهِ",
             repetitions: repetitions,
-            audioFileName: "\(section.rawValue)_\(number).mp3",
             translation: nil
         )
     }

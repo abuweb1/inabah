@@ -19,7 +19,8 @@ nonisolated struct ZikrDTO: Decodable, Sendable {
     let id: Int
     let arabic: String
     let max: Int
-    let audio: String
+    /// Имя аудиофайла в Bundle; поле необязательное — сейчас записей нет (с 2026-10-06).
+    let audio: String?
     let translations: [String: ZikrTranslationDTO]
 }
 

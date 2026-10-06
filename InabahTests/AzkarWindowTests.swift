@@ -203,7 +203,7 @@ struct AzkarProgressPersistenceTests {
     private static let repository = InMemoryContentRepository(azkar: Dictionary(uniqueKeysWithValues: AzkarSection.allCases.map { section in
         (section, [1, 2].map {
             Zikr(id: ZikrID(section: section, number: $0), arabic: "سُبْحَانَ اللَّهِ",
-                 repetitions: 3, audioFileName: "\(section.rawValue)_0\($0).mp3", translation: nil)
+                 repetitions: 3, translation: nil)
         })
     }))
 
