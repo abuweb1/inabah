@@ -82,7 +82,7 @@ class AzkarListScreenTest {
 
     private fun store(vararg repetitions: Int): AzkarStore {
         val azkar = repetitions.mapIndexed { index, count ->
-            Zikr(ZikrId(AzkarSection.Morning, index + 1), "سُبْحَانَ اللَّهِ", count, "morning_01.mp3", translation = null)
+            Zikr(ZikrId(AzkarSection.Morning, index + 1), "سُبْحَانَ اللَّهِ", count, audioFile, translation = null)
         }
         return AzkarStore(
             repository = FixedRepository(azkar),
@@ -98,6 +98,12 @@ class AzkarListScreenTest {
 
     /** «Сейчас» для стора; тест может перенести его вне окна. */
     private var now: Instant = FIXED_NOW
+
+    /**
+     * Файл записи у зикров стора: тесты плеера (движок-подделка) — «есть запись»; `null` — как сейчас
+     * в приложении, записей нет (2026-10-06).
+     */
+    private var audioFile: String? = "test-tone-1.wav"
 
     private val windowSettings by lazy { AzkarWindowSettings(storage) }
     private val defaultReading by lazy { ReadingSettings(storage) }
@@ -251,6 +257,21 @@ class AzkarListScreenTest {
             compose.onAllNodesWithText("12:00", substring = true).fetchSemanticsNodes().isNotEmpty()
         }
         compose.onAllNodesWithContentDescription("Выполнено на", substring = true).assertCountEquals(0)
+    }
+
+    // 2026-10-06: записей в приложении нет — ▶ неактивна, вместо «Прослушать все» заглушка.
+    @Test
+    fun withoutRecordingsPlayIsDisabledAndPlayAllIsPlaceholder() {
+        audioFile = null
+        val store = store(1, 3)
+        compose.setContent { Screen(store) }
+        compose.waitUntil(TIMEOUT_MILLIS) { counters().fetchSemanticsNodes().size == 2 }
+
+        compose.onAllNodesWithContentDescription("Аудио скоро").assertCountEquals(2)
+        compose.onAllNodesWithContentDescription("Аудио скоро")[0].assertIsNotEnabled()
+        compose.onAllNodesWithContentDescription("Прослушать").assertCountEquals(0)
+        compose.onNodeWithText("Прослушать все азкары", substring = true).performScrollTo()
+        compose.onAllNodesWithText("Слушать").assertCountEquals(0)
     }
 
     @Test

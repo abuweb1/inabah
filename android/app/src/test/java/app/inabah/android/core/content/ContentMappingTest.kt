@@ -3,7 +3,9 @@ package app.inabah.android.core.content
 import app.inabah.android.core.content.model.AzkarSection
 import app.inabah.android.core.content.model.HadithCollection
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestDispatcher
 import kotlinx.coroutines.test.runTest
@@ -59,6 +61,18 @@ class ContentMappingTest {
         val zikr = repository(mapOf("azkar.json" to azkar), StandardTestDispatcher(testScheduler)).azkar(AzkarSection.Evening).single()
 
         assertEquals("первый", zikr.translation!!.text)
+    }
+
+    // 2026-10-06: записей пока нет — в данных нет поля audio, зикр читается и показывает «Аудио скоро».
+    @Test
+    fun `Зикр без поля audio — записи нет, с полем — есть`() = runTest {
+        val noAudio = """{ "morning": [ { "id": 1, "arabic": "سُبْحَانَ اللَّهِ", "max": 1, "translations": { "ru": { "text": "т" } } } ], "evening": [] }"""
+        val zikr = repository(mapOf("azkar.json" to noAudio), StandardTestDispatcher(testScheduler)).azkar(AzkarSection.Morning).single()
+        assertNull(zikr.audioFileName)
+        assertFalse(zikr.hasAudio)
+
+        val withAudio = repository(mapOf("azkar.json" to azkar), StandardTestDispatcher(testScheduler)).azkar(AzkarSection.Morning).single()
+        assertTrue(withAudio.hasAudio)
     }
 
     @Test

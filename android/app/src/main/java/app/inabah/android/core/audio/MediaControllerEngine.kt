@@ -116,8 +116,15 @@ class MediaControllerEngine(private val context: Context) : AudioEngine {
 
     private fun connect() {
         if (connecting != null) return
-        val token = SessionToken(context, ComponentName(context, PlaybackService::class.java))
-        val future = MediaController.Builder(context, token).buildAsync()
+        val future = try {
+            val token = SessionToken(context, ComponentName(context, PlaybackService::class.java))
+            MediaController.Builder(context, token).buildAsync()
+        } catch (failure: IllegalArgumentException) {
+            // Служба не объявлена в манифесте (пока записей нет, она только в debug-сборке): со своими
+            // записями без переноса блока <service> в main — ошибка плеера, а не падение (ревью 2026-10-06).
+            onConnectionFailed(failure)
+            return
+        }
         connecting = future
         future.addListener(
             {
@@ -130,13 +137,7 @@ class MediaControllerEngine(private val context: Context) : AudioEngine {
                 val connected = try {
                     future.get()
                 } catch (failure: Exception) {
-                    // Служба не ответила: сообщить плееру ошибкой, а не молча стоять «играет» без звука.
-                    Log.e(TAG, "Нет связи со службой воспроизведения", failure)
-                    pending.clear()
-                    errorCount++
-                    _state.update {
-                        it.copy(playWhenReady = false, errorCount = errorCount, errorItem = it.itemIndex, connectionFailed = true)
-                    }
+                    onConnectionFailed(failure)
                     return@addListener
                 }
                 controller = connected
@@ -146,6 +147,16 @@ class MediaControllerEngine(private val context: Context) : AudioEngine {
             },
             ContextCompat.getMainExecutor(context),
         )
+    }
+
+    /** Нет связи со службой: сообщить плееру ошибкой, а не молча стоять «играет» без звука. */
+    private fun onConnectionFailed(failure: Exception) {
+        Log.e(TAG, "Нет связи со службой воспроизведения", failure)
+        pending.clear()
+        errorCount++
+        _state.update {
+            it.copy(playWhenReady = false, errorCount = errorCount, errorItem = it.itemIndex, connectionFailed = true)
+        }
     }
 
     private fun publish(player: Player) {

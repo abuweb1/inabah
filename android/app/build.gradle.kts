@@ -133,20 +133,17 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 }
 
-// Общие с iOS тексты и записи (корень репозитория) → ассеты APK:
+// Общие с iOS тексты (корень репозитория) → ассеты APK:
 // - data/<файл>.json → assets/data/ (только верхний уровень: data/pending/ в приложение не входит);
-// - audio/<раздел>/<файл>.mp3 → assets/audio/ одной папкой (в данных у зикра только имя файла);
 // - лицензия шрифта → assets/licenses/.
+// Аудиозаписей азкаров в приложении нет (2026-10-06): свои подключатся полем audio в данных
+// и файлами в assets/audio/.
 // Строчные комментарии, а не /** */: шаблоны путей со звёздочкой внутри блочного комментария
 // Kotlin читает как начало вложенного комментария.
 abstract class CopySharedContentTask : DefaultTask() {
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val dataFiles: ConfigurableFileCollection
-
-    @get:InputFiles
-    @get:PathSensitive(PathSensitivity.RELATIVE)
-    abstract val audioFiles: ConfigurableFileCollection
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
@@ -163,11 +160,29 @@ abstract class CopySharedContentTask : DefaultTask() {
         fileSystem.sync {
             into(outputDir)
             from(dataFiles) { into("data") }
-            from(audioFiles) {
-                eachFile { relativePath = RelativePath(true, "audio", name) }
-            }
-            includeEmptyDirs = false
             from(licenseFiles) { into("licenses") }
+        }
+    }
+}
+
+// Тестовые тоны (свои, 8 с; общие с тестами iOS) → assets/audio/ только debug-сборки: тесту службы
+// воспроизведения нужен звук, а записей в приложении нет. В release не попадают.
+abstract class CopyTestTonesTask : DefaultTask() {
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val toneFiles: ConfigurableFileCollection
+
+    @get:OutputDirectory
+    abstract val outputDir: DirectoryProperty
+
+    @get:Inject
+    abstract val fileSystem: FileSystemOperations
+
+    @TaskAction
+    fun copy() {
+        fileSystem.sync {
+            into(outputDir)
+            from(toneFiles) { into("audio") }
         }
     }
 }
@@ -176,8 +191,11 @@ val repositoryRoot: Directory = rootProject.layout.projectDirectory.dir("..")
 
 val copySharedContent = tasks.register<CopySharedContentTask>("copySharedContent") {
     dataFiles.from(repositoryRoot.dir("data").asFileTree.matching { include("*.json") })
-    audioFiles.from(repositoryRoot.dir("audio").asFileTree.matching { include("*/*.mp3") })
     licenseFiles.from(repositoryRoot.file("Inabah/Resources/Fonts/ScheherazadeNew-OFL.txt"))
+}
+
+val copyTestTones = tasks.register<CopyTestTonesTask>("copyTestTones") {
+    toneFiles.from(repositoryRoot.dir("InabahTests/Fixtures").asFileTree.matching { include("test-tone-*.wav") })
 }
 
 // JVM-тесты «Контент в ассетах» читают те же файлы, что попадают в APK.
@@ -197,5 +215,8 @@ androidComponents {
             copySharedContent,
             CopySharedContentTask::outputDir,
         )
+        if (variant.buildType == "debug") {
+            variant.sources.assets?.addGeneratedSourceDirectory(copyTestTones, CopyTestTonesTask::outputDir)
+        }
     }
 }

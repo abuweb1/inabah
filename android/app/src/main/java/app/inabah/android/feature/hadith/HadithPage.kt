@@ -40,6 +40,7 @@ import app.inabah.android.core.designsystem.Size
 import app.inabah.android.core.designsystem.Spacing
 import app.inabah.android.core.designsystem.Tracking
 import app.inabah.android.core.designsystem.components.ArabicText
+import app.inabah.android.core.designsystem.components.AudioSoonPlaceholder
 import app.inabah.android.core.designsystem.components.BareIconButton
 import app.inabah.android.core.designsystem.components.ParchmentPanel
 import app.inabah.android.core.designsystem.components.StatusGlyph
@@ -51,10 +52,7 @@ import app.inabah.android.core.share.shareText
 import app.inabah.android.core.share.storeLinksBlock
 import kotlin.math.roundToInt
 
-/** ▶ заглушки аудио — как символ headline, в sp (растёт с шагом интерфейса); круг 44 — постоянный, как в iOS. */
-private const val AUDIO_ICON_SIZE = 20f
-
-/** Значок «Поделиться» — как ▶ заглушки аудио: в sp, растёт с шагом интерфейса. */
+/** Значок «Поделиться» — как ▶ заглушки аудио (`AudioSoonPlaceholder`): в sp, растёт с шагом интерфейса. */
 private const val SHARE_ICON_SIZE = 20f
 
 /**
@@ -81,7 +79,7 @@ fun HadithPage(
     ) {
         ArabicPanel(hadith, arabicFontSize)
         HadithStatusButtons(status, onToggleRead, onToggleMemorized)
-        HadithAudioPlaceholder(hadith.number)
+        AudioSoonPlaceholder(stringResource(R.string.hadith_audio_title, hadith.number))
         val onShare = hadithShareAction(hadith)
         val translation = hadith.translation
         if (translation != null) {
@@ -160,31 +158,6 @@ private fun HadithStatusButtons(status: HadithStatus, onToggleRead: () -> Unit, 
             activeFill = palette.statusMemorizedStrong,
             modifier = Modifier.weight(1f),
         ) { color, size -> StatusGlyph(StatusGlyphKind.Memorized, color, size, isFilled = status.isMemorized) }
-    }
-}
-
-/** Аудио хадисов ещё не записано — неактивная карточка, как в прототипе. */
-@Composable
-private fun HadithAudioPlaceholder(number: Int) {
-    val palette = InabahTheme.palette
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .surface(palette.subtleFill, Radius.box)
-            .padding(vertical = Spacing.m, horizontal = Spacing.l)
-            .semantics(mergeDescendants = true) {},
-        horizontalArrangement = Arrangement.spacedBy(Spacing.m),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        // Неактивный значок — не кнопка «Воспроизвести»: TalkBack читает только подписи.
-        Box(Modifier.size(Size.visibleTapTarget).background(palette.track, CircleShape), contentAlignment = Alignment.Center) {
-            Icon(painterResource(R.drawable.ic_play_arrow), contentDescription = null, tint = palette.onAccentTertiary,
-                modifier = Modifier.size(with(LocalDensity.current) { AUDIO_ICON_SIZE.sp.toDp() }))
-        }
-        Column(verticalArrangement = Arrangement.spacedBy(Spacing.xxxs)) {
-            Text(stringResource(R.string.hadith_audio_title, number), color = palette.onAccentSecondary, style = InabahType.caption)
-            Text(stringResource(R.string.hadith_audio_soon), color = palette.onAccentTertiary, style = InabahType.caption2)
-        }
     }
 }
 

@@ -24,16 +24,22 @@ fun azkarSectionOf(audioId: String): AzkarSection? {
 
 private const val AUDIO_DOMAIN = "azkar"
 
-/** Подписи плеера и экрана блокировки: «Зикр №3», «Утренние азкары», «АЗКАРЫ». */
+/**
+ * Трек для плеера, подписи плеера и экрана блокировки: «Зикр №3», «Утренние азкары», «АЗКАРЫ».
+ * Записи нет — `null`.
+ */
 @Composable
-fun Zikr.toAudioTrack(repeatsByCount: Boolean = false): AudioTrack = AudioTrack(
-    id = audioTrackId,
-    assetFile = audioFileName,
-    title = stringResource(R.string.audio_zikr_title, id.number),
-    subtitle = stringResource(id.section.title),
-    category = stringResource(R.string.audio_category_azkar),
-    repeatCount = if (repeatsByCount) repetitions else 1,
-)
+fun Zikr.toAudioTrack(repeatsByCount: Boolean = false): AudioTrack? {
+    val file = audioFileName ?: return null
+    return AudioTrack(
+        id = audioTrackId,
+        assetFile = file,
+        title = stringResource(R.string.audio_zikr_title, id.number),
+        subtitle = stringResource(id.section.title),
+        category = stringResource(R.string.audio_category_azkar),
+        repeatCount = if (repeatsByCount) repetitions else 1,
+    )
+}
 
 /**
  * Состояние записи зикра для карточки — готовым значением от ленты (карточки не читают плеер):

@@ -1,12 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Только debug-сборка: каталог компонентов дизайн-системы для сверки с iOS по снимкам.
-     exported — чтобы запускать через adb (am start); фильтров намерений нет, в release его нет. -->
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<!-- Только debug-сборка, в release этого нет. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- Служба воспроизведения — только для теста службы (PlaybackServiceTest на тестовых тонах):
+         аудиозаписей в приложении пока нет (2026-10-06), в release её нет. Со своими записями —
+         перенести этот блок в src/main/AndroidManifest.xml. Медиауведомлению POST_NOTIFICATIONS
+         не нужно: Android 13+ делает исключение для медиасессий. -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
+
     <application>
+        <!-- Каталог компонентов дизайн-системы для сверки с iOS по снимкам. exported — чтобы запускать
+             через adb (am start); фильтров намерений нет. -->
         <activity
             android:name=".designcatalog.DesignCatalogActivity"
             android:exported="true"
             android:screenOrientation="portrait"
             android:theme="@style/Theme.Inabah" />
+
+        <!-- Экспортирована: к сессии подключаются системные контроллеры (уведомление, экран блокировки,
+             Bluetooth) — разрешением их не ограничить (ExportedService). Посторонние приложения
+             отклоняет PlaybackService.SessionCallback.onConnect, записи — только из ассетов. -->
+        <service
+            android:name=".core.audio.PlaybackService"
+            android:exported="true"
+            android:foregroundServiceType="mediaPlayback"
+            tools:ignore="ExportedService">
+            <intent-filter>
+                <action android:name="androidx.media3.session.MediaSessionService" />
+            </intent-filter>
+        </service>
     </application>
 </manifest>

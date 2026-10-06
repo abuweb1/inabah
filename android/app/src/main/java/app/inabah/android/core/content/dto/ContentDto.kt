@@ -17,7 +17,8 @@ data class ZikrDto(
     val id: Int,
     val arabic: String,
     val max: Int,
-    val audio: String,
+    /** Необязательное: записей пока нет (2026-10-06), свои подключатся этим полем. */
+    val audio: String? = null,
     val translations: Map<String, ZikrTranslationDto>,
 )
 
