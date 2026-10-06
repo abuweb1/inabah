@@ -25,7 +25,8 @@ struct HadithPage: View {
             }
             .padding(Spacing.m)
         }
-        .scrollIndicators(.hidden)    }
+        .scrollIndicators(.hidden)
+    }
 
     private var arabicPanel: some View {
         ParchmentPanel(bottomCornerRadius: Radius.card) {
