@@ -14,7 +14,7 @@ struct HadithPage: View {
             VStack(spacing: Spacing.m) {
                 arabicPanel
                 HadithStatusButtons(id: hadith.id, status: status)
-                HadithAudioPlaceholder(number: hadith.number)
+                AudioSoonPlaceholder(title: Text("hadith.audio.title \(hadith.number)"))
                 if let translation = hadith.translation {
                     HadithTranslationCard(hadith: hadith, translation: translation)
                 } else {
@@ -97,38 +97,6 @@ private struct HadithStatusButtons: View {
             .accessibilityAddTraits(status.isMemorized ? [.isToggle, .isSelected] : .isToggle)
         }
         .sensoryFeedback(.selection, trigger: status)
-    }
-}
-
-/// Аудио хадисов ещё не записано — неактивная карточка, как в прототипе.
-private struct HadithAudioPlaceholder: View {
-    let number: Int
-
-    @Environment(\.theme) private var theme
-
-    var body: some View {
-        HStack(spacing: Spacing.m) {
-            Image(systemName: "play.fill")
-                .font(.headline)
-                .foregroundStyle(theme.palette.onAccentTertiary)
-                .frame(width: Size.minTapTarget, height: Size.minTapTarget)
-                .background(theme.palette.track, in: .circle)
-                // Неактивный значок — не кнопка «Воспроизвести»: VoiceOver читает только подписи.
-                .accessibilityHidden(true)
-            VStack(alignment: .leading, spacing: Spacing.xxxs) {
-                Text("hadith.audio.title \(number)")
-                    .font(.caption)
-                    .foregroundStyle(theme.palette.onAccentSecondary)
-                Text("hadith.audio.soon")
-                    .font(.caption2)
-                    .foregroundStyle(theme.palette.onAccentTertiary)
-            }
-            Spacer(minLength: 0)
-        }
-        .padding(.vertical, Spacing.m)
-        .padding(.horizontal, Spacing.l)
-        .surface(theme.palette.subtleFill, cornerRadius: Radius.box)
-        .accessibilityElement(children: .combine)
     }
 }
 

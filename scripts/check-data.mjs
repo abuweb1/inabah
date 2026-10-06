@@ -106,7 +106,8 @@ function checkAzkar(AZKAR) {
     list.forEach((item, i) => {
       const where = `${type} id ${item.id ?? '?'}`;
       checkId(where, item, i);
-      for (const f of ['arabic', 'translit', 'russian', 'source', 'audio']) requireString(where, item, f);
+      // `audio` необязательно: записей пока нет (с 2026-10-06). Если поле есть — файл должен лежать в audio/.
+      for (const f of ['arabic', 'translit', 'russian', 'source']) requireString(where, item, f);
       if (!Number.isInteger(item.max) || item.max < 1) error(where, `некорректный max: ${item.max}`);
       if (item.arabic) checkArabic(where, item.arabic);
       if (item.russian) checkRussian(where, item.russian);

@@ -21,14 +21,30 @@ struct BundledContentTests {
         #expect(azkar.allSatisfy { $0.repetitions >= 1 })
     }
 
-    @Test("Аудиофайл зикра лежит в Bundle", arguments: AzkarSection.allCases)
-    func azkarAudioIsBundled(section: AzkarSection) async throws {
+    /// Чужих записей в приложении нет (удалены 2026-10-06): ни файлов в Bundle, ни ссылок
+    /// на них в данных. Появятся свои — поменять тест на «файл каждой записи лежит в Bundle».
+    @Test("Аудиозаписей нет: ни MP3 в Bundle, ни поля audio у зикров", arguments: AzkarSection.allCases)
+    @MainActor
+    func noBundledAudio(section: AzkarSection) async throws {
         let azkar = try await repository.azkar(in: section)
-        let missing = azkar.filter { zikr in
-            let name = (zikr.audioFileName as NSString).deletingPathExtension
-            return Bundle.main.url(forResource: name, withExtension: "mp3") == nil
-        }
-        #expect(missing.isEmpty, "Нет аудио: \(missing.map(\.audioFileName))")
+
+        #expect(azkar.allSatisfy { !$0.hasAudio && $0.audioTrack() == nil })
+        #expect(Bundle.main.urls(forResourcesWithExtension: "mp3", subdirectory: nil) ?? [] == [])
+    }
+
+    @Test("Запись указана, но файла нет в Bundle — трека нет, а не падение")
+    @MainActor
+    func missingAudioFileGivesNoTrack() {
+        let zikr = Zikr(
+            id: ZikrID(section: .morning, number: 1),
+            arabic: "سُبْحَانَ اللَّهِ",
+            repetitions: 1,
+            audioFileName: "morning_99.mp3",
+            translation: nil
+        )
+
+        #expect(zikr.hasAudio)
+        #expect(zikr.audioTrack() == nil)
     }
 
     @Test("Сборник хадисов загружается", arguments: [

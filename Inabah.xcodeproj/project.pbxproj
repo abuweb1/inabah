@@ -50,11 +50,6 @@
 			path = data;
 			sourceTree = "<group>";
 		};
-		AB0000000000000000000024 /* audio */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = audio;
-			sourceTree = "<group>";
-		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -81,7 +76,6 @@
 				AB0000000000000000000021 /* Inabah */,
 				AB0000000000000000000022 /* InabahTests */,
 				AB0000000000000000000023 /* data */,
-				AB0000000000000000000024 /* audio */,
 				AB0000000000000000000003 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -113,7 +107,6 @@
 			fileSystemSynchronizedGroups = (
 				AB0000000000000000000021 /* Inabah */,
 				AB0000000000000000000023 /* data */,
-				AB0000000000000000000024 /* audio */,
 			);
 			name = Inabah;
 			packageProductDependencies = (

@@ -17,14 +17,6 @@ struct AboutView: View {
                     .settingsRow()
                 AboutTextRow(title: "about.sources.hadith.title", text: "about.sources.hadith.text")
                     .settingsRow()
-                Link(destination: AboutLinks.azkar) {
-                    AboutLinkLabel(title: "about.link.azkar")
-                }
-                .settingsRow()
-                Link(destination: AboutLinks.sunnah) {
-                    AboutLinkLabel(title: "about.link.sunnah")
-                }
-                .settingsRow()
             } header: {
                 Text("about.sources.header")
             } footer: {
@@ -163,8 +155,6 @@ enum AboutLinks {
     /// Страница в App Store (Apple ID приложения из App Store Connect) — последний блок
     /// текста «Поделиться».
     static let appStore = URL(string: "https://apps.apple.com/app/id6819638881")!
-    static let azkar = URL(string: "https://azkar.ru")!
-    static let sunnah = URL(string: "https://sunnah.com")!
     static let repository = URL(string: "https://github.com/abuweb1/inabah")!
     static let privacy = URL(string: "https://github.com/abuweb1/inabah/blob/main/PRIVACY.md")!
     static let issues = URL(string: "https://github.com/abuweb1/inabah/issues")!

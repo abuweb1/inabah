@@ -18,8 +18,9 @@ nonisolated struct Zikr: Identifiable, Hashable, Sendable {
     let arabic: String
     /// Сколько раз читать (`max` в JSON), не меньше 1.
     let repetitions: Int
-    /// Имя аудиофайла в Bundle, например `morning_01.mp3`.
-    let audioFileName: String
+    /// Имя аудиофайла в Bundle, например `morning_01.mp3`; `nil` — записи нет (сейчас ни у одного
+    /// зикра, с 2026-10-06; на карточке — «Аудио скоро»).
+    var audioFileName: String? = nil
     let translation: ZikrTranslation?
 
     var section: AzkarSection { id.section }
