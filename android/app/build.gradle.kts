@@ -62,6 +62,8 @@ android {
 
     buildFeatures {
         compose = true
+        // Версия на экране «О приложении» — BuildConfig.VERSION_NAME / VERSION_CODE.
+        buildConfig = true
     }
 
     // Язык интерфейса выбирает приложение, не система (app/AppLocale.kt): все переводы строк — в основном

@@ -12,6 +12,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.unit.Dp
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
@@ -100,7 +103,7 @@ fun AppIconSettingsContent(
                                     cornerRadius = IconSize * ICON_CORNER_RATIO,
                                     modifier = Modifier.weight(1f),
                                 ) {
-                                    AppIconPreview(option)
+                                    AppIconImage(option, IconSize, clip = false)
                                 }
                             }
                         }
@@ -113,12 +116,18 @@ fun AppIconSettingsContent(
 
 /**
  * Иконка как в лаунчере: слои адаптивной иконки по отдельности (`painterResource` не читает `adaptive-icon`),
- * растянутые на 108/72 — видна центральная часть, края обрезает скругление плитки.
+ * растянутые на 108/72 — видна центральная часть. [clip] — скругление iOS-иконки (доля стороны); в плитке
+ * выбора обрезает сама плитка.
  */
 @Composable
-private fun AppIconPreview(option: AppIconOption) {
-    Box(Modifier.size(IconSize), contentAlignment = Alignment.Center) {
-        val layerSize = IconSize * ADAPTIVE_FULL_TO_VISIBLE
+internal fun AppIconImage(option: AppIconOption, size: Dp, modifier: Modifier = Modifier, clip: Boolean = true) {
+    Box(
+        modifier
+            .size(size)
+            .then(if (clip) Modifier.clip(RoundedCornerShape(size * ICON_CORNER_RATIO)) else Modifier),
+        contentAlignment = Alignment.Center,
+    ) {
+        val layerSize = size * ADAPTIVE_FULL_TO_VISIBLE
         Image(painterResource(option.background), contentDescription = null, modifier = Modifier.requiredSize(layerSize))
         Image(painterResource(option.foreground), contentDescription = null, modifier = Modifier.requiredSize(layerSize))
     }

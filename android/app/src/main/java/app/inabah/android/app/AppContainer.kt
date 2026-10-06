@@ -12,6 +12,7 @@ import app.inabah.android.core.audio.MediaControllerEngine
 import app.inabah.android.core.content.AssetContentRepository
 import app.inabah.android.core.content.ContentLanguagePriority
 import app.inabah.android.core.content.ContentRepository
+import app.inabah.android.core.content.LicenseTexts
 import app.inabah.android.core.content.Loadable
 import app.inabah.android.core.content.model.AzkarSection
 import app.inabah.android.core.content.model.HadithCollection
@@ -50,6 +51,7 @@ class AppServices(
     val appearanceSettings: AppearanceSettings,
     val textSizeSettings: TextSizeSettings,
     val appIconSettings: AppIconSettings,
+    val licenseTexts: LicenseTexts,
     val audioPlayer: AudioPlayerController,
 )
 
@@ -143,6 +145,7 @@ class AppContainer(context: Context) {
                 ioDispatcher = Dispatchers.IO,
                 onUnreadable = { error -> Log.e(TAG, "Не прочитана включённая иконка — отмечена «Классическая»", error) },
             ),
+            licenseTexts = LicenseTexts(appContext.assets::open, Dispatchers.IO),
             // Служба воспроизведения подключается при первом звуке, не при запуске приложения.
             audioPlayer = AudioPlayerController(MediaControllerEngine(appContext)),
         )
