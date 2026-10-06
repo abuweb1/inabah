@@ -40,7 +40,14 @@ data class Palette(
     val parchmentLight: Color,
     val parchmentMid: Color,
     val parchmentDeep: Color,
+    /** Тёмные «чернила» на золоте: значок главной кнопки плеера, цифры счётчика. Пергамент не меняет. */
     val parchmentInk: Color,
+    /** Стоп градиента пергамента вместо золота — у варианта фона свой ([ParchmentStyle]); по умолчанию золото. */
+    val parchmentHighlight: Color = gold,
+    /** Текст на пергаменте (арабский, «ХАДИС N»): у тёмного варианта фона — светлый. */
+    val parchmentText: Color = parchmentInk,
+    /** Рамка, «✦» и значок «N раз» на пергаменте: у тёмного варианта фона — светлее, иначе не видны. */
+    val parchmentAccent: Color = successDeep,
     val tabAzkar: Color,
     val tabHadith: Color,
     val tabMakharij: Color,
@@ -68,6 +75,8 @@ data class Palette(
     val goldMuted: Color get() = gold.copy(alpha = 0.45f)
     val goldTint: Color get() = gold.copy(alpha = 0.13f)
     val parchmentGlow: Color get() = parchmentLight.copy(alpha = 0.7f)
+    val parchmentAccentTint: Color get() = parchmentAccent.copy(alpha = 0.1f)
+    val parchmentAccentBorder: Color get() = parchmentAccent.copy(alpha = 0.25f)
 
     companion object {
         val Sections = Palette(

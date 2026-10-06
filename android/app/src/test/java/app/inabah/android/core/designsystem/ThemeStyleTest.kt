@@ -14,8 +14,8 @@ import kotlin.test.assertNotEquals
 import kotlin.test.assertTrue
 import org.junit.Test
 
-/** Контраст WCAG и расстояние OKLab — как `Contrast` в iOS `ThemeStyleTests` (те же пороги). */
-private object Contrast {
+/** Контраст WCAG и расстояние OKLab — как `Contrast` в iOS `ThemeStyleTests` (те же пороги); и в `ParchmentStyleTest`. */
+internal object Contrast {
     fun luminance(color: Color): Double {
         fun channel(c: Float): Double = if (c <= 0.03928) c / 12.92 else ((c + 0.055) / 1.055).pow(2.4)
         return 0.2126 * channel(color.red) + 0.7152 * channel(color.green) + 0.0722 * channel(color.blue)
@@ -118,10 +118,12 @@ class ThemeStyleTest {
             assertEquals(
                 listOf(base.gold, base.goldLight, base.goldDeep, base.sunRays, base.parchmentLight, base.parchmentMid,
                     base.parchmentDeep, base.parchmentInk, base.statusRead, base.statusMemorized, base.success,
-                    base.successLight, base.successDeep, base.successDim, base.onAccent, base.textPrimary),
+                    base.successLight, base.successDeep, base.successDim, base.onAccent, base.textPrimary,
+                    base.parchmentHighlight, base.parchmentText, base.parchmentAccent),
                 listOf(p.gold, p.goldLight, p.goldDeep, p.sunRays, p.parchmentLight, p.parchmentMid,
                     p.parchmentDeep, p.parchmentInk, p.statusRead, p.statusMemorized, p.success,
-                    p.successLight, p.successDeep, p.successDim, p.onAccent, p.textPrimary),
+                    p.successLight, p.successDeep, p.successDim, p.onAccent, p.textPrimary,
+                    p.parchmentHighlight, p.parchmentText, p.parchmentAccent),
                 "стиль $style",
             )
             assertEquals(Theme.Sections.gradients.parchment, style.theme.gradients.parchment)

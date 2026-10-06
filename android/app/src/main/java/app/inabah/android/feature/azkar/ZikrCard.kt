@@ -187,7 +187,7 @@ private fun ZikrFullContent(
         // Под свёрнутым заголовком верхние углы прямые — меняются сразу, без анимации.
         ParchmentPanel(topCornerRadius = if (isUnderHeader) 0.dp else Radius.card) {
             Column(verticalArrangement = Arrangement.spacedBy(Spacing.m)) {
-                ArabicText(zikr.arabic, arabicFontSize, palette.parchmentInk)
+                ArabicText(zikr.arabic, arabicFontSize, palette.parchmentText)
                 RepetitionsBadge(zikr.repetitions)
             }
         }
@@ -239,15 +239,15 @@ private fun RepetitionsBadge(repetitions: Int) {
     val palette = InabahTheme.palette
     Row(
         modifier = Modifier
-            .surface(palette.successTint, Radius.small, border = palette.successBorder)
+            .surface(palette.parchmentAccentTint, Radius.small, border = palette.parchmentAccentBorder)
             .padding(horizontal = Spacing.s, vertical = Spacing.xxxs),
         horizontalArrangement = Arrangement.spacedBy(Spacing.xxs),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Sparkle(palette.successDeep, Size.ornament * SPARKLE_IN_BADGE)
+        Sparkle(palette.parchmentAccent, Size.ornament * SPARKLE_IN_BADGE)
         Text(
             pluralStringResource(R.plurals.zikr_repetitions, repetitions, repetitions),
-            color = palette.successDeep,
+            color = palette.parchmentAccent,
             style = InabahType.caption2.copy(fontWeight = FontWeight.SemiBold),
         )
     }

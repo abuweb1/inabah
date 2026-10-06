@@ -22,6 +22,7 @@ import app.inabah.android.core.settings.AzkarResetSettings
 import app.inabah.android.core.settings.HadithCollectionOrder
 import app.inabah.android.core.settings.HadithProgress
 import app.inabah.android.core.settings.PackageManagerAppIconSwitcher
+import app.inabah.android.core.settings.ParchmentSettings
 import app.inabah.android.core.settings.PlaylistSettings
 import app.inabah.android.core.settings.PreferencesStorage
 import app.inabah.android.core.settings.ReadingSettings
@@ -49,6 +50,7 @@ class AppServices(
     val hadithProgress: HadithProgress,
     val hadithCollectionOrder: HadithCollectionOrder,
     val appearanceSettings: AppearanceSettings,
+    val parchmentSettings: ParchmentSettings,
     val textSizeSettings: TextSizeSettings,
     val appIconSettings: AppIconSettings,
     val licenseTexts: LicenseTexts,
@@ -139,6 +141,7 @@ class AppContainer(context: Context) {
             hadithProgress = HadithProgress(storage),
             hadithCollectionOrder = HadithCollectionOrder(storage),
             appearanceSettings = AppearanceSettings(storage),
+            parchmentSettings = ParchmentSettings(storage),
             textSizeSettings = TextSizeSettings(storage),
             appIconSettings = AppIconSettings(
                 switcher = PackageManagerAppIconSwitcher(appContext),

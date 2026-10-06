@@ -185,16 +185,16 @@ private fun Parchment() {
     Column(Modifier.surface(palette.card, Radius.card, border = palette.hairline, shadow = ShadowToken.card(palette))) {
         ParchmentPanel {
             Column(verticalArrangement = Arrangement.spacedBy(Spacing.m)) {
-                ArabicText(SAMPLE_ARABIC, 21f, palette.parchmentInk)
+                ArabicText(SAMPLE_ARABIC, 21f, palette.parchmentText)
                 Row(
                     modifier = Modifier
-                        .surface(palette.successTint, Radius.small, border = palette.successBorder)
+                        .surface(palette.parchmentAccentTint, Radius.small, border = palette.parchmentAccentBorder)
                         .padding(horizontal = Spacing.s, vertical = Spacing.xxxs),
                     horizontalArrangement = Arrangement.spacedBy(Spacing.xxs),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Sparkle(palette.successDeep, Size.ornament * 0.8f)
-                    Text(pluralStringResource(R.plurals.zikr_repetitions, 3, 3), color = palette.successDeep,
+                    Sparkle(palette.parchmentAccent, Size.ornament * 0.8f)
+                    Text(pluralStringResource(R.plurals.zikr_repetitions, 3, 3), color = palette.parchmentAccent,
                         style = InabahType.caption2.copy(fontWeight = FontWeight.SemiBold))
                 }
             }

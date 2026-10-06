@@ -325,9 +325,9 @@ private fun CompletionOverlay(section: AzkarSection, onGoHome: () -> Unit, conte
         )
         val hamd = stringResource(R.string.azkar_completion_hamd)
         ArabicText(
-            COMPLETION_HAMD, COMPLETION_HAMD_SIZE, palette.parchmentInk, textAlign = TextAlign.Center,
+            COMPLETION_HAMD, COMPLETION_HAMD_SIZE, palette.parchmentText, textAlign = TextAlign.Center,
             modifier = Modifier
-                .surface(gradients.parchment, Radius.control, border = palette.successDeep, lineWidth = Size.parchmentBorder)
+                .surface(gradients.parchment, Radius.control, border = palette.parchmentAccent, lineWidth = Size.parchmentBorder)
                 .padding(horizontal = Spacing.xlPlus, vertical = Spacing.m)
                 .clearAndSetSemantics { contentDescription = hamd },
         )

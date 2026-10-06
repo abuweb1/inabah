@@ -16,25 +16,37 @@ import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.inabah.android.R
 import app.inabah.android.core.designsystem.LocalInabahTheme
 import app.inabah.android.core.designsystem.Radius
 import app.inabah.android.core.designsystem.Spacing
+import app.inabah.android.core.designsystem.ParchmentStyle
 import app.inabah.android.core.designsystem.ThemeStyle
+import app.inabah.android.core.designsystem.components.ArabicText
 import app.inabah.android.core.designsystem.components.InabahTopBar
+import app.inabah.android.core.designsystem.components.ParchmentPanel
 import app.inabah.android.core.designsystem.components.SelectableTile
 import app.inabah.android.core.designsystem.components.SettingsGroup
 import app.inabah.android.core.designsystem.components.SettingsScaffold
+import app.inabah.android.core.designsystem.withParchment
 import app.inabah.android.core.settings.AppearanceSettings
+import app.inabah.android.core.settings.ParchmentSettings
 
 private val PreviewHeight = 96.dp
 private val PreviewCardHeight = 18.dp
 private val PreviewTabDot = 12.dp
+
+/** Образец на превью фона — «Во имя Аллаха»; контент, не переводится. */
+private const val PREVIEW_ARABIC = "بِسْمِ اللَّهِ"
+private const val PREVIEW_ARABIC_SIZE = 20f
 
 /** Единые стили — сеткой 2×2 под плиткой «По умолчанию». */
 private val UnifiedStyles = listOf(ThemeStyle.Violet, ThemeStyle.Emerald, ThemeStyle.Amber, ThemeStyle.Graphite)
@@ -46,12 +58,14 @@ private val UnifiedStyles = listOf(ThemeStyle.Violet, ThemeStyle.Emerald, ThemeS
 @Composable
 fun PaletteSettingsScreen(
     settings: AppearanceSettings,
+    parchmentSettings: ParchmentSettings,
     onBack: () -> Unit,
     contentPadding: PaddingValues,
     modifier: Modifier = Modifier,
 ) {
     val theme = LocalInabahTheme.current
     val selected by settings.style.collectAsStateWithLifecycle()
+    val parchment by parchmentSettings.style.collectAsStateWithLifecycle()
     SettingsScaffold(
         background = theme.gradients.settingsBackground,
         contentPadding = contentPadding,
@@ -76,8 +90,65 @@ fun PaletteSettingsScreen(
                 }
             },
         )
+        // Фон под арабским текстом — тоже про цвет, поэтому здесь (решение пользователя 2026-10-06).
+        SettingsGroup(
+            header = stringResource(R.string.settings_parchment_header),
+            footer = stringResource(R.string.settings_parchment_footer),
+            rows = listOf {
+                Column(
+                    Modifier
+                        .selectableGroup()
+                        .padding(horizontal = Spacing.xl, vertical = Spacing.m),
+                    verticalArrangement = Arrangement.spacedBy(Spacing.xlPlus),
+                ) {
+                    ParchmentStyle.entries.chunked(2).forEach { pair ->
+                        Row(horizontalArrangement = Arrangement.spacedBy(Spacing.l)) {
+                            pair.forEach { style ->
+                                SelectableTile(
+                                    title = stringResource(style.title),
+                                    isSelected = style == parchment,
+                                    onSelect = { parchmentSettings.select(style) },
+                                    modifier = Modifier.weight(1f),
+                                ) {
+                                    ParchmentPreview(style)
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+        )
     }
 }
+
+/**
+ * Превью фона — настоящий пергамент в цветах варианта (тема подменена только внутри плитки), как его
+ * увидят азкары и хадисы; не мигает при смене выбора.
+ */
+@Composable
+private fun ParchmentPreview(style: ParchmentStyle) {
+    val theme = LocalInabahTheme.current.withParchment(style)
+    CompositionLocalProvider(LocalInabahTheme provides theme) {
+        // Образец — только картинка: TalkBack читает название плитки, а не «بِسْمِ اللَّهِ» на каждой из шести.
+        ParchmentPanel(Modifier.clearAndSetSemantics {}, topCornerRadius = 0.dp, bottomCornerRadius = 0.dp) {
+            ArabicText(
+                PREVIEW_ARABIC, PREVIEW_ARABIC_SIZE, theme.palette.parchmentText,
+                Modifier.fillMaxWidth(), textAlign = TextAlign.Center, maxLines = 1,
+            )
+        }
+    }
+}
+
+@get:StringRes
+private val ParchmentStyle.title: Int
+    get() = when (this) {
+        ParchmentStyle.Classic -> R.string.parchment_classic
+        ParchmentStyle.Ivory -> R.string.parchment_ivory
+        ParchmentStyle.Sepia -> R.string.parchment_sepia
+        ParchmentStyle.Mint -> R.string.parchment_mint
+        ParchmentStyle.Pearl -> R.string.parchment_pearl
+        ParchmentStyle.Night -> R.string.parchment_night
+    }
 
 @Composable
 private fun PaletteTile(style: ThemeStyle, selected: ThemeStyle, onSelect: (ThemeStyle) -> Unit, modifier: Modifier) {

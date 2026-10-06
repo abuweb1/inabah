@@ -17,6 +17,10 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import app.inabah.android.core.designsystem.InabahTheme
 import app.inabah.android.core.designsystem.LocalInabahTheme
+import app.inabah.android.core.designsystem.ParchmentStyle
+import app.inabah.android.core.designsystem.Theme
+import app.inabah.android.core.designsystem.withParchment
+import app.inabah.android.core.settings.ParchmentSettings
 import app.inabah.android.core.designsystem.ThemeGradients
 import app.inabah.android.core.designsystem.ThemeStyle
 import app.inabah.android.core.designsystem.animateTheme
@@ -76,7 +80,7 @@ class PaletteSettingsTest {
             InabahTheme(theme = animateTheme(style.theme)) {
                 Column {
                     shownGradients = LocalInabahTheme.current.gradients
-                    PaletteSettingsScreen(settings, onBack = {}, contentPadding = PaddingValues())
+                    PaletteSettingsScreen(settings, ParchmentSettings(storage), onBack = {}, contentPadding = PaddingValues())
                 }
             }
         }
@@ -91,6 +95,36 @@ class PaletteSettingsTest {
         }
         compose.onNodeWithText("Изумрудная")
             .assert(SemanticsMatcher.expectValue(SemanticsProperties.Selected, true))
+    }
+
+    @Test
+    fun choosingMintParchmentSavesItAndRepaintsPanelKeepingButtonInk() {
+        val settings = AppearanceSettings(storage)
+        val parchment = ParchmentSettings(storage)
+        var shown: Theme? = null
+        compose.setContent {
+            // Как в MainActivity: палитра и фон под арабским текстом — одной темой.
+            val style by settings.style.collectAsState()
+            val parchmentStyle by parchment.style.collectAsState()
+            InabahTheme(theme = animateTheme(style.theme.withParchment(parchmentStyle))) {
+                Column {
+                    shown = LocalInabahTheme.current
+                    PaletteSettingsScreen(settings, parchment, onBack = {}, contentPadding = PaddingValues())
+                }
+            }
+        }
+
+        compose.onNodeWithText("Мятный").performScrollTo().performClick()
+        compose.waitForIdle()
+
+        compose.runOnIdle {
+            check(parchment.style.value == ParchmentStyle.Mint)
+            check(shown?.gradients?.parchment?.colors == ParchmentStyle.Mint.colors.backgrounds)
+            // Чернила золотых кнопок (плеер, счётчик) — прежние.
+            check(shown?.palette?.parchmentInk == Theme.Sections.palette.parchmentInk)
+        }
+        compose.onNodeWithText("Мятный").assert(SemanticsMatcher.expectValue(SemanticsProperties.Selected, true))
+        compose.onNodeWithText("Пергамент").assert(SemanticsMatcher.expectValue(SemanticsProperties.Selected, false))
     }
 
     /**

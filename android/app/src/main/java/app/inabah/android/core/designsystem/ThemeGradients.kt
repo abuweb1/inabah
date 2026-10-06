@@ -101,6 +101,8 @@ data class ThemeGradients(
         private const val PROGRESS_ANGLE = 90f
         private const val COUNTER_ANGLE = 160f
         private const val PARCHMENT_ANGLE = 150f
+        private const val PARCHMENT_HIGHLIGHT_STOP = 0.45f
+        private const val PARCHMENT_MID_STOP = 0.75f
         private const val STRIPE_ALPHA = 0.6f
 
         /** Фон раздела единого стиля: один градиент 168° (стопы 0 / 0,5 / 1) на все разделы. */
@@ -113,6 +115,17 @@ data class ThemeGradients(
 
         private fun twoStop(angle: Float, start: Color, end: Color) =
             AngledGradient(angle, listOf(0f to start, 1f to end))
+
+        /** Пергамент из цветов палитры — и для темы по умолчанию, и для выбранного фона ([ParchmentStyle]). */
+        internal fun parchment(palette: Palette) = AngledGradient(
+            PARCHMENT_ANGLE,
+            listOf(
+                0f to palette.parchmentLight,
+                PARCHMENT_HIGHLIGHT_STOP to palette.parchmentHighlight,
+                PARCHMENT_MID_STOP to palette.parchmentMid,
+                1f to palette.parchmentDeep,
+            ),
+        )
 
         /**
          * Фоны и карточки «По умолчанию»; градиенты из цветов палитры (полосы, счётчик, пергамент)
@@ -145,15 +158,7 @@ data class ThemeGradients(
                 progressFill = twoStop(PROGRESS_ANGLE, palette.successDeep, palette.success),
                 counterButton = twoStop(COUNTER_ANGLE, palette.goldLight, palette.goldDeep),
                 counterButtonDone = twoStop(COUNTER_ANGLE, palette.successLight, palette.success),
-                parchment = AngledGradient(
-                    PARCHMENT_ANGLE,
-                    listOf(
-                        0f to palette.parchmentLight,
-                        0.45f to palette.gold,
-                        0.75f to palette.parchmentMid,
-                        1f to palette.parchmentDeep,
-                    ),
-                ),
+                parchment = parchment(palette),
                 parchmentStripe = threeStop(
                     PROGRESS_ANGLE,
                     palette.successDeep.copy(alpha = STRIPE_ALPHA),
