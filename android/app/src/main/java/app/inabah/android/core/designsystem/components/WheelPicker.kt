@@ -74,6 +74,34 @@ internal fun wheelFirstIndex(value: Int, count: Int): Int = LOOPS / 2 * count + 
 /** Значение строки списка с индексом [index]. */
 internal fun wheelValue(index: Int, count: Int): Int = index % count
 
+/** Кратчайший сдвиг по кругу от [from] к [to]: 23 → 1 из 24 — вперёд на 2, а не назад на 22. */
+internal fun wheelDistance(from: Int, to: Int, count: Int): Int {
+    val forward = Math.floorMod(to - from, count)
+    return if (forward > count / 2) forward - count else forward
+}
+
+/**
+ * Строки барабана из [count] значений: по кругу (часы, минуты) или от края до края (AM / PM) —
+ * тогда сверху и снизу пустые строки, чтобы крайние значения вставали на полосу выбора.
+ */
+internal class WheelRows(val count: Int, val looping: Boolean) {
+    private val padding = if (looping) 0 else VISIBLE_ROWS / 2
+    val size: Int = if (looping) count * LOOPS else count + 2 * padding
+
+    /** Первый видимый элемент, когда на полосе [value]. */
+    fun firstIndex(value: Int): Int = if (looping) wheelFirstIndex(value, count) else value
+
+    fun valueAt(index: Int): Int = if (looping) wheelValue(index, count) else (index - padding).coerceIn(0, count - 1)
+
+    fun isBlank(index: Int): Boolean = !looping && (index < padding || index >= padding + count)
+
+    /** Строка на полосе после сдвига на [delta] значений: у барабана без круга — не дальше крайних. */
+    fun shifted(index: Int, delta: Int): Int =
+        if (looping) index + delta else (index + delta).coerceIn(padding, padding + count - 1)
+
+    fun distance(from: Int, to: Int): Int = if (looping) wheelDistance(from, to, count) else to - from
+}
+
 /**
  * Индекс строки, чей центр ближе всего к центру окна, — она на полосе выбора. Не «первый видимый + 2»:
  * при дробной плотности сверху виден ряд в 1 px, и первый видимый сдвигается на одну строку.
@@ -100,12 +128,14 @@ fun WheelPicker(
     label: (Int) -> String,
     description: String,
     modifier: Modifier = Modifier,
+    looping: Boolean = true,
 ) {
     val palette = InabahTheme.palette
-    val firstIndex = wheelFirstIndex(value, count)
+    val rows = remember(count, looping) { WheelRows(count, looping) }
+    val firstIndex = rows.firstIndex(value)
     val state = rememberLazyListState(initialFirstVisibleItemIndex = firstIndex)
-    val selected by remember {
-        derivedStateOf { wheelValue(state.centeredIndex(fallback = firstIndex + VISIBLE_ROWS / 2), count) }
+    val selected by remember(rows) {
+        derivedStateOf { rows.valueAt(state.centeredIndex(fallback = firstIndex + VISIBLE_ROWS / 2)) }
     }
     val currentOnChange by rememberUpdatedState(onValueChange)
     val scope = rememberCoroutineScope()
@@ -116,19 +146,30 @@ fun WheelPicker(
     // TalkBack: сдвиг барабана на [delta] значений — та же прокрутка, значение уйдёт по её окончании.
     fun step(delta: Int) {
         if (delta == 0) return
-        val center = currentIndex() + delta
+        val center = rows.shifted(currentIndex(), delta)
+        if (center == currentIndex()) return
         pendingIndex = center
         scope.launch { state.animateScrollToItem(center - VISIBLE_ROWS / 2) }
     }
     val increase = stringResource(R.string.common_increase)
     val decrease = stringResource(R.string.common_decrease)
+    // Остановок барабана: после каждой значение сверяется с принятым (ниже).
+    var settles by remember { mutableIntStateOf(0) }
     LaunchedEffect(state) {
         snapshotFlow { state.isScrollInProgress }
             .filter { !it }
             .collect {
                 pendingIndex = NO_PENDING
                 currentOnChange(selected)
+                settles++
             }
+    }
+    // Значение не приняли (начало времени азкаров = концу) или сменили снаружи — барабан едет к принятому,
+    // как iOS DatePicker; иначе на нём осталось бы отклонённое, а соседний барабан сохранил бы не то, что видно.
+    LaunchedEffect(value, settles) {
+        if (state.isScrollInProgress || selected == value) return@LaunchedEffect
+        val center = state.centeredIndex(fallback = firstIndex + VISIBLE_ROWS / 2)
+        state.animateScrollToItem(center + rows.distance(from = selected, to = value) - VISIBLE_ROWS / 2)
     }
     // Закрыли посреди прокрутки — применить то, что сейчас на полосе.
     DisposableEffect(state) {
@@ -145,7 +186,7 @@ fun WheelPicker(
                 stateDescription = label(selected)
                 progressBarRangeInfo = ProgressBarRangeInfo(selected.toFloat(), 0f..(count - 1).toFloat(), steps = count - 2)
                 setProgress { target ->
-                    step(target.roundToInt().coerceIn(0, count - 1) - wheelValue(currentIndex(), count))
+                    step(target.roundToInt().coerceIn(0, count - 1) - rows.valueAt(currentIndex()))
                     true
                 }
                 customActions = listOf(
@@ -160,7 +201,7 @@ fun WheelPicker(
             flingBehavior = rememberSnapFlingBehavior(state),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            items(count * LOOPS) { index ->
+            items(rows.size) { index ->
                 Box(
                     contentAlignment = Alignment.Center,
                     modifier = Modifier
@@ -177,21 +218,27 @@ fun WheelPicker(
                             scaleY = 1f - EDGE_SQUEEZE * t
                         },
                 ) {
-                    Text(
-                        label(index % count),
-                        color = palette.onAccent,
-                        textAlign = TextAlign.Center,
-                        style = InabahType.title3.monospacedDigits(),
-                    )
+                    if (!rows.isBlank(index)) {
+                        Text(
+                            label(rows.valueAt(index)),
+                            color = palette.onAccent,
+                            textAlign = TextAlign.Center,
+                            style = InabahType.title3.monospacedDigits(),
+                        )
+                    }
                 }
             }
         }
     }
 }
 
+/** 12-часовой барабан: подписи «AM» / «PM» в языке интерфейса и подпись третьего барабана для TalkBack. */
+data class DayPeriods(val am: String, val pm: String, val description: String)
+
 /**
- * Барабан часов и минут (iOS DatePicker в виде колеса), 24 часа — как в iOS для русской локали;
- * полоса выбора — одна на оба барабана.
+ * Барабан часов и минут (iOS DatePicker в виде колеса); полоса выбора — одна на все барабаны.
+ * Без [dayPeriods] — 24 часа; с ними — часы 12, 1…11 по кругу и третий барабан AM / PM без круга,
+ * как iOS при 12-часовом формате системы. [hour] и [onChange] — всегда 0…23.
  */
 @Composable
 fun TimeWheelPicker(
@@ -201,26 +248,50 @@ fun TimeWheelPicker(
     hourDescription: String,
     minuteDescription: String,
     modifier: Modifier = Modifier,
+    dayPeriods: DayPeriods? = null,
 ) {
     val palette = InabahTheme.palette
     val currentHour by rememberUpdatedState(hour)
     val currentMinute by rememberUpdatedState(minute)
+    val columns = if (dayPeriods == null) 2 else 3
     Box(modifier.padding(horizontal = Spacing.m, vertical = Spacing.s), contentAlignment = Alignment.Center) {
         Box(
             Modifier
-                .width(ColumnWidth * 2 + ColumnGap)
+                .width(ColumnWidth * columns + ColumnGap * (columns - 1))
                 .height(RowHeight)
                 .surface(SolidColor(palette.onAccent.copy(alpha = SELECTION_ALPHA)), RoundedCornerShape(SelectionRadius)),
         )
         Row {
-            WheelPicker(HOURS, hour, { onChange(it, currentMinute) }, ::twoDigits, hourDescription)
+            if (dayPeriods == null) {
+                WheelPicker(HOURS, hour, { onChange(it, currentMinute) }, ::twoDigits, hourDescription)
+            } else {
+                // Часы 12-часового барабана: 0 — «12», остальные как есть; половина дня — с третьего барабана.
+                WheelPicker(
+                    HALF_DAY, hour % HALF_DAY,
+                    { onChange(it + currentHour / HALF_DAY * HALF_DAY, currentMinute) },
+                    { if (it == 0) HALF_DAY.toString() else it.toString() },
+                    hourDescription,
+                )
+            }
             Box(Modifier.width(ColumnGap))
             WheelPicker(MINUTES, minute, { onChange(currentHour, it) }, ::twoDigits, minuteDescription)
+            if (dayPeriods != null) {
+                Box(Modifier.width(ColumnGap))
+                WheelPicker(
+                    DAY_PERIODS, hour / HALF_DAY,
+                    { onChange(currentHour % HALF_DAY + it * HALF_DAY, currentMinute) },
+                    { if (it == 0) dayPeriods.am else dayPeriods.pm },
+                    dayPeriods.description,
+                    looping = false,
+                )
+            }
         }
     }
 }
 
 private const val HOURS = 24
+private const val HALF_DAY = 12
+private const val DAY_PERIODS = 2
 private const val MINUTES = 60
 
 private fun twoDigits(value: Int): String = value.toString().padStart(2, '0')

@@ -14,6 +14,7 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.performSemanticsAction
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import app.inabah.android.core.designsystem.components.DayPeriods
 import app.inabah.android.core.designsystem.components.TimeWheelPicker
 import org.junit.Before
 import org.junit.Rule
@@ -83,6 +84,51 @@ class WheelPickerAccessibilityTest {
         compose.waitUntil(timeoutMillis = 5_000) { minute == 59 }
         // Часы не тронуты.
         compose.runOnIdle { check(hour == 17) }
+    }
+
+    // Регрессия (ревью «Времени азкаров»): отклонённое значение (начало = концу) оставалось на барабане,
+    // и следующая прокрутка минут сохраняла не то, что видно.
+    @Test
+    fun rejectedHourRollsWheelBackToAcceptedValue() {
+        hour = 5
+        compose.setContent {
+            InabahTheme {
+                // Как AzkarWindowSettings: 12:00 — конец окна, такое начало не принимается.
+                TimeWheelPicker(hour, minute, onChange = { h, m -> if (h != 12 || m != 0) { hour = h; minute = m } },
+                    hourDescription = "Часы", minuteDescription = "Минуты")
+            }
+        }
+
+        compose.onNodeWithContentDescription("Часы").performSemanticsAction(SemanticsActions.SetProgress) { it(12f) }
+
+        compose.waitUntil(timeoutMillis = 5_000) {
+            compose.onNodeWithContentDescription("Часы").fetchSemanticsNode()
+                .config[SemanticsProperties.StateDescription] == "05"
+        }
+        compose.runOnIdle { check(hour == 5) }
+    }
+
+    @Test
+    fun twelveHourWheelShowsHalfDayAndKeepsHourInTwentyFourHours() {
+        compose.setContent {
+            InabahTheme {
+                TimeWheelPicker(hour, minute, onChange = { h, m -> hour = h; minute = m },
+                    hourDescription = "Часы", minuteDescription = "Минуты",
+                    dayPeriods = DayPeriods("AM", "PM", description = "До или после полудня"))
+            }
+        }
+        // 17:00 — «5» и «PM».
+        compose.onNodeWithContentDescription("Часы").assert(stateIs("5"))
+        compose.onNodeWithContentDescription("До или после полудня").assert(stateIs("PM"))
+
+        // AM — 05:00.
+        compose.onNodeWithContentDescription("До или после полудня").performCustomAction("Меньше")
+        compose.waitUntil(timeoutMillis = 5_000) { hour == 5 }
+
+        // «12» до полудня — полночь.
+        compose.onNodeWithContentDescription("Часы").performSemanticsAction(SemanticsActions.SetProgress) { it(0f) }
+        compose.waitUntil(timeoutMillis = 5_000) { hour == 0 }
+        compose.onNodeWithContentDescription("Часы").assert(stateIs("12"))
     }
 
     @Test

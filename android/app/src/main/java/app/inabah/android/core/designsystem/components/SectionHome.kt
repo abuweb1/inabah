@@ -232,6 +232,8 @@ fun SectionNavCard(
     leadingStat: NavCardStat? = null,
     trailingStat: NavCardStat? = null,
     ring: NavCardRing? = null,
+    /** Тихая подпись справа вместо кольца (азкары вне своего времени — «05:00–12:00»). */
+    trailingNote: String? = null,
 ) {
     val palette = InabahTheme.palette
     val interaction = remember { MutableInteractionSource() }
@@ -272,6 +274,10 @@ fun SectionNavCard(
             horizontalArrangement = Arrangement.spacedBy(Spacing.m),
         ) {
             ring?.let { NavCardProgressRing(it.fraction, it.style) }
+            trailingNote?.let {
+                Text(it, color = palette.onAccentTertiary, style = InabahType.caption.monospacedDigits(),
+                    maxLines = 1, softWrap = false)
+            }
             val chevron = with(LocalDensity.current) { CHEVRON_SIZE.sp.toDp() }
             Icon(painterResource(R.drawable.ic_chevron_right), contentDescription = null,
                 tint = palette.onAccentTertiary, modifier = Modifier.size(chevron))

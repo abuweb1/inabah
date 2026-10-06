@@ -16,6 +16,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.heading
@@ -27,6 +28,8 @@ import app.inabah.android.core.designsystem.InabahType
 import app.inabah.android.core.designsystem.PressFeedback
 import app.inabah.android.core.designsystem.Size
 import app.inabah.android.core.designsystem.Spacing
+import app.inabah.android.core.formatting.isSystem24HourFormat
+import java.text.DateFormatSymbols
 
 // Всплывающие карточки экранов настроек — как iOS 26 (android/docs/settings, IMG_9744 и IMG_9747):
 // подтверждение сброса над строкой и барабан времени под капсулой значения.
@@ -91,10 +94,22 @@ fun TimePickerPopover(
     tint: Color,
     hourDescription: String,
     minuteDescription: String,
+    dayPeriodDescription: String,
     onChange: (hour: Int, minute: Int) -> Unit,
     onDismiss: () -> Unit,
 ) {
+    // Формат системы, как у капсул времени: при 12-часовом — часы 1–12 и барабан AM / PM.
+    val locale = LocalConfiguration.current.locales[0]
+    val is24Hour = isSystem24HourFormat()
+    val dayPeriods = remember(locale, is24Hour, dayPeriodDescription) {
+        if (is24Hour) {
+            null
+        } else {
+            val (am, pm) = DateFormatSymbols.getInstance(locale).amPmStrings
+            DayPeriods(am, pm, dayPeriodDescription)
+        }
+    }
     AnchoredPopover(expanded, PopoverPlacement.BelowEnd, tint, onDismiss) {
-        TimeWheelPicker(hour, minute, onChange, hourDescription, minuteDescription)
+        TimeWheelPicker(hour, minute, onChange, hourDescription, minuteDescription, dayPeriods = dayPeriods)
     }
 }
