@@ -18,13 +18,7 @@ enum class ParchmentStyle(val key: String, val colors: ParchmentColors) {
             deep = Color(0xFFE8C068), text = Color(0xFF1A1208),
         ),
     ),
-    Ivory(
-        "ivory",
-        ParchmentColors(
-            light = Color(0xFFF8F1E1), highlight = Color(0xFFF2E8D2), mid = Color(0xFFEFE4CC),
-            deep = Color(0xFFE4D6B8), text = Color(0xFF2A2016),
-        ),
-    ),
+    /** Тёплая старая бумага — к «Янтарной» палитре. */
     Sepia(
         "sepia",
         ParchmentColors(
@@ -33,22 +27,40 @@ enum class ParchmentStyle(val key: String, val colors: ParchmentColors) {
             deep = Color(0xFFC9A97C), text = Color(0xFF2B1D10), accent = Color(0xFF1F4A2A),
         ),
     ),
-    Mint(
-        "mint",
+
+    // Приглушённые средние тона под единые палитры (решение пользователя 2026-10-06: светлые «Слоновая кость»,
+    // «Жемчужный», «Мятный» резали глаз и не подходили ни к одной палитре), текст светлый.
+
+    /** Приглушённый лиловый с золотой рамкой (как золото счётчика на фиолетовом) — к «Фиолетовой». */
+    Amethyst(
+        "amethyst",
         ParchmentColors(
-            light = Color(0xFFD9EFDF), highlight = Color(0xFFCBE6D3), mid = Color(0xFFC6E2CE),
-            deep = Color(0xFFB2D5BC), text = Color(0xFF0F2A1B),
-        ),
-    ),
-    Pearl(
-        "pearl",
-        ParchmentColors(
-            light = Color(0xFFE6EAF0), highlight = Color(0xFFDCE2EA), mid = Color(0xFFD6DDE6),
-            deep = Color(0xFFC5CEDA), text = Color(0xFF161C26),
+            light = Color(0xFF4A3A6E), highlight = Color(0xFF54427C), mid = Color(0xFF46376A),
+            // Золото, а не зелёный: светло-зелёный на самом светлом оттенке давал 4,43 < 4,5.
+            deep = Color(0xFF3B2E5C), text = Color(0xFFF3EEFA), accent = Color(0xFFECC87B),
         ),
     ),
 
-    /** Тёмный фон со светлым текстом — для чтения в темноте без яркого пятна. */
+    /** Глубокий зелёный с золотой рамкой — к «Изумрудной». */
+    Jade(
+        "jade",
+        ParchmentColors(
+            light = Color(0xFF1C4D40), highlight = Color(0xFF21584A), mid = Color(0xFF1B4A3D),
+            deep = Color(0xFF153D32), text = Color(0xFFEDF7F2), accent = Color(0xFFECC87B),
+        ),
+    ),
+
+    /** Дымчатый серо-голубой — к «Графиту». */
+    Smoky(
+        "smoky",
+        ParchmentColors(
+            light = Color(0xFF3A414F), highlight = Color(0xFF434B5B), mid = Color(0xFF39404D),
+            // Светлее цвета вкладки «Настройки» (8FB4F0 давал 4,15 < 4,5).
+            deep = Color(0xFF2F3541), text = Color(0xFFEEF1F6), accent = Color(0xFFB4CBF4),
+        ),
+    ),
+
+    /** Тёмный фон со светлым текстом — подходит к любой палитре, для чтения в темноте без яркого пятна. */
     Night(
         "night",
         ParchmentColors(

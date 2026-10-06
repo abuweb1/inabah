@@ -118,12 +118,12 @@
     <string name="palette_sections_subtitle">Свой цвет у каждого раздела</string>
     <string name="palette_violet">Фиолетовая</string>
     <string name="palette_violet_subtitle">как Азкары</string>
+    <string name="parchment_amethyst">Аметист</string>
     <string name="parchment_classic">Пергамент</string>
-    <string name="parchment_ivory">Слоновая кость</string>
-    <string name="parchment_mint">Мятный</string>
+    <string name="parchment_jade">Нефрит</string>
     <string name="parchment_night">Ночной</string>
-    <string name="parchment_pearl">Жемчужный</string>
     <string name="parchment_sepia">Сепия</string>
+    <string name="parchment_smoky">Дымчатый</string>
     <string name="placeholder_soon">Скоро</string>
     <string name="playback_notification_channel">Воспроизведение</string>
     <string name="progress_fraction">%1$d/%2$d</string>

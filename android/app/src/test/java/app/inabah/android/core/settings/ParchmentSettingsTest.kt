@@ -15,9 +15,9 @@ class ParchmentSettingsTest {
 
     @Test
     fun `Выбор сохраняется между запусками`() = TestStorage.run { storage ->
-        ParchmentSettings(storage.storage).select(ParchmentStyle.Mint)
+        ParchmentSettings(storage.storage).select(ParchmentStyle.Jade)
 
-        assertEquals(ParchmentStyle.Mint, ParchmentSettings(storage.restart()).style.value)
+        assertEquals(ParchmentStyle.Jade, ParchmentSettings(storage.restart()).style.value)
     }
 
     @Test

@@ -143,10 +143,10 @@ private fun ParchmentPreview(style: ParchmentStyle) {
 private val ParchmentStyle.title: Int
     get() = when (this) {
         ParchmentStyle.Classic -> R.string.parchment_classic
-        ParchmentStyle.Ivory -> R.string.parchment_ivory
         ParchmentStyle.Sepia -> R.string.parchment_sepia
-        ParchmentStyle.Mint -> R.string.parchment_mint
-        ParchmentStyle.Pearl -> R.string.parchment_pearl
+        ParchmentStyle.Amethyst -> R.string.parchment_amethyst
+        ParchmentStyle.Jade -> R.string.parchment_jade
+        ParchmentStyle.Smoky -> R.string.parchment_smoky
         ParchmentStyle.Night -> R.string.parchment_night
     }
 

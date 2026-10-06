@@ -98,7 +98,7 @@ class PaletteSettingsTest {
     }
 
     @Test
-    fun choosingMintParchmentSavesItAndRepaintsPanelKeepingButtonInk() {
+    fun choosingJadeParchmentSavesItAndRepaintsPanelKeepingButtonInk() {
         val settings = AppearanceSettings(storage)
         val parchment = ParchmentSettings(storage)
         var shown: Theme? = null
@@ -114,16 +114,16 @@ class PaletteSettingsTest {
             }
         }
 
-        compose.onNodeWithText("Мятный").performScrollTo().performClick()
+        compose.onNodeWithText("Нефрит").performScrollTo().performClick()
         compose.waitForIdle()
 
         compose.runOnIdle {
-            check(parchment.style.value == ParchmentStyle.Mint)
-            check(shown?.gradients?.parchment?.colors == ParchmentStyle.Mint.colors.backgrounds)
+            check(parchment.style.value == ParchmentStyle.Jade)
+            check(shown?.gradients?.parchment?.colors == ParchmentStyle.Jade.colors.backgrounds)
             // Чернила золотых кнопок (плеер, счётчик) — прежние.
             check(shown?.palette?.parchmentInk == Theme.Sections.palette.parchmentInk)
         }
-        compose.onNodeWithText("Мятный").assert(SemanticsMatcher.expectValue(SemanticsProperties.Selected, true))
+        compose.onNodeWithText("Нефрит").assert(SemanticsMatcher.expectValue(SemanticsProperties.Selected, true))
         compose.onNodeWithText("Пергамент").assert(SemanticsMatcher.expectValue(SemanticsProperties.Selected, false))
     }
 
