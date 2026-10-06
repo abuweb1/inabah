@@ -50,6 +50,18 @@ enum class ParchmentStyle(val key: String, val colors: ParchmentColors) {
         ),
     ),
 
+    /**
+     * Приглушённый медово-коричневый с золотой рамкой — к «Янтарной» (2026-10-06: «Пергамент» и «Сепия»
+     * для неё слишком светлые, нужен тон в манере остальных).
+     */
+    Amber(
+        "amber",
+        ParchmentColors(
+            light = Color(0xFF5A3818), highlight = Color(0xFF664020), mid = Color(0xFF553415),
+            deep = Color(0xFF472B10), text = Color(0xFFF8EEDF), accent = Color(0xFFECC87B),
+        ),
+    ),
+
     /** Дымчатый серо-голубой — к «Графиту». */
     Smoky(
         "smoky",

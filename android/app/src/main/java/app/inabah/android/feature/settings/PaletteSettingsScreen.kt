@@ -52,6 +52,15 @@ private const val PREVIEW_ARABIC_SIZE = 20f
 private val UnifiedStyles = listOf(ThemeStyle.Violet, ThemeStyle.Emerald, ThemeStyle.Amber, ThemeStyle.Graphite)
 
 /**
+ * Фоны под «Пергаментом» (он — на всю ширину, как «По умолчанию» у палитр): сначала по палитрам в их порядке
+ * (Фиолетовая, Изумрудная, Янтарная, Графит), затем «Сепия» и универсальный «Ночной».
+ */
+private val ParchmentGrid = listOf(
+    ParchmentStyle.Amethyst, ParchmentStyle.Jade, ParchmentStyle.Amber,
+    ParchmentStyle.Smoky, ParchmentStyle.Sepia, ParchmentStyle.Night,
+)
+
+/**
  * «Палитра» (iOS `PaletteSettingsView`, снимок 07-sections-palette): «По умолчанию» на всю ширину и
  * четыре единых стиля. Выбор применяется сразу ко всему приложению — с анимацией темы (`animateTheme`).
  */
@@ -101,23 +110,27 @@ fun PaletteSettingsScreen(
                         .padding(horizontal = Spacing.xl, vertical = Spacing.m),
                     verticalArrangement = Arrangement.spacedBy(Spacing.xlPlus),
                 ) {
-                    ParchmentStyle.entries.chunked(2).forEach { pair ->
+                    ParchmentTile(ParchmentStyle.Classic, parchment, parchmentSettings::select, Modifier.fillMaxWidth())
+                    ParchmentGrid.chunked(2).forEach { pair ->
                         Row(horizontalArrangement = Arrangement.spacedBy(Spacing.l)) {
-                            pair.forEach { style ->
-                                SelectableTile(
-                                    title = stringResource(style.title),
-                                    isSelected = style == parchment,
-                                    onSelect = { parchmentSettings.select(style) },
-                                    modifier = Modifier.weight(1f),
-                                ) {
-                                    ParchmentPreview(style)
-                                }
-                            }
+                            pair.forEach { ParchmentTile(it, parchment, parchmentSettings::select, Modifier.weight(1f)) }
                         }
                     }
                 }
             },
         )
+    }
+}
+
+@Composable
+private fun ParchmentTile(style: ParchmentStyle, selected: ParchmentStyle, onSelect: (ParchmentStyle) -> Unit, modifier: Modifier) {
+    SelectableTile(
+        title = stringResource(style.title),
+        isSelected = style == selected,
+        onSelect = { onSelect(style) },
+        modifier = modifier,
+    ) {
+        ParchmentPreview(style)
     }
 }
 
@@ -146,6 +159,7 @@ private val ParchmentStyle.title: Int
         ParchmentStyle.Sepia -> R.string.parchment_sepia
         ParchmentStyle.Amethyst -> R.string.parchment_amethyst
         ParchmentStyle.Jade -> R.string.parchment_jade
+        ParchmentStyle.Amber -> R.string.parchment_amber
         ParchmentStyle.Smoky -> R.string.parchment_smoky
         ParchmentStyle.Night -> R.string.parchment_night
     }
