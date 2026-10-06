@@ -158,8 +158,11 @@ enum AppVersion {
     }
 }
 
-/// Внешние адреса экрана «О приложении».
+/// Внешние адреса приложения: экран «О приложении» и «Поделиться».
 enum AboutLinks {
+    /// Страница в App Store (Apple ID приложения из App Store Connect) — последний блок
+    /// текста «Поделиться».
+    static let appStore = URL(string: "https://apps.apple.com/app/id6819638881")!
     static let azkar = URL(string: "https://azkar.ru")!
     static let sunnah = URL(string: "https://sunnah.com")!
     static let repository = URL(string: "https://github.com/abuweb1/inabah")!
