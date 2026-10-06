@@ -1412,6 +1412,17 @@
         }
       }
     },
+    "reminder.action" : {
+      "comment" : "Кнопка «Сделать напоминание»: значок в шапке списка азкаров (VoiceOver) и кнопка на экране «Машаа Аллах»; на iOS пока не используется — «Сделать напоминание» сделано на Android, см. docs/02-screen-azkar.md",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сделать напоминание"
+          }
+        }
+      }
+    },
     "section.card.meta.original %@ %@" : {
       "comment" : "Подпись карточки и название в оригинале (арабский — контент). Подпись первой — иначе строка выстраивается справа налево Неразрывный пробел держит «·» на строке подписи; арабское название — в изоляте направления (U+2068…U+2069), чтобы при переносе точка не уходила к нему.",
       "localizations" : {
@@ -1947,6 +1958,105 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@ · Хадис %2$lld"
+          }
+        }
+      }
+    },
+    "share.text.reminder.evening.call" : {
+      "comment" : "Текст напоминания: призыв, вечерние; на iOS пока не используется — «Сделать напоминание» сделано на Android, см. docs/02-screen-azkar.md",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "О рабы Аллаха, защитите себя и свою семью от сглаза, зависти и колдовства — прочитайте вечерние азкары."
+          }
+        }
+      }
+    },
+    "share.text.reminder.evening.time" : {
+      "comment" : "Текст напоминания: лучшее время, вечерние; на iOS пока не используется — «Сделать напоминание» сделано на Android, см. docs/02-screen-azkar.md",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "❗ Лучшее время для чтения вечерних азкаров — с Асра до Магриба."
+          }
+        }
+      }
+    },
+    "share.text.reminder.evening.title" : {
+      "comment" : "Текст напоминания: заголовок вечерних; на iOS пока не используется — «Сделать напоминание» сделано на Android, см. docs/02-screen-azkar.md",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "‼️ Вечерние азкары ‼️"
+          }
+        }
+      }
+    },
+    "share.text.reminder.morning.call" : {
+      "comment" : "Текст напоминания: призыв, утренние; на iOS пока не используется — «Сделать напоминание» сделано на Android, см. docs/02-screen-azkar.md",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "О рабы Аллаха, защитите себя и свою семью от сглаза, зависти и колдовства — прочитайте утренние азкары."
+          }
+        }
+      }
+    },
+    "share.text.reminder.morning.time" : {
+      "comment" : "Текст напоминания: лучшее время, утренние; на iOS пока не используется — «Сделать напоминание» сделано на Android, см. docs/02-screen-azkar.md",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "❗ Лучшее время для чтения утренних азкаров — с Фаджра до восхода солнца."
+          }
+        }
+      }
+    },
+    "share.text.reminder.morning.title" : {
+      "comment" : "Текст напоминания (уходит в мессенджер, в приложении не показывается): заголовок утренних; на iOS пока не используется — «Сделать напоминание» сделано на Android, см. docs/02-screen-azkar.md",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "‼️ Утренние азкары ‼️"
+          }
+        }
+      }
+    },
+    "share.text.reminder.quote.intro" : {
+      "comment" : "Текст напоминания: перед словами Абу ад-Дарды; на iOS пока не используется — «Сделать напоминание» сделано на Android, см. docs/02-screen-azkar.md",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Абу ад-Дарда сказал:"
+          }
+        }
+      }
+    },
+    "share.text.reminder.quote.source" : {
+      "comment" : "Текст напоминания: источник слов Абу ад-Дарды; на iOS пока не используется — «Сделать напоминание» сделано на Android, см. docs/02-screen-azkar.md",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ахмад в «аз-Зухд», 726"
+          }
+        }
+      }
+    },
+    "share.text.reminder.quote.translation" : {
+      "comment" : "Текст напоминания: перевод слов Абу ад-Дарды (арабский — константа в коде); на iOS пока не используется — «Сделать напоминание» сделано на Android, см. docs/02-screen-azkar.md",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "«Те, чьи языки влажные от поминания Аллаха, войдут в Рай смеясь»."
           }
         }
       }

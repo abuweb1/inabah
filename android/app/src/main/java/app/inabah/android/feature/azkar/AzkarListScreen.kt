@@ -70,6 +70,7 @@ import app.inabah.android.core.designsystem.Size
 import app.inabah.android.core.designsystem.Spacing
 import app.inabah.android.core.designsystem.components.ArabicText
 import app.inabah.android.core.designsystem.components.FontSizeControls
+import app.inabah.android.core.designsystem.components.GlassIconButton
 import app.inabah.android.core.designsystem.components.InabahTopBar
 import app.inabah.android.core.designsystem.components.ContentError
 import app.inabah.android.core.designsystem.components.PrimaryButton
@@ -112,6 +113,7 @@ fun AzkarListScreen(
 ) {
     val theme = LocalInabahTheme.current
     val state by store.state(section).collectAsStateWithLifecycle()
+    val onRemind = azkarReminderAction(section)
     val fontSize by readingSettings.arabicFontSize.collectAsStateWithLifecycle()
     // Сохраняется: переход на другую вкладку и пересоздание активности оверлей не прячут
     // (стор уже отметил показ — заново он не появится).
@@ -130,6 +132,13 @@ fun AzkarListScreen(
             background = section.headerColor(theme),
             centerTitle = false,
         ) {
+            // «Сделать напоминание» — круглая кнопка как «‹», значок «Поделиться» (решение пользователя 2026-10-06).
+            GlassIconButton(
+                onClick = onRemind,
+                iconRes = R.drawable.ic_share,
+                contentDescription = stringResource(R.string.reminder_action),
+                tint = theme.palette.tabAzkar,
+            )
             FontSizeControls(
                 canDecrease = fontSize > ReadingSettings.MIN_SIZE,
                 canIncrease = fontSize < ReadingSettings.MAX_SIZE,
@@ -164,7 +173,7 @@ fun AzkarListScreen(
                 enter = fadeIn(Motion.overlay()),
                 exit = fadeOut(Motion.overlay()),
             ) {
-                CompletionOverlay(section, onGoHome, contentPadding)
+                CompletionOverlay(section, onGoHome, onRemind, contentPadding)
             }
         }
     }
@@ -337,7 +346,7 @@ private const val AUTO_SCROLL_COOLDOWN_MILLIS = 2_000L
 
 /** «مَا شَاءَ اللَّهُ» (iOS `AzkarCompletionView`); «← На главную» очищает стек вкладки. */
 @Composable
-private fun CompletionOverlay(section: AzkarSection, onGoHome: () -> Unit, contentPadding: PaddingValues) {
+private fun CompletionOverlay(section: AzkarSection, onGoHome: () -> Unit, onRemind: () -> Unit, contentPadding: PaddingValues) {
     val palette = InabahTheme.palette
     val gradients = InabahTheme.gradients
     Column(
@@ -371,6 +380,12 @@ private fun CompletionOverlay(section: AzkarSection, onGoHome: () -> Unit, conte
         )
         Text(stringResource(section.completionMessage), color = palette.textSecondary,
             style = InabahType.subheadline, textAlign = TextAlign.Center)
+        // Прочитал сам — напомни другим (решение пользователя 2026-10-06): тот же текст, что у кнопки в шапке.
+        PrimaryButton(
+            onClick = onRemind,
+            text = stringResource(R.string.reminder_action),
+            leadingIcon = painterResource(R.drawable.ic_share),
+        )
         PrimaryButton(
             onClick = onGoHome,
             text = stringResource(R.string.azkar_completion_home),
