@@ -553,6 +553,161 @@ struct AudioPlayerControllerTests {
     func queueItemClampsRepeatCount() {
         #expect(AudioQueueItem(track: Self.track(1), repeatCount: 0).repeatCount == 1)
     }
+
+    @Test("Плейлист: сбой старта не пропускает зикр — пауза на том же")
+    func playlistKeepsZikrOnPlaybackFailure() async {
+        engine.refusesToPlay = true
+
+        await playAll([1, 1])
+        await settle()
+
+        #expect(player.index == 0)
+        #expect(player.error == .playbackFailed)
+        #expect(!player.isPlaying)
+    }
+}
+
+/// Аудиосессия под управлением теста: считает активации, может отказать в активации.
+@MainActor
+private final class FakeAudioSession: AudioSessionHandling {
+    var onEvent: ((AudioSessionEvent) -> Void)?
+    var failsActivation = false
+    private(set) var activations = 0
+    private(set) var deactivations = 0
+
+    func activate() async throws {
+        activations += 1
+        if failsActivation { throw AudioEngineError.sessionUnavailable }
+    }
+
+    func deactivate() async throws {
+        deactivations += 1
+    }
+}
+
+@MainActor
+@Suite("Аудиоплеер и аудиосессия", .timeLimit(.minutes(1)))
+struct AudioPlayerSessionTests {
+    private let engine = FakeAudioEngine()
+    private let session = FakeAudioSession()
+    private let player: AudioPlayerController
+
+    init() {
+        player = AudioPlayerController(engine: engine, session: session)
+    }
+
+    private static func track(_ number: Int) -> AudioTrack {
+        AudioTrack(
+            id: "azkar.morning.\(number)",
+            url: URL(fileURLWithPath: "/morning_\(number).mp3"),
+            title: "Зикр \(number)",
+            subtitle: "Утренние азкары",
+            category: "АЗКАРЫ"
+        )
+    }
+
+    /// Дать пройти цепочке «очередь сессии → активация → старт» на главном акторе.
+    private func settle() async {
+        for _ in 0..<50 { await Task.yield() }
+    }
+
+    private func play(_ number: Int) async {
+        player.play(Self.track(number))
+        await player.waitForLoading()
+    }
+
+    @Test("Пауза и «играть» во время загрузки — звук стартует один раз, после активации")
+    func resumeDuringLoadStartsOnce() async {
+        engine.holdsLoads = true
+        player.play(Self.track(1))
+        await settle()
+
+        player.pause()
+        player.resume()
+        engine.releaseLoad("morning_1.mp3")
+        await player.waitForLoading()
+        await settle()
+
+        #expect(engine.playedURLs.count == 1)
+        #expect(session.activations == 1)
+        #expect(player.isPlaying)
+    }
+
+    @Test("«Играть» после паузы — сначала активация сессии, потом звук")
+    func resumeActivatesSession() async {
+        await play(1)
+        player.pause()
+
+        player.resume()
+        #expect(!engine.isPlaying)
+        await settle()
+
+        #expect(session.activations == 2)
+        #expect(engine.isPlaying)
+        #expect(engine.playedURLs.count == 2)
+    }
+
+    @Test("Сессия недоступна при продолжении — ошибка, звук не идёт")
+    func resumeWithoutSession() async {
+        await play(1)
+        player.pause()
+        session.failsActivation = true
+
+        player.resume()
+        await settle()
+
+        #expect(player.error == .sessionUnavailable)
+        #expect(!player.isPlaying)
+        #expect(engine.playedURLs.count == 1)
+    }
+
+    @Test("Пауза, пока сессия активируется, отменяет старт")
+    func pauseDuringActivationCancelsStart() async {
+        await play(1)
+        player.pause()
+
+        player.resume()
+        player.pause()
+        await settle()
+
+        #expect(!engine.isPlaying)
+        #expect(engine.playedURLs.count == 1)
+    }
+
+    @Test("Пауза на конец загрузки — сессию не трогаем, активирует «играть»")
+    func pausedLoadDoesNotActivate() async {
+        engine.holdsLoads = true
+        player.play(Self.track(1))
+        await settle()
+        player.pause()
+
+        engine.releaseLoad("morning_1.mp3")
+        await player.waitForLoading()
+        #expect(session.activations == 0)
+
+        player.resume()
+        await settle()
+        #expect(session.activations == 1)
+        #expect(engine.isPlaying)
+    }
+
+    @Test("После звонка плейлист продолжает тот же зикр, с активацией сессии")
+    func interruptionResumesPlaylist() async {
+        player.playAll(
+            [1, 2].map { AudioQueueItem(track: Self.track($0), repeatCount: 1) },
+            id: "test", rate: 1, pauseBetween: .zero
+        )
+        await player.waitForLoading()
+
+        session.onEvent?(.interruptionBegan)
+        #expect(!player.isPlaying)
+        session.onEvent?(.interruptionEnded(shouldResume: true))
+        await settle()
+
+        #expect(player.isPlaying)
+        #expect(player.index == 0)
+        #expect(session.activations == 2)
+    }
 }
 
 @MainActor
