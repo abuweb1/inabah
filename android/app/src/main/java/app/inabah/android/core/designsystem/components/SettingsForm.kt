@@ -25,7 +25,12 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -66,8 +71,8 @@ private val ChevronSize = 22.dp
 /**
  * Каркас экрана настроек: градиент раздела до краёв, сверху — [topBar] (навбар с «‹») или крупный
  * заголовок [largeTitle] (корень), группы прокручиваются; снизу — [contentPadding] (панель вкладок).
- * [bottomContent] — закреплён под группами, над панелью вкладок, не прокручивается (iOS `safeAreaInset`
- * у нижнего края: ссылка «О приложении» в корне).
+ * [bottomContent] — закреплён у нижнего края над панелью вкладок и не прокручивается; группы уходят под него
+ * и под панель, как в iOS (`safeAreaInset` у нижнего края: ссылка «О приложении» в корне).
  */
 @Composable
 fun SettingsScaffold(
@@ -79,36 +84,63 @@ fun SettingsScaffold(
     bottomContent: (@Composable () -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    // Отступ панели вкладок — у самого нижнего элемента: у закреплённого, если он есть, иначе у прокрутки.
     val tabBarPadding = contentPadding.calculateBottomPadding()
+    val density = LocalDensity.current
+    // Высота закреплённого элемента — меряется (текст растёт с шагом интерфейса): на неё прокрутка длиннее,
+    // чтобы последняя группа доезжала до него, а не пряталась под ним.
+    var bottomContentHeight by remember { mutableStateOf(0.dp) }
     Column(modifier.fillMaxSize().background(background)) {
         topBar?.invoke()
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth()
-                .verticalScroll(rememberScrollState())
-                .then(if (topBar == null) Modifier.windowInsetsPadding(WindowInsets.statusBars) else Modifier)
-                // Под навбаром — отступ до первой группы, как в iOS (снимки android/docs/settings, ~20 pt).
-                .then(if (topBar != null) Modifier.padding(top = Spacing.xlPlus) else Modifier)
-                .padding(horizontal = Spacing.xl)
-                .padding(bottom = (if (bottomContent == null) tabBarPadding else 0.dp) + Spacing.xl),
-            verticalArrangement = Arrangement.spacedBy(GroupSpacing),
-        ) {
-            // Крупный заголовок закреплён, как заголовки навбара; строки — с шагом интерфейса.
-            largeTitle?.let {
-                FixedTextSize {
-                    Text(
-                        it,
-                        color = InabahTheme.palette.onAccent,
-                        style = InabahType.largeTitle.copy(fontWeight = FontWeight.Bold),
-                        modifier = Modifier.padding(top = Spacing.xxxl).semantics { heading() },
-                    )
-                }
+        Box(Modifier.weight(1f).fillMaxWidth()) {
+            SettingsScrollColumn(
+                topBar = topBar != null,
+                bottomPadding = tabBarPadding + bottomContentHeight + Spacing.xl,
+                largeTitle = largeTitle,
+                content = content,
+            )
+            bottomContent?.let {
+                Box(
+                    Modifier
+                        .align(Alignment.BottomCenter)
+                        .fillMaxWidth()
+                        .padding(bottom = tabBarPadding)
+                        .onSizeChanged { bottomContentHeight = with(density) { it.height.toDp() } },
+                ) { it() }
             }
-            content()
         }
-        bottomContent?.let { Box(Modifier.fillMaxWidth().padding(bottom = tabBarPadding)) { it() } }
+    }
+}
+
+@Composable
+private fun SettingsScrollColumn(
+    topBar: Boolean,
+    bottomPadding: Dp,
+    largeTitle: String?,
+    content: @Composable ColumnScope.() -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .then(if (!topBar) Modifier.windowInsetsPadding(WindowInsets.statusBars) else Modifier)
+            // Под навбаром — отступ до первой группы, как в iOS (снимки android/docs/settings, ~20 pt).
+            .then(if (topBar) Modifier.padding(top = Spacing.xlPlus) else Modifier)
+            .padding(horizontal = Spacing.xl)
+            .padding(bottom = bottomPadding),
+        verticalArrangement = Arrangement.spacedBy(GroupSpacing),
+    ) {
+        // Крупный заголовок закреплён, как заголовки навбара; строки — с шагом интерфейса.
+        largeTitle?.let {
+            FixedTextSize {
+                Text(
+                    it,
+                    color = InabahTheme.palette.onAccent,
+                    style = InabahType.largeTitle.copy(fontWeight = FontWeight.Bold),
+                    modifier = Modifier.padding(top = Spacing.xxxl).semantics { heading() },
+                )
+            }
+        }
+        content()
     }
 }
 

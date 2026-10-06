@@ -1,7 +1,24 @@
 package app.inabah.android.feature.settings
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.material3.Text
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.getUnclippedBoundsInRoot
+import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onParent
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.swipeUp
+import androidx.compose.ui.unit.dp
+import app.inabah.android.core.designsystem.Size
+import app.inabah.android.core.designsystem.components.SettingsScaffold
+import org.junit.Assert.assertTrue
 import androidx.compose.ui.test.junit4.accessibility.enableAccessibilityChecks
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -21,6 +38,11 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+
+private const val PINNED = "pinned"
+private const val ROWS = 40
+private const val SWIPES = 8
+private val TAB_BAR_HEIGHT = 80.dp
 
 /** «О приложении»: ссылка внизу корня настроек, шапка с версией, лицензии открываются полным текстом. */
 @RunWith(AndroidJUnit4::class)
@@ -47,6 +69,28 @@ class AboutScreenTest {
             .assertIsDisplayed()
         compose.onNodeWithContentDescription(context.getString(R.string.about_title)).performClick()
         assertEquals(SettingsRoute.About, opened)
+    }
+
+    @Test
+    fun groupsScrollUnderPinnedLinkButEndAboveIt() {
+        compose.setContent {
+            InabahTheme(theme = ThemeStyle.Sections.theme) {
+                SettingsScaffold(
+                    background = SolidColor(Color.Black),
+                    contentPadding = PaddingValues(bottom = TAB_BAR_HEIGHT),
+                    largeTitle = "Настройки",
+                    bottomContent = { Box(Modifier.fillMaxWidth().height(Size.minTapTarget).testTag(PINNED)) },
+                ) {
+                    repeat(ROWS) { Text("Строка $it", modifier = Modifier.height(Size.minTapTarget)) }
+                }
+            }
+        }
+        // До прокрутки нижние строки лежат под закреплённым элементом (как в iOS — список уходит под него)…
+        val pinnedTop = compose.onNodeWithTag(PINNED).getUnclippedBoundsInRoot().top
+        repeat(SWIPES) { compose.onNodeWithText("Строка 0").onParent().performTouchInput { swipeUp() } }
+        // …а в конце прокрутки последняя строка — над ним, а не под ним.
+        val lastBottom = compose.onNodeWithText("Строка ${ROWS - 1}").getUnclippedBoundsInRoot().bottom
+        assertTrue("последняя строка $lastBottom под закреплённым $pinnedTop", lastBottom <= pinnedTop)
     }
 
     @Test
