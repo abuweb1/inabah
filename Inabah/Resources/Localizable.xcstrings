@@ -29,7 +29,7 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Инаба"
+            "value" : "Inabah"
           }
         }
       }
@@ -1550,7 +1550,7 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Инаба %@ · О приложении"
+            "value" : "Inabah %@ · О приложении"
           }
         }
       }
