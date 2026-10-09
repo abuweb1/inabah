@@ -54,6 +54,7 @@ import app.inabah.android.core.designsystem.components.FontSizeControls
 import app.inabah.android.core.designsystem.components.InabahTopBar
 import app.inabah.android.core.designsystem.components.surface
 import app.inabah.android.core.designsystem.monospacedDigits
+import app.inabah.android.core.settings.HadithFavorites
 import app.inabah.android.core.settings.HadithProgress
 import app.inabah.android.core.settings.HadithStatus
 import app.inabah.android.core.settings.ReadingSettings
@@ -69,6 +70,7 @@ fun HadithDetailScreen(
     id: HadithId,
     store: HadithStore,
     progress: HadithProgress,
+    favorites: HadithFavorites,
     readingSettings: ReadingSettings,
     onBack: () -> Unit,
     contentPadding: PaddingValues,
@@ -81,7 +83,7 @@ fun HadithDetailScreen(
 
     Box(modifier.fillMaxSize().background(theme.gradients.hadithBackground)) {
         when (val current = states[id.collection] ?: Loadable.Idle) {
-            is Loadable.Loaded -> HadithPages(current.value, id, progress, readingSettings, onBack, contentPadding)
+            is Loadable.Loaded -> HadithPages(current.value, id, progress, favorites, readingSettings, onBack, contentPadding)
             Loadable.Idle, Loadable.Loading, is Loadable.Failed -> Column(Modifier.fillMaxSize()) {
                 HadithTopBar(readingSettings, onBack, pager = null)
                 Box(Modifier.fillMaxSize()) {
@@ -104,6 +106,7 @@ private fun HadithPages(
     hadiths: List<Hadith>,
     id: HadithId,
     progress: HadithProgress,
+    favorites: HadithFavorites,
     readingSettings: ReadingSettings,
     onBack: () -> Unit,
     contentPadding: PaddingValues,
@@ -111,6 +114,7 @@ private fun HadithPages(
     val initialPage = hadiths.indexOfFirst { it.number == id.number }.coerceAtLeast(0)
     val pagerState = rememberPagerState(initialPage) { hadiths.size }
     val statuses by progress.statuses.collectAsStateWithLifecycle()
+    val favoriteIds by favorites.favorites.collectAsStateWithLifecycle()
     val fontSize by readingSettings.arabicFontSize.collectAsStateWithLifecycle()
     val animatedSize by animateFloatAsState(fontSize.toFloat(), Motion.fontSize(), label = "arabicSize")
     Column(Modifier.fillMaxSize()) {
@@ -125,9 +129,11 @@ private fun HadithPages(
             HadithPage(
                 hadith = hadith,
                 status = statuses[hadith.id] ?: HadithStatus.None,
+                isFavorite = hadith.id in favoriteIds,
                 arabicFontSize = animatedSize,
                 onToggleRead = { progress.toggleRead(hadith.id) },
                 onToggleMemorized = { progress.toggleMemorized(hadith.id) },
+                onToggleFavorite = { favorites.toggle(hadith.id) },
                 contentPadding = contentPadding,
             )
         }

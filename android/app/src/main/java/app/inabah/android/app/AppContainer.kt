@@ -21,6 +21,7 @@ import app.inabah.android.core.settings.AppearanceSettings
 import app.inabah.android.core.settings.AzkarHistory
 import app.inabah.android.core.settings.AzkarWindowSettings
 import app.inabah.android.core.settings.HadithCollectionOrder
+import app.inabah.android.core.settings.HadithFavorites
 import app.inabah.android.core.settings.HadithProgress
 import app.inabah.android.core.settings.PackageManagerAppIconSwitcher
 import app.inabah.android.core.settings.ParchmentSettings
@@ -49,6 +50,7 @@ class AppServices(
     val azkarStore: AzkarStore,
     val hadithStore: HadithStore,
     val hadithProgress: HadithProgress,
+    val hadithFavorites: HadithFavorites,
     val hadithCollectionOrder: HadithCollectionOrder,
     val appearanceSettings: AppearanceSettings,
     val parchmentSettings: ParchmentSettings,
@@ -143,6 +145,7 @@ class AppContainer(context: Context) {
             ),
             hadithStore = HadithStore(repository),
             hadithProgress = HadithProgress(storage),
+            hadithFavorites = HadithFavorites(storage),
             hadithCollectionOrder = HadithCollectionOrder(storage),
             appearanceSettings = AppearanceSettings(storage),
             parchmentSettings = ParchmentSettings(storage),

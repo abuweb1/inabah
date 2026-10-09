@@ -53,6 +53,7 @@ class AppRouter {
             is HadithRoute.CollectionList -> listOf(route)
             is HadithRoute.Detail -> listOf(HadithRoute.CollectionList(route.id.collection), route)
             is HadithRoute.About -> listOf(HadithRoute.CollectionList(route.collection), route)
+            HadithRoute.Favorites -> listOf(route)
         }
         _hadithStack.replaceWith(stack)
     }
