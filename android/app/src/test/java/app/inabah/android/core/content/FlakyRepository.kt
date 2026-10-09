@@ -1,6 +1,7 @@
 package app.inabah.android.core.content
 
 import app.inabah.android.core.content.model.AzkarSection
+import app.inabah.android.core.content.model.CollectionInfo
 import app.inabah.android.core.content.model.Hadith
 import app.inabah.android.core.content.model.HadithCollection
 import app.inabah.android.core.content.model.Zikr
@@ -15,6 +16,11 @@ class FlakyRepository(private val delegate: ContentRepository, private var failu
     override suspend fun hadiths(collection: HadithCollection): List<Hadith> {
         failIfNeeded("${collection.key}.json")
         return delegate.hadiths(collection)
+    }
+
+    override suspend fun collectionInfo(collection: HadithCollection): CollectionInfo {
+        failIfNeeded("collections.json")
+        return delegate.collectionInfo(collection)
     }
 
     private fun failIfNeeded(file: String) {

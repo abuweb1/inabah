@@ -22,6 +22,10 @@ sealed interface HadithRoute {
 
     @Serializable
     data class Detail(val id: HadithId) : HadithRoute
+
+    /** «О сборнике» — из шапки списка сборника. */
+    @Serializable
+    data class About(val collection: HadithCollection) : HadithRoute
 }
 
 @Serializable

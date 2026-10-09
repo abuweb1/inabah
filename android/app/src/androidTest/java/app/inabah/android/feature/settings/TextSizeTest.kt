@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.Density
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import app.inabah.android.core.content.ContentRepository
 import app.inabah.android.core.content.model.AzkarSection
+import app.inabah.android.core.content.model.CollectionInfo
 import app.inabah.android.core.content.model.Hadith
 import app.inabah.android.core.content.model.HadithCollection
 import app.inabah.android.core.content.model.Zikr
@@ -153,4 +154,6 @@ private class EmptyRepository : ContentRepository {
     override suspend fun azkar(section: AzkarSection): List<Zikr> = emptyList()
 
     override suspend fun hadiths(collection: HadithCollection): List<Hadith> = emptyList()
+
+    override suspend fun collectionInfo(collection: HadithCollection): CollectionInfo = CollectionInfo.Empty
 }

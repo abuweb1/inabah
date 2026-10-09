@@ -46,12 +46,13 @@ class AppRouter {
         _azkarStack.replaceWith(listOf(route))
     }
 
-    /** Хадис открывается поверх списка своего сборника — «назад» ведёт в этот список. */
+    /** Хадис и «О сборнике» открываются поверх списка своего сборника — «назад» ведёт в этот список. */
     fun open(route: HadithRoute) {
         selectedTab = AppTab.Hadith
         val stack = when (route) {
             is HadithRoute.CollectionList -> listOf(route)
             is HadithRoute.Detail -> listOf(HadithRoute.CollectionList(route.id.collection), route)
+            is HadithRoute.About -> listOf(HadithRoute.CollectionList(route.collection), route)
         }
         _hadithStack.replaceWith(stack)
     }

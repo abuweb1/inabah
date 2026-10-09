@@ -6,6 +6,7 @@ import app.inabah.android.core.content.ContentRepository
 import app.inabah.android.core.content.FlakyRepository
 import app.inabah.android.core.content.InMemoryContentRepository
 import app.inabah.android.core.content.Loadable
+import app.inabah.android.core.content.model.CollectionInfo
 import app.inabah.android.core.content.model.Hadith
 import app.inabah.android.core.content.model.HadithCollection
 import app.inabah.android.core.content.model.HadithId
@@ -52,6 +53,21 @@ class HadithStoreTest {
 
         store.load(HadithCollection.Nawawi)
         assertEquals(listOf(1), store.hadiths(HadithCollection.Nawawi).map { it.number }, "повторная попытка")
+    }
+
+    @Test
+    fun `О сборнике — загрузка, ошибка и повторная попытка`() = runTest {
+        val info = CollectionInfo(authors = emptyList(), about = listOf("Абзац."))
+        val repository = InMemoryContentRepository(collectionInfo = mapOf(HadithCollection.Qudsi to info))
+        val store = HadithStore(FlakyRepository(repository, failures = 1))
+
+        store.loadInfo(HadithCollection.Qudsi)
+        val failed = assertIs<Loadable.Failed>(store.infos.value[HadithCollection.Qudsi])
+        assertIs<ContentError.ResourceMissing>(failed.error)
+
+        store.loadInfo(HadithCollection.Qudsi)
+        assertEquals(Loadable.Loaded(info), store.infos.value[HadithCollection.Qudsi], "повторная попытка")
+        assertEquals(null, store.collections.value[HadithCollection.Qudsi], "сами хадисы не загружались")
     }
 
     @Test
