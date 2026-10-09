@@ -8,13 +8,15 @@
 //   node scripts/check-data.mjs            — проверка, первые 5 предупреждений каждого типа
 //   node scripts/check-data.mjs --verbose  — все предупреждения
 //
+// Плюс data/collections.json — сведения о сборниках для экрана «О сборнике».
+//
 // Код выхода 1 — есть ошибки (пустые обязательные поля, нет аудиофайла и т.п.).
 // Предупреждения (подозрения на артефакты PDF) на код выхода не влияют.
 
 import { readFileSync, existsSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { join } from 'node:path';
-import { ROOT, BASE_LANGUAGE, loadAll, legacyZikr, legacyHadith } from './lib/content.mjs';
+import { ROOT, BASE_LANGUAGE, loadAll, readData, legacyZikr, legacyHadith } from './lib/content.mjs';
 
 const AUDIO_DIR = join(ROOT, 'audio');
 
@@ -25,7 +27,11 @@ const EXPECTED = { morning: 16, evening: 16, nawawi: 50, qudsi: 40, ajurri: 40 }
 const AZKAR_KEYS = ['id', 'arabic', 'max', 'audio', 'translations'];
 const HADITH_KEYS = ['id', 'arabic', 'translations'];
 const AZKAR_TRANSLATION_KEYS = ['translit', 'text', 'source'];
-const HADITH_TRANSLATION_KEYS = ['rawi', 'text', 'source'];
+const HADITH_TRANSLATION_KEYS = ['rawi', 'text', 'source', 'notes'];
+const NOTE_KEYS = ['term', 'text'];
+const COLLECTION_KEYS = ['translations'];
+const COLLECTION_TRANSLATION_KEYS = ['authors', 'about'];
+const AUTHOR_KEYS = ['name', 'years'];
 
 // ── Проверки ─────────────────────────────────────────────────
 
@@ -176,6 +182,79 @@ function checkHadith(HADITH_DATA) {
   }
 }
 
+// collections.json: { <сборник>: { translations: { <язык>: { authors?: [{ name, years? }], about: [абзац…] } } } }.
+// Названия сборников — в приложении, число хадисов — длина data/<сборник>.json: сюда не дублируются.
+function checkCollections(collections, hadithTypes) {
+  if (!collections || typeof collections !== 'object' || Array.isArray(collections)) {
+    error('collections', 'ожидается объект { <сборник>: … }');
+    return;
+  }
+  for (const type of hadithTypes) if (!(type in collections)) error('collections', `нет сведений о сборнике «${type}»`);
+  for (const [type, entry] of Object.entries(collections)) {
+    const where = `collections ${type}`;
+    if (!hadithTypes.includes(type)) error(where, `нет такого сборника (data/${type}.json)`);
+    for (const k of Object.keys(entry ?? {})) if (!COLLECTION_KEYS.includes(k)) error(where, `неизвестное поле «${k}»`);
+    const translations = entry?.translations;
+    if (!translations || typeof translations !== 'object' || Array.isArray(translations)) {
+      error(where, 'нет объекта translations');
+      continue;
+    }
+    if (!translations[BASE_LANGUAGE]) error(where, `нет перевода translations.${BASE_LANGUAGE}`);
+    for (const [lang, t] of Object.entries(translations)) {
+      const at = `${where} ${lang}`;
+      if (!/^[a-z]{2}$/.test(lang)) error(where, `код языка «${lang}» — ожидается ISO 639-1 (ru, en…)`);
+      for (const k of Object.keys(t ?? {})) {
+        if (!COLLECTION_TRANSLATION_KEYS.includes(k)) error(where, `неизвестное поле translations.${lang}.${k}`);
+      }
+      // authors — необязательно (у подборки может не быть известного составителя), но не пустой массив.
+      if (t?.authors !== undefined) {
+        if (!Array.isArray(t.authors) || !t.authors.length) error(at, 'authors — непустой массив или поля нет');
+        else t.authors.forEach((a, i) => {
+          for (const k of Object.keys(a ?? {})) if (!AUTHOR_KEYS.includes(k)) error(at, `неизвестное поле authors[${i}].${k}`);
+          // { name: "", years: "" } — заготовка «составитель не указан»: приложение её не показывает.
+          if (a?.name === '' && !a.years) return;
+          if (requireString(at, a ?? {}, 'name')) checkMixedScript(at, 'authors.name', a.name);
+          if (a?.years !== undefined) requireString(at, a, 'years');
+        });
+      }
+      if (!Array.isArray(t?.about) || !t.about.length) {
+        error(at, 'about — непустой массив абзацев');
+        continue;
+      }
+      t.about.forEach((paragraph, i) => {
+        if (typeof paragraph !== 'string' || !paragraph.trim()) { error(at, `about[${i}] — пустой абзац`); return; }
+        if (lang === BASE_LANGUAGE) checkRussian(`${at} about[${i}]`, paragraph);
+        checkMixedScript(at, `about[${i}]`, paragraph);
+      });
+    }
+  }
+}
+
+// Сноски к словам перевода: notes — массив { term, text } (пустой — сносок пока нет).
+// term — слово или выражение из text перевода; пока способ показа не решён, несовпадение — предупреждение.
+function checkNotes(collections) {
+  const fold = s => s.toLowerCase().replace(/ё/g, 'е').replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
+  for (const [type, list] of Object.entries(collections)) {
+    for (const item of list ?? []) {
+      for (const [lang, t] of Object.entries(item.translations ?? {})) {
+        if (t?.notes === undefined) continue;
+        const where = `${type} id ${item.id ?? '?'}`;
+        if (!Array.isArray(t.notes)) { error(where, `translations.${lang}.notes — ожидается массив`); continue; }
+        t.notes.forEach((note, i) => {
+          const at = `${where} notes[${i}]`;
+          for (const k of Object.keys(note ?? {})) if (!NOTE_KEYS.includes(k)) error(at, `неизвестное поле «${k}»`);
+          const hasTerm = requireString(at, note ?? {}, 'term');
+          // Пояснение может приводить арабский термин и продолжать term со строчной — проверки checkRussian не для него.
+          if (requireString(at, note ?? {}, 'text')) checkMixedScript(at, 'notes.text', note.text);
+          if (hasTerm && typeof t.text === 'string' && !fold(t.text).includes(fold(note.term))) {
+            warn('Слово сноски не найдено в тексте перевода', at, `«${note.term}»`);
+          }
+        });
+      }
+    }
+  }
+}
+
 // Структура: известные ключи, id первым, translations с базовым языком и кодами ISO 639-1.
 function checkStructure(where, item, keys, translationKeys) {
   const actual = Object.keys(item);
@@ -217,6 +296,8 @@ const HADITH_DATA = Object.fromEntries(
   Object.entries(data.hadith).map(([type, list]) => [type, list?.map(h => legacyHadith(h))]));
 checkAzkar(AZKAR);
 checkHadith(HADITH_DATA);
+checkNotes(data.hadith);
+checkCollections(readData('collections.json'), Object.keys(data.hadith));
 
 const counts = Object.entries(EXPECTED)
   .map(([t]) => `${t}: ${(AZKAR[t] ?? HADITH_DATA[t])?.length ?? 0}`).join(', ');
