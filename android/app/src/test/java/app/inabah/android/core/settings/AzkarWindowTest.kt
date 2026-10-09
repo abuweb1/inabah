@@ -7,8 +7,10 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.ZonedDateTime
+import java.util.Locale
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertSame
 import kotlin.test.assertTrue
 import org.junit.Test
 
@@ -98,6 +100,36 @@ class AzkarWindowScheduleTest {
     }
 }
 
+/**
+ * Ключ дня — григорианская дата при любом календаре в настройках телефона (аудит iOS 2026-10-06, §5.1):
+ * день отрезка записывается в историю и читается после перезапуска под той же локалью — круговой путь
+ * через хранилище, а не только тип `LocalDate`.
+ */
+class AzkarDayKeyTest {
+    @Test
+    fun `Ключ дня не зависит от календаря телефона`() = TestStorage.run { storage ->
+        val saved = Locale.Category.entries.associateWith(Locale::getDefault)
+        val savedDefault = Locale.getDefault()
+        try {
+            var current = storage.storage
+            for (tag in listOf("ar-SA-u-ca-islamic", "ja-JP-u-ca-japanese", "th-TH-u-ca-buddhist")) {
+                Locale.setDefault(Locale.forLanguageTag(tag))
+                val schedule = AzkarWindowSchedule(AzkarWindowSettings.defaultWindow(AzkarSection.Morning), berlin)
+                val day = schedule.period(date(2026, 10, 3, 8)).day
+                assertEquals(LocalDate.of(2026, 10, 3), day, tag)
+
+                AzkarHistory(current) { throw AssertionError(it) }.record(completed = 1, total = 2, AzkarSection.Morning, day)
+                current = storage.restart()
+                val restored = AzkarHistory(current) { throw AssertionError(it) }
+                assertEquals(AzkarDayRecord(1, 2), restored.record(AzkarSection.Morning, LocalDate.of(2026, 10, 3)), tag)
+            }
+        } finally {
+            Locale.setDefault(savedDefault)
+            saved.forEach { (category, locale) -> Locale.setDefault(category, locale) }
+        }
+    }
+}
+
 /** «Время азкаров в настройках». */
 class AzkarWindowSettingsTest {
     @Test
@@ -111,8 +143,8 @@ class AzkarWindowSettingsTest {
     @Test
     fun `Новое время сохраняется между запусками`() = TestStorage.run { storage ->
         val settings = AzkarWindowSettings(storage.storage)
-        settings.setStart(DayTime.of(4, 30), AzkarSection.Morning)
-        settings.setEnd(DayTime.of(1, 0), AzkarSection.Evening)
+        settings.set(AzkarWindow(DayTime.of(4, 30), DayTime.of(12, 0)), AzkarSection.Morning)
+        settings.set(AzkarWindow(DayTime.of(17, 0), DayTime.of(1, 0)), AzkarSection.Evening)
 
         val restored = AzkarWindowSettings(storage.restart())
         assertEquals(AzkarWindow(DayTime.of(4, 30), DayTime.of(12, 0)), restored.window(AzkarSection.Morning))
@@ -122,12 +154,21 @@ class AzkarWindowSettingsTest {
     @Test
     fun `Начало, совпадающее с концом, не сохраняется`() = TestStorage.run { storage ->
         val settings = AzkarWindowSettings(storage.storage)
-        settings.setStart(DayTime.of(12, 0), AzkarSection.Morning)
-        settings.setEnd(DayTime.of(5, 0), AzkarSection.Morning)
+        settings.set(AzkarWindow(DayTime.of(12, 0), DayTime.of(12, 0)), AzkarSection.Morning)
 
         val default = AzkarWindowSettings.defaultWindow(AzkarSection.Morning)
         assertEquals(default, settings.window(AzkarSection.Morning))
         assertEquals(default, AzkarWindowSettings(storage.restart()).window(AzkarSection.Morning))
+    }
+
+    @Test
+    fun `То же окно не шлёт нового значения подписчикам`() = TestStorage.run { storage ->
+        val settings = AzkarWindowSettings(storage.storage)
+        val before = settings.windows.value
+
+        settings.set(AzkarWindowSettings.defaultWindow(AzkarSection.Morning), AzkarSection.Morning)
+
+        assertSame(before, settings.windows.value)
     }
 
     @Test

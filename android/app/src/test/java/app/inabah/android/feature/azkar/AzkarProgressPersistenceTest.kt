@@ -169,15 +169,14 @@ class AzkarProgressPersistenceTest {
     }
 
     @Test
-    fun `Смена времени — важна только итоговая граница, промежуточные значения колеса ничего не стирают`() =
+    fun `Смена времени — сверка видит только сохранённое окно`() =
         TestStorage.run { storage ->
             val settings = AzkarWindowSettings(storage.storage)
             val store = makeStore(storage, settings)
             store.sessions(morning)[0].increment()
 
-            // Колесо проходит через 07:00 (окно уже закончилось бы) и останавливается на 11:00.
-            settings.setEnd(DayTime.of(7, 0), morning)
-            settings.setEnd(DayTime.of(11, 0), morning)
+            // Колесо прошло через 07:00 (окно уже закончилось бы) в черновике экрана; сохранено итоговое 11:00.
+            settings.set(settings.window(morning).copy(end = DayTime.of(11, 0)), morning)
             store.reconcile()
             assertEquals(1, store.sessions(morning)[0].count)
 
@@ -192,7 +191,7 @@ class AzkarProgressPersistenceTest {
         val store = makeStore(storage, settings)
         store.sessions(morning)[0].increment()
 
-        settings.setEnd(DayTime.of(7, 30), morning)
+        settings.set(settings.window(morning).copy(end = DayTime.of(7, 30)), morning)
         store.reconcile()
 
         assertEquals(0, store.sessions(morning)[0].count)

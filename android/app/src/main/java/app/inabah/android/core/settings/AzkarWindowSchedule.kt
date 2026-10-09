@@ -29,7 +29,10 @@ value class DayTime private constructor(val minutesSinceMidnight: Int) {
 }
 
 /** Время азкаров раздела: «с [start] до [end]». Конец раньше начала — на следующий день (вечерние 17:00–02:00). */
-data class AzkarWindow(val start: DayTime, val end: DayTime)
+data class AzkarWindow(val start: DayTime, val end: DayTime) {
+    /** Начало = концу — у окна нет длины: такое время не сохраняется (iOS `isValid`). */
+    val isValid: Boolean get() = start != end
+}
 
 /**
  * Отрезок, к которому относится прогресс раздела (iOS `AzkarPeriod`): само время азкаров или

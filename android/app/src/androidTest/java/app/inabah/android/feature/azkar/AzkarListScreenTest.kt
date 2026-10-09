@@ -1,5 +1,12 @@
 package app.inabah.android.feature.azkar
 
+import android.text.format.DateFormat
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.LifecycleRegistry
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.test.platform.app.InstrumentationRegistry
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -305,29 +312,97 @@ class AzkarListScreenTest {
         compose.onNodeWithContentDescription("Машаа Аллах!").assertDoesNotExist()
     }
 
+    /** Экран настроек азкаров; [lifecycle] — свой владелец жизненного цикла, чтобы проверить уход в фон. */
+    private fun showSettings(store: AzkarStore, shown: () -> Boolean, lifecycle: LifecycleOwner? = null) {
+        compose.setContent {
+            InabahTheme {
+                val owner = lifecycle ?: LocalLifecycleOwner.current
+                CompositionLocalProvider(LocalLifecycleOwner provides owner) {
+                    if (shown()) AzkarSettingsScreen(store, windowSettings, onBack = {}, contentPadding = PaddingValues())
+                }
+            }
+        }
+    }
+
+    /**
+     * Барабан капсулы [chip] — на [hour]:00 через TalkBack-действия. Индекс часа зависит от формата системы:
+     * в 12-часовом — час половины дня, а половину («До или после полудня») переключает третий барабан.
+     */
+    private fun pickHour(chip: String, hour: Int) {
+        compose.onNodeWithContentDescription(chip).performClick()
+        val is24Hour = DateFormat.is24HourFormat(InstrumentationRegistry.getInstrumentation().targetContext)
+        val hours = compose.onNodeWithContentDescription("Часы")
+        hours.performSemanticsAction(SemanticsActions.SetProgress) { it((if (is24Hour) hour else hour % 12).toFloat()) }
+        compose.waitForIdle()
+        if (!is24Hour) {
+            val period = compose.onNodeWithContentDescription("До или после полудня")
+            // AM — первое значение барабана, PM — второе; шаг за край (уже нужная половина) ничего не делает.
+            val toward = if (hour < 12) "Меньше" else "Больше"
+            val action = period.fetchSemanticsNode().config[SemanticsActions.CustomActions].first { it.label == toward }
+            compose.runOnUiThread { action.action() }
+        }
+        compose.waitForIdle()
+    }
+
     @Test
-    fun newWindowAppliesToProgressOnlyWhenSettingsScreenLeaves() {
+    fun windowDraftIsSavedAndAppliedOnlyWhenSettingsScreenLeaves() {
         val store = store(1, 3)
         compose.runOnIdle {
             runBlocking { store.loadAll() }
             store.sessions(AzkarSection.Morning)[1].increment()
         }
         var shown by mutableStateOf(true)
-        compose.setContent {
-            InabahTheme {
-                if (shown) AzkarSettingsScreen(store, windowSettings, onBack = {}, contentPadding = PaddingValues())
-            }
-        }
-        compose.onNodeWithContentDescription("Начало утренних азкаров").assertExists()
+        showSettings(store, shown = { shown })
         compose.onNodeWithContentDescription("Конец вечерних азкаров").assertExists()
 
-        // Конец утренних — на уже прошедшие 07:00: пока экран открыт, прочитанное на месте.
-        compose.runOnIdle { windowSettings.setEnd(DayTime.of(7, 0), AzkarSection.Morning) }
-        compose.runOnIdle { check(store.hasProgress(AzkarSection.Morning)) }
+        // Начало утренних — на 09:00, позже нынешних 08:00: пока экран открыт, это только черновик.
+        pickHour("Начало утренних азкаров", 9)
+        compose.runOnIdle {
+            check(windowSettings.window(AzkarSection.Morning).start == DayTime.of(5, 0)) { "черновик сохранён раньше времени" }
+            check(store.hasProgress(AzkarSection.Morning))
+        }
 
-        // Ушли с экрана — окно закончилось, счётчики обнулены.
+        // Ушли с экрана — время сохранено, окно ещё не началось, счётчики обнулены.
         shown = false
-        compose.runOnIdle { check(!store.hasProgress(AzkarSection.Morning)) }
+        compose.runOnIdle {
+            check(windowSettings.window(AzkarSection.Morning).start == DayTime.of(9, 0))
+            check(!store.hasProgress(AzkarSection.Morning))
+        }
+    }
+
+    @Test
+    fun windowDraftIsSavedWhenAppGoesToBackground() {
+        val store = store(1)
+        compose.runOnIdle { runBlocking { store.loadAll() } }
+        val owner = object : LifecycleOwner {
+            val registry = LifecycleRegistry.createUnsafe(this).apply { currentState = Lifecycle.State.RESUMED }
+            override val lifecycle: Lifecycle get() = registry
+        }
+        showSettings(store, shown = { true }, lifecycle = owner)
+
+        pickHour("Начало утренних азкаров", 4)
+        compose.runOnIdle { check(windowSettings.window(AzkarSection.Morning).start == DayTime.of(5, 0)) }
+
+        // Шторка уведомлений / другое приложение — ON_STOP: черновик сохраняется, экран ещё открыт.
+        compose.runOnIdle { owner.registry.handleLifecycleEvent(Lifecycle.Event.ON_STOP) }
+        compose.runOnIdle { check(windowSettings.window(AzkarSection.Morning).start == DayTime.of(4, 0)) }
+    }
+
+    @Test
+    fun sameStartAndEndShowsNoticeAndKeepsPreviousWindow() {
+        val store = store(1)
+        compose.runOnIdle { runBlocking { store.loadAll() } }
+        var shown by mutableStateOf(true)
+        showSettings(store, shown = { shown })
+        val notice = "Начало и конец совпадают — для этого раздела останется прежнее время."
+        compose.onNodeWithText(notice).assertDoesNotExist()
+
+        // Конец утренних 12:00 → 05:00, как начало.
+        pickHour("Конец утренних азкаров", 5)
+        compose.onNodeWithText(notice).assertExists()
+
+        shown = false
+        compose.runOnIdle { check(windowSettings.window(AzkarSection.Morning) == AzkarWindowSettings.defaultWindow(AzkarSection.Morning)) }
     }
 
     @Test

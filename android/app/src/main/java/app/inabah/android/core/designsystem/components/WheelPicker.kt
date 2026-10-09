@@ -164,7 +164,7 @@ fun WheelPicker(
                 settles++
             }
     }
-    // Значение не приняли (начало времени азкаров = концу) или сменили снаружи — барабан едет к принятому,
+    // Значение не приняли (владелец отклонил его в onChange) или сменили снаружи — барабан едет к принятому,
     // как iOS DatePicker; иначе на нём осталось бы отклонённое, а соседний барабан сохранил бы не то, что видно.
     LaunchedEffect(value, settles) {
         if (state.isScrollInProgress || selected == value) return@LaunchedEffect
