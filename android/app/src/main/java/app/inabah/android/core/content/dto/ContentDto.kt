@@ -42,3 +42,23 @@ data class HadithTranslationDto(
     val rawi: String? = null,
     val source: String? = null,
 )
+
+// data/collections.json: { <ключ сборника>: CollectionInfoDto }.
+
+@Serializable
+data class CollectionInfoDto(
+    val translations: Map<String, CollectionTranslationDto> = emptyMap(),
+)
+
+@Serializable
+data class CollectionTranslationDto(
+    val authors: List<CollectionAuthorDto> = emptyList(),
+    val about: List<String> = emptyList(),
+)
+
+/** `{ "name": "", "years": "" }` — заготовка «составитель не указан» (у своей подборки). */
+@Serializable
+data class CollectionAuthorDto(
+    val name: String = "",
+    val years: String? = null,
+)

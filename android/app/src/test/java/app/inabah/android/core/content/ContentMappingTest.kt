@@ -1,6 +1,8 @@
 package app.inabah.android.core.content
 
 import app.inabah.android.core.content.model.AzkarSection
+import app.inabah.android.core.content.model.CollectionAuthor
+import app.inabah.android.core.content.model.CollectionInfo
 import app.inabah.android.core.content.model.HadithCollection
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -84,5 +86,38 @@ class ContentMappingTest {
         assertNull(hadith.translation!!.narrator)
         assertNull(hadith.translation!!.source)
         assertEquals("Перевод", hadith.translation!!.text)
+    }
+
+    private val collections = """
+        {
+          "nawawi": { "future": 1, "translations": {
+            "en": { "about": ["English"] },
+            "ru": { "authors": [ { "name": " Имам ан-Навави ", "years": "  " }, { "name": "", "years": "" },
+                                 { "name": "Ибн Раджаб", "years": " 736–795 гг. х. " } ],
+                    "about": [ " Первый абзац. ", "", "  ", "Второй абзац." ], "future": true } } },
+          "qudsi": { "translations": { "en": { "authors": [ { "name": "Someone" } ], "about": ["English"] } } }
+        }
+    """.trimIndent()
+
+    @Test
+    fun `О сборнике — заготовка без имени и пустые абзацы отбрасываются, пустые годы — нет, края обрезаются`() = runTest {
+        val repository = repository(mapOf("collections.json" to collections), StandardTestDispatcher(testScheduler))
+
+        val info = repository.collectionInfo(HadithCollection.Nawawi)
+
+        assertEquals(
+            listOf(CollectionAuthor("Имам ан-Навави", years = null), CollectionAuthor("Ибн Раджаб", "736–795 гг. х.")),
+            info.authors,
+        )
+        assertEquals(listOf("Первый абзац.", "Второй абзац."), info.about)
+        assertEquals(ContentLanguage.Base, info.language, "ru — по приоритету, не первый en")
+    }
+
+    @Test
+    fun `О сборнике — нет перевода на доступных языках или сборника нет в файле — пусто`() = runTest {
+        val repository = repository(mapOf("collections.json" to collections), StandardTestDispatcher(testScheduler))
+
+        assertEquals(CollectionInfo.Empty, repository.collectionInfo(HadithCollection.Qudsi), "только en")
+        assertEquals(CollectionInfo.Empty, repository.collectionInfo(HadithCollection.Ajurri), "нет в файле")
     }
 }

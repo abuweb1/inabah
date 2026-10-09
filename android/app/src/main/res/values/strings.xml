@@ -78,6 +78,9 @@
     <string name="content_error_message">Попробуйте ещё раз.</string>
     <string name="content_error_retry">Повторить</string>
     <string name="content_error_title">Не удалось загрузить</string>
+    <string name="hadith_about_book">О книге</string>
+    <string name="hadith_about_hadiths">Хадисы</string>
+    <string name="hadith_about_title">О сборнике</string>
     <string name="hadith_ajurri_title">40 хадисов аль-Аджурри</string>
     <string name="hadith_audio_title">Аудио · Хадис %d</string>
     <string name="hadith_detail_counter">%1$d из %2$d</string>
@@ -237,6 +240,13 @@
         <item quantity="few">%d зикра · После фаджра</item>
         <item quantity="many">%d зикров · После фаджра</item>
         <item quantity="other">%d зикра · После фаджра</item>
+    </plurals>
+    <!-- Заголовок группы составителей: число — сколько их (у сборника ан-Навави — один). -->
+    <plurals name="hadith_about_authors">
+        <item quantity="one">Составитель</item>
+        <item quantity="few">Составители</item>
+        <item quantity="many">Составители</item>
+        <item quantity="other">Составители</item>
     </plurals>
     <plurals name="hadith_ajurri_meta">
         <item quantity="one">%d хадис</item>

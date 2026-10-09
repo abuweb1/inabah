@@ -43,6 +43,7 @@ import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import app.inabah.android.core.content.ContentRepository
 import app.inabah.android.core.content.model.AzkarSection
+import app.inabah.android.core.content.model.CollectionInfo
 import app.inabah.android.core.content.model.Hadith
 import app.inabah.android.core.content.model.HadithCollection
 import app.inabah.android.core.content.model.Zikr
@@ -495,4 +496,6 @@ private class FixedRepository(private val azkar: List<Zikr>) : ContentRepository
     override suspend fun azkar(section: AzkarSection): List<Zikr> = azkar
 
     override suspend fun hadiths(collection: HadithCollection): List<Hadith> = emptyList()
+
+    override suspend fun collectionInfo(collection: HadithCollection): CollectionInfo = CollectionInfo.Empty
 }

@@ -1,8 +1,10 @@
 package app.inabah.android.core.content
 
 import app.inabah.android.core.content.dto.AzkarFileDto
+import app.inabah.android.core.content.dto.CollectionInfoDto
 import app.inabah.android.core.content.dto.HadithDto
 import app.inabah.android.core.content.model.AzkarSection
+import app.inabah.android.core.content.model.CollectionInfo
 import app.inabah.android.core.content.model.Hadith
 import app.inabah.android.core.content.model.HadithCollection
 import app.inabah.android.core.content.model.Zikr
@@ -15,12 +17,17 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.builtins.ListSerializer
+import kotlinx.serialization.builtins.MapSerializer
+import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.json.Json
 
-/** Источник азкаров и хадисов. Ошибки — [ContentError]. */
+/** Источник азкаров, хадисов и сведений о сборниках. Ошибки — [ContentError]. */
 interface ContentRepository {
     suspend fun azkar(section: AzkarSection): List<Zikr>
     suspend fun hadiths(collection: HadithCollection): List<Hadith>
+
+    /** «О сборнике»; сборника нет в файле — [CollectionInfo.Empty]. */
+    suspend fun collectionInfo(collection: HadithCollection): CollectionInfo
 }
 
 /** Открывает файл по пути внутри ассетов (`data/azkar.json`); нет файла — [FileNotFoundException]. */
@@ -42,6 +49,7 @@ class AssetContentRepository(
     private val mutex = Mutex()
     private var azkarFile: AzkarFileDto? = null
     private val hadithFiles = mutableMapOf<HadithCollection, List<HadithDto>>()
+    private var collectionsFile: Map<String, CollectionInfoDto>? = null
 
     override suspend fun azkar(section: AzkarSection): List<Zikr> {
         val file = mutex.withLock {
@@ -61,6 +69,15 @@ class AssetContentRepository(
                     .also { hadithFiles[collection] = it }
         }
         return items.map { it.toHadith(collection, priority) }
+    }
+
+    override suspend fun collectionInfo(collection: HadithCollection): CollectionInfo {
+        val file = mutex.withLock {
+            collectionsFile
+                ?: decode(COLLECTIONS_FILE, MapSerializer(String.serializer(), CollectionInfoDto.serializer()))
+                    .also { collectionsFile = it }
+        }
+        return file[collection.key]?.toCollectionInfo(priority) ?: CollectionInfo.Empty
     }
 
     private suspend fun <T> decode(file: String, deserializer: DeserializationStrategy<T>): T =
@@ -83,6 +100,7 @@ class AssetContentRepository(
     private companion object {
         const val DATA_DIR = "data"
         const val AZKAR_FILE = "azkar.json"
+        const val COLLECTIONS_FILE = "collections.json"
 
         val json = Json { ignoreUnknownKeys = true }
     }

@@ -37,6 +37,7 @@ import app.inabah.android.core.designsystem.components.bottomOnly
 import app.inabah.android.core.audio.ui.AudioPlayerHost
 import app.inabah.android.feature.azkar.AzkarHomeScreen
 import app.inabah.android.feature.azkar.AzkarListScreen
+import app.inabah.android.feature.hadith.CollectionAboutScreen
 import app.inabah.android.feature.hadith.HadithDetailScreen
 import app.inabah.android.feature.hadith.HadithHomeScreen
 import app.inabah.android.feature.hadith.HadithListScreen
@@ -182,6 +183,16 @@ private fun TabScreens(tab: AppTab, services: AppServices, contentPadding: Paddi
                     progress = services.hadithProgress,
                     onBack = { router.pop(AppTab.Hadith) },
                     onOpenHadith = { router.push(HadithRoute.Detail(it)) },
+                    onOpenAbout = { router.push(HadithRoute.About(route.collection)) },
+                    contentPadding = contentPadding.bottomOnly(),
+                )
+            }
+            entry<HadithRoute.About> { route ->
+                CollectionAboutScreen(
+                    collection = route.collection,
+                    store = services.hadithStore,
+                    progress = services.hadithProgress,
+                    onBack = { router.pop(AppTab.Hadith) },
                     contentPadding = contentPadding.bottomOnly(),
                 )
             }

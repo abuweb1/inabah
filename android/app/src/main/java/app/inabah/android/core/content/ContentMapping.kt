@@ -1,8 +1,11 @@
 package app.inabah.android.core.content
 
+import app.inabah.android.core.content.dto.CollectionInfoDto
 import app.inabah.android.core.content.dto.HadithDto
 import app.inabah.android.core.content.dto.ZikrDto
 import app.inabah.android.core.content.model.AzkarSection
+import app.inabah.android.core.content.model.CollectionAuthor
+import app.inabah.android.core.content.model.CollectionInfo
 import app.inabah.android.core.content.model.Hadith
 import app.inabah.android.core.content.model.HadithCollection
 import app.inabah.android.core.content.model.HadithId
@@ -45,6 +48,18 @@ internal fun HadithDto.toHadith(collection: HadithCollection, priority: ContentL
                 source = dto.source.nonBlankOrNull(),
             )
         },
+    )
+}
+
+/** Составитель с пустым именем — заготовка, не показывается; пустые годы и абзацы отбрасываются. */
+internal fun CollectionInfoDto.toCollectionInfo(priority: ContentLanguagePriority): CollectionInfo {
+    val (language, dto) = priority.select(translations.keyedByLanguage()) ?: return CollectionInfo.Empty
+    return CollectionInfo(
+        language = language,
+        authors = dto.authors.mapNotNull { author ->
+            author.name.nonBlankOrNull()?.let { CollectionAuthor(name = it, years = author.years.nonBlankOrNull()) }
+        },
+        about = dto.about.mapNotNull { it.nonBlankOrNull() },
     )
 }
 

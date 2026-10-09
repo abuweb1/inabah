@@ -33,6 +33,7 @@ import app.inabah.android.core.designsystem.PressFeedback
 import app.inabah.android.core.designsystem.Spacing
 import app.inabah.android.core.designsystem.components.ArabicText
 import app.inabah.android.core.designsystem.components.ContentError
+import app.inabah.android.core.designsystem.components.GlassIconButton
 import app.inabah.android.core.designsystem.components.InabahTopBar
 import app.inabah.android.core.designsystem.components.ProgressHeader
 import app.inabah.android.core.designsystem.components.pressFeedback
@@ -53,8 +54,9 @@ private const val PERCENT = 100
 private const val HALF = 0.5
 
 /**
- * Список хадисов сборника (iOS `HadithListView`): навбар с арабским названием, шапка прогресса
- * и строки со статусами. Отметки читают только шапка и лента — строке приходит готовый статус.
+ * Список хадисов сборника (iOS `HadithListView`): навбар с арабским названием и кнопкой
+ * «О сборнике» справа, шапка прогресса и строки со статусами. Отметки читают только шапка и лента —
+ * строке приходит готовый статус.
  */
 @Composable
 fun HadithListScreen(
@@ -63,6 +65,7 @@ fun HadithListScreen(
     progress: HadithProgress,
     onBack: () -> Unit,
     onOpenHadith: (HadithId) -> Unit,
+    onOpenAbout: () -> Unit,
     contentPadding: PaddingValues,
     modifier: Modifier = Modifier,
 ) {
@@ -80,7 +83,14 @@ fun HadithListScreen(
             onBack = onBack,
             subtitle = { ArabicText(collection.arabicTitle, SUBTITLE_ARABIC_SIZE, palette.onAccentSecondary, maxLines = 1) },
             background = palette.hadithHeader,
-        )
+        ) {
+            GlassIconButton(
+                onClick = onOpenAbout,
+                iconRes = R.drawable.ic_info,
+                contentDescription = stringResource(R.string.hadith_about_title),
+                tint = palette.tabHadith,
+            )
+        }
         Box(Modifier.fillMaxSize()) {
             when (val current = states[collection] ?: Loadable.Idle) {
                 Loadable.Idle, Loadable.Loading -> CircularProgressIndicator(
