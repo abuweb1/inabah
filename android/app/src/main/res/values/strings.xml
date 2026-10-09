@@ -3,7 +3,7 @@
 <resources>
     <string name="about_app_footer">Без рекламы, регистрации и сбора данных. Приложение работает без интернета.</string>
     <string name="about_app_header">Приложение</string>
-    <string name="about_app_name">Инаба</string>
+    <string name="about_app_name">Inabah</string>
     <string name="about_license_inter_subtitle">Шрифт интерфейса · Rasmus Andersson · SIL Open Font License 1.1</string>
     <string name="about_license_inter_title">Inter</string>
     <!-- Своё значение на Android (в iOS «Значки вкладок»): здесь Material Symbols — почти все значки приложения. -->
@@ -27,7 +27,7 @@
     <string name="app_icon_classic">Классическая</string>
     <string name="app_icon_dawn">Рассвет в михрабе</string>
     <string name="app_icon_niche">Ниша в нише</string>
-    <string name="app_name">Инаба</string>
+    <string name="app_name">Inabah</string>
     <string name="audio_category_azkar">АЗКАРЫ</string>
     <string name="audio_play_all_open">Открыть плеер</string>
     <string name="audio_play_all_pause">Пауза между зикрами</string>
@@ -136,7 +136,7 @@
     <string name="section_card_meta_original">%1$s · ⁨%2$s⁩</string>
     <string name="section_progress_done">Выполнено полностью</string>
     <string name="section_progress_percent">Выполнено на %d %%</string>
-    <string name="settings_about_footer">Инаба %1$s · О приложении</string>
+    <string name="settings_about_footer">Inabah %1$s · О приложении</string>
     <string name="settings_app_icon_error">Не удалось сменить иконку</string>
     <string name="settings_app_icon_error_ok">Понятно</string>
     <string name="settings_app_icon_footer">Иконка на рабочем столе сменится через несколько секунд. На некоторых телефонах приложение при этом закроется — просто откройте его снова.</string>
