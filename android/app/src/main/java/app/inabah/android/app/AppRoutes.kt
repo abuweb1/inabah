@@ -26,6 +26,10 @@ sealed interface HadithRoute {
     /** «О сборнике» — из шапки списка сборника. */
     @Serializable
     data class About(val collection: HadithCollection) : HadithRoute
+
+    /** «Избранное» — из кнопки справа вверху главной хадисов. */
+    @Serializable
+    data object Favorites : HadithRoute
 }
 
 @Serializable

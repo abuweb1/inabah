@@ -24,6 +24,8 @@ import androidx.compose.ui.layout.LastBaseline
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.toggleableState
+import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.intl.LocaleList
@@ -52,20 +54,23 @@ import app.inabah.android.core.share.shareText
 import app.inabah.android.core.share.storeLinksBlock
 import kotlin.math.roundToInt
 
-/** Значок «Поделиться» — как ▶ заглушки аудио (`AudioSoonPlaceholder`): в sp, растёт с шагом интерфейса. */
-private const val SHARE_ICON_SIZE = 20f
+/** Значки «Избранное» и «Поделиться» — как ▶ заглушки аудио (`AudioSoonPlaceholder`): в sp, растут с шагом интерфейса. */
+private const val ACTION_ICON_SIZE = 20f
 
 /**
  * Страница экрана хадиса (iOS `HadithPage`): арабский текст на пергаменте, отметки, заглушка аудио,
- * перевод. Статус и кегль приходят значениями — отметка другого хадиса страницу не перестраивает.
+ * перевод с закладкой «Избранное» и «Поделиться». Статус, закладка и кегль приходят значениями —
+ * отметка другого хадиса страницу не перестраивает.
  */
 @Composable
 fun HadithPage(
     hadith: Hadith,
     status: HadithStatus,
+    isFavorite: Boolean,
     arabicFontSize: Float,
     onToggleRead: () -> Unit,
     onToggleMemorized: () -> Unit,
+    onToggleFavorite: () -> Unit,
     contentPadding: PaddingValues,
     modifier: Modifier = Modifier,
 ) {
@@ -81,12 +86,13 @@ fun HadithPage(
         HadithStatusButtons(status, onToggleRead, onToggleMemorized)
         AudioSoonPlaceholder(stringResource(R.string.hadith_audio_title, hadith.number))
         val onShare = hadithShareAction(hadith)
+        val actions: @Composable (Modifier) -> Unit = { HadithActions(isFavorite, onToggleFavorite, onShare, it) }
         val translation = hadith.translation
         if (translation != null) {
-            HadithTranslationCard(translation, onShare)
+            HadithTranslationCard(translation, actions)
         } else {
-            // Без перевода — кнопка одна, справа внизу страницы.
-            Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) { HadithShareButton(onShare) }
+            // Без перевода — кнопки справа внизу страницы.
+            Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) { actions(Modifier) }
         }
     }
 }
@@ -102,19 +108,32 @@ private fun hadithShareAction(hadith: Hadith): () -> Unit {
     return { context.shareText(hadithShareText(hadith, header, narrator, source, storeLinks)) }
 }
 
-/** Значок «Поделиться» без подложки — в правом нижнем углу хадиса (решение пользователя 2026-10-06). */
+/**
+ * Закладка «Избранное» и «Поделиться» — значки без подложки в правом нижнем углу хадиса (решения
+ * пользователя 2026-10-06 и 2026-10-10); закладка в избранном — залитая, для TalkBack — переключатель.
+ */
 @Composable
-private fun HadithShareButton(onShare: () -> Unit, modifier: Modifier = Modifier) {
-    val iconSize = with(LocalDensity.current) { SHARE_ICON_SIZE.sp.toDp() }
-    BareIconButton(
-        onClick = onShare,
-        icon = painterResource(R.drawable.ic_share),
-        contentDescription = stringResource(R.string.share_action),
-        foreground = InabahTheme.palette.onAccentSecondary,
-        iconSize = iconSize,
-        // Значок — вровень с краем текста; лишняя зона касания уходит в поле карточки.
-        modifier = modifier.offset(x = (Size.visibleTapTarget - iconSize) / 2),
-    )
+private fun HadithActions(isFavorite: Boolean, onToggleFavorite: () -> Unit, onShare: () -> Unit, modifier: Modifier = Modifier) {
+    val palette = InabahTheme.palette
+    val iconSize = with(LocalDensity.current) { ACTION_ICON_SIZE.sp.toDp() }
+    // Правый значок — вровень с краем текста; лишняя зона касания уходит в поле карточки.
+    Row(modifier.offset(x = (Size.visibleTapTarget - iconSize) / 2)) {
+        BareIconButton(
+            onClick = onToggleFavorite,
+            icon = painterResource(if (isFavorite) R.drawable.ic_bookmark_filled else R.drawable.ic_bookmark),
+            contentDescription = stringResource(R.string.hadith_favorite),
+            foreground = if (isFavorite) palette.gold else palette.onAccentSecondary,
+            iconSize = iconSize,
+            modifier = Modifier.semantics { toggleableState = ToggleableState(isFavorite) },
+        )
+        BareIconButton(
+            onClick = onShare,
+            icon = painterResource(R.drawable.ic_share),
+            contentDescription = stringResource(R.string.share_action),
+            foreground = palette.onAccentSecondary,
+            iconSize = iconSize,
+        )
+    }
 }
 
 /** «ХАДИС 3» и арабский текст одним абзацем. */
@@ -163,10 +182,10 @@ private fun HadithStatusButtons(status: HadithStatus, onToggleRead: () -> Unit, 
 
 /**
  * «Передал: …», перевод и «Приводится: …» — стили переводов (настройка «Размер текста»);
- * справа от источника, в правом нижнем углу, — «Поделиться».
+ * справа от источника, в правом нижнем углу, — закладка «Избранное» и «Поделиться».
  */
 @Composable
-private fun HadithTranslationCard(translation: HadithTranslation, onShare: () -> Unit) {
+private fun HadithTranslationCard(translation: HadithTranslation, actions: @Composable (Modifier) -> Unit) {
     val palette = InabahTheme.palette
     // Язык перевода — только для его текста (переносы); подписи — на языке интерфейса.
     val locale = LocaleList(translation.language.code)
@@ -184,31 +203,31 @@ private fun HadithTranslationCard(translation: HadithTranslation, onShare: () ->
         Text(translation.text, color = palette.onAccent, style = InabahType.contentTranslation.copy(localeList = locale))
         val source = translation.source
         if (source == null) {
-            // Без источника — линии нет (нечего отделять), «Поделиться» одна справа внизу.
-            HadithShareButton(onShare, Modifier.align(Alignment.End))
+            // Без источника — линии нет (нечего отделять), кнопки одни справа внизу.
+            actions(Modifier.align(Alignment.End))
         } else {
             // Линия над источником, под ней отступ 8 (iOS: overlay сверху у padding(.top)).
             Column {
                 Box(Modifier.fillMaxWidth().height(Size.hairline).background(palette.hairline))
-                SourceWithShare(stringResource(R.string.hadith_detail_source, source), onShare)
+                SourceWithActions(stringResource(R.string.hadith_detail_source, source), actions)
             }
         }
     }
 }
 
 /**
- * «Приводится: …» и справа «Поделиться» — значок на уровне последней строки источника (их бывает 3–4),
- * в правом нижнем углу карточки; отступ 8 под линией — как без кнопки.
+ * «Приводится: …» и справа закладка с «Поделиться» — значки на уровне последней строки источника
+ * (их бывает 3–4), в правом нижнем углу карточки; отступ 8 под линией — как без кнопок.
  */
 @Composable
-private fun SourceWithShare(text: String, onShare: () -> Unit) {
+private fun SourceWithActions(text: String, actions: @Composable (Modifier) -> Unit) {
     val style = InabahType.contentNote.copy(fontStyle = FontStyle.Italic)
     // Середина значка — на середине строчных букв последней строки: выше базовой линии на ~треть кегля.
     val baselineToCenter = with(LocalDensity.current) { (style.fontSize.toPx() * X_HEIGHT_CENTER).roundToInt() }
     Row(Modifier.fillMaxWidth().padding(top = Spacing.s)) {
         Text(text, color = InabahTheme.palette.onAccentTertiary, style = style,
             modifier = Modifier.weight(1f).alignBy(LastBaseline))
-        HadithShareButton(onShare, Modifier.alignBy { it.measuredHeight / 2 + baselineToCenter })
+        actions(Modifier.alignBy { it.measuredHeight / 2 + baselineToCenter })
     }
 }
 

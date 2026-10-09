@@ -27,18 +27,21 @@ import app.inabah.android.core.designsystem.components.SettingsRow
 import app.inabah.android.core.designsystem.components.SettingsRowText
 import app.inabah.android.core.designsystem.components.SettingsScaffold
 import app.inabah.android.core.settings.HadithCollectionOrder
+import app.inabah.android.core.settings.HadithFavorites
 import app.inabah.android.core.settings.HadithProgress
 import app.inabah.android.feature.hadith.HadithStore
 import app.inabah.android.feature.hadith.title
 
 /**
  * Настройки хадисов (iOS `HadithSettingsView`): порядок сборников на главной и сброс отметок
- * «прочитан» / «выучен» каждого сборника отдельно — с подтверждением над строкой.
+ * «прочитан» / «выучен» каждого сборника отдельно — с подтверждением над строкой; внизу — «Очистить
+ * избранное» (решение пользователя 2026-10-10), тоже с подтверждением.
  */
 @Composable
 fun HadithSettingsScreen(
     store: HadithStore,
     progress: HadithProgress,
+    favorites: HadithFavorites,
     order: HadithCollectionOrder,
     onOpenOrder: () -> Unit,
     onBack: () -> Unit,
@@ -51,7 +54,9 @@ fun HadithSettingsScreen(
     val collections by order.collections.collectAsStateWithLifecycle()
     val states by store.collections.collectAsStateWithLifecycle()
     val statuses by progress.statuses.collectAsStateWithLifecycle()
+    val favoriteIds by favorites.favorites.collectAsStateWithLifecycle()
     var pendingReset by remember { mutableStateOf<HadithCollection?>(null) }
+    var pendingFavoritesClear by remember { mutableStateOf(false) }
     // Число хадисов сборника — для «из N»; загрузка уже идёт с запуска, здесь — на случай ошибки.
     LaunchedEffect(Unit) { store.loadAll() }
 
@@ -110,5 +115,28 @@ fun HadithSettingsScreen(
                 ),
             )
         } }
+        SettingsGroup(
+            header = stringResource(R.string.hadith_favorites_title),
+            rows = listOf {
+                Box {
+                    SettingsRow(onClick = { pendingFavoritesClear = true }, enabled = favoriteIds.isNotEmpty(), compact = true) {
+                        Text(
+                            stringResource(R.string.settings_hadith_favorites_clear),
+                            color = palette.onAccent,
+                            style = InabahType.body.copy(fontWeight = FontWeight.Bold),
+                        )
+                    }
+                    ConfirmationPopover(
+                        expanded = pendingFavoritesClear,
+                        title = stringResource(R.string.settings_hadith_favorites_clear_confirm_title),
+                        message = stringResource(R.string.settings_hadith_favorites_clear_confirm_message),
+                        actionLabel = stringResource(R.string.settings_hadith_favorites_clear_confirm_action),
+                        tint = tint,
+                        onConfirm = favorites::clear,
+                        onDismiss = { pendingFavoritesClear = false },
+                    )
+                }
+            },
+        )
     }
 }

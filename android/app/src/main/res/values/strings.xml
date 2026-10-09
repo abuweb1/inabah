@@ -89,6 +89,10 @@
     <string name="hadith_detail_number">Хадис %d</string>
     <string name="hadith_detail_previous">Предыдущий хадис</string>
     <string name="hadith_detail_source">Приводится: %s</string>
+    <string name="hadith_favorite">В избранном</string>
+    <string name="hadith_favorites_empty_message">Здесь появятся хадисы, которые вы добавите</string>
+    <string name="hadith_favorites_empty_title">Пока пусто</string>
+    <string name="hadith_favorites_title">Избранное</string>
     <string name="hadith_home_brand_tagline">НАСЛЕДИЕ ПРОРОКА ﷺ</string>
     <string name="hadith_home_epigraph_source">имам Ахмад (21716), Абу Дауд (3641), ат-Тирмизи (2682)</string>
     <string name="hadith_home_epigraph_text">«Пророки не оставляли в наследство ни динаров, ни дирхемов, но они оставляли в наследство знание…»</string>
@@ -149,6 +153,10 @@
     <string name="settings_appearance_header">Оформление</string>
     <string name="settings_azkar_subtitle">Время азкаров и сброс прогресса</string>
     <string name="settings_azkar_title">Азкары</string>
+    <string name="settings_hadith_favorites_clear">Очистить избранное</string>
+    <string name="settings_hadith_favorites_clear_confirm_action">Очистить</string>
+    <string name="settings_hadith_favorites_clear_confirm_message">Все хадисы будут убраны из избранного.</string>
+    <string name="settings_hadith_favorites_clear_confirm_title">Очистить избранное?</string>
     <string name="settings_hadith_home_header">Главная</string>
     <string name="settings_hadith_order_footer">Перетащите сборник за ручку справа, чтобы изменить порядок карточек на главной.</string>
     <string name="settings_hadith_order_move_down">Ниже</string>

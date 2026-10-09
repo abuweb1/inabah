@@ -38,6 +38,7 @@ import app.inabah.android.core.audio.ui.AudioPlayerHost
 import app.inabah.android.feature.azkar.AzkarHomeScreen
 import app.inabah.android.feature.azkar.AzkarListScreen
 import app.inabah.android.feature.hadith.CollectionAboutScreen
+import app.inabah.android.feature.hadith.FavoritesScreen
 import app.inabah.android.feature.hadith.HadithDetailScreen
 import app.inabah.android.feature.hadith.HadithHomeScreen
 import app.inabah.android.feature.hadith.HadithListScreen
@@ -173,7 +174,19 @@ private fun TabScreens(tab: AppTab, services: AppServices, contentPadding: Paddi
                     progress = services.hadithProgress,
                     order = services.hadithCollectionOrder,
                     onOpenCollection = { router.push(HadithRoute.CollectionList(it)) },
+                    onOpenFavorites = { router.push(HadithRoute.Favorites) },
                     contentPadding = contentPadding,
+                )
+            }
+            entry<HadithRoute.Favorites> {
+                FavoritesScreen(
+                    store = services.hadithStore,
+                    progress = services.hadithProgress,
+                    favorites = services.hadithFavorites,
+                    order = services.hadithCollectionOrder,
+                    onBack = { router.pop(AppTab.Hadith) },
+                    onOpenHadith = { router.push(HadithRoute.Detail(it)) },
+                    contentPadding = contentPadding.bottomOnly(),
                 )
             }
             entry<HadithRoute.CollectionList> { route ->
@@ -201,6 +214,7 @@ private fun TabScreens(tab: AppTab, services: AppServices, contentPadding: Paddi
                     id = route.id,
                     store = services.hadithStore,
                     progress = services.hadithProgress,
+                    favorites = services.hadithFavorites,
                     readingSettings = services.readingSettings,
                     onBack = { router.pop(AppTab.Hadith) },
                     contentPadding = contentPadding.bottomOnly(),
@@ -224,6 +238,7 @@ private fun TabScreens(tab: AppTab, services: AppServices, contentPadding: Paddi
                 HadithSettingsScreen(
                     store = services.hadithStore,
                     progress = services.hadithProgress,
+                    favorites = services.hadithFavorites,
                     order = services.hadithCollectionOrder,
                     onOpenOrder = { router.push(SettingsRoute.HadithOrder) },
                     onBack = { router.pop(AppTab.Settings) },
