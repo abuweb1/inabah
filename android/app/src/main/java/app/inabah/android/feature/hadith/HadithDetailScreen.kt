@@ -135,6 +135,7 @@ private fun HadithPages(
                 onToggleMemorized = { progress.toggleMemorized(hadith.id) },
                 onToggleFavorite = { favorites.toggle(hadith.id) },
                 contentPadding = contentPadding,
+                isCurrentPage = pagerState.settledPage == page,
             )
         }
     }

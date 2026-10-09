@@ -99,6 +99,10 @@
     <string name="hadith_home_verse_reference">аль-Бухари, Муслим</string>
     <string name="hadith_home_verse_translation">«Кому Аллах желает блага, тому Он даёт понимание религии»</string>
     <string name="hadith_list_progress">Прочитано: %1$d из %2$d · выучено: %3$d</string>
+    <string name="hadith_note_quote">«%1$s»</string>
+    <string name="hadith_notes_collapsed">Свёрнуто</string>
+    <string name="hadith_notes_expanded">Развёрнуто</string>
+    <string name="hadith_notes_toggle">Сноски: %d</string>
     <string name="hadith_nawawi_title">40 хадисов ан-Навави</string>
     <string name="hadith_progress_card">Прочитано %1$d из %2$d</string>
     <string name="hadith_progress_card_memorized">Выучено %1$d из %2$d</string>
@@ -186,6 +190,8 @@
     <string name="settings_reset_time_minute">Минуты</string>
     <string name="settings_title">Настройки</string>
     <string name="reminder_action">Сделать напоминание</string>
+    <string name="share_text_hadith_note_line">%1$s — %2$s</string>
+    <string name="share_text_hadith_notes">Сноски:</string>
     <string name="share_text_reminder_evening_call">О рабы Аллаха, защитите себя и свою семью от сглаза, зависти и колдовства — прочитайте вечерние азкары.</string>
     <string name="share_text_reminder_evening_time">❗ Лучшее время для чтения вечерних азкаров — с Асра до Магриба.</string>
     <string name="share_text_reminder_evening_title">‼️ Вечерние азкары ‼️</string>

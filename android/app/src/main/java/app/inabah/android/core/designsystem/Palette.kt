@@ -2,6 +2,10 @@ package app.inabah.android.core.designsystem
 
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.lerp
+
+/** Доля `tabHadith` в цвете текста сносок ([Palette.noteText]); контраст — `NoteColorsTest`. */
+private const val NOTE_TEXT_TINT = 0.3f
 
 /**
  * Цвета темы. HEX — только здесь, в [ThemeGradients] и сгенерированном [ThemePalettes]; экраны берут
@@ -77,6 +81,13 @@ data class Palette(
     val parchmentGlow: Color get() = parchmentLight.copy(alpha = 0.7f)
     val parchmentAccentTint: Color get() = parchmentAccent.copy(alpha = 0.1f)
     val parchmentAccentBorder: Color get() = parchmentAccent.copy(alpha = 0.25f)
+
+    // Сноски к переводу хадиса — как пузырь перевода азкаров, но в тон раздела хадисов: `tabHadith`
+    // свой в каждой палитре (в единых стилях — цвет стиля), `accent` «По умолчанию» — фиолетовый.
+    val noteStripe: Color get() = tabHadith
+    val noteFill: Color get() = tabHadith.copy(alpha = 0.1f)
+    /** «Оттенок транскрипции» раздела хадисов: белый с примесью `tabHadith`. */
+    val noteText: Color get() = lerp(onAccent, tabHadith, NOTE_TEXT_TINT)
 
     companion object {
         val Sections = Palette(

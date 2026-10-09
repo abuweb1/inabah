@@ -9,6 +9,7 @@ import app.inabah.android.core.content.model.CollectionInfo
 import app.inabah.android.core.content.model.Hadith
 import app.inabah.android.core.content.model.HadithCollection
 import app.inabah.android.core.content.model.HadithId
+import app.inabah.android.core.content.model.HadithNote
 import app.inabah.android.core.content.model.HadithTranslation
 import app.inabah.android.core.content.model.Zikr
 import app.inabah.android.core.content.model.ZikrId
@@ -46,6 +47,10 @@ internal fun HadithDto.toHadith(collection: HadithCollection, priority: ContentL
                 narrator = dto.rawi.nonBlankOrNull(),
                 text = dto.text,
                 source = dto.source.nonBlankOrNull(),
+                notes = dto.notes.mapNotNull { note ->
+                    val term = note.term.nonBlankOrNull() ?: return@mapNotNull null
+                    note.text.nonBlankOrNull()?.let { HadithNote(term, it) }
+                },
             )
         },
     )

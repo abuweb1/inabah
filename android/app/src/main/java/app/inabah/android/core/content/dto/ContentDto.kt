@@ -41,6 +41,14 @@ data class HadithTranslationDto(
     val text: String,
     val rawi: String? = null,
     val source: String? = null,
+    /** Сноски к словам перевода (docs/06-data-structure.md); `[]` — сносок пока нет. */
+    val notes: List<HadithNoteDto> = emptyList(),
+)
+
+@Serializable
+data class HadithNoteDto(
+    val term: String = "",
+    val text: String = "",
 )
 
 // data/collections.json: { <ключ сборника>: CollectionInfoDto }.
