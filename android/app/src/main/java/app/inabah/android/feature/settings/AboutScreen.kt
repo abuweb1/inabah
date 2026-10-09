@@ -119,7 +119,7 @@ fun AboutScreen(
     }
 }
 
-/** Иконка «Классическая», «إنابة», «Инаба» и версия — одним элементом для TalkBack. */
+/** Иконка «Классическая», «إنابة», «Inabah» и версия — одним элементом для TalkBack. */
 @Composable
 private fun AboutHeader() {
     val palette = InabahTheme.palette
@@ -162,7 +162,7 @@ private fun AboutLinkRow(@StringRes title: Int, onClick: () -> Unit) {
 }
 
 /**
- * «Инаба 1.0.0 · О приложении» — мелкая ссылка по центру у нижнего края корня настроек, над панелью вкладок
+ * «Inabah 1.1.0 · О приложении» — мелкая ссылка по центру у нижнего края корня настроек, над панелью вкладок
  * (iOS `AboutFooterLink`, решение пользователя 2026-10-05). Для TalkBack — «О приложении».
  */
 @Composable
