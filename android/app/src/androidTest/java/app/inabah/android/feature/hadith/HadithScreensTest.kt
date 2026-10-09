@@ -31,6 +31,7 @@ import app.inabah.android.core.content.model.CollectionInfo
 import app.inabah.android.core.content.model.Hadith
 import app.inabah.android.core.content.model.HadithCollection
 import app.inabah.android.core.content.model.HadithId
+import app.inabah.android.core.content.model.HadithNote
 import app.inabah.android.core.content.model.HadithTranslation
 import app.inabah.android.core.content.model.Zikr
 import app.inabah.android.core.designsystem.InabahTheme
@@ -53,6 +54,7 @@ private const val TIMEOUT_MILLIS = 5_000L
 private const val NAWAWI_AUTHOR = "Имам ан-Навави"
 private const val NAWAWI_YEARS = "631–676 гг. х."
 private const val ABOUT_PARAGRAPH = "Абзац о сборнике."
+private const val NOTE_TEXT = "Пояснение к слову."
 
 /** Экраны хадисов: отметки, листание, порядок сборников, сброс (критерии этапа 4, docs/android/09). */
 @RunWith(AndroidJUnit4::class)
@@ -353,6 +355,27 @@ class HadithScreensTest {
         compose.onNodeWithText("Очистить избранное").assertIsNotEnabled()
     }
 
+    @Test
+    fun notesHiddenUntilToggledAndCollapsedAgainAfterPaging() {
+        compose.setContent {
+            InabahTheme {
+                HadithDetailScreen(HadithId(HadithCollection.Nawawi, 1), HadithStore(NotesRepository()), HadithProgress(storage),
+                    HadithFavorites(storage), ReadingSettings(storage), onBack = {}, contentPadding = PaddingValues())
+            }
+        }
+        waitForNode("1 из 2")
+        // Свёрнутые сноски не в дереве доступности — их не видно и TalkBack.
+        compose.onAllNodesWithText(NOTE_TEXT).assertCountEquals(0)
+        compose.onNodeWithContentDescription("Сноски: 2").performScrollTo().performClick()
+        compose.onNodeWithText(NOTE_TEXT).assertExists()
+
+        compose.onNodeWithContentDescription("Следующий хадис").performClick()
+        waitForNode("2 из 2")
+        compose.onNodeWithContentDescription("Предыдущий хадис").performClick()
+        waitForNode("1 из 2")
+        compose.waitUntil(TIMEOUT_MILLIS) { compose.onAllNodesWithText(NOTE_TEXT).fetchSemanticsNodes().isEmpty() }
+    }
+
     private fun waitForText(text: String) {
         compose.waitUntil(TIMEOUT_MILLIS) { compose.onAllNodesWithText(text).fetchSemanticsNodes().isNotEmpty() }
     }
@@ -410,4 +433,16 @@ private class InfoFailsOnceRepository : FixedRepository() {
         }
         return super.collectionInfo(collection)
     }
+}
+
+/** Два хадиса ан-Навави: у первого две сноски, у второго — нет. */
+private class NotesRepository : FixedRepository() {
+    override suspend fun hadiths(collection: HadithCollection): List<Hadith> = listOf(
+        Hadith(HadithId(collection, 1), "إِنَّمَا الْأَعْمَالُ بِالنِّيَّاتِ", HadithTranslation(
+            ContentLanguage.Base, "Умар ибн аль-Хаттаб", "Перевод 1", "аль-Бухари",
+            notes = listOf(HadithNote("Слово", NOTE_TEXT), HadithNote("Различия передач", "Иначе у ат-Тирмизи.")),
+        )),
+        Hadith(HadithId(collection, 2), "إِنَّمَا الْأَعْمَالُ بِالنِّيَّاتِ",
+            HadithTranslation(ContentLanguage.Base, "Умар ибн аль-Хаттаб", "Перевод 2", "аль-Бухари")),
+    )
 }

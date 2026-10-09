@@ -4,6 +4,7 @@ import app.inabah.android.core.content.model.AzkarSection
 import app.inabah.android.core.content.model.CollectionAuthor
 import app.inabah.android.core.content.model.CollectionInfo
 import app.inabah.android.core.content.model.HadithCollection
+import app.inabah.android.core.content.model.HadithNote
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
@@ -86,6 +87,28 @@ class ContentMappingTest {
         assertNull(hadith.translation!!.narrator)
         assertNull(hadith.translation!!.source)
         assertEquals("Перевод", hadith.translation!!.text)
+    }
+
+    @Test
+    fun `Сноски — в порядке файла, края обрезаются, с пустым словом или пояснением отбрасываются`() = runTest {
+        val qudsi = """[
+            { "id": 1, "arabic": "قَالَ", "translations": { "ru": { "text": "Перевод", "notes": [
+                { "term": " Слово ", "text": " Пояснение. " },
+                { "term": "", "text": "без слова" },
+                { "term": "без пояснения", "text": "  " },
+                { "term": "Различия передач", "text": "У ат-Тирмизи — иначе.", "future": 1 } ] } } },
+            { "id": 2, "arabic": "قَالَ", "translations": { "ru": { "text": "Перевод", "notes": [] } } },
+            { "id": 3, "arabic": "قَالَ", "translations": { "ru": { "text": "Перевод" } } }
+        ]"""
+        val hadiths = repository(mapOf("qudsi.json" to qudsi), StandardTestDispatcher(testScheduler))
+            .hadiths(HadithCollection.Qudsi)
+
+        assertEquals(
+            listOf(HadithNote("Слово", "Пояснение."), HadithNote("Различия передач", "У ат-Тирмизи — иначе.")),
+            hadiths[0].translation!!.notes,
+        )
+        assertEquals(emptyList(), hadiths[1].translation!!.notes, "пустой массив")
+        assertEquals(emptyList(), hadiths[2].translation!!.notes, "нет поля")
     }
 
     private val collections = """

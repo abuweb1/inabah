@@ -31,4 +31,9 @@ data class HadithTranslation(
     val narrator: String?,
     val text: String,
     val source: String?,
+    /** Сноски в порядке файла; без пустых. */
+    val notes: List<HadithNote> = emptyList(),
 )
+
+/** Сноска: [term] — слово или выражение перевода (или тема пояснения ко всему хадису), [text] — пояснение. */
+data class HadithNote(val term: String, val text: String)

@@ -18,6 +18,11 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.LastBaseline
@@ -59,8 +64,10 @@ private const val ACTION_ICON_SIZE = 20f
 
 /**
  * Страница экрана хадиса (iOS `HadithPage`): арабский текст на пергаменте, отметки, заглушка аудио,
- * перевод с закладкой «Избранное» и «Поделиться». Статус, закладка и кегль приходят значениями —
- * отметка другого хадиса страницу не перестраивает.
+ * перевод со сносками (скрыты, справа «N ⌄»), закладкой «Избранное» и «Поделиться». Статус, закладка
+ * и кегль приходят значениями — отметка другого хадиса страницу не перестраивает. Раскрытые сноски
+ * сворачиваются, когда страница перестаёт быть текущей ([isCurrentPage]): пейджер держит соседнюю
+ * в композиции.
  */
 @Composable
 fun HadithPage(
@@ -73,7 +80,10 @@ fun HadithPage(
     onToggleFavorite: () -> Unit,
     contentPadding: PaddingValues,
     modifier: Modifier = Modifier,
+    isCurrentPage: Boolean = true,
 ) {
+    var notesExpanded by remember { mutableStateOf(false) }
+    LaunchedEffect(isCurrentPage) { if (!isCurrentPage) notesExpanded = false }
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -89,7 +99,7 @@ fun HadithPage(
         val actions: @Composable (Modifier) -> Unit = { HadithActions(isFavorite, onToggleFavorite, onShare, it) }
         val translation = hadith.translation
         if (translation != null) {
-            HadithTranslationCard(translation, actions)
+            HadithTranslationCard(translation, notesExpanded, onToggleNotes = { notesExpanded = !notesExpanded }, actions)
         } else {
             // Без перевода — кнопки справа внизу страницы.
             Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) { actions(Modifier) }
@@ -105,7 +115,12 @@ private fun hadithShareAction(hadith: Hadith): () -> Unit {
     val narrator = hadith.translation?.narrator?.let { stringResource(R.string.hadith_detail_narrator, it) }
     val source = hadith.translation?.source?.let { stringResource(R.string.hadith_detail_source, it) }
     val storeLinks = storeLinksBlock()
-    return { context.shareText(hadithShareText(hadith, header, narrator, source, storeLinks)) }
+    val notesTitle = stringResource(R.string.share_text_hadith_notes)
+    val noteLine = stringResource(R.string.share_text_hadith_note_line)
+    return {
+        val notes = hadithNotesBlock(hadith.translation?.notes.orEmpty(), notesTitle) { noteLine.format(it.term, it.text) }
+        context.shareText(hadithShareText(hadith, header, narrator, source, notes, storeLinks))
+    }
 }
 
 /**
@@ -182,10 +197,16 @@ private fun HadithStatusButtons(status: HadithStatus, onToggleRead: () -> Unit, 
 
 /**
  * «Передал: …», перевод и «Приводится: …» — стили переводов (настройка «Размер текста»);
- * справа от источника, в правом нижнем углу, — закладка «Избранное» и «Поделиться».
+ * под переводом — сноски, справа «N ⌄» (если есть); справа от источника, в правом нижнем углу, —
+ * закладка «Избранное» и «Поделиться».
  */
 @Composable
-private fun HadithTranslationCard(translation: HadithTranslation, actions: @Composable (Modifier) -> Unit) {
+private fun HadithTranslationCard(
+    translation: HadithTranslation,
+    notesExpanded: Boolean,
+    onToggleNotes: () -> Unit,
+    actions: @Composable (Modifier) -> Unit,
+) {
     val palette = InabahTheme.palette
     // Язык перевода — только для его текста (переносы); подписи — на языке интерфейса.
     val locale = LocaleList(translation.language.code)
@@ -201,6 +222,9 @@ private fun HadithTranslationCard(translation: HadithTranslation, actions: @Comp
                 style = InabahType.contentNote.copy(fontWeight = FontWeight.SemiBold))
         }
         Text(translation.text, color = palette.onAccent, style = InabahType.contentTranslation.copy(localeList = locale))
+        if (translation.notes.isNotEmpty()) {
+            HadithNotes(translation.notes, translation.text, locale, notesExpanded, onToggleNotes)
+        }
         val source = translation.source
         if (source == null) {
             // Без источника — линии нет (нечего отделять), кнопки одни справа внизу.
