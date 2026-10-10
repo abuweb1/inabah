@@ -47,6 +47,16 @@ struct AppRouterTests {
         #expect(router.hadithPath == [.list(.qudsi), .detail(id)])
     }
 
+    @Test("«О сборнике» открывается поверх списка сборника")
+    func openCollectionAbout() {
+        let router = AppRouter()
+
+        router.open(HadithRoute.about(.ajurri))
+
+        #expect(router.selectedTab == .hadith)
+        #expect(router.hadithPath == [.list(.ajurri), .about(.ajurri)])
+    }
+
     @Test("Повторный выбор вкладки «Настройки» возвращает к списку разделов", arguments: [
         [SettingsRoute.hadith],
         [.hadith, .hadithOrder],

@@ -41,6 +41,7 @@ struct RootTabView: View {
                                 switch route {
                                 case .list(let collection): HadithListView(collection: collection)
                                 case .detail(let id): HadithDetailView(id: id)
+                                case .about(let collection): CollectionAboutView(collection: collection)
                                 }
                             }
                             .interfaceTextSize()
