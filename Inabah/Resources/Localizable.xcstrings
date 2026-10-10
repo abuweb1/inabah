@@ -802,6 +802,61 @@
         }
       }
     },
+    "hadith.about.author" : {
+      "comment" : "«О сборнике»: заголовок группы, если составитель один",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Составитель"
+          }
+        }
+      }
+    },
+    "hadith.about.authors" : {
+      "comment" : "«О сборнике»: заголовок группы, если составителей несколько",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Составители"
+          }
+        }
+      }
+    },
+    "hadith.about.book" : {
+      "comment" : "«О сборнике»: заголовок группы с описанием книги",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "О книге"
+          }
+        }
+      }
+    },
+    "hadith.about.hadiths" : {
+      "comment" : "«О сборнике»: заголовок группы с прогрессом",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Хадисы"
+          }
+        }
+      }
+    },
+    "hadith.about.title" : {
+      "comment" : "«О сборнике»: заголовок экрана и подпись кнопки ⓘ в шапке списка хадисов (VoiceOver)",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "О сборнике"
+          }
+        }
+      }
+    },
     "hadith.ajurri.meta %lld" : {
       "comment" : "Подпись карточки сборника аль-Аджурри: число хадисов (арабское название подставляется отдельно — section.card.meta.original)",
       "localizations" : {
