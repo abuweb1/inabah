@@ -71,12 +71,13 @@ extension AzkarSection {
 // Названия раздела и сборника (`title`) — в расширениях оформления на главном акторе,
 // поэтому и тексты ниже — на нём; строит их вьюха.
 extension Zikr {
-    /// Раздел, арабский, «N раз», транскрипция, перевод, источник, ссылка на приложение.
+    /// Раздел, арабский, «N раз», «Передал: …», транскрипция, перевод, источник, ссылка на приложение.
     var shareText: String {
         ShareText.blocks(
             String(localized: section.title),
             arabic,
             String(localized: "zikr.repetitions \(repetitions)"),
+            translation?.narrator.map { String(localized: "hadith.detail.narrator \($0)") },
             translation?.transliteration,
             translation?.text,
             translation?.source,

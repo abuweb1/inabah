@@ -102,8 +102,9 @@ private struct HadithStatusButtons: View {
     }
 }
 
-/// «Передал: …», перевод, сноски и «Приводится: …»; закладка и «Поделиться» — справа на уровне последней
-/// строки источника (решение пользователя 2026-10-06), без источника — справа внизу карточки.
+/// Перевод хадиса — на своей тёмной карточке, как у зикра (решение пользователя 2026-10-10): общий
+/// `TranslationBlock` в цветах хадисов — «Передал: …», линия, перевод (без пузыря), сноски «N ⌄»,
+/// «Приводится: …» и справа на уровне его последней строки — закладка и «Поделиться».
 private struct HadithTranslationCard: View {
     let hadith: Hadith
     let translation: HadithTranslation
@@ -115,20 +116,19 @@ private struct HadithTranslationCard: View {
     @State private var isNotesExpanded = false
 
     var body: some View {
-        // Размеры — общие с переводом зикра (`ContentTextStyle`), шаг — из настройки «Размер текста».
-        VStack(alignment: .leading, spacing: Spacing.s) {
-            if let narrator = translation.narrator {
-                Text("hadith.detail.narrator \(narrator)")
-                    .font(.content(.note, scale: scale, weight: .semibold))
-                    .foregroundStyle(theme.palette.onAccentSecondary)
-            }
-            Text(verbatim: translation.text)
-                .font(.content(.translation, scale: scale))
-                .lineSpacing(ContentTextStyle.translationLineSpacing * scale)
-                .foregroundStyle(theme.palette.onAccent)
-                // Язык перевода — только для его текста (переносы); подписи «Передал:» /
-                // «Приводится:» — на языке интерфейса.
-                .environment(\.locale, Locale(identifier: translation.language.rawValue))
+        TranslationBlock(
+            text: translation.text,
+            language: translation.language,
+            colors: .hadith(theme.palette),
+            narrator: translation.narrator.map { String(localized: "hadith.detail.narrator \($0)") },
+            source: translation.source.map { String(localized: "hadith.detail.source \($0)") },
+            // Основной перевод — просто текстом под линией после «Передал»; пузырь — у сносок.
+            bubble: false,
+            narratorDivider: true,
+            trailingInset: HadithCardActions.textInset(scale: scale),
+            // Правый значок — вровень с правым краем текста; зона нажатия выходит в поля карточки.
+            trailingOffset: HadithCardActions.iconInset(scale: scale)
+        ) {
             if !translation.notes.isEmpty {
                 HadithNotes(
                     notes: translation.notes,
@@ -140,43 +140,18 @@ private struct HadithTranslationCard: View {
                     if !isCurrent { isNotesExpanded = false }
                 }
             }
-            if let source = translation.source {
-                Text("hadith.detail.source \(source)")
-                    .font(.content(.note, scale: scale).italic())
-                    .foregroundStyle(theme.palette.onAccentTertiary)
-                    // Место под значки справа: сами значки — в наложении и вёрстку не раздвигают.
-                    .padding(.trailing, HadithCardActions.textInset(scale: scale))
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .overlay(alignment: Self.lastLineTrailing) {
-                        let iconCenterAboveBaseline = ContentTextStyle.note.baseSize * scale * Self.xHeightRatio
-                        HadithCardActions(hadith: hadith)
-                            // Центр значка — на середине строчных букв последней строки.
-                            .alignmentGuide(.lastTextBaseline) { dimensions in
-                                dimensions[VerticalAlignment.center] + iconCenterAboveBaseline
-                            }
-                            // Правый значок — вровень с правым краем текста; зона нажатия выходит в поля карточки.
-                            .offset(x: HadithCardActions.iconInset(scale: scale))
-                    }
-                    .padding(.top, Spacing.s)
-                    .overlay(alignment: .top) {
-                        Rectangle()
-                            .fill(theme.palette.hairline)
-                            .frame(height: Size.hairline)
-                    }
-            } else {
-                HadithCardActions(hadith: hadith)
-                    .frame(maxWidth: .infinity, alignment: .trailing)
-            }
+        } sourceTrailing: {
+            HadithCardActions(hadith: hadith)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.vertical, Spacing.l)
         .padding(.horizontal, Spacing.xl)
-        .surface(theme.palette.subtleFill, cornerRadius: Radius.box)
+        .surface(
+            theme.palette.hadithCard,
+            cornerRadius: Radius.card,
+            border: theme.palette.hairline,
+            shadow: .card(theme.palette)
+        )
     }
-
-    private static let lastLineTrailing = Alignment(horizontal: .trailing, vertical: .lastTextBaseline)
-    /// Половина высоты строчных букв относительно кегля.
-    private static let xHeightRatio: CGFloat = 0.27
 }
 
 /// Закладка «В избранном» и «Поделиться» хадисом (как на Android: закладка слева): значки без

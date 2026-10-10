@@ -55,7 +55,8 @@ struct ZikrCardView: View {
         // Звучащая в плейлисте карточка подсвечена золотой рамкой. Фон и тень — у фигуры-подложки
         // (`surface`), а не у содержимого: иначе тень пересчитывалась бы на каждом кадре анимации.
         .surface(
-            theme.palette.card,
+            // Фон зикра — свой токен: его сдвигает «Фон перевода».
+            theme.palette.zikrCard,
             cornerRadius: Radius.card,
             border: isPlaylistCurrent ? theme.palette.gold : theme.palette.hairline,
             lineWidth: isPlaylistCurrent ? 2 : 1,

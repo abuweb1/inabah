@@ -105,6 +105,16 @@ nonisolated struct Palette: Hashable, Sendable {
     var parchmentAccentBorder: Color
     /// Тёмные «чернила» на золотых кнопках (счётчик, плеер) — от фона пергамента не зависят.
     var parchmentInk: Color
+
+    // Фон перевода — сдвигается ползунком «Фон перевода» (`Theme.withTranslationShade`). Задаются
+    // при сборке темы (`Palette.inabah`, `Theme.unified`), как цвета пергамента.
+
+    /// Карточка зикра и образец в «Размере текста» (по умолчанию — `card`).
+    var zikrCard: Color = .clear
+    /// Источник под переводом зикра (по умолчанию — `textTertiary`).
+    var zikrSource: Color = .clear
+    /// Карточка перевода хадиса: «По умолчанию» — тёмный оттенок шапки хадисов, в единых стилях — `card`.
+    var hadithCard: Color = .clear
 }
 
 nonisolated extension Palette {
@@ -205,8 +215,14 @@ nonisolated extension Palette {
         )
         // Пергамент по умолчанию — тем же путём, что и выбранный вариант (`Theme.withParchment`).
         palette.applyParchment(ParchmentStyle.classic.colors)
+        palette.zikrCard = palette.card
+        palette.zikrSource = palette.textTertiary
+        palette.hadithCard = SRGBColor(palette.hadithHeader).mixed(with: .black, by: hadithCardShade).color
         return palette
     }()
+
+    /// Насколько темнее шапки хадисов карточка перевода хадиса — как на Android (`HADITH_CARD_SHADE`).
+    static let hadithCardShade: Double = 0.5
 }
 
 /// Тень как токен темы — один стиль для однотипных элементов.

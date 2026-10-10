@@ -23,7 +23,7 @@ struct TextSizeSettingsView: View {
                 if let translation = sampleZikr?.translation {
                     ZikrTranslationView(translation: translation)
                         .padding(Spacing.l)
-                        .surface(theme.palette.card, cornerRadius: Radius.box)
+                        .surface(theme.palette.zikrCard, cornerRadius: Radius.box)
                         .padding(.vertical, Spacing.xs)
                         .settingsRow()
                 }
