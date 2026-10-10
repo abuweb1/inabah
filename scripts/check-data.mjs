@@ -9,7 +9,8 @@
 //   node scripts/check-data.mjs --verbose  — все предупреждения
 //
 // Плюс data/collections.json — сведения о сборниках для экрана «О сборнике»,
-// и data/reminders.json — тексты напоминаний (общие для iOS и Android).
+// data/reminders.json — тексты напоминаний и data/versions.json — история версий («Что нового»),
+// общие для iOS и Android.
 //
 // Код выхода 1 — есть ошибки (пустые обязательные поля, нет аудиофайла и т.п.).
 // Предупреждения (подозрения на артефакты PDF) на код выхода не влияют.
@@ -42,6 +43,10 @@ const REMINDER_KINDS = {
   hadithOfDay: { sections: null, placeholders: ['collection', 'number', 'text'] },
 };
 const REMINDER_TEXT_KEYS = ['title', 'body'];
+
+// versions.json: versions[] сверху вниз = { version, date, translations.<язык> = { items, android?, ios? } }.
+const VERSION_KEYS = ['version', 'date', 'translations'];
+const VERSION_ITEM_LISTS = ['items', 'android', 'ios'];
 
 // ── Проверки ─────────────────────────────────────────────────
 
@@ -302,6 +307,64 @@ function checkReminders(reminders) {
   }
 }
 
+// versions.json: номера X.Y.Z без повторов и строго по убыванию (как числа: 1.10.0 > 1.9.0), даты ГГГГ-ММ-ДД,
+// у каждой версии — базовый язык и хотя бы один непустой пункт. Нет записи для текущей версии приложения —
+// предупреждение: окно «Что нового» тогда не покажется.
+function checkVersions(file) {
+  const versions = file?.versions;
+  if (!Array.isArray(versions) || versions.length === 0) {
+    error('versions', 'нет непустого массива versions');
+    return;
+  }
+  for (const k of Object.keys(file)) if (k !== 'versions') error('versions', `неизвестное поле «${k}»`);
+  const parse = v => (/^\d+\.\d+\.\d+$/.test(v ?? '') ? v.split('.').map(Number) : null);
+  const compare = (a, b) => a[0] - b[0] || a[1] - b[1] || a[2] - b[2];
+  const isDate = d => /^\d{4}-\d{2}-\d{2}$/.test(d) && !Number.isNaN(Date.parse(`${d}T00:00:00Z`)) &&
+    new Date(`${d}T00:00:00Z`).toISOString().slice(0, 10) === d;
+  let previous = null;
+  for (const [index, entry] of versions.entries()) {
+    const at = `versions ${entry?.version ?? `#${index + 1}`}`;
+    for (const k of Object.keys(entry ?? {})) if (!VERSION_KEYS.includes(k)) error(at, `неизвестное поле «${k}»`);
+    const number = parse(entry?.version);
+    if (!number) error(at, `номер «${entry?.version ?? ''}» — ожидается X.Y.Z`);
+    else if (previous && compare(previous, number) <= 0) error(at, 'номера должны идти сверху вниз по убыванию, без повторов');
+    if (number) previous = number;
+    if (!isDate(entry?.date ?? '')) error(at, `дата «${entry?.date ?? ''}» — ожидается ГГГГ-ММ-ДД`);
+    const translations = entry?.translations;
+    if (!translations || typeof translations !== 'object' || Array.isArray(translations)) {
+      error(at, 'нет объекта translations');
+      continue;
+    }
+    if (!translations[BASE_LANGUAGE]) error(at, `нет перевода translations.${BASE_LANGUAGE}`);
+    for (const [lang, t] of Object.entries(translations)) {
+      const where = `${at} ${lang}`;
+      if (!/^[a-z]{2}$/.test(lang)) error(at, `код языка «${lang}» — ожидается ISO 639-1 (ru, en…)`);
+      for (const k of Object.keys(t ?? {})) if (!VERSION_ITEM_LISTS.includes(k)) error(where, `неизвестный список «${k}»`);
+      let count = 0;
+      for (const list of VERSION_ITEM_LISTS) {
+        const items = t?.[list];
+        if (items === undefined) continue;
+        if (!Array.isArray(items)) { error(where, `${list} — ожидается массив строк`); continue; }
+        items.forEach((item, i) => {
+          if (typeof item !== 'string' || !item.trim()) error(where, `${list}[${i}] — пустой пункт`);
+          else { count++; checkMixedScript(where, `${list}[${i}]`, item); }
+        });
+      }
+      if (count === 0) error(where, 'нет ни одного пункта');
+    }
+  }
+  const known = new Set(versions.map(v => v?.version));
+  const appVersions = [
+    ['Android', 'android/app/build.gradle.kts', /versionName\s*=\s*"([^"]+)"/],
+    ['iOS', 'Inabah.xcodeproj/project.pbxproj', /MARKETING_VERSION = ([^;]+);/],
+  ];
+  for (const [platform, path, pattern] of appVersions) {
+    const full = join(ROOT, path);
+    const current = existsSync(full) ? readFileSync(full, 'utf8').match(pattern)?.[1] : null;
+    if (current && !known.has(current)) warn('versions', platform, `нет записи для текущей версии ${current} — «Что нового» не покажется`);
+  }
+}
+
 // Структура: известные ключи, id первым, translations с базовым языком и кодами ISO 639-1.
 function checkStructure(where, item, keys, translationKeys) {
   const actual = Object.keys(item);
@@ -346,6 +409,7 @@ checkHadith(HADITH_DATA);
 checkNotes(data.hadith);
 checkCollections(readData('collections.json'), Object.keys(data.hadith));
 checkReminders(readData('reminders.json'));
+checkVersions(readData('versions.json'));
 
 const counts = Object.entries(EXPECTED)
   .map(([t]) => `${t}: ${(AZKAR[t] ?? HADITH_DATA[t])?.length ?? 0}`).join(', ');

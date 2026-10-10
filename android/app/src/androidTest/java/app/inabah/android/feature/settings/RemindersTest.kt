@@ -31,6 +31,7 @@ import app.inabah.android.core.settings.HadithCollectionOrder
 import app.inabah.android.core.settings.HadithFavorites
 import app.inabah.android.core.settings.HadithProgress
 import app.inabah.android.core.settings.ReminderSettings
+import app.inabah.android.core.updates.NoUpdateSource
 import app.inabah.android.core.settings.TestDataStoreRule
 import app.inabah.android.feature.azkar.AzkarHomeScreen
 import app.inabah.android.feature.azkar.AzkarStore
@@ -78,7 +79,7 @@ class RemindersTest {
     @Test
     fun offerEnableTurnsOnMorningAndEveningAndHidesCard() {
         compose.setContent {
-            InabahTheme { AzkarHomeScreen(azkarStore(), windows, reminders, onOpenSection = {}, contentPadding = PaddingValues()) }
+            InabahTheme { AzkarHomeScreen(azkarStore(), windows, reminders, NoUpdateSource, onOpenSection = {}, contentPadding = PaddingValues()) }
         }
         compose.onNodeWithText("Включить").performScrollTo().performClick()
 
@@ -92,7 +93,7 @@ class RemindersTest {
     @Test
     fun offerLaterHidesCardWithoutEnabling() {
         compose.setContent {
-            InabahTheme { AzkarHomeScreen(azkarStore(), windows, reminders, onOpenSection = {}, contentPadding = PaddingValues()) }
+            InabahTheme { AzkarHomeScreen(azkarStore(), windows, reminders, NoUpdateSource, onOpenSection = {}, contentPadding = PaddingValues()) }
         }
         compose.onNodeWithText("Не сейчас").performScrollTo().performClick()
 

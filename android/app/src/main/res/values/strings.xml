@@ -23,6 +23,7 @@
     <string name="about_sources_header">Источники</string>
     <string name="about_title">О приложении</string>
     <string name="about_version">Версия %1$s</string>
+    <string name="about_version_history">История версий</string>
     <string name="app_icon_beads">Чётки</string>
     <string name="app_icon_classic">Классическая</string>
     <string name="app_icon_dawn">Рассвет в михрабе</string>
@@ -255,6 +256,16 @@
     <string name="tab_hadith">Хадисы</string>
     <string name="tab_makharij">Махрадж</string>
     <string name="tab_settings">Настройки</string>
+    <!-- «Обновить» (главная «Азкаров»): подпись значка для TalkBack; до 1.2.0 значок виден только с подделкой в debug. -->
+    <string name="update_available">Доступна версия %1$s</string>
+    <!-- «История версий»: «1.1.1 · 12 октября 2026 г.» (дата — формат LONG локали). -->
+    <string name="version_history_header">%1$s · %2$s</string>
+    <string name="version_history_empty_message">Список изменений не удалось загрузить.</string>
+    <string name="version_history_empty_title">Нет истории версий</string>
+    <string name="version_history_title">История версий</string>
+    <!-- Окно «Что нового» после обновления; пункты — data/versions.json. -->
+    <string name="whats_new_ok">ОК</string>
+    <string name="whats_new_title">Что нового в %1$s</string>
     <string name="zikr_collapse">Свернуть</string>
     <string name="zikr_completed">Прочитано</string>
     <string name="zikr_counter_hint">Нажмите, чтобы отметить прочтение</string>

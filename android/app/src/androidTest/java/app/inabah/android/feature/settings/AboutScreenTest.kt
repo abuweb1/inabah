@@ -33,6 +33,9 @@ import app.inabah.android.app.SettingsRoute
 import app.inabah.android.core.content.LicenseDocument
 import app.inabah.android.core.designsystem.InabahTheme
 import app.inabah.android.core.designsystem.ThemeStyle
+import app.inabah.android.core.releases.AppVersion
+import app.inabah.android.core.releases.ReleaseNotes
+import java.time.LocalDate
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
@@ -98,7 +101,7 @@ class AboutScreenTest {
         var opened: LicenseDocument? = null
         compose.setContent {
             InabahTheme(theme = ThemeStyle.Sections.theme) {
-                AboutScreen(onOpenLicense = { opened = it }, onBack = {}, contentPadding = PaddingValues())
+                AboutScreen(onOpenLicense = { opened = it }, onOpenVersionHistory = {}, onBack = {}, contentPadding = PaddingValues())
             }
         }
         compose.onNodeWithText(context.getString(R.string.about_version, appVersion), substring = true).assertIsDisplayed()
@@ -109,6 +112,46 @@ class AboutScreenTest {
             .performScrollTo()
             .performClick()
         assertEquals(LicenseDocument.MaterialSymbols, opened)
+    }
+
+    @Test
+    fun versionHistoryRowOpensHistory() {
+        var opened = false
+        compose.setContent {
+            InabahTheme(theme = ThemeStyle.Sections.theme) {
+                AboutScreen(onOpenLicense = {}, onOpenVersionHistory = { opened = true }, onBack = {}, contentPadding = PaddingValues())
+            }
+        }
+        compose.onNodeWithText(context.getString(R.string.about_version_history)).performClick()
+        assertTrue(opened)
+    }
+
+    @Test
+    fun versionHistoryShowsVersionsNewestFirst() {
+        val versions = listOf(
+            ReleaseNotes(AppVersion.parse("1.1.1")!!, LocalDate.of(2026, 10, 12), listOf("Напоминания", "Избранное")),
+            ReleaseNotes(AppVersion.parse("1.1.0")!!, LocalDate.of(2026, 10, 8), listOf("Время азкаров")),
+        )
+        compose.setContent {
+            InabahTheme(theme = ThemeStyle.Sections.theme) {
+                VersionHistoryContent(versions, onBack = {}, contentPadding = PaddingValues())
+            }
+        }
+        val newest = compose.onNodeWithText("1.1.1 ·", substring = true).assertIsDisplayed().getUnclippedBoundsInRoot().top
+        val older = compose.onNodeWithText("1.1.0 ·", substring = true).assertIsDisplayed().getUnclippedBoundsInRoot().top
+        assertTrue("1.1.1 выше 1.1.0", newest < older)
+        compose.onNodeWithText("Избранное").assertIsDisplayed()
+        compose.onNodeWithText("Время азкаров").assertIsDisplayed()
+    }
+
+    @Test
+    fun emptyVersionHistoryShowsNotice() {
+        compose.setContent {
+            InabahTheme(theme = ThemeStyle.Sections.theme) {
+                VersionHistoryContent(emptyList(), onBack = {}, contentPadding = PaddingValues())
+            }
+        }
+        compose.onNodeWithText(context.getString(R.string.version_history_empty_title), substring = true).assertIsDisplayed()
     }
 
     @Test

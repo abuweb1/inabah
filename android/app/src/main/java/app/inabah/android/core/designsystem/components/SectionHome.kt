@@ -95,7 +95,8 @@ data class FeaturedVerse(
  * Каркас главных экранов разделов (iOS `SectionHomeLayout`): фон до краёв, бренд, аят и карточки.
  * Прокручивается, если не помещается; если помещается — карточки стоят по центру свободного места.
  * [topAction] — круглая кнопка в правом верхнем углу (вход в «Избранное» у хадисов): поверх
- * прокрутки, на уровне начала содержимого — бренд по центру она не задевает.
+ * прокрутки, на уровне начала содержимого — бренд по центру она не задевает. [leadingAction] — то же
+ * в левом верхнем углу («Обновить» на главной «Азкаров», когда вышла новая версия).
  */
 @Composable
 fun SectionHomeLayout(
@@ -104,6 +105,7 @@ fun SectionHomeLayout(
     verse: FeaturedVerse,
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(),
+    leadingAction: (@Composable () -> Unit)? = null,
     topAction: (@Composable () -> Unit)? = null,
     cards: @Composable ColumnScope.() -> Unit,
 ) {
@@ -143,6 +145,13 @@ fun SectionHomeLayout(
                     .align(Alignment.TopEnd)
                     .padding(top = contentPadding.calculateTopPadding(), end = Spacing.xl),
             ) { topAction() }
+        }
+        if (leadingAction != null) {
+            Box(
+                Modifier
+                    .align(Alignment.TopStart)
+                    .padding(top = contentPadding.calculateTopPadding(), start = Spacing.xl),
+            ) { leadingAction() }
         }
     }
 }
