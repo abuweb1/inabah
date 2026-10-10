@@ -44,6 +44,18 @@ struct PaletteSettingsView: View {
                 Text("settings.parchment.footer")
                     .foregroundStyle(theme.palette.onAccentSecondary)
             }
+
+            Section {
+                // Сдвиг всегда считается от темы без сдвига — палитры и пергамента.
+                TranslationShadeRow(base: settings.style.theme.withParchment(parchmentSettings.style))
+                    .padding(.vertical, Spacing.m)
+                    .settingsRow()
+            } header: {
+                Text("settings.translationShade.header")
+            } footer: {
+                Text("settings.translationShade.footer")
+                    .foregroundStyle(theme.palette.onAccentSecondary)
+            }
         }
         .settingsForm(background: theme.gradients.settingsBackground)
         .navigationTitle(Text("settings.palette.title"))
@@ -76,6 +88,91 @@ struct PaletteSettingsView: View {
             ParchmentPreview()
                 .environment(\.theme, theme.withParchment(style))
         }
+    }
+}
+
+/// «Фон перевода»: образец двух карточек и ползунок (решение пользователя 2026-10-10, как на Android).
+/// Пока палец на ползунке — меняется только образец (черновик); отпустил — сдвиг сохраняется
+/// и тема всего приложения меняется один раз.
+private struct TranslationShadeRow: View {
+    /// Тема без сдвига — от неё считаются образец и кружки по краям.
+    let base: Theme
+
+    @Environment(TranslationShadeSettings.self) private var settings
+    @State private var draft: Double?
+
+    private static let percent: Double = 100
+
+    var body: some View {
+        let shade = draft ?? settings.value
+        VStack(spacing: Spacing.l) {
+            TranslationShadeSample()
+                .environment(\.theme, base.withTranslationShade(shade))
+            ShadeSlider(
+                value: shade,
+                label: "settings.translationShade.header",
+                valueTitle: valueTitle(shade),
+                startSwatch: base.withTranslationShade(-1).palette.zikrCard,
+                endSwatch: base.withTranslationShade(1).palette.zikrCard,
+                onChange: { draft = $0 },
+                onCommit: commit
+            )
+        }
+    }
+
+    private func commit() {
+        guard let draft else { return }
+        withAnimation(Motion.highlight) { settings.set(draft) }
+        self.draft = nil
+    }
+
+    private func valueTitle(_ shade: Double) -> Text {
+        let percent = Int((abs(shade) * Self.percent).rounded())
+        if percent == 0 { return Text("settings.translationShade.default") }
+        return shade < 0
+            ? Text("settings.translationShade.darker \(percent)")
+            : Text("settings.translationShade.lighter \(percent)")
+    }
+}
+
+/// Карточки перевода зикра и хадиса в теме окружения — только картинка (VoiceOver читает ползунок).
+private struct TranslationShadeSample: View {
+    @Environment(\.theme) private var theme
+    @Environment(\.locale) private var locale
+
+    var body: some View {
+        let text = String(localized: "settings.translationShade.sample")
+        let language = ContentLanguage(rawValue: locale.language.languageCode?.identifier ?? ContentLanguage.base.rawValue)
+        // Карточки — одной высоты (по более длинной).
+        HStack(spacing: Spacing.m) {
+            card(theme.palette.zikrCard) {
+                TranslationBlock(
+                    text: text,
+                    language: language,
+                    colors: .azkar(theme.palette),
+                    narrator: String(localized: "tab.azkar")
+                )
+            }
+            card(theme.palette.hadithCard) {
+                TranslationBlock(
+                    text: text,
+                    language: language,
+                    colors: .hadith(theme.palette),
+                    narrator: String(localized: "tab.hadith"),
+                    bubble: false,
+                    narratorDivider: true
+                )
+            }
+        }
+        .fixedSize(horizontal: false, vertical: true)
+        .accessibilityHidden(true)
+    }
+
+    private func card(_ fill: Color, @ViewBuilder content: () -> some View) -> some View {
+        content()
+            .padding(Spacing.m)
+            .frame(maxHeight: .infinity, alignment: .top)
+            .surface(fill, cornerRadius: Radius.card, border: theme.palette.hairline, shadow: .card(theme.palette))
     }
 }
 

@@ -21,6 +21,8 @@ struct AppEnvironment {
     let appearanceSettings: AppearanceSettings
     /// Фон под арабским текстом — накладывается на тему палитры (`Theme.withParchment`).
     let parchmentSettings: ParchmentSettings
+    /// «Фон перевода» — накладывается на тему после пергамента (`Theme.withTranslationShade`).
+    let translationShadeSettings: TranslationShadeSettings
     /// Размер переводов и интерфейса — применяется к окружению в `appEnvironment`.
     let textSizeSettings: TextSizeSettings
 
@@ -53,6 +55,7 @@ struct AppEnvironment {
         )
         appearanceSettings = AppearanceSettings(defaults: defaults)
         parchmentSettings = ParchmentSettings(defaults: defaults)
+        translationShadeSettings = TranslationShadeSettings(defaults: defaults)
         textSizeSettings = TextSizeSettings(defaults: defaults)
     }
 
@@ -107,8 +110,13 @@ extension View {
             .environment(environment.audioPlayer)
             .environment(environment.appearanceSettings)
             .environment(environment.parchmentSettings)
+            .environment(environment.translationShadeSettings)
             .environment(environment.textSizeSettings)
-            .modifier(ThemedModifier(settings: environment.appearanceSettings, parchment: environment.parchmentSettings))
+            .modifier(ThemedModifier(
+                settings: environment.appearanceSettings,
+                parchment: environment.parchmentSettings,
+                translationShade: environment.translationShadeSettings
+            ))
             .modifier(TextSizeModifier(settings: environment.textSizeSettings))
     }
 }
@@ -144,16 +152,20 @@ extension View {
     }
 }
 
-/// Тема в окружении — из выбранной палитры и фона арабского текста. Только этот модификатор
-/// следит за выбором: смена палитры или фона один раз перерисовывает дерево с новой темой.
+/// Тема в окружении — из выбранной палитры, фона арабского текста и фона перевода. Только этот
+/// модификатор следит за выбором: смена одного из них один раз перерисовывает дерево с новой темой.
 /// Окнам — акцент палитры, чтобы системные диалоги тоже были в её цвет.
 private struct ThemedModifier: ViewModifier {
     let settings: AppearanceSettings
     let parchment: ParchmentSettings
+    let translationShade: TranslationShadeSettings
 
     func body(content: Content) -> some View {
         content
-            .environment(\.theme, settings.style.theme.withParchment(parchment.style))
+            .environment(
+                \.theme,
+                settings.style.theme.withParchment(parchment.style).withTranslationShade(translationShade.value)
+            )
             .onChange(of: settings.style, initial: true) { _, style in
                 WindowTint.apply(style.theme.palette.accentLight)
             }

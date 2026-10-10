@@ -2193,6 +2193,72 @@
         }
       }
     },
+    "settings.translationShade.darker %lld" : {
+      "comment" : "Значение ползунка «Фон перевода» левее центра, в процентах (VoiceOver)",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Темнее на %lld %%"
+          }
+        }
+      }
+    },
+    "settings.translationShade.default" : {
+      "comment" : "Значение ползунка «Фон перевода» по центру (VoiceOver)",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Как задумано"
+          }
+        }
+      }
+    },
+    "settings.translationShade.footer" : {
+      "comment" : "«Палитра»: подпись под группой «Фон перевода»",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Карточки перевода азкаров и хадисов. По центру — как задумано; светлее — до предела, пока перевод хорошо читается."
+          }
+        }
+      }
+    },
+    "settings.translationShade.header" : {
+      "comment" : "«Палитра»: заголовок группы и подпись ползунка (VoiceOver)",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Фон перевода"
+          }
+        }
+      }
+    },
+    "settings.translationShade.lighter %lld" : {
+      "comment" : "Значение ползунка «Фон перевода» правее центра, в процентах (VoiceOver)",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Светлее на %lld %%"
+          }
+        }
+      }
+    },
+    "settings.translationShade.sample" : {
+      "comment" : "Текст образца карточек перевода в «Палитре»",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Так будет выглядеть перевод на карточке."
+          }
+        }
+      }
+    },
     "settings.window.evening.end" : {
       "comment" : "VoiceOver: выбор конца времени вечерних азкаров",
       "localizations" : {
