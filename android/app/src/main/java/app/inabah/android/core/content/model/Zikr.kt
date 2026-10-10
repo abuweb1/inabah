@@ -32,4 +32,6 @@ data class ZikrTranslation(
     val text: String,
     val transliteration: String?,
     val source: String?,
+    /** «От кого передаётся» (`rawi`) — пользователь добавит к азкарам; нет — строки нет. */
+    val narrator: String? = null,
 )

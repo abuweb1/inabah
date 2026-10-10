@@ -41,6 +41,7 @@ private fun unified(colors: ThemeColors): Theme {
         header = colors.header,
         eveningHeader = colors.eveningHeader,
         hadithHeader = colors.header,
+        hadithCard = colors.card,
         textSecondary = colors.textSecondary,
         textTertiary = colors.textTertiary,
         accent = colors.accent,

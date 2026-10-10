@@ -7,6 +7,9 @@ import androidx.compose.ui.graphics.lerp
 /** Доля `tabHadith` в цвете текста сносок ([Palette.noteText]); контраст — `NoteColorsTest`. */
 private const val NOTE_TEXT_TINT = 0.3f
 
+/** Насколько темнее шапки хадисов карточка перевода хадиса ([Palette.hadithCard]); контраст — `NoteColorsTest`. */
+private const val HADITH_CARD_SHADE = 0.5f
+
 /**
  * Цвета темы. HEX — только здесь, в [ThemeGradients] и сгенерированном [ThemePalettes]; экраны берут
  * цвета из [InabahTheme]. Значения — тема «По умолчанию» (iOS `Assets.xcassets/Palette`),
@@ -20,6 +23,8 @@ data class Palette(
     val header: Color,
     val eveningHeader: Color,
     val hadithHeader: Color,
+    /** Фон карточки перевода хадиса — тёмный оттенок шапки хадисов (в единых стилях — `card`, как у зикра). */
+    val hadithCard: Color = lerp(hadithHeader, Color.Black, HADITH_CARD_SHADE),
     val shadow: Color,
     val textPrimary: Color,
     val textSecondary: Color,

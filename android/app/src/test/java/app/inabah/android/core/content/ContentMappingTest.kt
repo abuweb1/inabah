@@ -90,6 +90,17 @@ class ContentMappingTest {
     }
 
     @Test
+    fun `Передатчик зикра — необязательный, пустой становится отсутствующим`() = runTest {
+        val file = """{ "morning": [
+            { "id": 1, "arabic": "سُبْحَانَ اللَّهِ", "max": 1, "translations": { "ru": { "text": "а", "rawi": " Абу Хурайра " } } },
+            { "id": 2, "arabic": "سُبْحَانَ اللَّهِ", "max": 1, "translations": { "ru": { "text": "б", "rawi": "  " } } },
+            { "id": 3, "arabic": "سُبْحَانَ اللَّهِ", "max": 1, "translations": { "ru": { "text": "в" } } } ], "evening": [] }"""
+        val azkar = repository(mapOf("azkar.json" to file), StandardTestDispatcher(testScheduler)).azkar(AzkarSection.Morning)
+
+        assertEquals(listOf("Абу Хурайра", null, null), azkar.map { it.translation!!.narrator })
+    }
+
+    @Test
     fun `Сноски — в порядке файла, края обрезаются, с пустым словом или пояснением отбрасываются`() = runTest {
         val qudsi = """[
             { "id": 1, "arabic": "قَالَ", "translations": { "ru": { "text": "Перевод", "notes": [

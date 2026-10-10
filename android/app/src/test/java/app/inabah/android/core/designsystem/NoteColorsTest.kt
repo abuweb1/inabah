@@ -1,22 +1,35 @@
 package app.inabah.android.core.designsystem
 
 import androidx.compose.ui.graphics.compositeOver
+import app.inabah.android.core.designsystem.components.TranslationColors
+import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import org.junit.Test
 
-/** Сноски к переводу хадиса: цвета — производные от `tabHadith`, читаются во всех палитрах. */
+/** Перевод и сноски хадиса — на карточке `hadithCard`, цвета — производные от `tabHadith`, читаются во всех палитрах. */
 class NoteColorsTest {
+    private fun ratio(foreground: androidx.compose.ui.graphics.Color, background: androidx.compose.ui.graphics.Color) =
+        Contrast.ratio(Contrast.luminance(foreground), Contrast.luminance(background))
+
     @Test
-    fun `Текст сноски читается на своей подложке на всём фоне хадисов (≥ 4,5 к 1)`() {
+    fun `Перевод хадиса читается на своей карточке во всех палитрах`() {
         for (style in ThemeStyle.entries) {
             val palette = style.theme.palette
-            val text = Contrast.luminance(palette.noteText)
-            // Подложка сноски — внутри карточки перевода (subtleFill) на градиенте экрана хадиса.
-            for (background in style.theme.gradients.hadithBackground.colors) {
-                val fill = palette.noteFill.compositeOver(palette.subtleFill.compositeOver(background))
-                val ratio = Contrast.ratio(text, Contrast.luminance(fill))
-                assertTrue(ratio >= 4.5, "стиль $style, фон $background: контраст ${"%.2f".format(ratio)}")
-            }
+            val colors = TranslationColors.hadith(palette)
+            val card = palette.hadithCard
+            val bubble = colors.fill.compositeOver(card)
+            assertTrue(ratio(colors.text, bubble) >= 7.0, "стиль $style: перевод ${"%.2f".format(ratio(colors.text, bubble))}")
+            assertTrue(ratio(colors.lead, card) >= 4.5, "стиль $style: «Передал» ${"%.2f".format(ratio(colors.lead, card))}")
+            assertTrue(ratio(colors.source, card) >= 4.5, "стиль $style: источник ${"%.2f".format(ratio(colors.source, card))}")
+            // Сноски — тот же пузырь, текст — noteText.
+            assertTrue(ratio(palette.noteText, bubble) >= 4.5, "стиль $style: сноска ${"%.2f".format(ratio(palette.noteText, bubble))}")
+        }
+    }
+
+    @Test
+    fun `В единых стилях карточка хадиса — как у зикра`() {
+        for (style in ThemeStyle.entries.filter { it != ThemeStyle.Sections }) {
+            assertEquals(style.theme.palette.card, style.theme.palette.hadithCard, "стиль $style")
         }
     }
 }

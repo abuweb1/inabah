@@ -31,6 +31,7 @@ internal fun ZikrDto.toZikr(section: AzkarSection, priority: ContentLanguagePrio
                 text = dto.text,
                 transliteration = dto.translit.nonBlankOrNull(),
                 source = dto.source.nonBlankOrNull(),
+                narrator = dto.rawi.nonBlankOrNull(),
             )
         },
     )
