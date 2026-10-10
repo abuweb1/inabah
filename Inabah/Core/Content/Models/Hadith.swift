@@ -29,4 +29,12 @@ nonisolated struct HadithTranslation: Hashable, Sendable {
     let narrator: String?
     let text: String
     let source: String?
+    /// Сноски к словам перевода в порядке файла; без пустых.
+    var notes: [HadithNote] = []
+}
+
+/// Сноска: слово или выражение из перевода (или тема всего хадиса) и пояснение.
+nonisolated struct HadithNote: Hashable, Sendable {
+    let term: String
+    let text: String
 }

@@ -12,7 +12,8 @@ nonisolated extension Zikr {
                     language: language,
                     text: t.text,
                     transliteration: t.translit.nonEmpty,
-                    source: t.source.nonEmpty
+                    source: t.source.nonEmpty,
+                    narrator: t.rawi.nonEmpty
                 )
             }
         )
@@ -29,10 +30,61 @@ nonisolated extension Hadith {
                     language: language,
                     narrator: t.rawi.nonEmpty,
                     text: t.text,
-                    source: t.source.nonEmpty
+                    source: t.source.nonEmpty,
+                    // Сноска без слова или без пояснения не показывается (как на Android).
+                    notes: (t.notes ?? []).compactMap { note in
+                        guard let term = note.term.nonEmpty, let text = note.text.nonEmpty else { return nil }
+                        return HadithNote(term: term, text: text)
+                    }
                 )
             }
         )
+    }
+}
+
+nonisolated extension CollectionInfo {
+    /// Составитель с пустым именем — заготовка, не показывается; пустые годы и абзацы отбрасываются.
+    /// Перевода на доступных языках нет — `.empty`.
+    init(dto: CollectionInfoDTO, languages: ContentLanguagePriority) {
+        guard let selected = languages.select(from: dto.translations.keyedByLanguage) else {
+            self = .empty
+            return
+        }
+        let t = selected.translation
+        self.init(
+            authors: (t.authors ?? []).compactMap { author in
+                author.name.nonEmpty.map { CollectionAuthor(name: $0, years: author.years.nonEmpty) }
+            },
+            about: (t.about ?? []).compactMap { Optional($0).nonEmpty },
+            language: selected.language
+        )
+    }
+}
+
+nonisolated extension ReminderTexts {
+    /// Тексты на выбранном языке; языка нет — `nil` (уведомления не показываются). Текст считается
+    /// заданным, если заполнен заголовок или тело.
+    init?(dto: RemindersFileDTO, languages: ContentLanguagePriority) {
+        guard let t = languages.select(from: dto.translations.keyedByLanguage)?.translation else { return nil }
+        func bySection(_ texts: [String: ReminderTextDTO]?) -> [AzkarSection: ReminderText] {
+            var result: [AzkarSection: ReminderText] = [:]
+            for section in AzkarSection.allCases {
+                result[section] = texts?[section.rawValue].flatMap(ReminderText.init(dto:))
+            }
+            return result
+        }
+        self.init(
+            azkarStart: bySection(t.azkarStart),
+            azkarUnfinished: bySection(t.azkarUnfinished),
+            hadithOfDay: t.hadithOfDay.flatMap(ReminderText.init(dto:))
+        )
+    }
+}
+
+private nonisolated extension ReminderText {
+    init?(dto: ReminderTextDTO) {
+        guard dto.title.nonEmpty != nil || dto.body.nonEmpty != nil else { return nil }
+        self.init(title: dto.title ?? "", body: dto.body ?? "")
     }
 }
 

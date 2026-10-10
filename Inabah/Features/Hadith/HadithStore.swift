@@ -7,6 +7,8 @@ import Observation
 final class HadithStore {
     @ObservationIgnored private let repository: any ContentRepository
     private(set) var collections: [HadithCollection: Loadable<[Hadith]>] = [:]
+    /// Сведения для «О сборнике» (`collections.json`) — грузятся по запросу экрана.
+    private(set) var infos: [HadithCollection: Loadable<CollectionInfo>] = [:]
 
     init(repository: any ContentRepository) {
         self.repository = repository
@@ -30,6 +32,23 @@ final class HadithStore {
             collections[collection] = .failed(error)
         } catch {
             collections[collection] = .failed(.unknown(String(describing: error)))
+        }
+    }
+
+    func infoState(of collection: HadithCollection) -> Loadable<CollectionInfo> {
+        infos[collection] ?? .idle
+    }
+
+    /// Загружает сведения о сборнике; повторный вызов после ошибки — повторная попытка.
+    func loadInfo(_ collection: HadithCollection) async {
+        guard !infoState(of: collection).isLoadingOrLoaded else { return }
+        infos[collection] = .loading
+        do {
+            infos[collection] = .loaded(try await repository.collectionInfo(collection))
+        } catch let error as ContentError {
+            infos[collection] = .failed(error)
+        } catch {
+            infos[collection] = .failed(.unknown(String(describing: error)))
         }
     }
 
