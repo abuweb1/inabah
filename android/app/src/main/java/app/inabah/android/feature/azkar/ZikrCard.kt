@@ -228,7 +228,7 @@ private fun ZikrFullContent(
             total = zikr.repetitions,
             onIncrement = {
                 when (session.increment()) {
-                    IncrementResult.Counted -> haptics.performHapticFeedback(HapticFeedbackType.SegmentFrequentTick)
+                    IncrementResult.Counted -> haptics.performHapticFeedback(HapticFeedbackType.ContextClick)
                     IncrementResult.Completed -> haptics.performHapticFeedback(HapticFeedbackType.Confirm)
                     IncrementResult.AlreadyCompleted -> Unit
                 }
