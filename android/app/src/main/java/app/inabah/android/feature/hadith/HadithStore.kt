@@ -12,8 +12,14 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 
-/** Сборники хадисов и сведения о них в памяти (iOS `HadithStore`); хранения нет. Вызывать с главного потока. */
-class HadithStore(private val repository: ContentRepository) {
+/**
+ * Сборники хадисов и сведения о них в памяти (iOS `HadithStore`); хранения нет. Вызывать с главного потока.
+ * [onInfoFailure] — сведения о сборнике не загрузились (дефект сборки: файл встроенный; в приложении — лог).
+ */
+class HadithStore(
+    private val repository: ContentRepository,
+    private val onInfoFailure: (HadithCollection, ContentError) -> Unit = { _, _ -> },
+) {
     private val _collections = MutableStateFlow<Map<HadithCollection, Loadable<List<Hadith>>>>(emptyMap())
     private val _infos = MutableStateFlow<Map<HadithCollection, Loadable<CollectionInfo>>>(emptyMap())
 
@@ -37,6 +43,7 @@ class HadithStore(private val repository: ContentRepository) {
     /** Как [load], для сведений о сборнике (экран «О сборнике»). */
     suspend fun loadInfo(collection: HadithCollection) {
         _infos.load(collection) { repository.collectionInfo(collection) }
+        (_infos.value[collection] as? Loadable.Failed)?.let { onInfoFailure(collection, it.error) }
     }
 
     suspend fun loadAll() {

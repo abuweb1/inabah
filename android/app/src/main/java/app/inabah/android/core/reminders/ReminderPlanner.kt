@@ -4,6 +4,7 @@ import app.inabah.android.core.content.model.AzkarSection
 import app.inabah.android.core.content.model.Hadith
 import app.inabah.android.core.content.model.HadithCollection
 import app.inabah.android.core.content.model.HadithId
+import app.inabah.android.core.settings.AzkarDayRecord
 import app.inabah.android.core.settings.AzkarWindow
 import app.inabah.android.core.settings.AzkarWindowSchedule
 import app.inabah.android.core.settings.ReminderPreferences
@@ -24,6 +25,9 @@ enum class ReminderKind(val requestCode: Int, val section: AzkarSection?) {
 
     val isUnfinished: Boolean get() = this == MorningUnfinished || this == EveningUnfinished
 
+    /** Канал уведомлений вида — пользователь может выключить его в системе отдельно от остальных. */
+    val channel: String get() = if (section == null) ReminderChannels.HADITH else ReminderChannels.AZKAR
+
     companion object {
         fun start(section: AzkarSection): ReminderKind =
             if (section == AzkarSection.Morning) MorningStart else EveningStart
@@ -33,6 +37,18 @@ enum class ReminderKind(val requestCode: Int, val section: AzkarSection?) {
 
         fun fromName(name: String?): ReminderKind? = entries.firstOrNull { it.name == name }
     }
+}
+
+/**
+ * Каналы уведомлений напоминаний (видны в настройках системы). Важность «высокая» задаётся только при создании
+ * канала, дальше она — пользователя: поэтому id с `.alert` (решение 2026-10-10), прежние — в [LEGACY].
+ */
+object ReminderChannels {
+    const val AZKAR = "reminders.azkar.alert"
+    const val HADITH = "reminders.hadith.alert"
+
+    /** Каналы пробных сборок 1.1.1 с важностью «обычная» — удаляются. */
+    val LEGACY = listOf("reminders.azkar", "reminders.hadith")
 }
 
 /** Запланированное напоминание: [at] — когда, [windowDay] — дата начала окна азкаров (у азкаров). */
@@ -83,6 +99,26 @@ private fun unfinished(section: AzkarSection, schedule: AzkarWindowSchedule, now
     }
     val current = remindFor(schedule.currentOrNextStart(now))
     return if (current.at.isAfter(now)) current else remindFor(schedule.nextStart(after = now))
+}
+
+/**
+ * Показать ли сработавшее напоминание азкаров [kind] (`docs/07-screen-settings.md`, «Напоминания»): только пока окно
+ * открыто — будильник мог опоздать (телефон спал, время перевели); «ещё не прочитаны» — только если раздел в этом
+ * окне не выполнен. [record] — запись истории за день окна: дату его начала (после полуночи — вчерашнюю), как
+ * записывает `AzkarStore`. Пустой раздел (`total == 0`) выполненным не считается.
+ */
+fun isAzkarReminderDue(
+    kind: ReminderKind,
+    window: AzkarWindow,
+    now: Instant,
+    zone: ZoneId,
+    record: (LocalDate) -> AzkarDayRecord?,
+): Boolean {
+    val period = AzkarWindowSchedule(window, zone).period(now)
+    if (!period.isWindow) return false
+    if (!kind.isUnfinished) return true
+    val done = record(period.day)?.let { it.total > 0 && it.completed >= it.total } ?: false
+    return !done
 }
 
 /**

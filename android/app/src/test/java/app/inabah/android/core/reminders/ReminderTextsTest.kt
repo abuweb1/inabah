@@ -2,6 +2,7 @@ package app.inabah.android.core.reminders
 
 import app.inabah.android.core.content.ContentLanguage
 import app.inabah.android.core.content.ContentLanguagePriority
+import app.inabah.android.core.content.ContentSource
 import app.inabah.android.core.content.model.AzkarSection
 import java.io.File
 import java.io.FileNotFoundException
@@ -37,11 +38,15 @@ class ReminderTextsTest {
     }
 
     @Test
-    fun `Нет файла или нет перевода на доступных языках — null`() = runTest {
-        val missing = ReminderTextsSource({ throw FileNotFoundException(it) }, priority, StandardTestDispatcher(testScheduler))
-        assertNull(missing.texts())
+    fun `Нет файла, он повреждён или нет перевода на доступных языках — null и сообщение`() = runTest {
+        val errors = mutableListOf<String>()
+        fun source(open: ContentSource) = ReminderTextsSource(open, priority, StandardTestDispatcher(testScheduler)) { message, _ -> errors += message }
 
+        assertNull(source { throw FileNotFoundException(it) }.texts())
+        assertNull(source { "{ не json".byteInputStream() }.texts())
         val english = """{ "translations": { "en": { "hadithOfDay": { "title": "Hadith", "body": "{text}" } } } }"""
-        assertNull(ReminderTextsSource({ english.byteInputStream() }, priority, StandardTestDispatcher(testScheduler)).texts())
+        assertNull(source { english.byteInputStream() }.texts())
+
+        assertEquals(3, errors.size, "каждый сбой — в лог (аудит 2026-10-10, К5): $errors")
     }
 }

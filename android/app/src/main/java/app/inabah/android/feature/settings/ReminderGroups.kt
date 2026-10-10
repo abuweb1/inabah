@@ -18,6 +18,7 @@ import app.inabah.android.core.designsystem.components.SettingsGroup
 import app.inabah.android.core.designsystem.components.SettingsRow
 import app.inabah.android.core.designsystem.components.SettingsRowText
 import app.inabah.android.core.designsystem.components.SwitchRow
+import app.inabah.android.core.reminders.ReminderChannels
 import app.inabah.android.core.settings.AzkarWindow
 import app.inabah.android.core.settings.DayTime
 import app.inabah.android.core.settings.ReminderSettings
@@ -32,7 +33,7 @@ import app.inabah.android.feature.azkar.title
 @Composable
 internal fun AzkarRemindersGroup(settings: ReminderSettings, windows: Map<AzkarSection, AzkarWindow>, tint: Color) {
     val preferences by settings.preferences.collectAsStateWithLifecycle()
-    val permission = rememberNotificationPermission()
+    val permission = rememberNotificationPermission(ReminderChannels.AZKAR)
     var denied by remember { mutableStateOf(false) }
     val format = rememberDayTimeFormatter()
     val palette = InabahTheme.palette
@@ -95,7 +96,7 @@ internal fun HadithOfDayGroup(
     tint: Color,
 ) {
     val preferences by settings.preferences.collectAsStateWithLifecycle()
-    val permission = rememberNotificationPermission()
+    val permission = rememberNotificationPermission(ReminderChannels.HADITH)
     var denied by remember { mutableStateOf(false) }
     val palette = InabahTheme.palette
     val enabled = preferences.hadithOfDay && permission.allowed
@@ -141,7 +142,7 @@ internal fun HadithOfDayGroup(
     )
 }
 
-/** «Открыть настройки» — уведомления выключены в системе или в разрешении отказано. */
+/** «Открыть настройки» — уведомления (или канал раздела) выключены в системе или в разрешении отказано. */
 @Composable
 private fun OpenNotificationSettingsRow(permission: NotificationPermissionState) {
     SettingsRow(onClick = permission.openSettings, compact = true) {

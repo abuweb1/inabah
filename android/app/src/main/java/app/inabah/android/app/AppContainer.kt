@@ -139,7 +139,9 @@ class AppContainer(context: Context) {
         val azkarHistory = AzkarHistory(storage) { error ->
             Log.w(TAG, "История азкаров не читается — начата заново (первая испорченная — в azkar.history.corrupt)", error)
         }
-        val hadithStore = HadithStore(repository)
+        val hadithStore = HadithStore(repository) { collection, error ->
+            Log.e(TAG, "Не загружены сведения «${collection.key}»", error)
+        }
         val hadithProgress = HadithProgress(storage)
         val hadithCollectionOrder = HadithCollectionOrder(storage)
         val reminderSettings = ReminderSettings(storage)
@@ -183,7 +185,9 @@ class AppContainer(context: Context) {
                 hadithStore = hadithStore,
                 hadithProgress = hadithProgress,
                 hadithOrder = hadithCollectionOrder,
-                texts = ReminderTextsSource(appContext.assets::open, contentLanguagePriority, Dispatchers.IO),
+                texts = ReminderTextsSource(appContext.assets::open, contentLanguagePriority, Dispatchers.IO) { message, error ->
+                    Log.e(TAG, "Тексты напоминаний: $message", error)
+                },
                 alarms = ReminderAlarms(appContext),
                 notifier = ReminderNotifier(appContext),
                 now = Instant::now,
