@@ -61,6 +61,8 @@ import androidx.compose.ui.text.intl.LocaleList
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.inabah.android.R
+import app.inabah.android.core.designsystem.components.TranslationBlock
+import app.inabah.android.core.designsystem.components.TranslationColors
 import app.inabah.android.core.share.shareText
 import app.inabah.android.core.share.storeLinksBlock
 import app.inabah.android.core.content.model.ZikrTranslation
@@ -89,7 +91,6 @@ private const val MINI_ROW_WORDS = 8
 private const val MINI_ROW_ARABIC_SIZE = 17f
 private val MiniCheckSize = 28.dp
 private val MiniCheckGlyph = 16.dp
-private val BubbleRadius = 8.dp
 private val CounterCheckGlyph = 26.dp
 
 /** Ореол вспышки выполненного счётчика — на столько выходит за кнопку. */
@@ -149,7 +150,7 @@ fun ZikrCard(
     Column(
         modifier
             .fillMaxWidth()
-            .surface(palette.card, Radius.card, border = borderColor, lineWidth = borderWidth, shadow = ShadowToken.card(palette))
+            .surface(palette.zikrCard, Radius.card, border = borderColor, lineWidth = borderWidth, shadow = ShadowToken.card(palette))
             .clip(RoundedCornerShape(Radius.card)),
     ) {
         ZikrMiniRow(
@@ -207,6 +208,7 @@ private fun ZikrFullContent(
         val sectionTitle = stringResource(zikr.section.title)
         val repetitions = pluralStringResource(R.plurals.zikr_repetitions, zikr.repetitions, zikr.repetitions)
         val storeLinks = storeLinksBlock()
+        val narratorLine = zikr.translation?.narrator?.let { stringResource(R.string.hadith_detail_narrator, it) }
         ZikrActions(
             hasAudio = zikr.hasAudio,
             isAudioActive = isAudioActive,
@@ -216,7 +218,7 @@ private fun ZikrFullContent(
             canReset = state.count > 0,
             onToggleTranslation = { session.setTranslationVisible(!state.isTranslationVisible) },
             onReset = session::reset,
-            onShare = { context.shareText(zikrShareText(zikr, sectionTitle, repetitions, storeLinks)) },
+            onShare = { context.shareText(zikrShareText(zikr, sectionTitle, repetitions, narratorLine, storeLinks)) },
             modifier = Modifier.padding(vertical = Spacing.l),
         )
         CardDivider()
@@ -265,38 +267,20 @@ private fun RepetitionsBadge(repetitions: Int) {
 private const val SPARKLE_IN_BADGE = 0.8f
 
 /**
- * Транскрипция, перевод на подложке с полосой и источник (iOS `ZikrTranslationView`); язык текста —
- * язык перевода (переносы). Стили переводов — растут с шагом «Размера переводов»; также образец
- * на экране «Размер текста».
+ * «Передал» (когда есть), транскрипция, перевод в пузыре и источник (iOS `ZikrTranslationView`) — общий
+ * [TranslationBlock] в цветах азкаров. Также образец на экране «Размер текста».
  */
 @Composable
 fun ZikrTranslationBlock(translation: ZikrTranslation, modifier: Modifier = Modifier) {
-    val palette = InabahTheme.palette
-    val locale = LocaleList(translation.language.code)
-    Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
-        translation.transliteration?.let {
-            Text(it, color = palette.textSecondary, style = InabahType.contentTransliteration.copy(localeList = locale))
-        }
-        val stripeColor = palette.accent
-        Text(
-            translation.text,
-            color = palette.textPrimary,
-            style = InabahType.contentTranslation.copy(localeList = locale),
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(palette.accentDim, RoundedCornerShape(topEnd = BubbleRadius, bottomEnd = BubbleRadius))
-                .drawBehind {
-                    val stripe = Size.accentStripe.toPx()
-                    val x = if (layoutDirection == androidx.compose.ui.unit.LayoutDirection.Ltr) 0f else size.width - stripe
-                    drawRect(stripeColor, topLeft = androidx.compose.ui.geometry.Offset(x, 0f),
-                        size = androidx.compose.ui.geometry.Size(stripe, size.height))
-                }
-                .padding(horizontal = Spacing.m, vertical = Spacing.s),
-        )
-        translation.source?.let {
-            Text(it, color = palette.textTertiary, style = InabahType.contentNote.copy(localeList = locale))
-        }
-    }
+    TranslationBlock(
+        text = translation.text,
+        locale = LocaleList(translation.language.code),
+        colors = TranslationColors.azkar(InabahTheme.palette),
+        modifier = modifier,
+        narrator = translation.narrator?.let { stringResource(R.string.hadith_detail_narrator, it) },
+        transliteration = translation.transliteration,
+        source = translation.source,
+    )
 }
 
 /**

@@ -1,7 +1,6 @@
 package app.inabah.android.feature.hadith
 
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -11,7 +10,6 @@ import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -19,8 +17,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
@@ -32,8 +28,6 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.intl.LocaleList
-import androidx.compose.ui.unit.LayoutDirection
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import app.inabah.android.R
 import app.inabah.android.core.content.model.HadithNote
@@ -45,14 +39,12 @@ import app.inabah.android.core.designsystem.Size
 import app.inabah.android.core.designsystem.Spacing
 import app.inabah.android.core.designsystem.components.collapsible
 import app.inabah.android.core.designsystem.components.pressFeedback
+import app.inabah.android.core.designsystem.components.translationBubble
 import app.inabah.android.core.designsystem.monospacedDigits
 
 /** Стрелка сносок — как значки действий хадиса: в sp, растёт с шагом интерфейса. */
 private const val CHEVRON_SIZE = 20f
 private const val HALF_TURN = 180f
-
-/** Скругление правых углов подложки сноски — как у пузыря перевода азкаров. */
-private val BubbleRadius = 8.dp
 
 private val NonWord = Regex("""[^\p{L}\p{N}]+""")
 
@@ -141,15 +133,7 @@ private fun HadithNoteBubble(note: HadithNote, quoted: Boolean, locale: LocaleLi
     val stripeColor = palette.noteStripe
     val style = InabahType.contentTransliteration.copy(localeList = locale)
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(palette.noteFill, RoundedCornerShape(topEnd = BubbleRadius, bottomEnd = BubbleRadius))
-            .drawBehind {
-                val stripe = Size.accentStripe.toPx()
-                val x = if (layoutDirection == LayoutDirection.Ltr) 0f else size.width - stripe
-                drawRect(stripeColor, topLeft = Offset(x, 0f), size = androidx.compose.ui.geometry.Size(stripe, size.height))
-            }
-            .padding(horizontal = Spacing.m, vertical = Spacing.s),
+        modifier = Modifier.translationBubble(palette.noteFill, stripeColor),
         verticalArrangement = Arrangement.spacedBy(Spacing.xxs),
     ) {
         val term = if (quoted) stringResource(R.string.hadith_note_quote, note.term) else note.term

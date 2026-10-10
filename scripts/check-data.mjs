@@ -27,7 +27,7 @@ const EXPECTED = { morning: 16, evening: 16, nawawi: 50, qudsi: 40, ajurri: 40 }
 
 const AZKAR_KEYS = ['id', 'arabic', 'max', 'audio', 'translations'];
 const HADITH_KEYS = ['id', 'arabic', 'translations'];
-const AZKAR_TRANSLATION_KEYS = ['translit', 'text', 'source'];
+const AZKAR_TRANSLATION_KEYS = ['translit', 'text', 'source', 'rawi'];
 const HADITH_TRANSLATION_KEYS = ['rawi', 'text', 'source', 'notes'];
 const NOTE_KEYS = ['term', 'text'];
 const COLLECTION_KEYS = ['translations'];

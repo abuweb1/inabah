@@ -41,6 +41,7 @@ class ShareTextTest {
             zikr(ZikrTranslation(ru, "Пречист Аллах и хвала Ему.", "Субхана-Ллахи ва би-хамди-хи.", "Муслим")),
             sectionTitle = "Утренние азкары",
             repetitions = "100 раз",
+            narratorLine = null,
             storeLinks = links,
         )
 
@@ -53,9 +54,24 @@ class ShareTextTest {
 
     @Test
     fun `Зикр без перевода — раздел, арабский и «N раз», без пустых строк`() {
-        val text = zikrShareText(zikr(translation = null), sectionTitle = "Утренние азкары", repetitions = "100 раз", storeLinks = null)
+        val text = zikrShareText(
+            zikr(translation = null), sectionTitle = "Утренние азкары", repetitions = "100 раз", narratorLine = null, storeLinks = null,
+        )
 
         assertEquals("Утренние азкары\n\nسُبْحَانَ اللَّهِ وَ بِحَمْدِهِ\n\n100 раз", text)
+    }
+
+    @Test
+    fun `Зикр с передатчиком — «Передал» после «N раз», перед транскрипцией`() {
+        val text = zikrShareText(
+            zikr(ZikrTranslation(ru, "Перевод", "Транскрипция", source = null, narrator = "Абу Хурайра")),
+            sectionTitle = "Утренние азкары", repetitions = "1 раз", narratorLine = "Передал: Абу Хурайра", storeLinks = null,
+        )
+
+        assertEquals(
+            "Утренние азкары\n\nسُبْحَانَ اللَّهِ وَ بِحَمْدِهِ\n\n1 раз\n\nПередал: Абу Хурайра\n\nТранскрипция\n\nПеревод",
+            text,
+        )
     }
 
     @Test

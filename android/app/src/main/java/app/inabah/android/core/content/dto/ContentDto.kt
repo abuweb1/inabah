@@ -27,6 +27,8 @@ data class ZikrTranslationDto(
     val text: String,
     val translit: String? = null,
     val source: String? = null,
+    /** Передатчик, как у хадисов; необязательное (2026-10-10 — пользователь заполнит позже). */
+    val rawi: String? = null,
 )
 
 @Serializable

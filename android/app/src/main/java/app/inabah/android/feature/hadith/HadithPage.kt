@@ -1,6 +1,5 @@
 package app.inabah.android.feature.hadith
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -8,14 +7,11 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -25,13 +21,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.LastBaseline
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.toggleableState
 import androidx.compose.ui.state.ToggleableState
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.intl.LocaleList
 import androidx.compose.ui.platform.LocalContext
@@ -43,6 +37,7 @@ import app.inabah.android.core.content.model.HadithTranslation
 import app.inabah.android.core.designsystem.InabahTheme
 import app.inabah.android.core.designsystem.InabahType
 import app.inabah.android.core.designsystem.Radius
+import app.inabah.android.core.designsystem.ShadowToken
 import app.inabah.android.core.designsystem.Size
 import app.inabah.android.core.designsystem.Spacing
 import app.inabah.android.core.designsystem.Tracking
@@ -53,11 +48,12 @@ import app.inabah.android.core.designsystem.components.ParchmentPanel
 import app.inabah.android.core.designsystem.components.StatusGlyph
 import app.inabah.android.core.designsystem.components.StatusGlyphKind
 import app.inabah.android.core.designsystem.components.ToggleTile
+import app.inabah.android.core.designsystem.components.TranslationBlock
+import app.inabah.android.core.designsystem.components.TranslationColors
 import app.inabah.android.core.designsystem.components.surface
 import app.inabah.android.core.settings.HadithStatus
 import app.inabah.android.core.share.shareText
 import app.inabah.android.core.share.storeLinksBlock
-import kotlin.math.roundToInt
 
 /** Значки «Избранное» и «Поделиться» — как ▶ заглушки аудио (`AudioSoonPlaceholder`): в sp, растут с шагом интерфейса. */
 private const val ACTION_ICON_SIZE = 20f
@@ -196,9 +192,9 @@ private fun HadithStatusButtons(status: HadithStatus, onToggleRead: () -> Unit, 
 }
 
 /**
- * «Передал: …», перевод и «Приводится: …» — стили переводов (настройка «Размер текста»);
- * под переводом — сноски, справа «N ⌄» (если есть); справа от источника, в правом нижнем углу, —
- * закладка «Избранное» и «Поделиться».
+ * Перевод хадиса — на своей тёмной карточке, как у зикра (решение пользователя 2026-10-10): общий
+ * [TranslationBlock] в цветах хадисов — «Передал: …», линия, перевод (без пузыря), сноски «N ⌄» (если есть),
+ * «Приводится: …» и справа, в правом нижнем углу, — закладка «Избранное» и «Поделиться».
  */
 @Composable
 private fun HadithTranslationCard(
@@ -210,50 +206,24 @@ private fun HadithTranslationCard(
     val palette = InabahTheme.palette
     // Язык перевода — только для его текста (переносы); подписи — на языке интерфейса.
     val locale = LocaleList(translation.language.code)
-    Column(
+    TranslationBlock(
+        text = translation.text,
+        locale = locale,
+        colors = TranslationColors.hadith(palette),
         modifier = Modifier
             .fillMaxWidth()
-            .surface(palette.subtleFill, Radius.box)
+            .surface(palette.hadithCard, Radius.card, border = palette.hairline, shadow = ShadowToken.card(palette))
             .padding(vertical = Spacing.l, horizontal = Spacing.xl),
-        verticalArrangement = Arrangement.spacedBy(Spacing.s),
-    ) {
-        translation.narrator?.let {
-            Text(stringResource(R.string.hadith_detail_narrator, it), color = palette.onAccentSecondary,
-                style = InabahType.contentNote.copy(fontWeight = FontWeight.SemiBold))
-        }
-        Text(translation.text, color = palette.onAccent, style = InabahType.contentTranslation.copy(localeList = locale))
-        if (translation.notes.isNotEmpty()) {
-            HadithNotes(translation.notes, translation.text, locale, notesExpanded, onToggleNotes)
-        }
-        val source = translation.source
-        if (source == null) {
-            // Без источника — линии нет (нечего отделять), кнопки одни справа внизу.
-            actions(Modifier.align(Alignment.End))
-        } else {
-            // Линия над источником, под ней отступ 8 (iOS: overlay сверху у padding(.top)).
-            Column {
-                Box(Modifier.fillMaxWidth().height(Size.hairline).background(palette.hairline))
-                SourceWithActions(stringResource(R.string.hadith_detail_source, source), actions)
+        narrator = translation.narrator?.let { stringResource(R.string.hadith_detail_narrator, it) },
+        source = translation.source?.let { stringResource(R.string.hadith_detail_source, it) },
+        belowText = {
+            if (translation.notes.isNotEmpty()) {
+                HadithNotes(translation.notes, translation.text, locale, notesExpanded, onToggleNotes)
             }
-        }
-    }
+        },
+        sourceTrailing = actions,
+        // Основной перевод — просто текстом, под линией после «Передал»; пузырь — у сносок (решение пользователя 2026-10-10).
+        bubble = false,
+        narratorDivider = true,
+    )
 }
-
-/**
- * «Приводится: …» и справа закладка с «Поделиться» — значки на уровне последней строки источника
- * (их бывает 3–4), в правом нижнем углу карточки; отступ 8 под линией — как без кнопок.
- */
-@Composable
-private fun SourceWithActions(text: String, actions: @Composable (Modifier) -> Unit) {
-    val style = InabahType.contentNote.copy(fontStyle = FontStyle.Italic)
-    // Середина значка — на середине строчных букв последней строки: выше базовой линии на ~треть кегля.
-    val baselineToCenter = with(LocalDensity.current) { (style.fontSize.toPx() * X_HEIGHT_CENTER).roundToInt() }
-    Row(Modifier.fillMaxWidth().padding(top = Spacing.s)) {
-        Text(text, color = InabahTheme.palette.onAccentTertiary, style = style,
-            modifier = Modifier.weight(1f).alignBy(LastBaseline))
-        actions(Modifier.alignBy { it.measuredHeight / 2 + baselineToCenter })
-    }
-}
-
-/** Середина строчных букв над базовой линией — доля кегля (x-height Inter ≈ 0,55 → половина). */
-private const val X_HEIGHT_CENTER = 0.27f
