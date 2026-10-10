@@ -5,6 +5,8 @@ import SwiftUI
 struct HadithPage: View {
     let hadith: Hadith
     let status: HadithStatus
+    /// Страница на экране; ушли с неё — раскрытые сноски сворачиваются (как на Android).
+    var isCurrent = true
 
     @Environment(ReadingSettings.self) private var settings
     @Environment(\.theme) private var theme
@@ -16,7 +18,7 @@ struct HadithPage: View {
                 HadithStatusButtons(id: hadith.id, status: status)
                 AudioSoonPlaceholder(title: Text("hadith.audio.title \(hadith.number)"))
                 if let translation = hadith.translation {
-                    HadithTranslationCard(hadith: hadith, translation: translation)
+                    HadithTranslationCard(hadith: hadith, translation: translation, isCurrent: isCurrent)
                 } else {
                     // Перевода нет — закладка и «Поделиться» справа внизу страницы.
                     HadithCardActions(hadith: hadith)
@@ -100,14 +102,17 @@ private struct HadithStatusButtons: View {
     }
 }
 
-/// «Передал: …», перевод и «Приводится: …»; закладка и «Поделиться» — справа на уровне последней
+/// «Передал: …», перевод, сноски и «Приводится: …»; закладка и «Поделиться» — справа на уровне последней
 /// строки источника (решение пользователя 2026-10-06), без источника — справа внизу карточки.
 private struct HadithTranslationCard: View {
     let hadith: Hadith
     let translation: HadithTranslation
+    let isCurrent: Bool
 
     @Environment(\.theme) private var theme
     @Environment(\.contentTextScale) private var scale
+
+    @State private var isNotesExpanded = false
 
     var body: some View {
         // Размеры — общие с переводом зикра (`ContentTextStyle`), шаг — из настройки «Размер текста».
@@ -124,6 +129,17 @@ private struct HadithTranslationCard: View {
                 // Язык перевода — только для его текста (переносы); подписи «Передал:» /
                 // «Приводится:» — на языке интерфейса.
                 .environment(\.locale, Locale(identifier: translation.language.rawValue))
+            if !translation.notes.isEmpty {
+                HadithNotes(
+                    notes: translation.notes,
+                    translation: translation.text,
+                    language: translation.language,
+                    isExpanded: $isNotesExpanded
+                )
+                .onChange(of: isCurrent) { _, isCurrent in
+                    if !isCurrent { isNotesExpanded = false }
+                }
+            }
             if let source = translation.source {
                 Text("hadith.detail.source \(source)")
                     .font(.content(.note, scale: scale).italic())
