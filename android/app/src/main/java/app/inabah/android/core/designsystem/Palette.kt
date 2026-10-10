@@ -19,6 +19,8 @@ private const val HADITH_CARD_SHADE = 0.5f
 data class Palette(
     val background: Color,
     val card: Color,
+    /** Фон карточки зикра и образца перевода в «Размере текста» (по умолчанию — `card`); сдвигается ползунком «Фон перевода» (`withTranslationShade`). */
+    val zikrCard: Color = card,
     val actionBackground: Color,
     val header: Color,
     val eveningHeader: Color,
@@ -29,6 +31,8 @@ data class Palette(
     val textPrimary: Color,
     val textSecondary: Color,
     val textTertiary: Color,
+    /** Источник под переводом зикра (по умолчанию — `textTertiary`); светлеет вместе с фоном перевода (`withTranslationShade`). */
+    val zikrSource: Color = textTertiary,
     val onAccent: Color,
     val accent: Color,
     val accentLight: Color,

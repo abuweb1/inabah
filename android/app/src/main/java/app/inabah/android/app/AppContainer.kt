@@ -31,6 +31,7 @@ import app.inabah.android.core.settings.PreferencesStorage
 import app.inabah.android.core.settings.ReadingSettings
 import app.inabah.android.core.settings.ReminderSettings
 import app.inabah.android.core.settings.TextSizeSettings
+import app.inabah.android.core.settings.TranslationShadeSettings
 import app.inabah.android.feature.azkar.AzkarStore
 import app.inabah.android.feature.hadith.HadithStore
 import java.time.Instant
@@ -56,6 +57,7 @@ class AppServices(
     val hadithCollectionOrder: HadithCollectionOrder,
     val appearanceSettings: AppearanceSettings,
     val parchmentSettings: ParchmentSettings,
+    val translationShadeSettings: TranslationShadeSettings,
     val textSizeSettings: TextSizeSettings,
     val appIconSettings: AppIconSettings,
     val licenseTexts: LicenseTexts,
@@ -163,6 +165,7 @@ class AppContainer(context: Context) {
             hadithCollectionOrder = hadithCollectionOrder,
             appearanceSettings = AppearanceSettings(storage),
             parchmentSettings = ParchmentSettings(storage),
+            translationShadeSettings = TranslationShadeSettings(storage),
             textSizeSettings = TextSizeSettings(storage),
             appIconSettings = AppIconSettings(
                 switcher = PackageManagerAppIconSwitcher(appContext),

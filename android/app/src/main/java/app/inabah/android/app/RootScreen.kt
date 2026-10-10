@@ -259,6 +259,7 @@ private fun TabScreens(tab: AppTab, services: AppServices, contentPadding: Paddi
                 PaletteSettingsScreen(
                     settings = services.appearanceSettings,
                     parchmentSettings = services.parchmentSettings,
+                    translationShadeSettings = services.translationShadeSettings,
                     onBack = { router.pop(AppTab.Settings) },
                     contentPadding = contentPadding.bottomOnly(),
                 )

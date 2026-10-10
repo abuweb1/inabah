@@ -183,6 +183,12 @@
     <string name="settings_palette_title">Палитра</string>
     <string name="settings_parchment_footer">Фон под арабским текстом азкаров и хадисов.</string>
     <string name="settings_parchment_header">Фон арабского текста</string>
+    <string name="settings_translation_shade_header">Фон перевода</string>
+    <string name="settings_translation_shade_footer">Карточки перевода азкаров и хадисов. По центру — как задумано; светлее — до предела, пока перевод хорошо читается.</string>
+    <string name="settings_translation_shade_default">Как задумано</string>
+    <string name="settings_translation_shade_darker">Темнее на %1$d %%</string>
+    <string name="settings_translation_shade_lighter">Светлее на %1$d %%</string>
+    <string name="settings_translation_shade_sample">Так будет выглядеть перевод на карточке.</string>
     <string name="settings_reset_now_confirm_action">Сбросить</string>
     <string name="settings_reset_now_confirm_evening">Счётчики вечерних азкаров будут обнулены.</string>
     <string name="settings_reset_now_confirm_morning">Счётчики утренних азкаров будут обнулены.</string>

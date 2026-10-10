@@ -49,7 +49,7 @@ data class TranslationColors(val stripe: Color, val fill: Color, val lead: Color
             fill = palette.accentDim,
             lead = palette.textSecondary,
             text = palette.textPrimary,
-            source = palette.textTertiary,
+            source = palette.zikrSource,
         )
 
         fun hadith(palette: Palette) = TranslationColors(

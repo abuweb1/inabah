@@ -8,8 +8,9 @@ import org.junit.Test
 
 /** Перевод и сноски хадиса — на карточке `hadithCard`, цвета — производные от `tabHadith`, читаются во всех палитрах. */
 class NoteColorsTest {
+    // Текст с прозрачностью (`onAccentSecondary` — белый 60 %) — уже наложенным на фон.
     private fun ratio(foreground: androidx.compose.ui.graphics.Color, background: androidx.compose.ui.graphics.Color) =
-        Contrast.ratio(Contrast.luminance(foreground), Contrast.luminance(background))
+        Contrast.ratio(foreground.compositeOver(background), background)
 
     @Test
     fun `Перевод хадиса читается на своей карточке во всех палитрах`() {
@@ -27,9 +28,11 @@ class NoteColorsTest {
     }
 
     @Test
-    fun `В единых стилях карточка хадиса — как у зикра`() {
+    fun `В единых стилях карточки перевода — цвет карточки стиля`() {
         for (style in ThemeStyle.entries.filter { it != ThemeStyle.Sections }) {
             assertEquals(style.theme.palette.card, style.theme.palette.hadithCard, "стиль $style")
+            assertEquals(style.theme.palette.card, style.theme.palette.zikrCard, "стиль $style")
+            assertEquals(style.theme.palette.textTertiary, style.theme.palette.zikrSource, "стиль $style")
         }
     }
 }

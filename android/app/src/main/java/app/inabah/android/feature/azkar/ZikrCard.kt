@@ -150,7 +150,7 @@ fun ZikrCard(
     Column(
         modifier
             .fillMaxWidth()
-            .surface(palette.card, Radius.card, border = borderColor, lineWidth = borderWidth, shadow = ShadowToken.card(palette))
+            .surface(palette.zikrCard, Radius.card, border = borderColor, lineWidth = borderWidth, shadow = ShadowToken.card(palette))
             .clip(RoundedCornerShape(Radius.card)),
     ) {
         ZikrMiniRow(
