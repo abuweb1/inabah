@@ -76,18 +76,24 @@ class ReminderNotifier(context: Context) {
         manager.notify(kind.requestCode, notification)
     }
 
+    // Важность «высокая» — всплывающий баннер (решение пользователя 2026-10-10). Важность задаётся только при
+    // создании канала, дальше она — пользователя: поэтому новые id, а каналы пробных сборок с «обычной» удаляются.
     private fun ensureChannels() {
         val system = context.getSystemService(NotificationManager::class.java)
+        LEGACY_CHANNELS.forEach(system::deleteNotificationChannel)
         system.createNotificationChannels(
             listOf(
-                NotificationChannel(AZKAR_CHANNEL, context.getString(R.string.reminders_channel_azkar), NotificationManager.IMPORTANCE_DEFAULT),
-                NotificationChannel(HADITH_CHANNEL, context.getString(R.string.reminders_channel_hadith), NotificationManager.IMPORTANCE_DEFAULT),
+                NotificationChannel(AZKAR_CHANNEL, context.getString(R.string.reminders_channel_azkar), NotificationManager.IMPORTANCE_HIGH),
+                NotificationChannel(HADITH_CHANNEL, context.getString(R.string.reminders_channel_hadith), NotificationManager.IMPORTANCE_HIGH),
             ),
         )
     }
 
     private companion object {
-        const val AZKAR_CHANNEL = "reminders.azkar"
-        const val HADITH_CHANNEL = "reminders.hadith"
+        const val AZKAR_CHANNEL = "reminders.azkar.alert"
+        const val HADITH_CHANNEL = "reminders.hadith.alert"
+
+        /** Каналы пробных сборок 1.1.1 с важностью «обычная» (2026-10-10). */
+        val LEGACY_CHANNELS = listOf("reminders.azkar", "reminders.hadith")
     }
 }
