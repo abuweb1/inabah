@@ -37,6 +37,9 @@ import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.onNodeWithText
 import androidx.test.espresso.Espresso
 import app.inabah.android.core.settings.ReminderSettings
+import app.inabah.android.core.updates.AvailableUpdate
+import app.inabah.android.core.updates.NoUpdateSource
+import app.inabah.android.core.updates.UpdateSource
 import app.inabah.android.feature.settings.AzkarSettingsScreen
 import androidx.compose.ui.test.junit4.accessibility.enableAccessibilityChecks
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -259,7 +262,7 @@ class AzkarListScreenTest {
         val store = store(1, 3)
         compose.runOnIdle { runBlocking { store.loadAll() } }
         compose.setContent {
-            InabahTheme { AzkarHomeScreen(store, windowSettings, ReminderSettings(storage), onOpenSection = {}, contentPadding = PaddingValues()) }
+            InabahTheme { AzkarHomeScreen(store, windowSettings, ReminderSettings(storage), NoUpdateSource, onOpenSection = {}, contentPadding = PaddingValues()) }
         }
 
         // 13:00 — вне окна оба раздела: у утренних время окна (в любом формате системы есть «12:00»),
@@ -268,6 +271,24 @@ class AzkarListScreenTest {
             compose.onAllNodesWithText("12:00", substring = true).fetchSemanticsNodes().isNotEmpty()
         }
         compose.onAllNodesWithContentDescription("Выполнено на", substring = true).assertCountEquals(0)
+    }
+
+    // «Обновить» (2026-10-10): в релизе обновления нет — значка нет; есть (подделка) — значок с номером для TalkBack.
+    @Test
+    fun homeShowsUpdateButtonOnlyWhenUpdateIsAvailable() {
+        val store = store(1, 3)
+        var source by mutableStateOf<UpdateSource>(NoUpdateSource)
+        compose.setContent {
+            InabahTheme { AzkarHomeScreen(store, windowSettings, ReminderSettings(storage), source, onOpenSection = {}, contentPadding = PaddingValues()) }
+        }
+        compose.waitForIdle()
+        compose.onAllNodesWithContentDescription("Доступна версия", substring = true).assertCountEquals(0)
+
+        source = UpdateSource { AvailableUpdate("1.2.0") }
+
+        compose.waitUntil(TIMEOUT_MILLIS) {
+            compose.onAllNodesWithContentDescription("Доступна версия 1.2.0").fetchSemanticsNodes().isNotEmpty()
+        }
     }
 
     // 2026-10-06: записей в приложении нет — ▶ неактивна, вместо «Прослушать все» заглушка.

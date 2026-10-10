@@ -60,6 +60,10 @@ sealed interface SettingsRoute {
     @Serializable
     data object About : SettingsRoute
 
+    /** «История версий» — все версии из `data/versions.json` (из «О приложении»). */
+    @Serializable
+    data object VersionHistory : SettingsRoute
+
     /** Полный текст лицензии шрифта или значков (из «О приложении»). */
     @Serializable
     data class License(val document: LicenseDocument) : SettingsRoute

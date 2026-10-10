@@ -37,6 +37,7 @@ import androidx.compose.ui.window.PopupPositionProvider
 import androidx.compose.ui.window.PopupProperties
 import app.inabah.android.core.designsystem.FixedTextSize
 import app.inabah.android.core.designsystem.InabahTheme
+import app.inabah.android.core.designsystem.Palette
 import app.inabah.android.core.designsystem.ShadowToken
 import app.inabah.android.core.designsystem.Spacing
 
@@ -131,13 +132,7 @@ fun AnchoredPopover(
                     transformOrigin = origin
                 }
                 .padding(Spacing.xs)
-                .surface(
-                    // Стекло iOS над фоном раздела — фон, подкрашенный цветом раздела.
-                    SolidColor(lerp(palette.background, tint, POPOVER_TINT).copy(alpha = POPOVER_FILL_ALPHA)),
-                    shape,
-                    border = tint.copy(alpha = POPOVER_RIM_ALPHA),
-                    shadow = ShadowToken.floating(palette),
-                )
+                .popoverSurface(palette, tint, shape)
                 .padding(
                     top = if (showsArrow) ArrowHeight else 0.dp,
                     bottom = if (showsArrow) ArrowHeight else 0.dp,
@@ -148,6 +143,18 @@ fun AnchoredPopover(
         }
     }
 }
+
+/**
+ * Подложка всплывающих окон — стекло iOS над фоном раздела: фон палитры, подкрашенный [tint], обводка и тень.
+ * Общая у [AnchoredPopover] и окна по центру экрана («Что нового»); [shape] по умолчанию — скругление popover.
+ */
+fun Modifier.popoverSurface(palette: Palette, tint: Color, shape: Shape = RoundedCornerShape(PopoverRadius)): Modifier =
+    surface(
+        SolidColor(lerp(palette.background, tint, POPOVER_TINT).copy(alpha = POPOVER_FILL_ALPHA)),
+        shape,
+        border = tint.copy(alpha = POPOVER_RIM_ALPHA),
+        shadow = ShadowToken.floating(palette),
+    )
 
 private val ArrowWidth = 22.dp
 private val ArrowHeight = 9.dp

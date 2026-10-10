@@ -16,7 +16,13 @@ import app.inabah.android.core.content.LicenseTexts
 import app.inabah.android.core.content.Loadable
 import app.inabah.android.core.content.model.AzkarSection
 import app.inabah.android.core.content.model.HadithCollection
+import app.inabah.android.BuildConfig
+import app.inabah.android.core.releases.ReleaseNotesSource
+import app.inabah.android.core.releases.WhatsNew
 import app.inabah.android.core.reminders.ReminderTextsSource
+import app.inabah.android.core.updates.DebugFileUpdateSource
+import app.inabah.android.core.updates.NoUpdateSource
+import app.inabah.android.core.updates.UpdateSource
 import app.inabah.android.core.settings.AppIconSettings
 import app.inabah.android.core.settings.AppearanceSettings
 import app.inabah.android.core.settings.AzkarHistory
@@ -64,6 +70,9 @@ class AppServices(
     val audioPlayer: AudioPlayerController,
     val reminderSettings: ReminderSettings,
     val reminders: ReminderService,
+    val releaseNotes: ReleaseNotesSource,
+    val whatsNew: WhatsNew,
+    val updateSource: UpdateSource,
 )
 
 /**
@@ -117,6 +126,7 @@ class AppContainer(context: Context) {
             appScope.launch { services.appIconSettings.refresh() }
             // Расписание напоминаний — за настройками и окнами азкаров, пока жив процесс.
             appScope.launch { services.reminders.run() }
+            appScope.launch { services.whatsNew.check() }
             services.azkarStore.loadAll()
             services.hadithStore.loadAll()
             logContentFailures(services)
@@ -145,6 +155,9 @@ class AppContainer(context: Context) {
         val hadithProgress = HadithProgress(storage)
         val hadithCollectionOrder = HadithCollectionOrder(storage)
         val reminderSettings = ReminderSettings(storage)
+        val releaseNotes = ReleaseNotesSource(appContext.assets::open, contentLanguagePriority, Dispatchers.IO) { message, error ->
+            Log.e(TAG, "История версий: $message", error)
+        }
         return AppServices(
             router = AppRouter(),
             readingSettings = ReadingSettings(storage),
@@ -193,7 +206,24 @@ class AppContainer(context: Context) {
                 now = Instant::now,
                 zone = ZoneId::systemDefault,
             ),
+            releaseNotes = releaseNotes,
+            whatsNew = WhatsNew(storage, releaseNotes, BuildConfig.VERSION_NAME, isFreshInstall()),
+            // До 1.2.0 — без сети: в релизе «обновления нет», подделка — только в debug (R8 убирает ветку).
+            updateSource = if (BuildConfig.DEBUG) {
+                DebugFileUpdateSource(appContext.filesDir.resolve(DebugFileUpdateSource.FILE_NAME), Dispatchers.IO)
+            } else {
+                NoUpdateSource
+            },
         )
+    }
+
+    /**
+     * Установлено, а не обновлено: время установки совпадает со временем последнего обновления
+     * (на iOS такого нет — там признак «в UserDefaults ещё нет ключей приложения»).
+     */
+    private fun isFreshInstall(): Boolean {
+        val info = appContext.packageManager.getPackageInfo(appContext.packageName, 0)
+        return info.firstInstallTime == info.lastUpdateTime
     }
 
     private companion object {

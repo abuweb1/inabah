@@ -19,14 +19,17 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.scene.Scene
 import androidx.navigation3.ui.NavDisplay
+import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.rememberHazeState
 import androidx.compose.runtime.getValue
@@ -52,6 +55,8 @@ import app.inabah.android.feature.settings.HadithSettingsScreen
 import app.inabah.android.feature.settings.PaletteSettingsScreen
 import app.inabah.android.feature.settings.SettingsScreen
 import app.inabah.android.feature.settings.TextSizeSettingsScreen
+import app.inabah.android.feature.settings.VersionHistoryScreen
+import app.inabah.android.feature.whatsnew.WhatsNewOverlay
 
 /**
  * Корень (iOS `RootTabView`): вкладки, у каждой (кроме «Махраджа») — свой стек экранов (Navigation 3)
@@ -63,6 +68,8 @@ fun RootScreen(services: AppServices, modifier: Modifier = Modifier) {
     val router = services.router
     // Сохраняется при уходе в фон, восстанавливается до первого кадра (после смерти процесса).
     rememberSaveable(saver = Saver<Unit, String>(save = { router.snapshot() }, restore = { router.restore(it) })) {}
+    // «Что нового» после обновления — поверх любой вкладки, один раз (WhatsNew.check при запуске).
+    val whatsNew by services.whatsNew.pending.collectAsStateWithLifecycle()
     RootContent(
         selectedTab = router.selectedTab,
         canGoBack = router.canGoBack,
@@ -70,6 +77,13 @@ fun RootScreen(services: AppServices, modifier: Modifier = Modifier) {
         onBack = { router.goBack() },
         modifier = modifier,
         player = { AudioPlayerHost(services.audioPlayer) },
+        overlay = whatsNew?.let { notes ->
+            { backdrop ->
+                // Цвет — раздела, на котором окно появилось (в единой теме у всех разделов цвет темы).
+                val tab = remember(notes) { router.selectedTab }
+                WhatsNewOverlay(notes, tab.tint(LocalInabahTheme.current), backdrop, onDismiss = services.whatsNew::dismiss)
+            }
+        },
     ) { tab, contentPadding ->
         TabContent(tab, services, contentPadding)
     }
@@ -90,6 +104,11 @@ fun RootContent(
     modifier: Modifier = Modifier,
     /** Мини-плеер над панелью вкладок; его высота входит в нижний отступ содержимого. */
     player: @Composable () -> Unit = {},
+    /**
+     * Окно поверх всего («Что нового»): получает экран вкладки как источник размытия; пока оно есть,
+     * экран под ним для TalkBack скрыт.
+     */
+    overlay: (@Composable (backdrop: HazeState) -> Unit)? = null,
     content: @Composable (tab: AppTab, contentPadding: PaddingValues) -> Unit,
 ) {
     BackHandler(enabled = canGoBack, onBack = onBack)
@@ -100,6 +119,7 @@ fun RootContent(
     val backdrop = rememberHazeState()
     Box(modifier.fillMaxSize()) {
         Scaffold(
+            modifier = if (overlay != null) Modifier.clearAndSetSemantics {} else Modifier,
             containerColor = Color.Transparent,
             bottomBar = {
                 // Панель вкладок — после плеера: рисуется поверх, плеер при скрытии уезжает под неё.
@@ -124,6 +144,7 @@ fun RootContent(
                 }
             }
         }
+        overlay?.invoke(backdrop)
     }
 }
 
@@ -150,6 +171,7 @@ private fun TabScreens(tab: AppTab, services: AppServices, contentPadding: Paddi
                     services.azkarStore,
                     services.azkarWindowSettings,
                     services.reminderSettings,
+                    services.updateSource,
                     onOpenSection = { router.push(AzkarRoute.SectionList(it)) },
                     contentPadding,
                 )
@@ -274,6 +296,14 @@ private fun TabScreens(tab: AppTab, services: AppServices, contentPadding: Paddi
             entry<SettingsRoute.About> {
                 AboutScreen(
                     onOpenLicense = { router.push(SettingsRoute.License(it)) },
+                    onOpenVersionHistory = { router.push(SettingsRoute.VersionHistory) },
+                    onBack = { router.pop(AppTab.Settings) },
+                    contentPadding = contentPadding.bottomOnly(),
+                )
+            }
+            entry<SettingsRoute.VersionHistory> {
+                VersionHistoryScreen(
+                    source = services.releaseNotes,
                     onBack = { router.pop(AppTab.Settings) },
                     contentPadding = contentPadding.bottomOnly(),
                 )
