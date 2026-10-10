@@ -37,6 +37,8 @@ nonisolated enum HadithRoute: Hashable, Codable, Sendable {
     case detail(HadithID)
     /// «О сборнике» — из шапки списка сборника.
     case about(HadithCollection)
+    /// «Избранное» — с главной хадисов; хадис из него открывается поверх.
+    case favorites
 }
 
 /// Навигация приложения: выбранная вкладка и типизированный стек каждой вкладки.
@@ -86,7 +88,7 @@ final class AppRouter {
     func open(_ route: HadithRoute) {
         selectedTab = .hadith
         switch route {
-        case .list:
+        case .list, .favorites:
             hadithPath = [route]
         case .detail(let id):
             hadithPath = [.list(id.collection), route]

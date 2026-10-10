@@ -1,16 +1,32 @@
 import SwiftUI
 
 /// Общий каркас главных экранов разделов («Азкары», «Хадисы»):
-/// градиентный фон, бренд-блок, аят и навигационные карточки.
-struct SectionHomeLayout<Cards: View>: View {
+/// градиентный фон, бренд-блок, аят и навигационные карточки; необязательная круглая кнопка
+/// справа вверху (вход в «Избранное» у хадисов) — поверх прокрутки, как на Android.
+struct SectionHomeLayout<Cards: View, TopAction: View>: View {
     let background: ThemeGradient
     let brand: SectionBrand
     let verse: FeaturedVerse
     @ViewBuilder let cards: Cards
+    @ViewBuilder let topAction: TopAction
 
     @Environment(\.theme) private var theme
 
     private typealias Layout = SectionHomeLayoutMetrics
+
+    init(
+        background: ThemeGradient,
+        brand: SectionBrand,
+        verse: FeaturedVerse,
+        @ViewBuilder cards: () -> Cards,
+        @ViewBuilder topAction: () -> TopAction
+    ) {
+        self.background = background
+        self.brand = brand
+        self.verse = verse
+        self.cards = cards()
+        self.topAction = topAction()
+    }
 
     var body: some View {
         // Контент растягивается минимум на видимую область (без статус-бара и таб-бара),
@@ -35,6 +51,10 @@ struct SectionHomeLayout<Cards: View>: View {
                 .frame(minHeight: viewport.size.height)
             }
             .scrollBounceBehavior(.basedOnSize)
+        }
+        .overlay(alignment: .topTrailing) {
+            topAction
+                .padding(.trailing, Spacing.xl)
         }
         .background { background.linear.ignoresSafeArea() }
     }
@@ -108,6 +128,17 @@ struct SectionHomeLayout<Cards: View>: View {
             border: verse.isFramed ? theme.palette.hairline : .clear
         )
         .accessibilityElement(children: .combine)
+    }
+}
+
+extension SectionHomeLayout where TopAction == EmptyView {
+    init(
+        background: ThemeGradient,
+        brand: SectionBrand,
+        verse: FeaturedVerse,
+        @ViewBuilder cards: () -> Cards
+    ) {
+        self.init(background: background, brand: brand, verse: verse, cards: cards) { EmptyView() }
     }
 }
 
