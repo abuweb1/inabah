@@ -9,8 +9,13 @@ import SwiftUI
 struct AzkarSettingsView: View {
     @Environment(AzkarStore.self) private var store
     @Environment(AzkarWindowSettings.self) private var windowSettings
+    @Environment(ReminderSettings.self) private var reminders
+    @Environment(ReminderScheduler.self) private var scheduler
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.theme) private var theme
+
+    /// В разрешении только что отказали — показать «заблокировано», даже если ничего не включено.
+    @State private var permissionDenied = false
 
     /// Раздел, сброс которого ждёт подтверждения.
     @State private var pendingReset: AzkarSection?
@@ -37,6 +42,8 @@ struct AzkarSettingsView: View {
                         .foregroundStyle(theme.palette.onAccentSecondary)
                 }
             }
+
+            remindersSection
 
             Section {
                 ForEach(AzkarSection.allCases, id: \.self) { section in
@@ -73,6 +80,51 @@ struct AzkarSettingsView: View {
         }
     }
 
+    /// «Напоминания» (решения пользователя 2026-10-10, вид — как на Android): в начале времени каждого
+    /// раздела (время — из черновика) и «если ещё не прочитаны». Переключатели сохраняются сразу;
+    /// включён — только если сохранён и уведомления разрешены.
+    @ViewBuilder
+    private var remindersSection: some View {
+        let allowed = scheduler.isAllowed
+        let preferences = reminders.preferences
+        let blocked = !allowed && (permissionDenied || !preferences.azkarStart.isEmpty || preferences.azkarUnfinished)
+        let toggle = ReminderToggleAction(scheduler: scheduler) { permissionDenied = true }
+        Section {
+            ForEach(AzkarSection.allCases, id: \.self) { section in
+                ReminderToggleRow(
+                    title: section.title,
+                    subtitle: Text("settings.reminders.start.subtitle \(draft(for: section).wrappedValue.start.text(in: store.calendar))"),
+                    isOn: allowed && reminders.isStartEnabled(section),
+                    tint: theme.palette.tabAzkar
+                ) { isOn in
+                    toggle(isOn) { reminders.setStart($0, for: section) }
+                }
+                .settingsRow()
+            }
+            ReminderToggleRow(
+                title: "settings.reminders.unfinished",
+                subtitle: Text("settings.reminders.unfinished.subtitle"),
+                isOn: allowed && preferences.azkarUnfinished,
+                tint: theme.palette.tabAzkar
+            ) { isOn in
+                toggle(isOn) { reminders.setUnfinished($0) }
+            }
+            .disabled(preferences.azkarStart.isEmpty)
+            .settingsRow()
+            if blocked {
+                ReminderOpenSettingsRow()
+                    .settingsRow()
+            }
+        } header: {
+            Text("settings.reminders.header")
+        } footer: {
+            if blocked {
+                Text("settings.reminders.blocked")
+                    .foregroundStyle(theme.palette.onAccent)
+            }
+        }
+    }
+
     /// В черновике есть раздел, у которого начало совпало с концом, — такое время не сохранится.
     private var hasEmptyWindow: Bool {
         drafts.values.contains { !$0.isValid }
@@ -97,6 +149,8 @@ struct AzkarSettingsView: View {
             windowSettings.set(window, for: section)
         }
         store.reconcile()
+        // Новое время азкаров — новое время напоминаний.
+        scheduler.reschedule()
     }
 }
 

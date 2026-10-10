@@ -1,4 +1,5 @@
 import SwiftUI
+import UserNotifications
 
 /// Корень композиции: создаёт зависимости приложения один раз и передаёт их в окружение.
 ///
@@ -25,12 +26,18 @@ struct AppEnvironment {
     let translationShadeSettings: TranslationShadeSettings
     /// Размер переводов и интерфейса — применяется к окружению в `appEnvironment`.
     let textSizeSettings: TextSizeSettings
+    /// Напоминания: настройки и их планировщик (центр уведомлений iOS).
+    let reminderSettings: ReminderSettings
+    let reminderScheduler: ReminderScheduler
+    /// Делегат центра уведомлений — центр держит его слабой ссылкой; ставится `installNotificationDelegate()`.
+    let notificationDelegate: ReminderNotificationDelegate
 
     init(
         repository: any ContentRepository = BundleContentRepository(),
         defaults: UserDefaults = .standard,
         audioPlayer: AudioPlayerController? = nil,
-        appIconSwitcher: (any AppIconSwitching)? = nil
+        appIconSwitcher: (any AppIconSwitching)? = nil,
+        notificationCenter: (any NotificationCentering)? = nil
     ) {
         router = AppRouter()
         readingSettings = ReadingSettings(defaults: defaults)
@@ -57,6 +64,25 @@ struct AppEnvironment {
         parchmentSettings = ParchmentSettings(defaults: defaults)
         translationShadeSettings = TranslationShadeSettings(defaults: defaults)
         textSizeSettings = TextSizeSettings(defaults: defaults)
+        reminderSettings = ReminderSettings(defaults: defaults)
+        reminderScheduler = ReminderScheduler(
+            center: notificationCenter ?? SystemNotificationCenter(),
+            settings: reminderSettings,
+            windowSettings: azkarWindowSettings,
+            history: azkarHistory,
+            hadithStore: hadithStore,
+            progress: hadithProgress,
+            order: hadithCollectionOrder,
+            repository: repository,
+            calendar: azkarStore.calendar
+        )
+        notificationDelegate = ReminderNotificationDelegate(router: router)
+    }
+
+    /// Нажатия на напоминания ведут через роутер приложения — вызывается один раз при запуске,
+    /// не в превью и тестах (там центр уведомлений не трогается).
+    func installNotificationDelegate() {
+        UNUserNotificationCenter.current().delegate = notificationDelegate
     }
 
     /// Превью: контент в памяти, отметки — в отдельном наборе `UserDefaults`; плеер без
@@ -67,7 +93,8 @@ struct AppEnvironment {
             repository: InMemoryContentRepository.preview,
             defaults: previewDefaults(),
             audioPlayer: AudioPlayerController(engine: AVAudioEngineAdapter()),
-            appIconSwitcher: PreviewAppIconSwitcher()
+            appIconSwitcher: PreviewAppIconSwitcher(),
+            notificationCenter: InertNotificationCenter()
         )
     }
 
@@ -82,6 +109,15 @@ struct AppEnvironment {
         defaults.set("1", forKey: HadithProgress.memorizedKey(read[0]))
         return defaults
     }
+}
+
+/// Центр уведомлений для превью: ничего не спрашивает и не ставит.
+private final class InertNotificationCenter: NotificationCentering {
+    func authorization() async -> ReminderAuthorization { .notDetermined }
+    func requestAuthorization() async -> Bool { false }
+    func pendingIdentifiers() async -> [String] { [] }
+    func removePending(_ identifiers: [String]) {}
+    func add(_ request: UNNotificationRequest) async throws {}
 }
 
 /// Смена иконки для превью: выбор только запоминается, иконка процесса не меняется.
@@ -112,6 +148,8 @@ extension View {
             .environment(environment.parchmentSettings)
             .environment(environment.translationShadeSettings)
             .environment(environment.textSizeSettings)
+            .environment(environment.reminderSettings)
+            .environment(environment.reminderScheduler)
             .modifier(ThemedModifier(
                 settings: environment.appearanceSettings,
                 parchment: environment.parchmentSettings,
