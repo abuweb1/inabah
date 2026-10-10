@@ -19,16 +19,16 @@ struct NoticeCard<Actions: View>: View {
                     .font(.title3)
                     .foregroundStyle(theme.palette.gold)
                     .accessibilityHidden(true)
+                // Заголовок — отдельным элементом-заголовком, пояснение — обычным текстом (аудит iOS 1.1.1, А10).
                 Text(title)
                     .font(.headline)
                     .foregroundStyle(theme.palette.onAccent)
+                    .accessibilityAddTraits(.isHeader)
                 Text(message)
                     .font(.caption)
                     .multilineTextAlignment(.center)
                     .foregroundStyle(theme.palette.onAccentSecondary)
             }
-            .accessibilityElement(children: .combine)
-            .accessibilityAddTraits(.isHeader)
             actions
         }
         .frame(maxWidth: .infinity)

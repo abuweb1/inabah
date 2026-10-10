@@ -12,7 +12,7 @@ struct ZikrTranslationView: View {
             text: translation.text,
             language: translation.language,
             colors: .azkar(theme.palette),
-            narrator: translation.narrator.map { String(localized: "hadith.detail.narrator \($0)") },
+            narrator: translation.narrator.map { String(localized: "translation.narrator \($0)") },
             transliteration: translation.transliteration,
             source: translation.source
         )

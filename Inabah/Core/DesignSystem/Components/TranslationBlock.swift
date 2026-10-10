@@ -66,6 +66,7 @@ struct TranslationBlock<Below: View, Trailing: View>: View {
                 Text(verbatim: narrator)
                     .font(.content(.note, scale: scale, weight: .semibold))
                     .foregroundStyle(colors.lead)
+                    .environment(\.locale, contentLocale)
                 if narratorDivider {
                     Rectangle()
                         .fill(theme.palette.hairline)
@@ -76,14 +77,18 @@ struct TranslationBlock<Below: View, Trailing: View>: View {
                 Text(verbatim: transliteration)
                     .font(.content(.transliteration, scale: scale))
                     .foregroundStyle(colors.lead)
+                    .environment(\.locale, contentLocale)
             }
             translation
             belowText
             sourceLine
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .environment(\.locale, Locale(identifier: language.rawValue))
     }
+
+    /// Язык перевода — только для текстов контента (переносы): подписи интерфейса внутри блока
+    /// (закладка, «Сноски: N», VoiceOver) остаются на языке интерфейса (аудит iOS 1.1.1, А6).
+    private var contentLocale: Locale { Locale(identifier: language.rawValue) }
 
     @ViewBuilder
     private var translation: some View {
@@ -91,6 +96,7 @@ struct TranslationBlock<Below: View, Trailing: View>: View {
             .font(.content(.translation, scale: scale))
             .lineSpacing(ContentTextStyle.translationLineSpacing * scale)
             .foregroundStyle(colors.text)
+            .environment(\.locale, contentLocale)
         if bubble {
             body.translationBubble(fill: colors.fill, stripe: colors.stripe)
         } else {
@@ -104,6 +110,7 @@ struct TranslationBlock<Below: View, Trailing: View>: View {
             Text(verbatim: source)
                 .font(.content(.note, scale: scale))
                 .foregroundStyle(colors.source)
+                .environment(\.locale, contentLocale)
                 // Место под действия справа: сами они — в наложении и вёрстку не раздвигают.
                 .padding(.trailing, trailingInset)
                 .frame(maxWidth: .infinity, alignment: .leading)

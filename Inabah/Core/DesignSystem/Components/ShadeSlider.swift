@@ -17,6 +17,9 @@ struct ShadeSlider: View {
 
     @Environment(\.theme) private var theme
     @State private var width: CGFloat = 1
+    /// Палец на дорожке. Сбрасывается и при отмене жеста (прокрутка перехватила касание, звонок), где
+    /// `onEnded` не вызывается, — сохранение идёт по его концу (аудит iOS 1.1.1, А4).
+    @GestureState private var isDragging = false
 
     private enum Layout {
         static let trackHeight: CGFloat = 4
@@ -100,9 +103,12 @@ struct ShadeSlider: View {
         .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { width = max($0, 1) }
         .gesture(
             DragGesture(minimumDistance: 0)
+                .updating($isDragging) { _, state, _ in state = true }
                 .onChanged { drag in change(Self.value(at: drag.location.x, width: width, inset: inset)) }
-                .onEnded { _ in onCommit() }
         )
+        .onChange(of: isDragging) { _, dragging in
+            if !dragging { onCommit() }
+        }
     }
 
     private func change(_ target: Double) {

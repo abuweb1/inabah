@@ -98,7 +98,8 @@ struct HadithSettingsView: View {
     @ViewBuilder
     private var hadithOfDaySection: some View {
         let allowed = scheduler.isAllowed
-        let isOn = allowed && reminders.preferences.hadithOfDay
+        // Сохранённое значение — и при запрете уведомлений (Р2, как в настройках азкаров).
+        let isOn = reminders.preferences.hadithOfDay
         let blocked = !allowed && (permissionDenied || reminders.preferences.hadithOfDay)
         let toggle = ReminderToggleAction(scheduler: scheduler) { permissionDenied = true }
         Section {

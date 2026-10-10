@@ -23,6 +23,8 @@ enum Radius {
     static let box: CGFloat = 14
     static let card: CGFloat = 18
     static let navCard: CGFloat = 20
+    /// Правые углы пузыря перевода и сносок (`translationBubble`).
+    static let bubble: CGFloat = 8
     /// Панель мини-плеера.
     static let panel: CGFloat = 24
 }

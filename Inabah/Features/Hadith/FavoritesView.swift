@@ -113,6 +113,9 @@ private struct FavoritesGroupView: View {
                 Button("content.error.retry") {
                     Task { await store.load(group.collection) }
                 }
+                // Зона нажатия — не меньше 44 pt (аудит iOS 1.1.1, А13).
+                .frame(minHeight: Size.minTapTarget)
+                .contentShape(.rect)
             }
             .foregroundStyle(theme.palette.onAccent)
             .padding(.vertical, Spacing.s)

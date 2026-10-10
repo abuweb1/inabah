@@ -925,17 +925,6 @@
         }
       }
     },
-    "hadith.detail.narrator %@" : {
-      "comment" : "Передатчик хадиса над переводом",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Передал: %@"
-          }
-        }
-      }
-    },
     "hadith.detail.next" : {
       "comment" : "Доступность: кнопка › в навбаре",
       "localizations" : {
@@ -1574,18 +1563,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Дымчатый"
-          }
-        }
-      }
-    },
-    "placeholder.soon" : {
-      "comment" : "Заголовок заглушки раздела в разработке",
-      "extractionState" : "stale",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Скоро"
           }
         }
       }
@@ -2794,6 +2771,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Обычный"
+          }
+        }
+      }
+    },
+    "translation.narrator %@" : {
+      "comment" : "Передатчик над переводом зикра и хадиса («Передал: …»), в том числе в «Поделиться»",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Передал: %@"
           }
         }
       }

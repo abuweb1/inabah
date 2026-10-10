@@ -11,15 +11,20 @@ nonisolated struct ReminderText: Hashable, Sendable {
         ReminderText(title: Self.fill(title, values), body: Self.fill(body, values))
     }
 
+    /// Подстановки — в постоянном порядке, `{text}` последней: текст хадиса может содержать фигурные
+    /// скобки, и внутри него ничего не заменяется (аудит iOS 1.1.1, А8).
     private static func fill(_ text: String, _ values: [ReminderPlaceholder: String]) -> String {
-        values
-            .reduce(text) { result, value in result.replacingOccurrences(of: "{\(value.key.rawValue)}", with: value.value) }
+        ReminderPlaceholder.allCases
+            .reduce(text) { result, placeholder in
+                guard let value = values[placeholder] else { return result }
+                return result.replacingOccurrences(of: "{\(placeholder.rawValue)}", with: value)
+            }
             .trimmingCharacters(in: .whitespacesAndNewlines)
     }
 }
 
-/// Подстановки текстов (имена — как в `reminders.json` и `check-data`).
-nonisolated enum ReminderPlaceholder: String, Hashable, Sendable {
+/// Подстановки текстов (имена — как в `reminders.json` и `check-data`); порядок объявления — порядок замены.
+nonisolated enum ReminderPlaceholder: String, CaseIterable, Hashable, Sendable {
     case collection
     case number
     case text

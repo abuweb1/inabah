@@ -110,6 +110,34 @@ struct ReminderSchedulerTests {
         #expect(center.requests.isEmpty)
     }
 
+    @Test("Раздел в текущем окне дочитан — «ещё не прочитаны» на него не ставится")
+    func completedWindowSkipsUnfinished() async {
+        AzkarHistory(defaults: defaults).record(SectionProgress(completed: 16, total: 16), of: .morning, on: "2026-10-12")
+        let center = FakeNotificationCenter(status: .allowed)
+        let settings = ReminderSettings(defaults: defaults)
+        settings.setStart(true, for: .morning)
+        settings.setUnfinished(true)
+
+        await scheduler(center, settings: settings).rescheduleNow()
+
+        let unfinished = center.requests.filter { $0.identifier.contains("morningUnfinished") }
+        #expect(unfinished.count == ReminderPlan.horizonDays - 1)
+    }
+
+    @Test("Показанный хадис — из прежнего плана по прошедшему времени; новый план сохраняется")
+    func shownFromPreviousPlan() async {
+        let center = FakeNotificationCenter(status: .allowed)
+        let settings = ReminderSettings(defaults: defaults)
+        settings.setHadithOfDay(true)
+        let shown = HadithID(collection: .qudsi, number: 4)
+        settings.setHadithPlan([1_000: shown, 9_999_999_999: HadithID(collection: .qudsi, number: 5)])
+
+        await scheduler(center, settings: settings).rescheduleNow()
+
+        #expect(settings.lastHadith == shown)
+        #expect(settings.hadithPlan.count == ReminderPlan.horizonDays)
+    }
+
     @Test("Настройки: по умолчанию выключено, 20:00; включение отвечает на предложение; мусор в «показанном» — nil")
     func settingsDefaults() {
         let settings = ReminderSettings(defaults: defaults)

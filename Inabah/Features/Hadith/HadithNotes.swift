@@ -5,8 +5,16 @@ import SwiftUI
 /// без регистра, «ё» как «е», знаки — пробелы, только целые слова.
 nonisolated enum HadithNoteTerm {
     static func isQuoted(_ term: String, in translation: String) -> Bool {
-        let folded = fold(term)
-        return !folded.isEmpty && " \(fold(translation)) ".contains(" \(folded) ")
+        quoted([term], in: translation)[0]
+    }
+
+    /// То же для всех сносок сразу: перевод разбирается один раз.
+    static func quoted(_ terms: [String], in translation: String) -> [Bool] {
+        let text = " \(fold(translation)) "
+        return terms.map { term in
+            let folded = fold(term)
+            return !folded.isEmpty && text.contains(" \(folded) ")
+        }
     }
 
     private static func fold(_ text: String) -> String {
@@ -32,8 +40,10 @@ struct HadithNotes: View {
                 withAnimation(Motion.collapse) { isExpanded.toggle() }
             }
             VStack(alignment: .leading, spacing: Spacing.s) {
-                ForEach(Array(notes.enumerated()), id: \.offset) { _, note in
-                    HadithNoteBubble(note: note, isQuoted: HadithNoteTerm.isQuoted(note.term, in: translation))
+                // Кавычки решаются один раз на весь список, а не разбором перевода для каждой сноски (А16).
+                let quoted = HadithNoteTerm.quoted(notes.map(\.term), in: translation)
+                ForEach(Array(notes.enumerated()), id: \.offset) { index, note in
+                    HadithNoteBubble(note: note, isQuoted: quoted[index])
                 }
             }
             .padding(.top, Spacing.xs)

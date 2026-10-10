@@ -55,6 +55,8 @@ struct SectionHomeLayout<Cards: View, TopAction: View>: View {
         .overlay(alignment: .topTrailing) {
             topAction
                 .padding(.trailing, Spacing.xl)
+                // Визуально вверху — и VoiceOver читает первой, а не после карточек (аудит iOS 1.1.1, А11).
+                .accessibilitySortPriority(1)
         }
         .background { background.linear.ignoresSafeArea() }
     }

@@ -103,6 +103,17 @@ private struct TranslationShadeRow: View {
 
     private static let percent: Double = 100
 
+    init(base: Theme) {
+        self.base = base
+        // Кружки по краям от положения ползунка не зависят — считаются при сборке строки, а не на
+        // каждом кадре перетаскивания (аудит iOS 1.1.1, А5).
+        startSwatch = base.withTranslationShade(-1).palette.zikrCard
+        endSwatch = base.withTranslationShade(1).palette.zikrCard
+    }
+
+    private let startSwatch: Color
+    private let endSwatch: Color
+
     var body: some View {
         let shade = draft ?? settings.value
         VStack(spacing: Spacing.l) {
@@ -112,12 +123,14 @@ private struct TranslationShadeRow: View {
                 value: shade,
                 label: "settings.translationShade.header",
                 valueTitle: valueTitle(shade),
-                startSwatch: base.withTranslationShade(-1).palette.zikrCard,
-                endSwatch: base.withTranslationShade(1).palette.zikrCard,
+                startSwatch: startSwatch,
+                endSwatch: endSwatch,
                 onChange: { draft = $0 },
                 onCommit: commit
             )
         }
+        // Ушли с экрана посреди перетаскивания — черновик не теряется.
+        .onDisappear(perform: commit)
     }
 
     private func commit() {

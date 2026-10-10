@@ -78,12 +78,15 @@ private struct ReminderOfferCard: View {
 
     private static let laterMinHeight: CGFloat = 48
 
+    /// Идёт запрос разрешения — кнопки неактивны: второе нажатие не запустит второй запрос (аудит iOS 1.1.1, А12).
+    @State private var isRequesting = false
+
     var body: some View {
         NoticeCard(symbol: "clock", title: "reminders.offer.title", message: "reminders.offer.message") {
             VStack(spacing: Spacing.xs) {
                 Button("reminders.offer.enable", action: enable)
                     .buttonStyle(PrimaryButtonStyle())
-                Button(action: reminders.answerOffer) {
+                Button(action: answer) {
                     Text("reminders.offer.later")
                         .font(.body.weight(.semibold))
                         .foregroundStyle(theme.palette.onAccentSecondary)
@@ -93,18 +96,25 @@ private struct ReminderOfferCard: View {
                 .buttonStyle(PressDimButtonStyle())
             }
             .padding(.top, Spacing.s)
+            .disabled(isRequesting)
         }
     }
 
     private func enable() {
+        isRequesting = true
         Task {
             if await scheduler.requestAuthorization() {
                 reminders.setStart(true, for: .morning)
                 reminders.setStart(true, for: .evening)
                 scheduler.reschedule()
             }
-            reminders.answerOffer()
+            answer()
         }
+    }
+
+    /// Карточка уходит плавно — карточки главной не съезжают скачком.
+    private func answer() {
+        withAnimation(Motion.collapse) { reminders.answerOffer() }
     }
 }
 

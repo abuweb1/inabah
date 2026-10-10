@@ -136,6 +136,7 @@ private struct CollectionAboutHeader: View {
         .frame(maxWidth: .infinity)
         .padding(.top, Spacing.l)
         .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(.isHeader)
     }
 }
 
@@ -169,7 +170,8 @@ private struct CollectionAboutText: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: Spacing.m) {
-            ForEach(paragraphs, id: \.self) { paragraph in
+            // По номеру абзаца: одинаковые абзацы не спутаются (А14).
+            ForEach(Array(paragraphs.enumerated()), id: \.offset) { _, paragraph in
                 Text(verbatim: paragraph)
                     .font(.content(.translation, scale: scale))
                     .lineSpacing(ContentTextStyle.translationLineSpacing * scale)

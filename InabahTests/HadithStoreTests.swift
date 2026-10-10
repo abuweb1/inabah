@@ -23,6 +23,19 @@ struct HadithStoreTests {
         #expect(store.hadiths(in: .qudsi).isEmpty)
     }
 
+    @Test("«О сборнике»: сведения грузятся по запросу; сборника нет в файле — пусто")
+    func loadsInfo() async {
+        let info = CollectionInfo(authors: [CollectionAuthor(name: "ан-Навави", years: nil)], about: ["О книге"], language: .base)
+        let store = HadithStore(repository: InMemoryContentRepository(infos: [.nawawi: info]))
+        #expect(store.infoState(of: .nawawi).value == nil)
+
+        await store.loadInfo(.nawawi)
+        await store.loadInfo(.qudsi)
+
+        #expect(store.infoState(of: .nawawi).value == info)
+        #expect(store.infoState(of: .qudsi).value == .empty)
+    }
+
     @Test("Ошибка контента — состояние ошибки")
     func failure() async {
         let store = HadithStore(repository: InMemoryContentRepository(error: .resourceMissing("nawawi.json")))

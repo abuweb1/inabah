@@ -120,7 +120,7 @@ private struct HadithTranslationCard: View {
             text: translation.text,
             language: translation.language,
             colors: .hadith(theme.palette),
-            narrator: translation.narrator.map { String(localized: "hadith.detail.narrator \($0)") },
+            narrator: translation.narrator.map { String(localized: "translation.narrator \($0)") },
             source: translation.source.map { String(localized: "hadith.detail.source \($0)") },
             // Основной перевод — просто текстом под линией после «Передал»; пузырь — у сносок.
             bubble: false,
