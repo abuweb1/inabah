@@ -56,7 +56,7 @@ class AssetContentRepositoryTest {
     @Test
     fun `Сборник хадисов загружается`() = runTest {
         val repository = repository(dispatcher = StandardTestDispatcher(testScheduler))
-        val expected = mapOf(HadithCollection.Nawawi to 50, HadithCollection.Qudsi to 40, HadithCollection.Ajurri to 40)
+        val expected = mapOf(HadithCollection.Nawawi to 50, HadithCollection.Qudsi to 42, HadithCollection.Ajurri to 40)
         for ((collection, count) in expected) {
             val hadiths = repository.hadiths(collection)
 
