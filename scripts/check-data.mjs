@@ -8,7 +8,8 @@
 //   node scripts/check-data.mjs            — проверка, первые 5 предупреждений каждого типа
 //   node scripts/check-data.mjs --verbose  — все предупреждения
 //
-// Плюс data/collections.json — сведения о сборниках для экрана «О сборнике».
+// Плюс data/collections.json — сведения о сборниках для экрана «О сборнике»,
+// и data/reminders.json — тексты напоминаний (общие для iOS и Android).
 //
 // Код выхода 1 — есть ошибки (пустые обязательные поля, нет аудиофайла и т.п.).
 // Предупреждения (подозрения на артефакты PDF) на код выхода не влияют.
@@ -32,6 +33,15 @@ const NOTE_KEYS = ['term', 'text'];
 const COLLECTION_KEYS = ['translations'];
 const COLLECTION_TRANSLATION_KEYS = ['authors', 'about'];
 const AUTHOR_KEYS = ['name', 'years'];
+
+// reminders.json: translations.<язык>.<вид>[.<раздел>] = { title, body }; в каждом виде — свои подстановки.
+const AZKAR_SECTIONS = ['morning', 'evening'];
+const REMINDER_KINDS = {
+  azkarStart: { sections: AZKAR_SECTIONS, placeholders: ['end'] },
+  azkarUnfinished: { sections: AZKAR_SECTIONS, placeholders: ['end'] },
+  hadithOfDay: { sections: null, placeholders: ['collection', 'number', 'text'] },
+};
+const REMINDER_TEXT_KEYS = ['title', 'body'];
 
 // ── Проверки ─────────────────────────────────────────────────
 
@@ -255,6 +265,43 @@ function checkNotes(collections) {
   }
 }
 
+// reminders.json: у каждого языка все виды (и разделы азкаров), непустые title/body,
+// подстановки {…} — только свои для вида (неизвестная — ошибка: приложение её не заменит).
+function checkReminders(reminders) {
+  const translations = reminders?.translations;
+  if (!translations || typeof translations !== 'object' || Array.isArray(translations)) {
+    error('reminders', 'нет объекта translations');
+    return;
+  }
+  for (const k of Object.keys(reminders)) if (k !== 'translations') error('reminders', `неизвестное поле «${k}»`);
+  if (!translations[BASE_LANGUAGE]) error('reminders', `нет перевода translations.${BASE_LANGUAGE}`);
+  const checkText = (where, text, placeholders) => {
+    for (const k of Object.keys(text ?? {})) if (!REMINDER_TEXT_KEYS.includes(k)) error(where, `неизвестное поле «${k}»`);
+    for (const field of REMINDER_TEXT_KEYS) {
+      if (!requireString(where, text ?? {}, field)) continue;
+      for (const [, name] of text[field].matchAll(/\{(\w*)\}/g)) {
+        if (!placeholders.includes(name)) error(where, `${field}: неизвестная подстановка {${name}} (можно: ${placeholders.map(p => `{${p}}`).join(', ')})`);
+      }
+      checkMixedScript(where, field, text[field]);
+    }
+  };
+  for (const [lang, t] of Object.entries(translations)) {
+    const at = `reminders ${lang}`;
+    if (!/^[a-z]{2}$/.test(lang)) error('reminders', `код языка «${lang}» — ожидается ISO 639-1 (ru, en…)`);
+    for (const k of Object.keys(t ?? {})) if (!(k in REMINDER_KINDS)) error(at, `неизвестный вид «${k}»`);
+    for (const [kind, spec] of Object.entries(REMINDER_KINDS)) {
+      const entry = t?.[kind];
+      if (!entry) { error(at, `нет вида «${kind}»`); continue; }
+      if (!spec.sections) { checkText(`${at} ${kind}`, entry, spec.placeholders); continue; }
+      for (const k of Object.keys(entry)) if (!spec.sections.includes(k)) error(`${at} ${kind}`, `неизвестный раздел «${k}»`);
+      for (const section of spec.sections) {
+        if (!entry[section]) error(`${at} ${kind}`, `нет раздела «${section}»`);
+        else checkText(`${at} ${kind}.${section}`, entry[section], spec.placeholders);
+      }
+    }
+  }
+}
+
 // Структура: известные ключи, id первым, translations с базовым языком и кодами ISO 639-1.
 function checkStructure(where, item, keys, translationKeys) {
   const actual = Object.keys(item);
@@ -298,6 +345,7 @@ checkAzkar(AZKAR);
 checkHadith(HADITH_DATA);
 checkNotes(data.hadith);
 checkCollections(readData('collections.json'), Object.keys(data.hadith));
+checkReminders(readData('reminders.json'));
 
 const counts = Object.entries(EXPECTED)
   .map(([t]) => `${t}: ${(AZKAR[t] ?? HADITH_DATA[t])?.length ?? 0}`).join(', ');
