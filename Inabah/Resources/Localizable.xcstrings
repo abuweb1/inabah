@@ -1654,6 +1654,50 @@
         }
       }
     },
+    "reminders.offer.enable" : {
+      "comment" : "Предложение включить напоминания: кнопка",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Включить"
+          }
+        }
+      }
+    },
+    "reminders.offer.later" : {
+      "comment" : "Предложение включить напоминания: отказ",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не сейчас"
+          }
+        }
+      }
+    },
+    "reminders.offer.message" : {
+      "comment" : "Предложение включить напоминания: пояснение",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "В начале утреннего и вечернего времени. Изменить можно в настройках азкаров."
+          }
+        }
+      }
+    },
+    "reminders.offer.title" : {
+      "comment" : "Предложение включить напоминания на главной азкаров: заголовок",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Напоминать об азкарах?"
+          }
+        }
+      }
+    },
     "section.card.meta.original %@ %@" : {
       "comment" : "Подпись карточки и название в оригинале (арабский — контент). Подпись первой — иначе строка выстраивается справа налево Неразрывный пробел держит «·» на строке подписи; арабское название — в изоляте направления (U+2068…U+2069), чтобы при переносе точка не уходила к нему.",
       "localizations" : {
@@ -1973,6 +2017,61 @@
         }
       }
     },
+    "settings.hadithOfDay.footer" : {
+      "comment" : "«Хадис дня»: подпись группы",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Следующий непрочитанный хадис по порядку сборников; все прочитаны — по кругу."
+          }
+        }
+      }
+    },
+    "settings.hadithOfDay.header" : {
+      "comment" : "Настройки хадисов: заголовок группы «Хадис дня»",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Хадис дня"
+          }
+        }
+      }
+    },
+    "settings.hadithOfDay.time" : {
+      "comment" : "«Хадис дня»: строка времени",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Время"
+          }
+        }
+      }
+    },
+    "settings.hadithOfDay.time.description" : {
+      "comment" : "«Хадис дня»: выбор времени (VoiceOver)",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Время хадиса дня"
+          }
+        }
+      }
+    },
+    "settings.hadithOfDay.toggle" : {
+      "comment" : "«Хадис дня»: переключатель",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Напоминать"
+          }
+        }
+      }
+    },
     "settings.palette.footer" : {
       "comment" : "Палитра: подпись под вариантами",
       "localizations" : {
@@ -2024,6 +2123,72 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Фон арабского текста"
+          }
+        }
+      }
+    },
+    "settings.reminders.blocked" : {
+      "comment" : "Уведомления запрещены в настройках iPhone",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Уведомления выключены в настройках телефона."
+          }
+        }
+      }
+    },
+    "settings.reminders.header" : {
+      "comment" : "Настройки азкаров: заголовок группы напоминаний",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Напоминания"
+          }
+        }
+      }
+    },
+    "settings.reminders.openSettings" : {
+      "comment" : "Кнопка перехода в настройки уведомлений приложения",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Открыть настройки"
+          }
+        }
+      }
+    },
+    "settings.reminders.start.subtitle %@" : {
+      "comment" : "Подпись напоминания в начале времени азкаров: время начала",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "в начале времени, %@"
+          }
+        }
+      }
+    },
+    "settings.reminders.unfinished" : {
+      "comment" : "Напоминание, если азкары ещё не прочитаны",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Если ещё не прочитаны"
+          }
+        }
+      }
+    },
+    "settings.reminders.unfinished.subtitle" : {
+      "comment" : "Подпись напоминания «если ещё не прочитаны»",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "за 2 часа до конца времени"
           }
         }
       }

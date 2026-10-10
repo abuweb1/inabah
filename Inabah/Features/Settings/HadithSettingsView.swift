@@ -1,18 +1,27 @@
 import SwiftUI
 
-/// Настройки хадисов: сброс отметок «прочитан» / «выучен» каждого сборника отдельно
-/// и очистка «Избранного».
+/// Настройки хадисов: сброс отметок «прочитан» / «выучен» каждого сборника отдельно,
+/// «Хадис дня» и очистка «Избранного».
 struct HadithSettingsView: View {
     @Environment(HadithStore.self) private var store
     @Environment(HadithProgress.self) private var progress
     @Environment(HadithFavorites.self) private var favorites
     @Environment(HadithCollectionOrder.self) private var order
+    @Environment(ReminderSettings.self) private var reminders
+    @Environment(ReminderScheduler.self) private var scheduler
+    @Environment(AzkarStore.self) private var azkarStore
+    @Environment(\.scenePhase) private var scenePhase
     @Environment(\.theme) private var theme
 
     /// Сборник, сброс которого ждёт подтверждения.
     @State private var pendingReset: HadithCollection?
     /// Очистка «Избранного» ждёт подтверждения (`true`; `nil` — диалога нет).
     @State private var pendingFavoritesClear: Bool?
+    /// Время хадиса дня, пока экран открыт: сохраняется при уходе с экрана или в фон, а не на
+    /// каждом шаге колеса (как время азкаров).
+    @State private var hadithTimeDraft: DayTime?
+    /// В разрешении только что отказали — показать «заблокировано».
+    @State private var permissionDenied = false
 
     var body: some View {
         Form {
@@ -44,6 +53,8 @@ struct HadithSettingsView: View {
                     Text(collection.title)
                 }
             }
+
+            hadithOfDaySection
 
             Section {
                 Button(role: .destructive) {
@@ -77,6 +88,63 @@ struct HadithSettingsView: View {
         )
         .task { await store.loadAll() }
         .audioPlayerInset()
+        .onDisappear(perform: commitHadithTime)
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .background { commitHadithTime() }
+        }
+    }
+
+    /// «Хадис дня» (решения пользователя 2026-10-10, вид — как на Android): переключатель и время.
+    @ViewBuilder
+    private var hadithOfDaySection: some View {
+        let allowed = scheduler.isAllowed
+        let isOn = allowed && reminders.preferences.hadithOfDay
+        let blocked = !allowed && (permissionDenied || reminders.preferences.hadithOfDay)
+        let toggle = ReminderToggleAction(scheduler: scheduler) { permissionDenied = true }
+        Section {
+            ReminderToggleRow(title: "settings.hadithOfDay.toggle", subtitle: nil, isOn: isOn, tint: theme.palette.tabHadith) { newValue in
+                toggle(newValue) { reminders.setHadithOfDay($0) }
+            }
+            .settingsRow()
+            if isOn {
+                DatePicker(selection: hadithTime, displayedComponents: .hourAndMinute) {
+                    Text("settings.hadithOfDay.time")
+                }
+                .accessibilityLabel(Text("settings.hadithOfDay.time.description"))
+                .settingsRow()
+            }
+            if blocked {
+                ReminderOpenSettingsRow()
+                    .settingsRow()
+            }
+        } header: {
+            Text("settings.hadithOfDay.header")
+        } footer: {
+            VStack(alignment: .leading, spacing: Spacing.xs) {
+                if blocked {
+                    Text("settings.reminders.blocked")
+                        .foregroundStyle(theme.palette.onAccent)
+                }
+                Text("settings.hadithOfDay.footer")
+                    .foregroundStyle(theme.palette.onAccentSecondary)
+            }
+        }
+    }
+
+    /// Время суток как дата опорного дня — для `DatePicker`; в черновик идут только часы и минуты.
+    private var hadithTime: Binding<Date> {
+        Binding {
+            (hadithTimeDraft ?? reminders.preferences.hadithTime).date(in: azkarStore.calendar)
+        } set: { date in
+            hadithTimeDraft = DayTime(date, in: azkarStore.calendar)
+        }
+    }
+
+    private func commitHadithTime() {
+        guard let hadithTimeDraft else { return }
+        reminders.setHadithTime(hadithTimeDraft)
+        self.hadithTimeDraft = nil
+        scheduler.reschedule()
     }
 }
 

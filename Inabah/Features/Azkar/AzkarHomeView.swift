@@ -4,6 +4,7 @@ import SwiftUI
 struct AzkarHomeView: View {
     @Environment(AzkarStore.self) private var store
     @Environment(AzkarWindowSettings.self) private var windowSettings
+    @Environment(ReminderSettings.self) private var reminders
     @Environment(\.theme) private var theme
 
     private static let brand = SectionBrand(
@@ -39,6 +40,10 @@ struct AzkarHomeView: View {
                 }
                 .buttonStyle(PressScaleButtonStyle())
             }
+            // Одно ненавязчивое предложение (решение пользователя 2026-10-10): пока на него не ответили.
+            if !reminders.offerAnswered {
+                ReminderOfferCard()
+            }
         }
         .audioPlayerInset()
         .toolbarVisibility(.hidden, for: .navigationBar)
@@ -61,6 +66,45 @@ struct AzkarHomeView: View {
     private func meta(for section: AzkarSection) -> LocalizedStringResource? {
         let count = store.sessions(in: section).count
         return count > 0 ? section.cardMeta(count: count) : nil
+    }
+}
+
+/// «Напоминать об азкарах?» — «Включить» спрашивает разрешение и включает напоминания в начале
+/// утреннего и вечернего времени; «Не сейчас» — просто скрывает. Ответ запоминается в любом случае.
+private struct ReminderOfferCard: View {
+    @Environment(ReminderSettings.self) private var reminders
+    @Environment(ReminderScheduler.self) private var scheduler
+    @Environment(\.theme) private var theme
+
+    private static let laterMinHeight: CGFloat = 48
+
+    var body: some View {
+        NoticeCard(symbol: "clock", title: "reminders.offer.title", message: "reminders.offer.message") {
+            VStack(spacing: Spacing.xs) {
+                Button("reminders.offer.enable", action: enable)
+                    .buttonStyle(PrimaryButtonStyle())
+                Button(action: reminders.answerOffer) {
+                    Text("reminders.offer.later")
+                        .font(.body.weight(.semibold))
+                        .foregroundStyle(theme.palette.onAccentSecondary)
+                        .frame(maxWidth: .infinity, minHeight: Self.laterMinHeight)
+                        .contentShape(.rect)
+                }
+                .buttonStyle(PressDimButtonStyle())
+            }
+            .padding(.top, Spacing.s)
+        }
+    }
+
+    private func enable() {
+        Task {
+            if await scheduler.requestAuthorization() {
+                reminders.setStart(true, for: .morning)
+                reminders.setStart(true, for: .evening)
+                scheduler.reschedule()
+            }
+            reminders.answerOffer()
+        }
     }
 }
 

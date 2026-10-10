@@ -6,6 +6,7 @@ struct RootTabView: View {
     @Environment(AzkarStore.self) private var azkarStore
     @Environment(HadithStore.self) private var hadithStore
     @Environment(AudioPlayerController.self) private var audioPlayer
+    @Environment(ReminderScheduler.self) private var reminderScheduler
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.theme) private var theme
 
@@ -97,6 +98,13 @@ struct RootTabView: View {
             }
             // Пока приложение было в фоне, время азкаров могло начаться или закончиться.
             if phase == .active { azkarStore.reconcile() }
+            // Напоминания: приложение не запускается в момент уведомления — план на неделю
+            // пересобирается при возврате (разрешение могли поменять) и при уходе в фон.
+            if phase == .active || phase == .background { reminderScheduler.reschedule() }
+        }
+        // Раздел дочитан или сброшен — «ещё не прочитаны» на это окно снимается или возвращается.
+        .onChange(of: AzkarSection.allCases.map { azkarStore.progress(of: $0) }) {
+            reminderScheduler.reschedule()
         }
     }
 
