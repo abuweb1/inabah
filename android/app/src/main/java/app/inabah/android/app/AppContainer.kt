@@ -16,6 +16,7 @@ import app.inabah.android.core.content.LicenseTexts
 import app.inabah.android.core.content.Loadable
 import app.inabah.android.core.content.model.AzkarSection
 import app.inabah.android.core.content.model.HadithCollection
+import app.inabah.android.core.reminders.ReminderTextsSource
 import app.inabah.android.core.settings.AppIconSettings
 import app.inabah.android.core.settings.AppearanceSettings
 import app.inabah.android.core.settings.AzkarHistory
@@ -28,6 +29,7 @@ import app.inabah.android.core.settings.ParchmentSettings
 import app.inabah.android.core.settings.PlaylistSettings
 import app.inabah.android.core.settings.PreferencesStorage
 import app.inabah.android.core.settings.ReadingSettings
+import app.inabah.android.core.settings.ReminderSettings
 import app.inabah.android.core.settings.TextSizeSettings
 import app.inabah.android.feature.azkar.AzkarStore
 import app.inabah.android.feature.hadith.HadithStore
@@ -58,6 +60,8 @@ class AppServices(
     val appIconSettings: AppIconSettings,
     val licenseTexts: LicenseTexts,
     val audioPlayer: AudioPlayerController,
+    val reminderSettings: ReminderSettings,
+    val reminders: ReminderService,
 )
 
 /**
@@ -84,9 +88,11 @@ class AppContainer(context: Context) {
         onError = { error -> Log.e(TAG, "Ошибка хранилища настроек", error) },
     )
 
+    private val contentLanguagePriority = ContentLanguagePriority.fromLanguageTags(systemLanguageTags())
+
     private val repository: ContentRepository = AssetContentRepository(
         source = appContext.assets::open,
-        priority = ContentLanguagePriority.fromLanguageTags(systemLanguageTags()),
+        priority = contentLanguagePriority,
         ioDispatcher = Dispatchers.IO,
     )
 
@@ -107,6 +113,8 @@ class AppContainer(context: Context) {
             appScope.launch { services.azkarStore.runBoundaryTimer() }
             appScope.launch { services.audioPlayer.run() }
             appScope.launch { services.appIconSettings.refresh() }
+            // Расписание напоминаний — за настройками и окнами азкаров, пока жив процесс.
+            appScope.launch { services.reminders.run() }
             services.azkarStore.loadAll()
             services.hadithStore.loadAll()
             logContentFailures(services)
@@ -125,6 +133,14 @@ class AppContainer(context: Context) {
     // Порядок — как в iOS AppEnvironment: настройки, затем сторы, которые от них зависят.
     private fun createServices(): AppServices {
         val azkarWindowSettings = AzkarWindowSettings(storage)
+        // Одна история на сторы и напоминания: «ещё не прочитаны» смотрит то, что записал AzkarStore.
+        val azkarHistory = AzkarHistory(storage) { error ->
+            Log.w(TAG, "История азкаров не читается — начата заново (первая испорченная — в azkar.history.corrupt)", error)
+        }
+        val hadithStore = HadithStore(repository)
+        val hadithProgress = HadithProgress(storage)
+        val hadithCollectionOrder = HadithCollectionOrder(storage)
+        val reminderSettings = ReminderSettings(storage)
         return AppServices(
             router = AppRouter(),
             readingSettings = ReadingSettings(storage),
@@ -134,19 +150,17 @@ class AppContainer(context: Context) {
                 repository = repository,
                 storage = storage,
                 windowSettings = azkarWindowSettings,
-                history = AzkarHistory(storage) { error ->
-                    Log.w(TAG, "История азкаров не читается — начата заново (первая испорченная — в azkar.history.corrupt)", error)
-                },
+                history = azkarHistory,
                 now = Instant::now,
                 zone = ZoneId::systemDefault,
                 onUnreadableProgress = { section, error ->
                     Log.w(TAG, "Прогресс «${section.key}» не читается — отрезок заново", error)
                 },
             ),
-            hadithStore = HadithStore(repository),
-            hadithProgress = HadithProgress(storage),
+            hadithStore = hadithStore,
+            hadithProgress = hadithProgress,
             hadithFavorites = HadithFavorites(storage),
-            hadithCollectionOrder = HadithCollectionOrder(storage),
+            hadithCollectionOrder = hadithCollectionOrder,
             appearanceSettings = AppearanceSettings(storage),
             parchmentSettings = ParchmentSettings(storage),
             textSizeSettings = TextSizeSettings(storage),
@@ -158,6 +172,20 @@ class AppContainer(context: Context) {
             licenseTexts = LicenseTexts(appContext.assets::open, Dispatchers.IO),
             // Служба воспроизведения подключается при первом звуке, не при запуске приложения.
             audioPlayer = AudioPlayerController(MediaControllerEngine(appContext)),
+            reminderSettings = reminderSettings,
+            reminders = ReminderService(
+                settings = reminderSettings,
+                windowSettings = azkarWindowSettings,
+                history = azkarHistory,
+                hadithStore = hadithStore,
+                hadithProgress = hadithProgress,
+                hadithOrder = hadithCollectionOrder,
+                texts = ReminderTextsSource(appContext.assets::open, contentLanguagePriority, Dispatchers.IO),
+                alarms = ReminderAlarms(appContext),
+                notifier = ReminderNotifier(appContext),
+                now = Instant::now,
+                zone = ZoneId::systemDefault,
+            ),
         )
     }
 

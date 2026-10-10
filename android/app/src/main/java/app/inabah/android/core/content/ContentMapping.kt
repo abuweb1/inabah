@@ -69,7 +69,7 @@ internal fun CollectionInfoDto.toCollectionInfo(priority: ContentLanguagePriorit
 }
 
 /** Ключи JSON → языки; при совпадении после приведения к нижнему регистру — первый по порядку файла. */
-private fun <T> Map<String, T>.keyedByLanguage(): Map<ContentLanguage, T> {
+internal fun <T> Map<String, T>.keyedByLanguage(): Map<ContentLanguage, T> {
     val result = LinkedHashMap<ContentLanguage, T>(size)
     for ((code, value) in this) result.putIfAbsent(ContentLanguage.of(code), value)
     return result

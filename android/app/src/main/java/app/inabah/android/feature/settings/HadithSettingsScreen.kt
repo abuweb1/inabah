@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
@@ -13,6 +14,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.inabah.android.R
 import app.inabah.android.core.content.Loadable
@@ -29,6 +32,7 @@ import app.inabah.android.core.designsystem.components.SettingsScaffold
 import app.inabah.android.core.settings.HadithCollectionOrder
 import app.inabah.android.core.settings.HadithFavorites
 import app.inabah.android.core.settings.HadithProgress
+import app.inabah.android.core.settings.ReminderSettings
 import app.inabah.android.feature.hadith.HadithStore
 import app.inabah.android.feature.hadith.title
 
@@ -43,6 +47,7 @@ fun HadithSettingsScreen(
     progress: HadithProgress,
     favorites: HadithFavorites,
     order: HadithCollectionOrder,
+    reminderSettings: ReminderSettings,
     onOpenOrder: () -> Unit,
     onBack: () -> Unit,
     contentPadding: PaddingValues,
@@ -57,6 +62,12 @@ fun HadithSettingsScreen(
     val favoriteIds by favorites.favorites.collectAsStateWithLifecycle()
     var pendingReset by remember { mutableStateOf<HadithCollection?>(null) }
     var pendingFavoritesClear by remember { mutableStateOf(false) }
+    // Время хадиса дня — черновиком (как окна азкаров): сохраняется при уходе с экрана или в фон.
+    var hadithTimeDraft by remember { mutableStateOf(reminderSettings.preferences.value.hadithTime) }
+    var editingHadithTime by remember { mutableStateOf(false) }
+    val commitHadithTime: () -> Unit = { reminderSettings.setHadithTime(hadithTimeDraft) }
+    DisposableEffect(reminderSettings) { onDispose(commitHadithTime) }
+    LifecycleEventEffect(Lifecycle.Event.ON_STOP, onEvent = commitHadithTime)
     // Число хадисов сборника — для «из N»; загрузка уже идёт с запуска, здесь — на случай ошибки.
     LaunchedEffect(Unit) { store.loadAll() }
 
@@ -115,6 +126,14 @@ fun HadithSettingsScreen(
                 ),
             )
         } }
+        HadithOfDayGroup(
+            settings = reminderSettings,
+            timeDraft = hadithTimeDraft,
+            isEditingTime = editingHadithTime,
+            onEditTime = { editingHadithTime = it },
+            onTimeChange = { hadithTimeDraft = it },
+            tint = tint,
+        )
         SettingsGroup(
             header = stringResource(R.string.hadith_favorites_title),
             rows = listOf {

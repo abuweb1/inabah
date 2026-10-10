@@ -157,6 +157,11 @@
     <string name="settings_appearance_header">Оформление</string>
     <string name="settings_azkar_subtitle">Время азкаров и сброс прогресса</string>
     <string name="settings_azkar_title">Азкары</string>
+    <string name="settings_hadith_of_day_footer">Следующий непрочитанный хадис по порядку сборников; все прочитаны — по кругу.</string>
+    <string name="settings_hadith_of_day_header">Хадис дня</string>
+    <string name="settings_hadith_of_day_time">Время</string>
+    <string name="settings_hadith_of_day_time_description">Время хадиса дня</string>
+    <string name="settings_hadith_of_day_toggle">Напоминать</string>
     <string name="settings_hadith_favorites_clear">Очистить избранное</string>
     <string name="settings_hadith_favorites_clear_confirm_action">Очистить</string>
     <string name="settings_hadith_favorites_clear_confirm_message">Все хадисы будут убраны из избранного.</string>
@@ -182,6 +187,12 @@
     <string name="settings_reset_now_confirm_evening">Счётчики вечерних азкаров будут обнулены.</string>
     <string name="settings_reset_now_confirm_morning">Счётчики утренних азкаров будут обнулены.</string>
     <string name="settings_reset_now_confirm_title">Сбросить прогресс?</string>
+    <string name="settings_reminders_blocked">Уведомления выключены в настройках телефона.</string>
+    <string name="settings_reminders_header">Напоминания</string>
+    <string name="settings_reminders_open_settings">Открыть настройки</string>
+    <string name="settings_reminders_start_subtitle">в начале времени, %1$s</string>
+    <string name="settings_reminders_unfinished">Если ещё не прочитаны</string>
+    <string name="settings_reminders_unfinished_subtitle">за 2 часа до конца времени</string>
     <string name="settings_reset_now_footer">Счётчики раздела обнулятся сразу, не дожидаясь конца времени азкаров.</string>
     <string name="settings_reset_now_header">Сбросить сейчас</string>
     <string name="settings_reset_time_picker_title">Время азкаров</string>
@@ -189,6 +200,12 @@
     <string name="settings_reset_time_hour">Часы</string>
     <string name="settings_reset_time_minute">Минуты</string>
     <string name="settings_title">Настройки</string>
+    <string name="reminders_offer_enable">Включить</string>
+    <string name="reminders_offer_later">Не сейчас</string>
+    <string name="reminders_offer_message">В начале утреннего и вечернего времени. Изменить можно в настройках азкаров.</string>
+    <string name="reminders_offer_title">Напоминать об азкарах?</string>
+    <string name="reminders_channel_azkar">Азкары</string>
+    <string name="reminders_channel_hadith">Хадис дня</string>
     <string name="reminder_action">Сделать напоминание</string>
     <string name="share_text_hadith_note_line">%1$s — %2$s</string>
     <string name="share_text_hadith_notes">Сноски:</string>

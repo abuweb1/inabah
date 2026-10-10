@@ -1,10 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <!-- Аудиозаписей в приложении пока нет (2026-10-06): служба воспроизведения (PlaybackService,
          foregroundServiceType="mediaPlayback") и разрешения FOREGROUND_SERVICE / _MEDIA_PLAYBACK не
          объявлены — фоновый звук без звука вызывал бы вопросы Google Play. Код плеера на месте: со своими
          записями вернуть сюда блок из src/debug/AndroidManifest.xml (там он — для теста службы). -->
+
+    <!-- Напоминания (docs/07-screen-settings.md, «Напоминания»): уведомления — по согласию пользователя
+         (по умолчанию выключены); после перезагрузки будильники ставятся заново. Точные будильники не нужны. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <!-- Резервная копия Google (решение 5, docs/android/08, 2026-10-05): только файл настроек и прогресса
          DataStore — отметки хадисов, счётчики, палитра переживают смену телефона, как iCloud-копия на iOS. -->
@@ -73,6 +79,23 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity-alias>
+        <!-- Будильник напоминания — только свой (явный интент ReminderAlarms). -->
+        <receiver
+            android:name=".app.ReminderReceiver"
+            android:exported="false" />
+
+        <!-- Перепланирование: действия — защищённые системные (послать их может только система). -->
+        <receiver
+            android:name=".app.ReminderRescheduleReceiver"
+            android:exported="true"
+            tools:ignore="ExportedReceiver">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.TIME_SET" />
+                <action android:name="android.intent.action.TIMEZONE_CHANGED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>

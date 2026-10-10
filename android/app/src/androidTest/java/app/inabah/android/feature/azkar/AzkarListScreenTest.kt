@@ -2,6 +2,8 @@ package app.inabah.android.feature.azkar
 
 import android.text.format.DateFormat
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.test.SemanticsMatcher
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LifecycleRegistry
@@ -34,6 +36,7 @@ import androidx.compose.ui.test.isEnabled
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.onNodeWithText
 import androidx.test.espresso.Espresso
+import app.inabah.android.core.settings.ReminderSettings
 import app.inabah.android.feature.settings.AzkarSettingsScreen
 import androidx.compose.ui.test.junit4.accessibility.enableAccessibilityChecks
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -256,7 +259,7 @@ class AzkarListScreenTest {
         val store = store(1, 3)
         compose.runOnIdle { runBlocking { store.loadAll() } }
         compose.setContent {
-            InabahTheme { AzkarHomeScreen(store, windowSettings, onOpenSection = {}, contentPadding = PaddingValues()) }
+            InabahTheme { AzkarHomeScreen(store, windowSettings, ReminderSettings(storage), onOpenSection = {}, contentPadding = PaddingValues()) }
         }
 
         // 13:00 — вне окна оба раздела: у утренних время окна (в любом формате системы есть «12:00»),
@@ -319,7 +322,7 @@ class AzkarListScreenTest {
             InabahTheme {
                 val owner = lifecycle ?: LocalLifecycleOwner.current
                 CompositionLocalProvider(LocalLifecycleOwner provides owner) {
-                    if (shown()) AzkarSettingsScreen(store, windowSettings, onBack = {}, contentPadding = PaddingValues())
+                    if (shown()) AzkarSettingsScreen(store, windowSettings, ReminderSettings(storage), onBack = {}, contentPadding = PaddingValues())
                 }
             }
         }
@@ -449,12 +452,12 @@ class AzkarListScreenTest {
         }
         compose.setContent {
             InabahTheme {
-                AzkarSettingsScreen(store, windowSettings, onBack = {}, contentPadding = PaddingValues())
+                AzkarSettingsScreen(store, windowSettings, ReminderSettings(storage), onBack = {}, contentPadding = PaddingValues())
             }
         }
 
         // «Утренние азкары» — и в строке времени, и в строке сброса: нужна строка-кнопка.
-        val resetRow = compose.onNode(hasText("Утренние азкары") and hasClickAction())
+        val resetRow = compose.onNode(hasText("Утренние азкары") and hasClickAction() and SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Button))
 
         // Закрыли подтверждение «Назад» — прогресс на месте.
         resetRow.performClick()

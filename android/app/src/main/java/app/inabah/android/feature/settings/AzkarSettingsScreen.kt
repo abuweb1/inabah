@@ -46,19 +46,21 @@ import app.inabah.android.core.designsystem.components.pressFeedback
 import app.inabah.android.core.settings.AzkarWindow
 import app.inabah.android.core.settings.AzkarWindowSettings
 import app.inabah.android.core.settings.DayTime
+import app.inabah.android.core.settings.ReminderSettings
 import app.inabah.android.feature.azkar.AzkarStore
 import app.inabah.android.feature.azkar.rememberDayTimeFormatter
 import app.inabah.android.feature.azkar.title
 
 /**
  * Настройки азкаров (iOS `AzkarSettingsView`): время азкаров «с — до» — барабан под капсулой времени
- * правит черновик, он сохраняется и применяется к прогрессу при уходе с экрана или в фон; ручной сброс раздела —
- * с подтверждением над строкой.
+ * правит черновик, он сохраняется и применяется к прогрессу при уходе с экрана или в фон; напоминания;
+ * ручной сброс раздела — с подтверждением над строкой.
  */
 @Composable
 fun AzkarSettingsScreen(
     store: AzkarStore,
     windowSettings: AzkarWindowSettings,
+    reminderSettings: ReminderSettings,
     onBack: () -> Unit,
     contentPadding: PaddingValues,
     modifier: Modifier = Modifier,
@@ -137,6 +139,7 @@ fun AzkarSettingsScreen(
                 }
             },
         )
+        AzkarRemindersGroup(reminderSettings, drafts, tint)
         SettingsGroup(
             header = stringResource(R.string.settings_reset_now_header),
             footer = stringResource(R.string.settings_reset_now_footer),
@@ -178,7 +181,7 @@ private fun WindowEdgeLabel(text: String) {
 
 /** Капсула «05:00» (формат системы); нажатие — барабан под ней. TalkBack: «Начало утренних азкаров, 05:00». */
 @Composable
-private fun WindowTimeChip(
+internal fun WindowTimeChip(
     time: DayTime,
     description: String,
     isEditing: Boolean,
