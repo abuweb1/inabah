@@ -1,15 +1,14 @@
 package app.inabah.android.app
 
 import app.inabah.android.core.content.Loadable
-import app.inabah.android.core.content.model.AzkarSection
 import app.inabah.android.core.reminders.ReminderKind
 import app.inabah.android.core.reminders.ReminderPlaceholders
 import app.inabah.android.core.reminders.ReminderText
 import app.inabah.android.core.reminders.ReminderTextsSource
+import app.inabah.android.core.reminders.isAzkarReminderDue
 import app.inabah.android.core.reminders.pickHadithOfDay
 import app.inabah.android.core.reminders.planReminders
 import app.inabah.android.core.settings.AzkarHistory
-import app.inabah.android.core.settings.AzkarWindowSchedule
 import app.inabah.android.core.settings.AzkarWindowSettings
 import app.inabah.android.core.settings.HadithCollectionOrder
 import app.inabah.android.core.settings.HadithProgress
@@ -17,7 +16,6 @@ import app.inabah.android.core.settings.ReminderSettings
 import app.inabah.android.feature.hadith.HadithStore
 import app.inabah.android.feature.hadith.title
 import java.time.Instant
-import java.time.LocalDate
 import java.time.ZoneId
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
@@ -42,6 +40,7 @@ class ReminderService(
 ) {
     /** Расписание следует за настройками напоминаний и окнами азкаров, пока живёт процесс. */
     suspend fun run() {
+        notifier.ensureChannels()
         combine(settings.preferences, windowSettings.windows) { _, _ -> }.collect { reschedule() }
     }
 
@@ -65,16 +64,9 @@ class ReminderService(
             notifyHadith(text)
             return
         }
-        val schedule = AzkarWindowSchedule(windowSettings.window(section), zone())
-        val period = schedule.period(now())
-        // Будильник опоздал (телефон спал, время перевели) и окно уже закончилось — напоминать не о чем.
-        if (!period.isWindow) return
-        if (kind.isUnfinished && isCompleted(section, period.day)) return
+        if (!isAzkarReminderDue(kind, windowSettings.window(section), now(), zone()) { history.record(section, it) }) return
         notifier.showAzkar(kind, section, text)
     }
-
-    private fun isCompleted(section: AzkarSection, day: LocalDate): Boolean =
-        history.record(section, day)?.let { it.total > 0 && it.completed >= it.total } ?: false
 
     private suspend fun notifyHadith(text: ReminderText) {
         hadithStore.loadAll()
@@ -93,7 +85,7 @@ class ReminderService(
             ReminderPlaceholders.NUMBER to hadith.number.toString(),
             ReminderPlaceholders.TEXT to hadith.translation?.text.orEmpty(),
         )
-        notifier.showHadith(hadith.id, text.fill(values))
-        settings.rememberHadithOfDay(hadith.id)
+        // Канал «Хадис дня» выключен — не показан и не запомнен: иначе круг уходил бы вперёд невиданным.
+        if (notifier.showHadith(hadith.id, text.fill(values))) settings.rememberHadithOfDay(hadith.id)
     }
 }

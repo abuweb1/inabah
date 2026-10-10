@@ -58,12 +58,14 @@ object ReminderPlaceholders {
 
 /**
  * Тексты из `assets/data/reminders.json`: разбираются один раз (кэш под [Mutex]), чтение — на [ioDispatcher].
- * Файла нет или он повреждён — `null`, и уведомления не показываются: ошибку ловит `check-data` до сборки.
+ * Файла нет, он повреждён или в нём нет подходящего языка — `null`, и уведомления не показываются: ошибку ловит
+ * `check-data` до сборки, а в приложении — [onError] (лог, аудит 2026-10-10, К5: иначе причину не найти).
  */
 class ReminderTextsSource(
     private val source: ContentSource,
     private val priority: ContentLanguagePriority,
     private val ioDispatcher: CoroutineDispatcher,
+    private val onError: (message: String, error: Throwable?) -> Unit = { _, _ -> },
 ) {
     private val mutex = Mutex()
     private var cached: ReminderTexts? = null
@@ -75,13 +77,17 @@ class ReminderTextsSource(
     private suspend fun read(): ReminderTexts? = withContext(ioDispatcher) {
         val file = try {
             source.open(FILE).use { json.decodeFromString(RemindersFileDto.serializer(), it.bufferedReader().readText()) }
-        } catch (_: IOException) {
+        } catch (error: IOException) {
+            onError("Не прочитан $FILE", error)
             return@withContext null
-        } catch (_: IllegalArgumentException) {
+        } catch (error: IllegalArgumentException) {
             // SerializationException — подкласс IllegalArgumentException.
+            onError("Не разобран $FILE", error)
             return@withContext null
         }
-        file.toTexts(priority)
+        val texts = file.toTexts(priority)
+        if (texts == null) onError("В $FILE нет текстов на языке интерфейса", null)
+        texts
     }
 
     private companion object {

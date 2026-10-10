@@ -20,6 +20,7 @@ import app.inabah.android.core.designsystem.components.SectionBrand
 import app.inabah.android.core.designsystem.components.SectionHomeLayout
 import app.inabah.android.core.designsystem.components.SectionNavCard
 import app.inabah.android.core.designsystem.components.TextButton
+import app.inabah.android.core.reminders.ReminderChannels
 import app.inabah.android.core.settings.AzkarWindowSettings
 import app.inabah.android.core.settings.ReminderSettings
 import app.inabah.android.feature.settings.rememberNotificationPermission
@@ -68,7 +69,8 @@ fun AzkarHomeScreen(
  */
 @Composable
 private fun ReminderOfferCard(settings: ReminderSettings) {
-    val permission = rememberNotificationPermission()
+    // С каналом «Азкары»: выключен — «Включить» не включает напоминания, которые не придут.
+    val permission = rememberNotificationPermission(ReminderChannels.AZKAR)
     NoticeCard(
         icon = R.drawable.ic_schedule,
         title = stringResource(R.string.reminders_offer_title),

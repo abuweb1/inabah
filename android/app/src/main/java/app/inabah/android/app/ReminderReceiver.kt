@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.util.Log
 import app.inabah.android.core.reminders.ReminderKind
+import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.filterNotNull
@@ -29,6 +30,13 @@ private fun BroadcastReceiver.runWithServices(context: Context, block: suspend (
                 block(container.services.filterNotNull().first())
             }
             if (done == null) Log.w("Inabah", "Напоминание: не успели за ${TIMEOUT_MILLIS} мс")
+        } catch (cancellation: CancellationException) {
+            throw cancellation
+        } catch (error: Exception) {
+            // Сбой системы (уведомления, будильники) не роняет фоновый процесс (аудит 2026-10-10, К4). Сбой показа —
+            // следующий будильник `fire` уже поставил в `finally`; сбой самого перепланирования — расписание
+            // восстановит следующий запуск (`ReminderService.run`) или системный сигнал.
+            Log.e("Inabah", "Напоминание: сбой", error)
         } finally {
             pending.finish()
         }

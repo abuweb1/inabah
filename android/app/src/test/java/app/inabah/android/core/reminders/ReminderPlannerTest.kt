@@ -10,6 +10,7 @@ import app.inabah.android.core.settings.DayTime
 import app.inabah.android.core.settings.ReminderPreferences
 import app.inabah.android.core.settings.berlin
 import app.inabah.android.core.settings.date
+import java.time.Instant
 import java.time.LocalDate
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
@@ -75,11 +76,33 @@ class ReminderPlannerTest {
 
     @Test
     fun `Перевод часов — время суток по местному времени`() {
-        // 25 октября 2026 в Берлине — переход на зимнее время (03:00 → 02:00).
-        val planned = plan(ReminderPreferences(hadithOfDay = true, hadithTime = DayTime.of(20, 0)), date(2026, 10, 25, 10))
+        // Сейчас — до перехода на зимнее время (25.10.2026, 03:00 CEST → 02:00 CET), напоминание — после него.
+        val planned = plan(ReminderPreferences(hadithOfDay = true, hadithTime = DayTime.of(20, 0)), utc("2026-10-24T22:00:00Z"))
 
-        assertEquals(date(2026, 10, 25, 20), planned.getValue(ReminderKind.HadithOfDay).at)
+        assertEquals(utc("2026-10-25T19:00:00Z"), planned.getValue(ReminderKind.HadithOfDay).at, "20:00 CET, не 20:00 CEST")
     }
+
+    @Test
+    fun `Весной время в разрыве — момент перехода`() {
+        // 29.03.2026 в Берлине 02:00 CET → 03:00 CEST: 02:30 не бывает. Сейчас — 01:00 CET.
+        val planned = plan(ReminderPreferences(hadithOfDay = true, hadithTime = DayTime.of(2, 30)), utc("2026-03-29T00:00:00Z"))
+
+        assertEquals(utc("2026-03-29T01:00:00Z"), planned.getValue(ReminderKind.HadithOfDay).at, "03:00 CEST")
+    }
+
+    @Test
+    fun `Осенью повтор часа — первое наступление и без второго срабатывания`() {
+        // 25.10.2026 02:30 бывает дважды: 00:30Z (CEST) и 01:30Z (CET).
+        val preferences = ReminderPreferences(hadithOfDay = true, hadithTime = DayTime.of(2, 30))
+
+        val before = plan(preferences, utc("2026-10-24T23:00:00Z"))
+        assertEquals(utc("2026-10-25T00:30:00Z"), before.getValue(ReminderKind.HadithOfDay).at, "раннее — 02:30 CEST")
+
+        val afterFirst = plan(preferences, utc("2026-10-25T00:30:00Z"))
+        assertEquals(utc("2026-10-26T01:30:00Z"), afterFirst.getValue(ReminderKind.HadithOfDay).at, "повтор часа пропущен — завтра")
+    }
+
+    private fun utc(text: String): Instant = Instant.parse(text)
 
     private fun hadiths(collection: HadithCollection, count: Int) =
         (1..count).map { Hadith(HadithId(collection, it), "حديث", translation = null) }
