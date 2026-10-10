@@ -87,7 +87,7 @@ extension Zikr {
 
 extension Hadith {
     /// «Сборник · Хадис N», арабский одним абзацем, «Передал: …», перевод, «Приводится: …»,
-    /// ссылка на приложение.
+    /// сноски, ссылка на приложение.
     var shareText: String {
         ShareText.blocks(
             String(localized: "share.hadith.header \(String(localized: collection.title)) \(number)"),
@@ -95,7 +95,15 @@ extension Hadith {
             translation?.narrator.map { String(localized: "hadith.detail.narrator \($0)") },
             translation?.text,
             translation?.source.map { String(localized: "hadith.detail.source \($0)") },
+            notesBlock,
             AboutLinks.appStore.absoluteString
         )
+    }
+
+    /// «Сноски:» и по строке «слово — пояснение» (без кавычек, как на Android); сносок нет — `nil`.
+    private var notesBlock: String? {
+        guard let notes = translation?.notes, !notes.isEmpty else { return nil }
+        let lines = notes.map { String(localized: "share.text.hadith.noteLine \($0.term) \($0.text)") }
+        return ([String(localized: "share.text.hadith.notes")] + lines).joined(separator: "\n")
     }
 }

@@ -1136,6 +1136,50 @@
         }
       }
     },
+    "hadith.note.quote %@" : {
+      "comment" : "Слово сноски, взятое из текста перевода, — в кавычках",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "«%@»"
+          }
+        }
+      }
+    },
+    "hadith.notes.collapsed" : {
+      "comment" : "Состояние кнопки сносок (VoiceOver)",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Свёрнуто"
+          }
+        }
+      }
+    },
+    "hadith.notes.expanded" : {
+      "comment" : "Состояние кнопки сносок (VoiceOver)",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Развёрнуто"
+          }
+        }
+      }
+    },
+    "hadith.notes.toggle %lld" : {
+      "comment" : "Кнопка сносок под переводом хадиса (VoiceOver; на экране — только число и стрелка)",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сноски: %lld"
+          }
+        }
+      }
+    },
     "hadith.progress.card %lld %lld" : {
       "comment" : "Прогресс на карточке сборника: прочитано, всего",
       "localizations" : {
@@ -2266,6 +2310,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@ · Хадис %2$lld"
+          }
+        }
+      }
+    },
+    "share.text.hadith.noteLine %@ %@" : {
+      "comment" : "«Поделиться» хадисом: строка сноски «слово — пояснение»",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ — %2$@"
+          }
+        }
+      }
+    },
+    "share.text.hadith.notes" : {
+      "comment" : "«Поделиться» хадисом: заголовок блока сносок",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сноски:"
           }
         }
       }

@@ -60,6 +60,23 @@ struct ShareTextTests {
         ])
     }
 
+    @Test("Сноски — после источника: «Сноски:» и строки «слово — пояснение» без кавычек")
+    func hadithWithNotes() {
+        let hadith = Hadith(
+            id: HadithID(collection: .nawawi, number: 2),
+            arabic: "عَنْ عُمَرَ",
+            translation: HadithTranslation(
+                language: .base, narrator: nil, text: "Перевод", source: "Муслим",
+                notes: [HadithNote(term: "иман", text: "вера"), HadithNote(term: "Различия передач", text: "у Муслима иначе")]
+            )
+        )
+
+        #expect(hadith.shareText.components(separatedBy: ShareText.blockSeparator) == [
+            "40 хадисов ан-Навави · Хадис 2", "عَنْ عُمَرَ", "Перевод", "Приводится: Муслим",
+            "Сноски:\nиман — вера\nРазличия передач — у Муслима иначе", Self.link,
+        ])
+    }
+
     @Test("Напоминание: заголовок, призыв, слова Абу ад-Дарды в 4 строки, черта со временем, ссылка")
     func morningReminder() throws {
         let blocks = AzkarSection.morning.reminderText.components(separatedBy: ShareText.blockSeparator)

@@ -120,6 +120,23 @@ nonisolated extension Palette {
 }
 
 nonisolated extension Palette {
+    // Сноски к переводу хадиса — как пузырь перевода азкаров, но в тон раздела хадисов: `tabHadith`
+    // свой в каждой палитре (в единых стилях — цвет стиля). Значения — как на Android (`Palette.kt`).
+
+    /// Доля `tabHadith` в цвете текста сносок.
+    static let noteTextTint: Double = 0.3
+    static let noteFillOpacity: Double = 0.1
+
+    /// Полоса слева у пузыря сноски.
+    var noteStripe: Color { tabHadith }
+    /// Подложка пузыря сноски.
+    var noteFill: Color { tabHadith.opacity(Self.noteFillOpacity) }
+    /// «Оттенок транскрипции» раздела хадисов: белый с примесью `tabHadith`. Смешивание — в OKLab
+    /// (`.perceptual`), как `lerp` цветов в Compose, — иначе цвет разойдётся с Android.
+    var noteText: Color { onAccent.mix(with: tabHadith, by: Self.noteTextTint, in: .perceptual) }
+}
+
+nonisolated extension Palette {
     /// Основная тёмная фиолетовая тема (тёмный вариант прототипа).
     static let inabah: Palette = {
         let onAccent = Color(asset: .onAccent)
