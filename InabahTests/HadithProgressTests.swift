@@ -125,9 +125,45 @@ struct HadithProgressTests {
 
     @Test("«Выучен» без «прочитан» в хранилище читается как «выучен»")
     func memorizedWithoutReadLoads() {
-        defaults.set("1", forKey: "h_mem_qudsi_3")
+        defaults.set("1", forKey: "h_mem_ajurri_3")
 
-        #expect(HadithProgress(defaults: defaults).status(of: HadithID(collection: .qudsi, number: 3)) == .memorized)
+        #expect(HadithProgress(defaults: defaults).status(of: HadithID(collection: .ajurri, number: 3)) == .memorized)
+    }
+
+    @Test("Сброс удаляет и отметки, не попавшие в память (номер 0, чужое значение), но не избранное")
+    func resetRemovesStrayKeys() {
+        defaults.set("1", forKey: "h_read_ajurri_0")
+        defaults.set("0", forKey: "h_mem_ajurri_7")
+        defaults.set("1", forKey: "h_fav_ajurri_7")
+        let progress = HadithProgress(defaults: defaults)
+
+        progress.reset(.ajurri)
+
+        #expect(defaults.object(forKey: "h_read_ajurri_0") == nil)
+        #expect(defaults.object(forKey: "h_mem_ajurri_7") == nil)
+        #expect(defaults.string(forKey: "h_fav_ajurri_7") == "1")
+    }
+
+    @Test("Новая редакция къудси: старые отметки сбрасываются один раз, другие сборники и избранное целы")
+    func qudsiRevisionResetsOnce() {
+        defaults.set("1", forKey: "h_read_qudsi_3")
+        defaults.set("1", forKey: "h_mem_qudsi_3")
+        defaults.set("1", forKey: "h_read_nawawi_1")
+        defaults.set("1", forKey: "h_fav_qudsi_3")
+
+        let updated = HadithProgress(defaults: defaults)
+
+        #expect(updated.status(of: HadithID(collection: .qudsi, number: 3)) == .none)
+        #expect(defaults.object(forKey: "h_read_qudsi_3") == nil)
+        #expect(defaults.object(forKey: "h_mem_qudsi_3") == nil)
+        #expect(updated.status(of: first) == .read)
+        #expect(defaults.string(forKey: "h_fav_qudsi_3") == "1")
+        #expect(defaults.integer(forKey: HadithProgress.revisionKey(.qudsi)) == 2)
+
+        // Отметки новой редакции переживают повторный запуск.
+        updated.toggleRead(HadithID(collection: .qudsi, number: 4))
+        let relaunched = HadithProgress(defaults: defaults)
+        #expect(relaunched.status(of: HadithID(collection: .qudsi, number: 4)) == .read)
     }
 
     @Test("Отметки одного сборника не попадают в другой, посторонние значения игнорируются")

@@ -49,7 +49,7 @@ struct BundledContentTests {
 
     @Test("Сборник хадисов загружается", arguments: [
         (HadithCollection.nawawi, 50),
-        (HadithCollection.qudsi, 40),
+        (HadithCollection.qudsi, 42),
         (HadithCollection.ajurri, 40),
     ])
     func hadithsLoad(collection: HadithCollection, expectedCount: Int) async throws {
@@ -59,6 +59,35 @@ struct BundledContentTests {
         #expect(hadiths.map(\.number) == Array(1...expectedCount))
         #expect(hadiths.allSatisfy { $0.translation?.language == .base })
         #expect(hadiths.allSatisfy { !$0.arabic.isEmpty })
+    }
+
+    @Test("Сведения «О сборнике» есть у каждого сборника", arguments: HadithCollection.allCases)
+    func collectionInfoLoads(collection: HadithCollection) async throws {
+        let info = try await repository.collectionInfo(collection)
+
+        #expect(info.language == .base)
+        #expect(!info.about.isEmpty)
+        // Къудси — своя подборка: составителей нет (заготовка с пустым именем не показывается).
+        #expect(info.authors.isEmpty == (collection == .qudsi))
+    }
+
+    @Test("Тексты напоминаний: все виды на базовом языке")
+    func reminderTextsLoad() async throws {
+        let texts = try #require(try await repository.reminderTexts())
+
+        #expect(Set(texts.azkarStart.keys) == Set(AzkarSection.allCases))
+        #expect(Set(texts.azkarUnfinished.keys) == Set(AzkarSection.allCases))
+        let hadith = try #require(texts.hadithOfDay)
+        #expect(hadith.title.contains("{collection}"))
+    }
+
+    @Test("Сноски у хадисов разбираются; у аль-Аджурри их нет")
+    func hadithNotesLoad() async throws {
+        let qudsi = try await repository.hadiths(in: .qudsi)
+        let ajurri = try await repository.hadiths(in: .ajurri)
+
+        #expect(qudsi.contains { !($0.translation?.notes.isEmpty ?? true) })
+        #expect(ajurri.allSatisfy { $0.translation?.notes.isEmpty ?? true })
     }
 
     @Test("Служебные данные data/pending не попадают в Bundle")

@@ -5,6 +5,10 @@ import Foundation
 nonisolated protocol ContentRepository: Sendable {
     func azkar(in section: AzkarSection) async throws -> [Zikr]
     func hadiths(in collection: HadithCollection) async throws -> [Hadith]
+    /// Сведения для «О сборнике»; сборника нет в файле или нет перевода — `.empty`.
+    func collectionInfo(_ collection: HadithCollection) async throws -> CollectionInfo
+    /// Тексты напоминаний; подходящего языка нет — `nil`.
+    func reminderTexts() async throws -> ReminderTexts?
 }
 
 nonisolated enum ContentError: Error, Equatable {
@@ -29,6 +33,8 @@ actor BundleContentRepository: ContentRepository {
 
     private var azkarFile: AzkarFileDTO?
     private var hadithFiles: [HadithCollection: [HadithDTO]] = [:]
+    private var collectionsFile: [String: CollectionInfoDTO]?
+    private var remindersFile: RemindersFileDTO?
 
     init(bundle: Bundle = .main, languages: ContentLanguagePriority = .system) {
         self.bundle = bundle
@@ -43,6 +49,25 @@ actor BundleContentRepository: ContentRepository {
     func hadiths(in collection: HadithCollection) throws -> [Hadith] {
         let items = try loadedHadithFile(collection)
         return items.map { Hadith(dto: $0, collection: collection, languages: languages) }
+    }
+
+    func collectionInfo(_ collection: HadithCollection) throws -> CollectionInfo {
+        if collectionsFile == nil {
+            collectionsFile = try decode([String: CollectionInfoDTO].self, resource: "collections")
+        }
+        guard let dto = collectionsFile?[collection.rawValue] else { return .empty }
+        return CollectionInfo(dto: dto, languages: languages)
+    }
+
+    func reminderTexts() throws -> ReminderTexts? {
+        let file: RemindersFileDTO
+        if let remindersFile {
+            file = remindersFile
+        } else {
+            file = try decode(RemindersFileDTO.self, resource: "reminders")
+            remindersFile = file
+        }
+        return ReminderTexts(dto: file, languages: languages)
     }
 
     private func loadedAzkarFile() throws -> AzkarFileDTO {
@@ -75,6 +100,8 @@ actor BundleContentRepository: ContentRepository {
 nonisolated struct InMemoryContentRepository: ContentRepository {
     var azkar: [AzkarSection: [Zikr]] = [:]
     var hadiths: [HadithCollection: [Hadith]] = [:]
+    var infos: [HadithCollection: CollectionInfo] = [:]
+    var reminders: ReminderTexts?
     var error: ContentError?
 
     func azkar(in section: AzkarSection) throws -> [Zikr] {
@@ -85,5 +112,15 @@ nonisolated struct InMemoryContentRepository: ContentRepository {
     func hadiths(in collection: HadithCollection) throws -> [Hadith] {
         if let error { throw error }
         return hadiths[collection] ?? []
+    }
+
+    func collectionInfo(_ collection: HadithCollection) throws -> CollectionInfo {
+        if let error { throw error }
+        return infos[collection] ?? .empty
+    }
+
+    func reminderTexts() throws -> ReminderTexts? {
+        if let error { throw error }
+        return reminders
     }
 }
