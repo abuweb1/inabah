@@ -18,8 +18,8 @@ struct HadithPage: View {
                 if let translation = hadith.translation {
                     HadithTranslationCard(hadith: hadith, translation: translation)
                 } else {
-                    // Перевода нет — «Поделиться» справа внизу страницы.
-                    HadithShareButton(hadith: hadith)
+                    // Перевода нет — закладка и «Поделиться» справа внизу страницы.
+                    HadithCardActions(hadith: hadith)
                         .frame(maxWidth: .infinity, alignment: .trailing)
                 }
             }
@@ -100,7 +100,7 @@ private struct HadithStatusButtons: View {
     }
 }
 
-/// «Передал: …», перевод и «Приводится: …»; «Поделиться» — справа на уровне последней
+/// «Передал: …», перевод и «Приводится: …»; закладка и «Поделиться» — справа на уровне последней
 /// строки источника (решение пользователя 2026-10-06), без источника — справа внизу карточки.
 private struct HadithTranslationCard: View {
     let hadith: Hadith
@@ -128,19 +128,18 @@ private struct HadithTranslationCard: View {
                 Text("hadith.detail.source \(source)")
                     .font(.content(.note, scale: scale).italic())
                     .foregroundStyle(theme.palette.onAccentTertiary)
-                    // Место под значок справа: сам значок — в наложении и вёрстку не раздвигает.
-                    .padding(.trailing, HadithShareButton.iconSize(scale: scale) + Spacing.s)
+                    // Место под значки справа: сами значки — в наложении и вёрстку не раздвигают.
+                    .padding(.trailing, HadithCardActions.textInset(scale: scale))
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .overlay(alignment: Self.lastLineTrailing) {
                         let iconCenterAboveBaseline = ContentTextStyle.note.baseSize * scale * Self.xHeightRatio
-                        let iconInset = (Size.minTapTarget - HadithShareButton.iconSize(scale: scale)) / 2
-                        HadithShareButton(hadith: hadith)
+                        HadithCardActions(hadith: hadith)
                             // Центр значка — на середине строчных букв последней строки.
                             .alignmentGuide(.lastTextBaseline) { dimensions in
                                 dimensions[VerticalAlignment.center] + iconCenterAboveBaseline
                             }
-                            // Значок — вровень с правым краем текста; зона нажатия выходит в поля карточки.
-                            .offset(x: iconInset)
+                            // Правый значок — вровень с правым краем текста; зона нажатия выходит в поля карточки.
+                            .offset(x: HadithCardActions.iconInset(scale: scale))
                     }
                     .padding(.top, Spacing.s)
                     .overlay(alignment: .top) {
@@ -149,7 +148,7 @@ private struct HadithTranslationCard: View {
                             .frame(height: Size.hairline)
                     }
             } else {
-                HadithShareButton(hadith: hadith)
+                HadithCardActions(hadith: hadith)
                     .frame(maxWidth: .infinity, alignment: .trailing)
             }
         }
@@ -164,11 +163,13 @@ private struct HadithTranslationCard: View {
     private static let xHeightRatio: CGFloat = 0.27
 }
 
-/// «Поделиться» хадисом: значок без подложки цвета подписей; растёт вместе с переводом
-/// (шаг «Размер текста»), а не по системному размеру.
-private struct HadithShareButton: View {
+/// Закладка «В избранном» и «Поделиться» хадисом (как на Android: закладка слева): значки без
+/// подложки, растут вместе с переводом (шаг «Размер текста»), а не по системному размеру.
+/// Избранное читает только этот ряд — закладка не перестраивает страницу.
+private struct HadithCardActions: View {
     let hadith: Hadith
 
+    @Environment(HadithFavorites.self) private var favorites
     @Environment(\.theme) private var theme
     @Environment(\.contentTextScale) private var scale
 
@@ -176,10 +177,34 @@ private struct HadithShareButton: View {
         baseIconSize * scale
     }
 
+    /// Поле от правого значка до края его зоны нажатия — на столько ряд сдвигается вправо.
+    static func iconInset(scale: Double) -> CGFloat {
+        (Size.minTapTarget - iconSize(scale: scale)) / 2
+    }
+
+    /// Отступ текста источника справа: место под два значка, видимые части которых стоят в тексте.
+    static func textInset(scale: Double) -> CGFloat {
+        Size.minTapTarget * 2 - iconInset(scale: scale) + Spacing.s
+    }
+
     private static let baseIconSize: CGFloat = 19
 
     var body: some View {
-        ShareButton(iconSize: Self.iconSize(scale: scale)) { hadith.shareText }
-            .buttonStyle(BareIconButtonStyle(foreground: theme.palette.onAccentSecondary))
+        let isFavorite = favorites.isFavorite(hadith.id)
+        HStack(spacing: 0) {
+            Button {
+                favorites.toggle(hadith.id)
+            } label: {
+                Image(systemName: isFavorite ? "bookmark.fill" : "bookmark")
+                    .font(.system(size: Self.iconSize(scale: scale)))
+            }
+            .buttonStyle(BareIconButtonStyle(foreground: isFavorite ? theme.palette.gold : theme.palette.onAccentSecondary))
+            .accessibilityLabel(Text("hadith.favorite"))
+            .accessibilityAddTraits(isFavorite ? [.isToggle, .isSelected] : .isToggle)
+            .sensoryFeedback(.selection, trigger: isFavorite)
+
+            ShareButton(iconSize: Self.iconSize(scale: scale)) { hadith.shareText }
+                .buttonStyle(BareIconButtonStyle(foreground: theme.palette.onAccentSecondary))
+        }
     }
 }

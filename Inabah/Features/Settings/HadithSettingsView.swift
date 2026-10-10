@@ -1,14 +1,18 @@
 import SwiftUI
 
-/// Настройки хадисов: сброс отметок «прочитан» / «выучен» каждого сборника отдельно.
+/// Настройки хадисов: сброс отметок «прочитан» / «выучен» каждого сборника отдельно
+/// и очистка «Избранного».
 struct HadithSettingsView: View {
     @Environment(HadithStore.self) private var store
     @Environment(HadithProgress.self) private var progress
+    @Environment(HadithFavorites.self) private var favorites
     @Environment(HadithCollectionOrder.self) private var order
     @Environment(\.theme) private var theme
 
     /// Сборник, сброс которого ждёт подтверждения.
     @State private var pendingReset: HadithCollection?
+    /// Очистка «Избранного» ждёт подтверждения (`true`; `nil` — диалога нет).
+    @State private var pendingFavoritesClear: Bool?
 
     var body: some View {
         Form {
@@ -40,6 +44,19 @@ struct HadithSettingsView: View {
                     Text(collection.title)
                 }
             }
+
+            Section {
+                Button(role: .destructive) {
+                    pendingFavoritesClear = true
+                } label: {
+                    Text("settings.hadith.favorites.clear")
+                }
+                // Неактивна, если закладок нет (правило — как на Android: по сохранённым закладкам).
+                .disabled(favorites.isEmpty)
+                .settingsRow()
+            } header: {
+                Text("hadith.favorites.title")
+            }
         }
         .settingsForm(background: theme.gradients.hadithBackground)
         .navigationTitle(Text("settings.hadith.title"))
@@ -50,6 +67,13 @@ struct HadithSettingsView: View {
             actionLabel: "settings.hadith.reset.confirm.action",
             message: { Text("settings.hadith.reset.confirm.message \(String(localized: $0.title))") },
             perform: { progress.reset($0) }
+        )
+        .destructiveConfirmation(
+            "settings.hadith.favorites.clear.confirm.title",
+            item: $pendingFavoritesClear,
+            actionLabel: "settings.hadith.favorites.clear.confirm.action",
+            message: { _ in Text("settings.hadith.favorites.clear.confirm.message") },
+            perform: { _ in favorites.clear() }
         )
         .task { await store.loadAll() }
         .audioPlayerInset()

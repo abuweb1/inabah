@@ -13,6 +13,7 @@ struct AppEnvironment {
     let azkarStore: AzkarStore
     let hadithStore: HadithStore
     let hadithProgress: HadithProgress
+    let hadithFavorites: HadithFavorites
     let hadithCollectionOrder: HadithCollectionOrder
     let appIconSettings: AppIconSettings
     let audioPlayer: AudioPlayerController
@@ -42,6 +43,7 @@ struct AppEnvironment {
         )
         hadithStore = HadithStore(repository: repository)
         hadithProgress = HadithProgress(defaults: defaults)
+        hadithFavorites = HadithFavorites(defaults: defaults)
         hadithCollectionOrder = HadithCollectionOrder(defaults: defaults)
         appIconSettings = AppIconSettings(switcher: appIconSwitcher ?? SystemAppIconSwitcher())
         self.audioPlayer = audioPlayer ?? AudioPlayerController(
@@ -99,6 +101,7 @@ extension View {
             .environment(environment.azkarStore)
             .environment(environment.hadithStore)
             .environment(environment.hadithProgress)
+            .environment(environment.hadithFavorites)
             .environment(environment.hadithCollectionOrder)
             .environment(environment.appIconSettings)
             .environment(environment.audioPlayer)

@@ -57,6 +57,16 @@ struct AppRouterTests {
         #expect(router.hadithPath == [.list(.ajurri), .about(.ajurri)])
     }
 
+    @Test("«Избранное» открывается с главной хадисов")
+    func openFavorites() {
+        let router = AppRouter()
+
+        router.open(HadithRoute.favorites)
+
+        #expect(router.selectedTab == .hadith)
+        #expect(router.hadithPath == [.favorites])
+    }
+
     @Test("Повторный выбор вкладки «Настройки» возвращает к списку разделов", arguments: [
         [SettingsRoute.hadith],
         [.hadith, .hadithOrder],

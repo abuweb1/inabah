@@ -980,6 +980,50 @@
         }
       }
     },
+    "hadith.favorite" : {
+      "comment" : "Закладка на экране хадиса (VoiceOver; состояние — «выбрано»)",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "В избранном"
+          }
+        }
+      }
+    },
+    "hadith.favorites.empty.message" : {
+      "comment" : "«Избранное» пусто: пояснение",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Здесь появятся хадисы, которые вы добавите"
+          }
+        }
+      }
+    },
+    "hadith.favorites.empty.title" : {
+      "comment" : "«Избранное» пусто: заголовок карточки",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пока пусто"
+          }
+        }
+      }
+    },
+    "hadith.favorites.title" : {
+      "comment" : "«Избранное»: заголовок экрана, подпись кнопки на главной хадисов (VoiceOver), группа в настройках хадисов",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Избранное"
+          }
+        }
+      }
+    },
     "hadith.home.brand.tagline" : {
       "comment" : "Подзаголовок главной раздела хадисов",
       "localizations" : {
@@ -1705,6 +1749,50 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Азкары"
+          }
+        }
+      }
+    },
+    "settings.hadith.favorites.clear" : {
+      "comment" : "Настройки хадисов: кнопка очистки «Избранного»",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Очистить избранное"
+          }
+        }
+      }
+    },
+    "settings.hadith.favorites.clear.confirm.action" : {
+      "comment" : "Подтверждение очистки «Избранного»: кнопка",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Очистить"
+          }
+        }
+      }
+    },
+    "settings.hadith.favorites.clear.confirm.message" : {
+      "comment" : "Подтверждение очистки «Избранного»: пояснение",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Все хадисы будут убраны из избранного."
+          }
+        }
+      }
+    },
+    "settings.hadith.favorites.clear.confirm.title" : {
+      "comment" : "Подтверждение очистки «Избранного»: заголовок",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Очистить избранное?"
           }
         }
       }

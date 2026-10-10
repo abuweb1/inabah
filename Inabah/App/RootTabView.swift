@@ -42,6 +42,7 @@ struct RootTabView: View {
                                 case .list(let collection): HadithListView(collection: collection)
                                 case .detail(let id): HadithDetailView(id: id)
                                 case .about(let collection): CollectionAboutView(collection: collection)
+                                case .favorites: FavoritesView()
                                 }
                             }
                             .interfaceTextSize()
