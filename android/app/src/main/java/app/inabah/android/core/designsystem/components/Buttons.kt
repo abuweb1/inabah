@@ -221,6 +221,26 @@ fun PrimaryButton(
     }
 }
 
+/** Второе действие под [PrimaryButton] («Не сейчас»): текст без подложки, зона касания — по ширине. */
+@Composable
+fun TextButton(
+    onClick: () -> Unit,
+    text: String,
+    modifier: Modifier = Modifier,
+) = FixedTextSize {
+    val interaction = remember { MutableInteractionSource() }
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .defaultMinSize(minHeight = Size.minTapTarget)
+            .clickable(interaction, indication = null, role = Role.Button, onClick = onClick)
+            .pressFeedback(interaction, opacity = PressFeedback.ROW_OPACITY),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(text, color = InabahTheme.palette.onAccentSecondary, style = InabahType.body.copy(fontWeight = FontWeight.SemiBold))
+    }
+}
+
 /**
  * Плитка-переключатель (iOS `ToggleTileButtonStyle`, отметки хадиса): значок над подписью.
  * Включена — фон [activeFill], текст onAccent; выключена — [fill], цвет [tint]; смена — 300 мс.

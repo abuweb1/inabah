@@ -149,6 +149,7 @@ private fun TabScreens(tab: AppTab, services: AppServices, contentPadding: Paddi
                 AzkarHomeScreen(
                     services.azkarStore,
                     services.azkarWindowSettings,
+                    services.reminderSettings,
                     onOpenSection = { router.push(AzkarRoute.SectionList(it)) },
                     contentPadding,
                 )
@@ -230,6 +231,7 @@ private fun TabScreens(tab: AppTab, services: AppServices, contentPadding: Paddi
                 AzkarSettingsScreen(
                     store = services.azkarStore,
                     windowSettings = services.azkarWindowSettings,
+                    reminderSettings = services.reminderSettings,
                     onBack = { router.pop(AppTab.Settings) },
                     contentPadding = contentPadding.bottomOnly(),
                 )
@@ -240,6 +242,7 @@ private fun TabScreens(tab: AppTab, services: AppServices, contentPadding: Paddi
                     progress = services.hadithProgress,
                     favorites = services.hadithFavorites,
                     order = services.hadithCollectionOrder,
+                    reminderSettings = services.reminderSettings,
                     onOpenOrder = { router.push(SettingsRoute.HadithOrder) },
                     onBack = { router.pop(AppTab.Settings) },
                     contentPadding = contentPadding.bottomOnly(),

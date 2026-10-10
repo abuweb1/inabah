@@ -40,6 +40,7 @@ import app.inabah.android.core.settings.HadithFavorites
 import app.inabah.android.core.settings.HadithProgress
 import app.inabah.android.core.settings.HadithStatus
 import app.inabah.android.core.settings.PreferencesStorage
+import app.inabah.android.core.settings.ReminderSettings
 import app.inabah.android.core.settings.TestDataStoreRule
 import app.inabah.android.core.settings.ReadingSettings
 import app.inabah.android.feature.settings.HadithOrderSettingsScreen
@@ -196,7 +197,8 @@ class HadithScreensTest {
         progress.toggleRead(qudsi)
         compose.setContent {
             InabahTheme {
-                HadithSettingsScreen(store, progress, HadithFavorites(storage), HadithCollectionOrder(storage), onOpenOrder = {}, onBack = {},
+                HadithSettingsScreen(store, progress, HadithFavorites(storage), HadithCollectionOrder(storage), ReminderSettings(storage),
+                    onOpenOrder = {}, onBack = {},
                     contentPadding = PaddingValues())
             }
         }
@@ -341,7 +343,7 @@ class HadithScreensTest {
         favorites.toggle(nawawi)
         compose.setContent {
             InabahTheme {
-                HadithSettingsScreen(HadithStore(FixedRepository()), progress, favorites, HadithCollectionOrder(storage),
+                HadithSettingsScreen(HadithStore(FixedRepository()), progress, favorites, HadithCollectionOrder(storage), ReminderSettings(storage),
                     onOpenOrder = {}, onBack = {}, contentPadding = PaddingValues())
             }
         }

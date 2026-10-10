@@ -14,10 +14,15 @@ import app.inabah.android.core.content.model.AzkarSection
 import app.inabah.android.core.designsystem.LocalInabahTheme
 import app.inabah.android.core.designsystem.components.FeaturedVerse
 import app.inabah.android.core.designsystem.components.NavCardRing
+import app.inabah.android.core.designsystem.components.NoticeCard
+import app.inabah.android.core.designsystem.components.PrimaryButton
 import app.inabah.android.core.designsystem.components.SectionBrand
 import app.inabah.android.core.designsystem.components.SectionHomeLayout
 import app.inabah.android.core.designsystem.components.SectionNavCard
+import app.inabah.android.core.designsystem.components.TextButton
 import app.inabah.android.core.settings.AzkarWindowSettings
+import app.inabah.android.core.settings.ReminderSettings
+import app.inabah.android.feature.settings.rememberNotificationPermission
 
 // Арабский контент главной — не переводится.
 private const val BRAND_ARABIC = "إنابة"
@@ -28,6 +33,7 @@ private const val VERSE_ARABIC = "وَأَنِيبُوا إِلَىٰ رَبِّ
 fun AzkarHomeScreen(
     store: AzkarStore,
     windowSettings: AzkarWindowSettings,
+    reminderSettings: ReminderSettings,
     onOpenSection: (AzkarSection) -> Unit,
     contentPadding: PaddingValues,
     modifier: Modifier = Modifier,
@@ -51,6 +57,33 @@ fun AzkarHomeScreen(
         AzkarSection.entries.forEach { section ->
             AzkarSectionCard(store, windowSettings, section, onClick = { onOpenSection(section) })
         }
+        val offerAnswered by reminderSettings.offerAnswered.collectAsStateWithLifecycle()
+        if (!offerAnswered) ReminderOfferCard(reminderSettings)
+    }
+}
+
+/**
+ * Один раз — «Напоминать об азкарах?» (решение пользователя 2026-10-10): «Включить» — разрешение и
+ * напоминания в начале утреннего и вечернего времени; любой ответ — карточка больше не показывается.
+ */
+@Composable
+private fun ReminderOfferCard(settings: ReminderSettings) {
+    val permission = rememberNotificationPermission()
+    NoticeCard(
+        icon = R.drawable.ic_schedule,
+        title = stringResource(R.string.reminders_offer_title),
+        message = stringResource(R.string.reminders_offer_message),
+    ) {
+        PrimaryButton(
+            onClick = {
+                permission.request { granted ->
+                    if (granted) AzkarSection.entries.forEach { settings.setAzkarStart(it, true) }
+                    settings.answerOffer()
+                }
+            },
+            text = stringResource(R.string.reminders_offer_enable),
+        )
+        TextButton(onClick = settings::answerOffer, text = stringResource(R.string.reminders_offer_later))
     }
 }
 

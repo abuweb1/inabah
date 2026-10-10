@@ -37,8 +37,8 @@ const AUTHOR_KEYS = ['name', 'years'];
 // reminders.json: translations.<язык>.<вид>[.<раздел>] = { title, body }; в каждом виде — свои подстановки.
 const AZKAR_SECTIONS = ['morning', 'evening'];
 const REMINDER_KINDS = {
-  azkarStart: { sections: AZKAR_SECTIONS, placeholders: ['end'] },
-  azkarUnfinished: { sections: AZKAR_SECTIONS, placeholders: ['end'] },
+  azkarStart: { sections: AZKAR_SECTIONS, placeholders: [] },
+  azkarUnfinished: { sections: AZKAR_SECTIONS, placeholders: [] },
   hadithOfDay: { sections: null, placeholders: ['collection', 'number', 'text'] },
 };
 const REMINDER_TEXT_KEYS = ['title', 'body'];
@@ -280,7 +280,7 @@ function checkReminders(reminders) {
     for (const field of REMINDER_TEXT_KEYS) {
       if (!requireString(where, text ?? {}, field)) continue;
       for (const [, name] of text[field].matchAll(/\{(\w*)\}/g)) {
-        if (!placeholders.includes(name)) error(where, `${field}: неизвестная подстановка {${name}} (можно: ${placeholders.map(p => `{${p}}`).join(', ')})`);
+        if (!placeholders.includes(name)) error(where, `${field}: неизвестная подстановка {${name}} (можно: ${placeholders.map(p => `{${p}}`).join(', ') || 'никаких'})`);
       }
       checkMixedScript(where, field, text[field]);
     }

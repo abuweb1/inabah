@@ -3,6 +3,7 @@ package app.inabah.android.core.designsystem.components
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -28,8 +29,9 @@ private const val NOTICE_ICON_SIZE = 24f
 
 /**
  * Карточка-заглушка (iOS `ComingSoonCard`, компактная — `10-typography.md`, 10.3): значок золотом,
- * [title] и [message] по центру — «Скоро» в «Махрадже», пустое «Избранное». Для TalkBack — одним
- * элементом и заголовком: находится в навигации по заголовкам.
+ * [title] и [message] по центру — «Скоро» в «Махрадже», пустое «Избранное», предложение напоминаний
+ * (с кнопками [actions] под текстом). Для TalkBack — одним элементом и заголовком: находится в навигации
+ * по заголовкам; кнопки остаются отдельными элементами.
  */
 @Composable
 fun NoticeCard(
@@ -37,6 +39,7 @@ fun NoticeCard(
     title: String,
     message: String,
     modifier: Modifier = Modifier,
+    actions: (@Composable ColumnScope.() -> Unit)? = null,
 ) {
     val palette = InabahTheme.palette
     val iconSize = with(LocalDensity.current) { NOTICE_ICON_SIZE.sp.toDp() }
@@ -52,5 +55,13 @@ fun NoticeCard(
         Icon(painterResource(icon), contentDescription = null, tint = palette.gold, modifier = Modifier.size(iconSize))
         Text(title, color = palette.onAccent, style = InabahType.headline.copy(fontWeight = FontWeight.Bold))
         Text(message, color = palette.onAccentSecondary, style = InabahType.caption, textAlign = TextAlign.Center)
+        if (actions != null) {
+            Column(
+                Modifier.fillMaxWidth().padding(top = Spacing.s),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(Spacing.xs),
+                content = actions,
+            )
+        }
     }
 }
