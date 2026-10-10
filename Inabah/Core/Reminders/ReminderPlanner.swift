@@ -118,7 +118,9 @@ nonisolated enum ReminderPlan {
     /// Показывать ли напоминание азкаров `kind` в момент `now` — как на Android (`isAzkarReminderDue`):
     /// только пока окно открыто; «ещё не прочитаны» — если раздел в этом окне не выполнен. `record` — запись
     /// истории за день окна (дату его начала: после полуночи — вчерашнюю). Пустой раздел (`total == 0`)
-    /// выполненным не считается. На iOS этим решается, ставить ли «ещё не прочитаны» на текущее окно.
+    /// выполненным не считается. В приложении не вызывается: на iOS триггер точный, а «ещё не прочитаны»
+    /// не ставится на выполненные окна (`plan`, `isCompleted`). Зеркало Android — держит правила одинаковыми
+    /// и проверяется тестами (аудит iOS 1.1.1, А17).
     static func isAzkarReminderDue(
         kind: ReminderKind,
         window: AzkarWindow,
@@ -135,6 +137,11 @@ nonisolated enum ReminderPlan {
     static func isCompleted(_ record: AzkarDayRecord?) -> Bool {
         guard let record else { return false }
         return record.total > 0 && record.completed >= record.total
+    }
+
+    /// Раздел выполнен — по текущему прогрессу (то же правило, что у записи истории).
+    static func isCompleted(_ progress: SectionProgress) -> Bool {
+        progress.total > 0 && progress.completed >= progress.total
     }
 
     // MARK: - Хадис дня
@@ -154,7 +161,10 @@ nonisolated enum ReminderPlan {
         return all[(lastIndex + 1) % all.count]
     }
 
-    /// Хадисы на `count` дней подряд: каждый следующий — как если бы предыдущий уже был прочитан и показан.
+    /// Хадисы на `count` дней подряд — как на Android, где хадис выбирается в момент показа (решение
+    /// пользователя 2026-10-10, «тот же, пока не прочтёшь»): пока есть непрочитанный, каждый день приходит
+    /// первый непрочитанный — до тех пор, пока его не прочтут (прочтение — в приложении, после чего план
+    /// пересобирается). Всё прочитано — по кругу: каждый день следующий после показанного накануне.
     static func pickHadiths(
         count: Int,
         order: [HadithCollection],
@@ -163,17 +173,10 @@ nonisolated enum ReminderPlan {
         last: HadithID?
     ) -> [Hadith] {
         var picked: [Hadith] = []
-        var shown = Set<HadithID>()
         var previous = last
         for _ in 0..<count {
-            guard let hadith = pickHadithOfDay(
-                order: order,
-                hadiths: hadiths,
-                isRead: { isRead($0) || shown.contains($0) },
-                last: previous
-            ) else { break }
+            guard let hadith = pickHadithOfDay(order: order, hadiths: hadiths, isRead: isRead, last: previous) else { break }
             picked.append(hadith)
-            shown.insert(hadith.id)
             previous = hadith.id
         }
         return picked

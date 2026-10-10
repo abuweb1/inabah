@@ -1,6 +1,7 @@
 import Foundation
 import Observation
 import OSLog
+import UIKit
 import UserNotifications
 
 /// Разрешены ли уведомления: и доступ дан, и баннеры не выключены в настройках iPhone (аудит Android, К1).
@@ -110,18 +111,32 @@ final class ReminderScheduler {
         return granted && isAllowed
     }
 
-    /// Пересобрать план; предыдущая незавершённая пересборка отменяется.
+    /// Пересобрать план. Пересборки идут строго по очереди: предыдущая отменяется и дожидается —
+    /// две одновременные не перемешивают запросы и план хадисов (аудит iOS 1.1.1, А1). На время
+    /// пересборки — фоновая задача: при уходе в фон система даёт её закончить (А2).
     func reschedule() {
-        pending?.cancel()
-        pending = Task { await rescheduleNow() }
+        let previous = pending
+        let backgroundTask = UIApplication.shared.beginBackgroundTask(withName: "reminders")
+        pending = Task {
+            previous?.cancel()
+            await previous?.value
+            if !Task.isCancelled { await rescheduleNow() }
+            UIApplication.shared.endBackgroundTask(backgroundTask)
+        }
     }
 
+    /// Сначала ставятся запросы нового плана (идентификаторы постоянные — тот же запрос заменяется),
+    /// потом снимаются прежние, которых в плане нет: прерванная пересборка не оставляет неделю без
+    /// напоминаний (А2). Отменённая — останавливается, ничего не снимая и не записывая.
     func rescheduleNow() async {
         await refreshAuthorization()
-        let stale = await center.pendingIdentifiers().filter { $0.hasPrefix(ReminderPlan.identifierPrefix) }
-        center.removePending(stale)
+        let existing = await center.pendingIdentifiers().filter { $0.hasPrefix(ReminderPlan.identifierPrefix) }
         // Нет разрешения — ничего не ставится и «показанный» хадис не сдвигается (аудит Android, К1).
-        guard isAllowed, !Task.isCancelled else { return }
+        guard isAllowed else {
+            center.removePending(existing)
+            return
+        }
+        guard !Task.isCancelled else { return }
 
         let texts: ReminderTexts
         do {
@@ -144,29 +159,36 @@ final class ReminderScheduler {
         let hadiths = await hadithsOfDay(for: planned.filter { $0.kind == .hadithOfDay }, now: moment)
         guard !Task.isCancelled else { return }
 
+        var added = Set<String>()
         for reminder in planned {
+            guard !Task.isCancelled else { return }
             guard let content = content(for: reminder, texts: texts, hadith: hadiths[reminder.at]) else { continue }
-            let components = calendar.dateComponents([.year, .month, .day, .hour, .minute, .second], from: reminder.at)
+            // Компоненты — в календаре и поясе расписания, явно (А9): триггер читает их тем же календарём.
+            var components = calendar.dateComponents([.year, .month, .day, .hour, .minute, .second], from: reminder.at)
+            components.calendar = calendar
+            components.timeZone = calendar.timeZone
             let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: false)
             do {
                 try await center.add(UNNotificationRequest(identifier: reminder.identifier, content: content, trigger: trigger))
+                added.insert(reminder.identifier)
             } catch {
                 logger.error("Напоминание не поставлено: \(String(describing: error), privacy: .public)")
             }
         }
+        guard !Task.isCancelled else { return }
+        center.removePending(existing.filter { !added.contains($0) })
+        settings.setHadithPlan(Dictionary(uniqueKeysWithValues: hadiths.map { ($0.key.timeIntervalSince1970, $0.value.id) }))
     }
 
     /// Хадисы дня по моментам: прежний план показывает, какой уже показан (`last`), новый — выбирается
-    /// после загрузки всех сборников (аудит Android, К7); упавший сборник просто не участвует.
+    /// после загрузки всех сборников (аудит Android, К7); упавший сборник просто не участвует. План
+    /// сохраняет вызывающий — только когда запросы поставлены.
     private func hadithsOfDay(for reminders: [PlannedReminder], now moment: Date) async -> [Date: Hadith] {
         let previous = settings.hadithPlan
         if let shown = previous.filter({ $0.key <= moment.timeIntervalSince1970 }).max(by: { $0.key < $1.key }) {
             settings.setLastHadith(shown.value)
         }
-        guard !reminders.isEmpty else {
-            settings.setHadithPlan([:])
-            return [:]
-        }
+        guard !reminders.isEmpty else { return [:] }
         await hadithStore.loadAll()
         let loaded = Dictionary(uniqueKeysWithValues: HadithCollection.allCases.map { ($0, hadithStore.hadiths(in: $0)) })
         let picks = ReminderPlan.pickHadiths(
@@ -178,7 +200,6 @@ final class ReminderScheduler {
         )
         var byMoment: [Date: Hadith] = [:]
         for (reminder, hadith) in zip(reminders, picks) { byMoment[reminder.at] = hadith }
-        settings.setHadithPlan(Dictionary(uniqueKeysWithValues: byMoment.map { ($0.key.timeIntervalSince1970, $0.value.id) }))
         return byMoment
     }
 

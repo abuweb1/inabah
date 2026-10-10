@@ -77,7 +77,7 @@ extension Zikr {
             String(localized: section.title),
             arabic,
             String(localized: "zikr.repetitions \(repetitions)"),
-            translation?.narrator.map { String(localized: "hadith.detail.narrator \($0)") },
+            translation?.narrator.map { String(localized: "translation.narrator \($0)") },
             translation?.transliteration,
             translation?.text,
             translation?.source,
@@ -93,7 +93,7 @@ extension Hadith {
         ShareText.blocks(
             String(localized: "share.hadith.header \(String(localized: collection.title)) \(number)"),
             arabicDisplayText,
-            translation?.narrator.map { String(localized: "hadith.detail.narrator \($0)") },
+            translation?.narrator.map { String(localized: "translation.narrator \($0)") },
             translation?.text,
             translation?.source.map { String(localized: "hadith.detail.source \($0)") },
             notesBlock,

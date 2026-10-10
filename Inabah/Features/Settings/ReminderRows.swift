@@ -12,7 +12,17 @@ struct ReminderToggleRow: View {
     @Environment(\.theme) private var theme
     /// Положение переключателя на экране: возвращается к сохранённому сразу после нажатия — включённым
     /// он становится, только когда напоминание действительно включено (дали разрешение).
-    @State private var shown = false
+    @State private var shown: Bool
+
+    init(title: LocalizedStringResource, subtitle: Text?, isOn: Bool, tint: Color, onChange: @escaping (Bool) -> Void) {
+        self.title = title
+        self.subtitle = subtitle
+        self.isOn = isOn
+        self.tint = tint
+        self.onChange = onChange
+        // Сразу сохранённое значение — без кадра «выкл» при появлении (аудит iOS 1.1.1, А7).
+        _shown = State(initialValue: isOn)
+    }
 
     var body: some View {
         Toggle(isOn: $shown) {
@@ -27,7 +37,6 @@ struct ReminderToggleRow: View {
             }
         }
         .tint(tint)
-        .onAppear { shown = isOn }
         .onChange(of: isOn) { _, value in shown = value }
         .onChange(of: shown) { _, value in
             guard value != isOn else { return }
@@ -58,7 +67,9 @@ struct ReminderOpenSettingsRow: View {
 }
 
 /// Включение напоминаний с запросом разрешения: включается, только если уведомления разрешены;
-/// отказ запоминается до ухода с экрана — показывается «заблокировано» (как на Android).
+/// отказ запоминается до ухода с экрана — показывается «заблокировано» (как на Android). Выключение —
+/// всегда сразу, и при запрете уведомлений: переключатель показывает сохранённое значение (решение
+/// пользователя 2026-10-10, аудит iOS 1.1.1, Р2).
 @MainActor
 struct ReminderToggleAction {
     let scheduler: ReminderScheduler

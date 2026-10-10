@@ -102,10 +102,7 @@ struct RootTabView: View {
             // пересобирается при возврате (разрешение могли поменять) и при уходе в фон.
             if phase == .active || phase == .background { reminderScheduler.reschedule() }
         }
-        // Раздел дочитан или сброшен — «ещё не прочитаны» на это окно снимается или возвращается.
-        .onChange(of: AzkarSection.allCases.map { azkarStore.progress(of: $0) }) {
-            reminderScheduler.reschedule()
-        }
+        .background { ReminderCompletionWatcher() }
     }
 
     /// Выбор вкладки проходит через роутер — повторный тап по активной вкладке возвращает к её корню.
@@ -114,6 +111,21 @@ struct RootTabView: View {
             get: { router.selectedTab },
             set: { router.select($0) }
         )
+    }
+}
+
+/// Раздел дочитан или снова не дочитан (сброс, новое окно) — «ещё не прочитаны» на это окно снимается
+/// или возвращается. Следит только за выполненностью, а не за каждым зикром (аудит iOS 1.1.1, А3), и
+/// отдельной вьюхой — счёт зикров не перестраивает корень с вкладками.
+private struct ReminderCompletionWatcher: View {
+    @Environment(AzkarStore.self) private var azkarStore
+    @Environment(ReminderScheduler.self) private var reminderScheduler
+
+    var body: some View {
+        Color.clear
+            .onChange(of: AzkarSection.allCases.map { ReminderPlan.isCompleted(azkarStore.progress(of: $0)) }) {
+                reminderScheduler.reschedule()
+            }
     }
 }
 

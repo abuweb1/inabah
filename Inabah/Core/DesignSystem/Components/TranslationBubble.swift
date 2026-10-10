@@ -13,14 +13,12 @@ private struct TranslationBubbleModifier: ViewModifier {
     let fill: Color
     let stripe: Color
 
-    private static let radius: CGFloat = 8
-
     func body(content: Content) -> some View {
         content
             .padding(.vertical, Spacing.s)
             .padding(.horizontal, Spacing.m)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(fill, in: .rect(cornerRadii: .init(bottomTrailing: Self.radius, topTrailing: Self.radius)))
+            .background(fill, in: .rect(cornerRadii: .init(bottomTrailing: Radius.bubble, topTrailing: Radius.bubble)))
             .overlay(alignment: .leading) {
                 Rectangle().fill(stripe).frame(width: Size.accentStripe)
             }

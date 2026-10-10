@@ -160,18 +160,30 @@ struct ReminderPlannerTests {
         #expect(ReminderPlan.pickHadithOfDay(order: [.ajurri], hadiths: [:], isRead: { _ in false }, last: nil) == nil)
     }
 
-    @Test("Неделя хадисов — подряд непрочитанные, затем по кругу")
-    func sequence() {
-        let picks = ReminderPlan.pickHadiths(count: 6, order: [.nawawi, .qudsi], hadiths: Self.library, isRead: { $0.number == 2 }, last: nil)
+    @Test("Неделя хадисов: есть непрочитанный — каждый день он, пока не прочтут (как на Android)")
+    func sameUntilRead() {
+        let picks = ReminderPlan.pickHadiths(count: 3, order: [.nawawi, .qudsi], hadiths: Self.library, isRead: { $0.number == 1 }, last: nil)
+        #expect(picks.map(\.id) == Array(repeating: HadithID(collection: .nawawi, number: 2), count: 3))
+    }
+
+    @Test("Неделя хадисов: всё прочитано — каждый день следующий по кругу от показанного")
+    func cycleWhenAllRead() {
+        let picks = ReminderPlan.pickHadiths(
+            count: 4, order: [.nawawi, .qudsi], hadiths: Self.library, isRead: { _ in true }, last: HadithID(collection: .nawawi, number: 3)
+        )
         #expect(picks.map(\.id) == [
-            HadithID(collection: .nawawi, number: 1),
-            HadithID(collection: .nawawi, number: 3),
             HadithID(collection: .qudsi, number: 1),
-            // Непрочитанные кончились — по кругу после последнего показанного (къудси № 1).
             HadithID(collection: .qudsi, number: 2),
             HadithID(collection: .nawawi, number: 1),
             HadithID(collection: .nawawi, number: 2),
         ])
+    }
+
+    @Test("Подстановки: внутри текста хадиса фигурные скобки не заменяются")
+    func fillOrder() {
+        let template = ReminderText(title: "№ {number}", body: "{text}")
+        let filled = template.filled([.number: "7", .text: "Сказано {number} раз"])
+        #expect(filled == ReminderText(title: "№ 7", body: "Сказано {number} раз"))
     }
 
     // MARK: - Нажатие (Т7)

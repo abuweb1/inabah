@@ -81,8 +81,9 @@ struct AzkarSettingsView: View {
     }
 
     /// «Напоминания» (решения пользователя 2026-10-10, вид — как на Android): в начале времени каждого
-    /// раздела (время — из черновика) и «если ещё не прочитаны». Переключатели сохраняются сразу;
-    /// включён — только если сохранён и уведомления разрешены.
+    /// раздела (время — из черновика) и «если ещё не прочитаны». Переключатели сохраняются сразу и
+    /// показывают сохранённое — и при запрете уведомлений, тогда ниже «Открыть настройки», а выключить
+    /// можно всегда (решение пользователя 2026-10-10, аудит iOS 1.1.1, Р2).
     @ViewBuilder
     private var remindersSection: some View {
         let allowed = scheduler.isAllowed
@@ -94,7 +95,7 @@ struct AzkarSettingsView: View {
                 ReminderToggleRow(
                     title: section.title,
                     subtitle: Text("settings.reminders.start.subtitle \(draft(for: section).wrappedValue.start.text(in: store.calendar))"),
-                    isOn: allowed && reminders.isStartEnabled(section),
+                    isOn: reminders.isStartEnabled(section),
                     tint: theme.palette.tabAzkar
                 ) { isOn in
                     toggle(isOn) { reminders.setStart($0, for: section) }
@@ -104,7 +105,7 @@ struct AzkarSettingsView: View {
             ReminderToggleRow(
                 title: "settings.reminders.unfinished",
                 subtitle: Text("settings.reminders.unfinished.subtitle"),
-                isOn: allowed && preferences.azkarUnfinished,
+                isOn: preferences.azkarUnfinished,
                 tint: theme.palette.tabAzkar
             ) { isOn in
                 toggle(isOn) { reminders.setUnfinished($0) }

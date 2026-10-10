@@ -90,16 +90,25 @@ nonisolated enum TranslationShade {
     }
 }
 
-/// Пределы осветления считаются один раз на палитру (К10 аудита Android: не на каждый кадр ползунка).
+/// Пределы осветления и цвета палитры в sRGB считаются один раз на палитру (К10 аудита Android, А5 аудита
+/// iOS: не на каждый кадр ползунка). Палитр немного — по числу палитр и фонов арабского текста.
 @MainActor
 private enum TranslationShadeLimits {
     static var cache: [Palette: (azkar: Double, hadith: Double)] = [:]
+    static var colors: [Palette: TranslationShade.Colors] = [:]
 
     static func limits(_ palette: Palette) -> (azkar: Double, hadith: Double) {
         if let cached = cache[palette] { return cached }
         let limits = (TranslationShade.lightLimit(palette, .azkar), TranslationShade.lightLimit(palette, .hadith))
         cache[palette] = limits
         return limits
+    }
+
+    static func colors(_ palette: Palette) -> TranslationShade.Colors {
+        if let cached = colors[palette] { return cached }
+        let value = TranslationShade.Colors(palette)
+        colors[palette] = value
+        return value
     }
 }
 
@@ -111,7 +120,7 @@ extension Theme {
     func withTranslationShade(_ shade: Double) -> Theme {
         let value = shade.isNaN ? 0 : min(max(shade, -1), 1)
         guard abs(value) >= TranslationShade.noShade else { return self }
-        let c = TranslationShade.Colors(palette)
+        let c = TranslationShadeLimits.colors(palette)
         var theme = self
         if value < 0 {
             let t = -value * TranslationShade.darkMax
