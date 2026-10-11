@@ -32,7 +32,7 @@ fun AzkarStreakCapsule(current: Int, onClick: () -> Unit, modifier: Modifier = M
     ) {
         Icon(painterResource(R.drawable.ic_auto_awesome), contentDescription = null, tint = palette.gold, modifier = Modifier.size(iconSize))
         Text(
-            if (current > 0) pluralStringResource(R.plurals.azkar_streak_days, current, current) else stringResource(R.string.azkar_streak_start),
+            if (current > 0) streakDaysText(current) else stringResource(R.string.azkar_streak_start),
             color = palette.onAccent,
             style = InabahType.subheadline,
         )
@@ -44,5 +44,19 @@ fun AzkarStreakCapsule(current: Int, onClick: () -> Unit, modifier: Modifier = M
         )
     }
 }
+
+/** «12 дней подряд»; больше [STREAK_DISPLAY_MAX] — «9999+ дней подряд» (решение пользователя 2026-10-11). */
+@Composable
+fun streakDaysText(days: Int): String =
+    if (days > STREAK_DISPLAY_MAX) stringResource(R.string.azkar_streak_days_max)
+    else pluralStringResource(R.plurals.azkar_streak_days, days, days)
+
+/** Число серии в сводке календаря: больше [STREAK_DISPLAY_MAX] — «9999+». */
+@Composable
+fun streakNumberText(days: Int): String =
+    if (days > STREAK_DISPLAY_MAX) stringResource(R.string.azkar_streak_number_max) else days.toString()
+
+/** Самое большое число серии на экране; дальше — «9999+». */
+const val STREAK_DISPLAY_MAX = 9999
 
 private const val ICON_SIZE = 16

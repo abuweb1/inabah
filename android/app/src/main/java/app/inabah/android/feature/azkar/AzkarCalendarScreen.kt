@@ -12,14 +12,12 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -31,7 +29,11 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
@@ -182,7 +184,7 @@ private fun StreakSummary(streak: AzkarStreak) {
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(Spacing.xxs),
             ) {
-                Text(value.toString(), color = palette.onAccent, style = InabahType.title2)
+                Text(streakNumberText(value), color = palette.onAccent, style = InabahType.title2)
                 Text(stringResource(label), color = palette.onAccentSecondary, style = InabahType.caption, textAlign = TextAlign.Center)
             }
         }
@@ -238,7 +240,7 @@ private fun WeekdayHeader(firstDayOfWeek: DayOfWeek, locale: Locale) {
             Text(
                 firstDayOfWeek.plus(offset.toLong()).getDisplayName(TextStyle.SHORT_STANDALONE, locale),
                 color = palette.onAccentTertiary,
-                style = InabahType.caption,
+                style = InabahType.subheadline,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.weight(1f),
             )
@@ -297,10 +299,9 @@ private fun DayCell(
         label,
     )
     Box {
-        Column(
+        Box(
             Modifier
-                .heightIn(min = Size.minTapTarget)
-                .width(Size.minTapTarget)
+                .size(Size.minTapTarget)
                 .then(
                     if (isFuture) {
                         Modifier.clearAndSetSemantics {}
@@ -310,29 +311,16 @@ private fun DayCell(
                             .clickable(role = Role.Button, onClick = onSelect)
                             .semantics { contentDescription = description }
                     },
-                )
-                .padding(vertical = Spacing.xxs),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(Spacing.xxs),
+                ),
+            contentAlignment = Alignment.Center,
         ) {
-            Box(
-                Modifier
-                    .clearAndSetSemantics {}
-                    .size(DAY_NUMBER_SIZE)
-                    .then(if (isToday) Modifier.background(palette.tabAzkar.copy(alpha = TODAY_FILL_ALPHA), CircleShape) else Modifier),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    date.dayOfMonth.toString(),
-                    color = when {
-                        isFuture -> palette.onAccentTertiary
-                        isToday -> palette.tabAzkar
-                        else -> palette.onAccent
-                    },
-                    style = if (isToday) InabahType.footnote.copy(fontWeight = FontWeight.Bold) else InabahType.footnote,
-                )
-            }
-            if (!isFuture) DayMark(day, Modifier.size(sizeInSp(MARK_SIZE)))
+            if (!isFuture) DayMark(day, Modifier.size(DAY_CIRCLE_SIZE), isToday = isToday)
+            Text(
+                date.dayOfMonth.toString(),
+                color = if (isFuture) palette.onAccentTertiary else palette.onAccent,
+                style = if (isToday) InabahType.callout.copy(fontWeight = FontWeight.Bold) else InabahType.callout,
+                modifier = Modifier.clearAndSetSemantics {},
+            )
         }
         AnchoredPopover(isSelected, PopoverPlacement.AboveCenter, palette.tabAzkar, onDismiss, showsArrow = true) {
             DayDetails(label, day)
@@ -340,26 +328,58 @@ private fun DayCell(
     }
 }
 
-/** Круг дня: левая половина — утренние (`sunRays`), правая — вечерние (`tabAzkar`); полностью — залита, начат — бледная. */
+/** Что нарисовать на половине кольца. */
+private enum class HalfMark { None, Started, Complete }
+
+private val AzkarDayRecord?.mark: HalfMark
+    get() = when {
+        this == null -> HalfMark.None
+        isComplete -> HalfMark.Complete
+        else -> HalfMark.Started
+    }
+
+/**
+ * Кольцо дня (решения пользователя 2026-10-11, макет «G» и телефон): под дугами — дорожка `track` по всему
+ * кругу, левая дуга — утренние (`gold`), правая — вечерние (`newMoon`, 🌑 чёрный); раздел полностью —
+ * сплошная дуга, начат — пунктир той же толщины, не читался — только дорожка. Толщина — [RING_FRACTION]
+ * размера (9 dp у круга 44 в сетке). [isToday] — лёгкая заливка внутри кольца цветом раздела.
+ */
 @Composable
-internal fun DayMark(day: AzkarDay?, modifier: Modifier = Modifier) {
+internal fun DayMark(day: AzkarDay?, modifier: Modifier = Modifier, isToday: Boolean = false) {
     val palette = InabahTheme.palette
-    val morning = halfColor(day?.morning, palette.sunRays)
-    // Вечер — цвет раздела, а не золото луны: рядом с солнечной половиной золото не отличить (эмулятор).
-    val evening = halfColor(day?.evening, palette.tabAzkar)
+    val morning = day?.morning.mark
+    val evening = day?.evening.mark
+    val sun = palette.gold
+    val moon = palette.newMoon
     val outline = palette.track
+    val today = palette.tabAzkar.copy(alpha = TODAY_FILL_ALPHA)
     Canvas(modifier.clearAndSetSemantics {}) {
-        drawCircle(outline, style = Stroke(width = MARK_OUTLINE.toPx()))
-        // Углы — по часовой от «трёх часов»: 90° — низ, 270° — верх.
-        morning?.let { drawArc(it, startAngle = 90f, sweepAngle = 180f, useCenter = true) }
-        evening?.let { drawArc(it, startAngle = 270f, sweepAngle = 180f, useCenter = true) }
+        val width = size.minDimension * RING_FRACTION
+        drawCircle(outline, radius = size.minDimension / 2 - width / 2, style = Stroke(width))
+        if (isToday) drawCircle(today, radius = size.minDimension / 2 - width)
+        val inset = Offset(width / 2, width / 2)
+        val ring = androidx.compose.ui.geometry.Size(size.width - width, size.height - width)
+        // Углы — по часовой от «трёх часов»: 90° — низ, 270° — верх; левая дуга — от 90°, правая — от 270°.
+        drawHalf(morning, sun, startAngle = 90f, inset, ring, width)
+        drawHalf(evening, moon, startAngle = 270f, inset, ring, width)
     }
 }
 
-private fun halfColor(record: AzkarDayRecord?, color: Color): Color? = when {
-    record == null -> null
-    record.isComplete -> color
-    else -> color.copy(alpha = STARTED_ALPHA)
+private fun DrawScope.drawHalf(
+    mark: HalfMark,
+    color: Color,
+    startAngle: Float,
+    topLeft: Offset,
+    ring: androidx.compose.ui.geometry.Size,
+    width: Float,
+) {
+    val effect = when (mark) {
+        HalfMark.None -> return
+        HalfMark.Complete -> null
+        HalfMark.Started -> PathEffect.dashPathEffect(floatArrayOf(width * DASH_ON, width * DASH_OFF))
+    }
+    drawArc(color, startAngle, HALF_TURN, useCenter = false, topLeft = topLeft, size = ring,
+        style = Stroke(width, cap = StrokeCap.Butt, pathEffect = effect))
 }
 
 /** Подробности дня над ячейкой: дата и по разделу «16 из 16» или «не читались». */
@@ -407,7 +427,7 @@ private fun Legend() {
         items.forEach { (day, label) ->
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Spacing.xs)) {
                 DayMark(day, Modifier.size(sizeInSp(MARK_SIZE)))
-                Text(stringResource(label), color = palette.onAccentSecondary, style = InabahType.caption)
+                Text(stringResource(label), color = palette.onAccentSecondary, style = InabahType.footnote)
             }
         }
     }
@@ -420,11 +440,15 @@ private fun sizeInSp(value: Int): Dp = with(LocalDensity.current) { value.sp.toD
 private const val DAYS_IN_WEEK = 7
 private const val MONTH_TITLE_PATTERN = "LLLL yyyy"
 private const val DAY_PATTERN = "d MMMM"
-private const val MARK_SIZE = 14
+private const val MARK_SIZE = 22
 private const val DETAILS_ICON_SIZE = 18
-private const val STARTED_ALPHA = 0.3f
-private const val TODAY_FILL_ALPHA = 0.18f
-private val DAY_NUMBER_SIZE = 28.dp
-private val MARK_OUTLINE = 1.dp
-private val DETAILS_WIDTH = 240.dp
+private const val HALF_TURN = 180f
+private val DAY_CIRCLE_SIZE = 44.dp
+
+/** Толщина кольца — доля размера круга: 9 dp у круга 44 («ещё толще» — место для числа хватает и на крупном шрифте). */
+private const val RING_FRACTION = 9f / 44f
+private const val DASH_ON = 0.6f
+private const val DASH_OFF = 0.9f
+private const val TODAY_FILL_ALPHA = 0.22f
+private val DETAILS_WIDTH = 280.dp
 private val DETAILS_PADDING = 20.dp

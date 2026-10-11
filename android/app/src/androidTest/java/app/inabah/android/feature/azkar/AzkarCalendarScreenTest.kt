@@ -105,5 +105,12 @@ class AzkarCalendarScreenTest {
         current = 2
         compose.onNodeWithText("2 дня подряд").assertIsDisplayed()
         compose.onAllNodesWithText("Начните серию сегодня").assertCountEquals(0)
+
+        // Больше 9999 — «9999+» (решение пользователя 2026-10-11).
+        current = 9999
+        // Склонение — по локали тестовой активности (не русской), поэтому только число.
+        compose.onNodeWithText("9999 д", substring = true).assertIsDisplayed()
+        current = 10_000
+        compose.onNodeWithText("9999+ дней подряд").assertIsDisplayed()
     }
 }

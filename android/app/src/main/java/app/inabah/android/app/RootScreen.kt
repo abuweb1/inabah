@@ -191,6 +191,7 @@ private fun TabScreens(tab: AppTab, services: AppServices, contentPadding: Paddi
                 AzkarListScreen(
                     section = route.section,
                     store = services.azkarStore,
+                    history = services.azkarHistory,
                     windowSettings = services.azkarWindowSettings,
                     readingSettings = services.readingSettings,
                     player = services.audioPlayer,
