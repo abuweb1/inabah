@@ -210,6 +210,17 @@
         }
       }
     },
+    "about.versionHistory" : {
+      "comment" : "«О приложении»: строка перехода к истории версий",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "История версий"
+          }
+        }
+      }
+    },
     "appIcon.beads" : {
       "comment" : "Иконка приложения: кольцо бусин с кистью",
       "localizations" : {
@@ -2815,6 +2826,83 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Обычный"
+          }
+        }
+      }
+    },
+    "update.available %@" : {
+      "comment" : "VoiceOver: значок «Обновить» на главной азкаров",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Доступна версия %@"
+          }
+        }
+      }
+    },
+    "versionHistory.empty.message" : {
+      "comment" : "История версий: пояснение, когда файл не загрузился",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Список изменений не удалось загрузить."
+          }
+        }
+      }
+    },
+    "versionHistory.empty.title" : {
+      "comment" : "История версий: файл не загрузился",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Нет истории версий"
+          }
+        }
+      }
+    },
+    "versionHistory.header %@ %@" : {
+      "comment" : "История версий: заголовок группы «версия · дата»",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$@"
+          }
+        }
+      }
+    },
+    "versionHistory.title" : {
+      "comment" : "Заголовок экрана истории версий",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "История версий"
+          }
+        }
+      }
+    },
+    "whatsNew.ok" : {
+      "comment" : "Окно «Что нового»: закрыть (кириллица)",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ОК"
+          }
+        }
+      }
+    },
+    "whatsNew.title %@" : {
+      "comment" : "Окно «Что нового» после обновления: заголовок с номером версии",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Что нового в %@"
           }
         }
       }

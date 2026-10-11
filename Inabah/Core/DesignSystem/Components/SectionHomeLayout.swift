@@ -1,14 +1,16 @@
 import SwiftUI
 
 /// Общий каркас главных экранов разделов («Азкары», «Хадисы»):
-/// градиентный фон, бренд-блок, аят и навигационные карточки; необязательная круглая кнопка
-/// справа вверху (вход в «Избранное» у хадисов) — поверх прокрутки, как на Android.
-struct SectionHomeLayout<Cards: View, TopAction: View>: View {
+/// градиентный фон, бренд-блок, аят и навигационные карточки; необязательные круглые кнопки
+/// справа вверху (вход в «Избранное» у хадисов) и слева вверху («Обновить» у азкаров) — поверх
+/// прокрутки, как на Android.
+struct SectionHomeLayout<Cards: View, TopAction: View, LeadingAction: View>: View {
     let background: ThemeGradient
     let brand: SectionBrand
     let verse: FeaturedVerse
     @ViewBuilder let cards: Cards
     @ViewBuilder let topAction: TopAction
+    @ViewBuilder let leadingAction: LeadingAction
 
     @Environment(\.theme) private var theme
 
@@ -19,13 +21,15 @@ struct SectionHomeLayout<Cards: View, TopAction: View>: View {
         brand: SectionBrand,
         verse: FeaturedVerse,
         @ViewBuilder cards: () -> Cards,
-        @ViewBuilder topAction: () -> TopAction
+        @ViewBuilder topAction: () -> TopAction,
+        @ViewBuilder leadingAction: () -> LeadingAction
     ) {
         self.background = background
         self.brand = brand
         self.verse = verse
         self.cards = cards()
         self.topAction = topAction()
+        self.leadingAction = leadingAction()
     }
 
     var body: some View {
@@ -56,6 +60,11 @@ struct SectionHomeLayout<Cards: View, TopAction: View>: View {
             topAction
                 .padding(.trailing, Spacing.xl)
                 // Визуально вверху — и VoiceOver читает первой, а не после карточек (аудит iOS 1.1.1, А11).
+                .accessibilitySortPriority(1)
+        }
+        .overlay(alignment: .topLeading) {
+            leadingAction
+                .padding(.leading, Spacing.xl)
                 .accessibilitySortPriority(1)
         }
         .background { background.linear.ignoresSafeArea() }
@@ -133,14 +142,38 @@ struct SectionHomeLayout<Cards: View, TopAction: View>: View {
     }
 }
 
-extension SectionHomeLayout where TopAction == EmptyView {
+extension SectionHomeLayout where TopAction == EmptyView, LeadingAction == EmptyView {
     init(
         background: ThemeGradient,
         brand: SectionBrand,
         verse: FeaturedVerse,
         @ViewBuilder cards: () -> Cards
     ) {
-        self.init(background: background, brand: brand, verse: verse, cards: cards) { EmptyView() }
+        self.init(background: background, brand: brand, verse: verse, cards: cards, topAction: { EmptyView() }, leadingAction: { EmptyView() })
+    }
+}
+
+extension SectionHomeLayout where LeadingAction == EmptyView {
+    init(
+        background: ThemeGradient,
+        brand: SectionBrand,
+        verse: FeaturedVerse,
+        @ViewBuilder cards: () -> Cards,
+        @ViewBuilder topAction: () -> TopAction
+    ) {
+        self.init(background: background, brand: brand, verse: verse, cards: cards, topAction: topAction, leadingAction: { EmptyView() })
+    }
+}
+
+extension SectionHomeLayout where TopAction == EmptyView {
+    init(
+        background: ThemeGradient,
+        brand: SectionBrand,
+        verse: FeaturedVerse,
+        @ViewBuilder cards: () -> Cards,
+        @ViewBuilder leadingAction: () -> LeadingAction
+    ) {
+        self.init(background: background, brand: brand, verse: verse, cards: cards, topAction: { EmptyView() }, leadingAction: leadingAction)
     }
 }
 

@@ -29,6 +29,8 @@ nonisolated enum SettingsRoute: Hashable, Codable, Sendable {
     case about
     /// Полный текст лицензии (из «О приложении»).
     case license(LicenseDocument)
+    /// «История версий» (из «О приложении»).
+    case versionHistory
 }
 
 /// Экраны внутри вкладки «Хадисы».

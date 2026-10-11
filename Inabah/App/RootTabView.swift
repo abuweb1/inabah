@@ -7,6 +7,7 @@ struct RootTabView: View {
     @Environment(HadithStore.self) private var hadithStore
     @Environment(AudioPlayerController.self) private var audioPlayer
     @Environment(ReminderScheduler.self) private var reminderScheduler
+    @Environment(WhatsNew.self) private var whatsNew
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.theme) private var theme
 
@@ -75,6 +76,7 @@ struct RootTabView: View {
                                 case .textSize: TextSizeSettingsView()
                                 case .about: AboutView()
                                 case .license(let document): LicenseView(document: document)
+                                case .versionHistory: VersionHistoryView()
                                 }
                             }
                             .interfaceTextSize()
@@ -86,7 +88,11 @@ struct RootTabView: View {
         // Подсветка выбранной вкладки — в тон раздела; содержимому вкладок выше возвращён
         // общий акцент, чтобы оттенок таб-бара не перекрашивал кнопки и переключатели.
         .tint(router.selectedTab.tint(in: theme))
+        // Под окном «Что нового» вкладки скрыты от VoiceOver; окно — поверх всех вкладок.
+        .accessibilityHidden(whatsNew.pending != nil)
+        .overlay { WhatsNewLayer() }
         .task {
+            await whatsNew.check()
             await azkarStore.loadAll()
             await hadithStore.loadAll()
         }

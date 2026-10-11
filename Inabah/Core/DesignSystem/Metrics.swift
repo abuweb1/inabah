@@ -102,6 +102,8 @@ enum Motion {
     static let cardPress = Animation.easeOut(duration: 0.18)
     /// Появление/исчезновение оверлея.
     static let overlay = Animation.easeOut(duration: 0.4)
+    /// Окно поверх экрана («Что нового»): пружина как на Android (затухание 0.82, жёсткость MediumLow).
+    static let dialog = Animation.spring(response: 0.31, dampingFraction: 0.82)
     /// Подсветка звучащей карточки.
     static let highlight = Animation.easeInOut(duration: 0.3)
     /// Медленная пульсация (каллиграфия экрана завершения).
