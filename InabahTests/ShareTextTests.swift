@@ -72,13 +72,13 @@ struct ShareTextTests {
         ])
     }
 
-    @Test("Сноски — после источника: «Комментарии учёных:», слово и пояснение на двух строках, между сносками пустая строка")
+    @Test("Сноски — после источника: «Комментарии учёных:», пустая строка, слово (из перевода — в кавычках) и пояснение на двух строках, между сносками пустая строка")
     func hadithWithNotes() {
         let hadith = Hadith(
             id: HadithID(collection: .nawawi, number: 2),
             arabic: "عَنْ عُمَرَ",
             translation: HadithTranslation(
-                language: .base, narrator: nil, text: "Перевод", source: "Муслим",
+                language: .base, narrator: nil, text: "Перевод про иман", source: "Муслим",
                 notes: [HadithNote(term: "иман", text: "вера"), HadithNote(term: "Различия передач", text: "у Муслима иначе")]
             )
         )
@@ -87,7 +87,8 @@ struct ShareTextTests {
             Приводится: Муслим
 
             Комментарии учёных:
-            иман
+
+            «иман»
             вера
 
             Различия передач
