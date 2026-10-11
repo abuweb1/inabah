@@ -25,6 +25,15 @@ struct ArabicText: View {
             .frame(maxWidth: .infinity, alignment: alignment == .center ? .center : .leading)
             .environment(\.layoutDirection, .rightToLeft)
     }
+
+    /// Начало текста для однострочного превью (мини-строка зикра, свёрнутый хадис): первые слова
+    /// и «…» — вёрстка и обрезка длинного арабского текста ради одной строки заметно дороже.
+    /// Как `arabicPreview` на Android: слов не больше `words` — все через одиночный пробел.
+    nonisolated static func preview(of text: String, words: Int = 8) -> String {
+        let parts = text.split(whereSeparator: \.isWhitespace)
+        let joined = parts.prefix(words).joined(separator: " ")
+        return parts.count > words ? joined + "…" : joined
+    }
 }
 
 #Preview {

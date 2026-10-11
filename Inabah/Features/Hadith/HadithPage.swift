@@ -5,11 +5,18 @@ import SwiftUI
 struct HadithPage: View {
     let hadith: Hadith
     let status: HadithStatus
-    /// Страница на экране; ушли с неё — раскрытые сноски сворачиваются (как на Android).
+    /// Страница на экране; ушли с неё — раскрытые сноски сворачиваются, а арабский текст
+    /// возвращается к настройке (как на Android).
     var isCurrent = true
 
     @Environment(ReadingSettings.self) private var settings
     @Environment(\.theme) private var theme
+
+    /// Свёрнут или раскрыт арабский текст нажатием на этой странице; `nil` — как в настройке
+    /// «Сворачивать арабский текст». Выбор не запоминается (решение пользователя, как на Android).
+    @State private var arabicExpandedChoice: Bool?
+
+    private var isArabicExpanded: Bool { arabicExpandedChoice ?? !settings.hadithArabicCollapsed }
 
     var body: some View {
         ScrollView {
@@ -28,24 +35,112 @@ struct HadithPage: View {
             .padding(Spacing.m)
         }
         .scrollIndicators(.hidden)
+        .onChange(of: isCurrent) { _, current in
+            if !current { arabicExpandedChoice = nil }
+        }
+        .onChange(of: settings.hadithArabicCollapsed) { arabicExpandedChoice = nil }
     }
 
+    /// Строка «ХАДИС N ⌄» сворачивает текст в строку с его началом и раскрывает обратно — всегда,
+    /// независимо от настройки (Android 6.6, п. 1). Отступ над текстом — внутри сворачиваемой части:
+    /// свёрнутая панель без пустого места.
     private var arabicPanel: some View {
         ParchmentPanel(bottomCornerRadius: Radius.card) {
-            VStack(alignment: .leading, spacing: Spacing.m) {
-                Text("hadith.detail.number \(hadith.number)")
-                    .font(.caption2.weight(.bold))
-                    .textCase(.uppercase)
-                    .tracking(Tracking.label)
-                    .foregroundStyle(theme.palette.parchmentText)
+            VStack(alignment: .leading, spacing: 0) {
+                HadithArabicHeader(
+                    number: hadith.number,
+                    preview: ArabicText.preview(of: hadith.arabicDisplayText),
+                    isExpanded: isArabicExpanded
+                ) {
+                    let expand = !isArabicExpanded
+                    withAnimation(Motion.collapse) { arabicExpandedChoice = expand }
+                }
                 ArabicText(
                     text: hadith.arabicDisplayText,
                     size: settings.arabicFontSize,
                     color: theme.palette.parchmentText
                 )
+                .padding(.top, Spacing.m)
+                .collapsible(isExpanded: isArabicExpanded)
             }
         }
     }
+}
+
+/// «ХАДИС N», начало текста (только когда свёрнут) и круглая ⌄ на пергаменте. Нажимается вся строка,
+/// без затемнения — отзывается только круг (как на Android: без ряби).
+private struct HadithArabicHeader: View {
+    let number: Int
+    let preview: String
+    let isExpanded: Bool
+    let onToggle: () -> Void
+
+    @Environment(\.theme) private var theme
+
+    private static let previewSize: Double = 17
+    private static let chevronSize: CGFloat = 14
+
+    @State private var toggles = 0
+
+    var body: some View {
+        Button {
+            toggles += 1
+            onToggle()
+        } label: {
+            HStack(spacing: Spacing.s) {
+                Text("hadith.detail.number \(number)")
+                    .font(.caption2.weight(.bold))
+                    .textCase(.uppercase)
+                    .tracking(Tracking.label)
+                    .foregroundStyle(theme.palette.parchmentText)
+                ArabicText(text: preview, size: Self.previewSize, color: theme.palette.parchmentText, lineLimit: 1)
+                    .opacity(isExpanded ? 0 : 1)
+                    .accessibilityHidden(true)
+                Image(systemName: "chevron.down")
+                    .font(.system(size: Self.chevronSize, weight: .semibold))
+                    .foregroundStyle(theme.palette.parchmentAccent)
+                    .rotationEffect(.degrees(isExpanded ? 180 : 0))
+                    .frame(width: Size.miniButton, height: Size.miniButton)
+                    .surface(
+                        theme.palette.parchmentAccentTint,
+                        cornerRadius: Size.miniButton / 2,
+                        border: theme.palette.parchmentAccentBorder
+                    )
+                    .modifier(PressedScale())
+                    .fixedTextSize()
+            }
+            .frame(minHeight: Size.minTapTarget)
+            .contentShape(.rect)
+        }
+        .buttonStyle(PressStateButtonStyle())
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Text("hadith.detail.number \(number)"))
+        .accessibilityHint(Text(isExpanded ? "hadith.arabic.hide" : "hadith.arabic.show"))
+        .sensoryFeedback(.selection, trigger: toggles)
+    }
+}
+
+/// Стиль без своего отклика: передаёт «нажата» внутрь, чтобы отозвалась только часть строки.
+private struct PressStateButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .environment(\.isHeaderPressed, configuration.isPressed)
+    }
+}
+
+/// Нажатая строка — круг сжимается, как круглые кнопки дизайн-системы.
+private struct PressedScale: ViewModifier {
+    @Environment(\.isHeaderPressed) private var isPressed
+
+    func body(content: Content) -> some View {
+        content
+            .scaleEffect(isPressed ? PressFeedback.iconScale : 1)
+            .animation(Motion.press, value: isPressed)
+    }
+}
+
+private extension EnvironmentValues {
+    @Entry var isHeaderPressed = false
 }
 
 /// «◎ Прочитать / ✓ Прочитан» и «☆ Выучить / ★ Выучен». Статус приходит значением.
