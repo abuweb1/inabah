@@ -72,14 +72,17 @@ nonisolated enum ReminderPlan {
     /// За сколько до конца окна — «ещё не прочитаны» (как на Android: там будильники неточные и запас нужен
     /// на опоздание; на iOS время точное, значение то же — одинаково на обеих платформах).
     static let unfinishedLead: TimeInterval = 2 * 60 * 60
+    /// За сколько до конца окна — «серия под угрозой» (решение пользователя 2026-10-11: за час, позже
+    /// «ещё не прочитаны»; оба приходят каждое в своё время).
+    static let streakLead: TimeInterval = 60 * 60
 
     /// Ближайшие напоминания строго после `now` на `days` дней. «Ещё не прочитаны» — только для разделов
     /// с включённым «в начале» и только на окна, где раздел ещё не выполнен (`isCompleted(section, windowDay)`).
     ///
-    /// «Серия под угрозой» — в тот же момент, что «не прочитаны», независимо от «в начале»: правило Android
-    /// (`streakAtRisk`) считается для будущего момента по истории `history` как есть — будто дальше ничего
-    /// не прочитают. Прочтение пересобирает план, а без него серия прерывается — дальше уведомлений нет,
-    /// как и на Android. Если в момент стоит серия, «не прочитаны» того же раздела не ставится (без дублей).
+    /// «Серия под угрозой» — за `streakLead` до конца окна, независимо от «в начале» и от «не прочитаны»:
+    /// правило Android (`streakAtRisk`) считается для будущего момента по истории `history` как есть — будто
+    /// дальше ничего не прочитают. Прочтение пересобирает план (и снимает оба напоминания), а без него серия
+    /// прерывается — дальше уведомлений нет, как и на Android.
     static func plan(
         preferences: ReminderPreferences,
         windows: [AzkarSection: AzkarWindow],
@@ -102,25 +105,19 @@ nonisolated enum ReminderPlan {
                 }
             }
             let wantsUnfinished = startsEnabled && preferences.azkarUnfinished
-            guard wantsUnfinished || preferences.azkarStreak else { continue }
-            var windowStart = schedule.currentOrNextStart(now)
-            var added = 0
-            while added < days {
-                let reminder = unfinished(section, schedule: schedule, windowStart: windowStart)
-                if reminder.at > now {
-                    added += 1
-                    let streak = preferences.azkarStreak
-                        ? streakAtRisk(section: section, windows: windows, days: history, at: reminder.at, calendar: calendar)
-                        : nil
-                    if let streak {
-                        var atRisk = PlannedReminder(kind: .streak(section), at: reminder.at, windowDay: reminder.windowDay)
-                        atRisk.streak = streak
-                        result.append(atRisk)
-                    } else if wantsUnfinished, let day = reminder.windowDay, !isCompleted(section, day) {
-                        result.append(reminder)
-                    }
+            if wantsUnfinished {
+                for reminder in beforeEnd(.unfinished(section), lead: unfinishedLead, schedule: schedule, now: now, days: days) {
+                    if let day = reminder.windowDay, !isCompleted(section, day) { result.append(reminder) }
                 }
-                windowStart = schedule.nextStart(after: windowStart)
+            }
+            if preferences.azkarStreak {
+                for moment in beforeEnd(.streak(section), lead: streakLead, schedule: schedule, now: now, days: days) {
+                    guard let streak = streakAtRisk(section: section, windows: windows, days: history, at: moment.at, calendar: calendar)
+                    else { continue }
+                    var atRisk = moment
+                    atRisk.streak = streak
+                    result.append(atRisk)
+                }
             }
         }
         if preferences.hadithOfDay {
@@ -136,12 +133,27 @@ nonisolated enum ReminderPlan {
         return result.sorted { $0.at < $1.at }
     }
 
-    /// За `unfinishedLead` до конца окна; окно короче — в его середине.
-    private static func unfinished(_ section: AzkarSection, schedule: AzkarWindowSchedule, windowStart: Date) -> PlannedReminder {
-        let end = schedule.windowEnd(startingAt: windowStart)
-        let beforeEnd = end.addingTimeInterval(-unfinishedLead)
-        let at = beforeEnd > windowStart ? beforeEnd : windowStart.addingTimeInterval(end.timeIntervalSince(windowStart) / 2)
-        return PlannedReminder(kind: .unfinished(section), at: at, windowDay: schedule.dayKey(of: windowStart))
+    /// Напоминания `kind` за `lead` до конца ближайших `days` окон строго после `now`; окно короче `lead` —
+    /// в его середине.
+    private static func beforeEnd(
+        _ kind: ReminderKind,
+        lead: TimeInterval,
+        schedule: AzkarWindowSchedule,
+        now: Date,
+        days: Int
+    ) -> [PlannedReminder] {
+        var result: [PlannedReminder] = []
+        var windowStart = schedule.currentOrNextStart(now)
+        while result.count < days {
+            let end = schedule.windowEnd(startingAt: windowStart)
+            let beforeEnd = end.addingTimeInterval(-lead)
+            let at = beforeEnd > windowStart ? beforeEnd : windowStart.addingTimeInterval(end.timeIntervalSince(windowStart) / 2)
+            if at > now {
+                result.append(PlannedReminder(kind: kind, at: at, windowDay: schedule.dayKey(of: windowStart)))
+            }
+            windowStart = schedule.nextStart(after: windowStart)
+        }
+        return result
     }
 
     /// Показывать ли напоминание азкаров `kind` в момент `now` — как на Android (`isAzkarReminderDue`):
