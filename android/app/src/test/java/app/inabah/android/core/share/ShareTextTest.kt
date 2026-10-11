@@ -62,14 +62,14 @@ class ShareTextTest {
     }
 
     @Test
-    fun `Зикр с передатчиком — «Передал» после «N раз», перед транскрипцией`() {
+    fun `Зикр с вступлением — как есть, без «Передал», после «N раз», перед транскрипцией`() {
         val text = zikrShareText(
-            zikr(ZikrTranslation(ru, "Перевод", "Транскрипция", source = null, narrator = "Абу Хурайра")),
-            sectionTitle = "Утренние азкары", repetitions = "1 раз", narratorLine = "Передал: Абу Хурайра", storeLinks = null,
+            zikr(ZikrTranslation(ru, "Перевод", "Транскрипция", source = null, narrator = "Передаётся от Абу Хурайры")),
+            sectionTitle = "Утренние азкары", repetitions = "1 раз", narratorLine = "Передаётся от Абу Хурайры", storeLinks = null,
         )
 
         assertEquals(
-            "Утренние азкары\n\nسُبْحَانَ اللَّهِ وَ بِحَمْدِهِ\n\n1 раз\n\nПередал: Абу Хурайра\n\nТранскрипция\n\nПеревод",
+            "Утренние азкары\n\nسُبْحَانَ اللَّهِ وَ بِحَمْدِهِ\n\n1 раз\n\nПередаётся от Абу Хурайры\n\nТранскрипция\n\nПеревод",
             text,
         )
     }
@@ -82,18 +82,19 @@ class ShareTextTest {
     }
 
     @Test
-    fun `Хадис — заголовок, арабский одним абзацем, передатчик, перевод, источник`() {
+    fun `Хадис — заголовок, арабский одним абзацем, вступление без «Передал», перевод, источник`() {
+        val intro = "Передаётся от Умара ибн аль-Хаттаба, да будет доволен им Аллахӏ, что он сказал:"
         val text = hadithShareText(
-            hadith(HadithTranslation(ru, "Умар ибн аль-Хаттаб", "«Приход Джибриля…»", "Муслим (№ 8)")),
+            hadith(HadithTranslation(ru, intro, "«Приход Джибриля…»", "Муслим (№ 8)")),
             header = "40 хадисов ан-Навави · Хадис 2",
-            narratorLine = "Передал: Умар ибн аль-Хаттаб",
+            narratorLine = intro,
             sourceLine = "Приводится: Муслим (№ 8)",
             notesBlock = null,
             storeLinks = links,
         )
 
         assertEquals(
-            "40 хадисов ан-Навави · Хадис 2\n\nعَنْ عُمَرَ قَالَ: بَيْنَمَا نَحْنُ\n\nПередал: Умар ибн аль-Хаттаб\n\n" +
+            "40 хадисов ан-Навави · Хадис 2\n\nعَنْ عُمَرَ قَالَ: بَيْنَمَا نَحْنُ\n\n$intro\n\n" +
                 "«Приход Джибриля…»\n\nПриводится: Муслим (№ 8)\n\n$links",
             text,
         )
@@ -114,20 +115,23 @@ class ShareTextTest {
     }
 
     @Test
-    fun `Хадис со сносками — блок «Пояснения» после источника и перед ссылками`() {
-        val notes = listOf(HadithNote("Он предписал Себе", "По Своей милости."), HadithNote("Различия передач", "Иначе у ат-Тирмизи."))
-        val block = hadithNotesBlock(notes, "Пояснения:") { "${it.term} — ${it.text}" }
+    // Решения пользователя 2026-10-11 (TASKS §12, пример): «Комментарии учёных:», пустая строка, сноски через
+    // пустую строку — слово и пояснение на двух строках; слово из перевода — в кавычках, общее пояснение — без.
+    fun `Хадис со сносками — «Комментарии учёных» после источника и перед ссылками`() {
+        val notes = listOf(HadithNote("иман", "вера"), HadithNote("Различия передач", "у Муслима иначе"))
+        val translation = "Иман — это вера в Аллаха."
+        val block = hadithNotesBlock(notes, "Комментарии учёных:", translation) { "«$it»" }
         val text = hadithShareText(
-            hadith(HadithTranslation(ru, narrator = null, text = "Перевод", source = "Муслим", notes = notes)),
+            hadith(HadithTranslation(ru, narrator = null, text = translation, source = "Муслим", notes = notes)),
             header = "Хадис 1", narratorLine = null, sourceLine = "Приводится: Муслим", notesBlock = block, storeLinks = links,
         )
 
         assertEquals(
-            "Хадис 1\n\nعَنْ عُمَرَ قَالَ: بَيْنَمَا نَحْنُ\n\nПеревод\n\nПриводится: Муслим\n\n" +
-                "Пояснения:\nОн предписал Себе — По Своей милости.\nРазличия передач — Иначе у ат-Тирмизи.\n\n$links",
+            "Хадис 1\n\nعَنْ عُمَرَ قَالَ: بَيْنَمَا نَحْنُ\n\n$translation\n\nПриводится: Муслим\n\n" +
+                "Комментарии учёных:\n\n«иман»\nвера\n\nРазличия передач\nу Муслима иначе\n\n$links",
             text,
         )
-        assertEquals(null, hadithNotesBlock(emptyList(), "Пояснения:") { it.term }, "без сносок — блока нет")
+        assertEquals(null, hadithNotesBlock(emptyList(), "Комментарии учёных:", translation) { it }, "без сносок — блока нет")
     }
 
     @Test

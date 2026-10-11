@@ -139,13 +139,15 @@ fun HadithPage(
 private fun hadithShareAction(hadith: Hadith): () -> Unit {
     val context = LocalContext.current
     val header = stringResource(R.string.share_hadith_header, stringResource(hadith.id.collection.title), hadith.number)
-    val narrator = hadith.translation?.narrator?.let { stringResource(R.string.hadith_detail_narrator, it) }
+    // Вступление — как есть, без «Передал:» (решение пользователя 2026-10-11).
+    val narrator = hadith.translation?.narrator
     val source = hadith.translation?.source?.let { stringResource(R.string.hadith_detail_source, it) }
     val storeLinks = storeLinksBlock()
     val notesTitle = stringResource(R.string.share_text_hadith_notes)
-    val noteLine = stringResource(R.string.share_text_hadith_note_line)
+    val quote = stringResource(R.string.hadith_note_quote)
     return {
-        val notes = hadithNotesBlock(hadith.translation?.notes.orEmpty(), notesTitle) { noteLine.format(it.term, it.text) }
+        val translation = hadith.translation
+        val notes = hadithNotesBlock(translation?.notes.orEmpty(), notesTitle, translation?.text.orEmpty()) { quote.format(it) }
         context.shareText(hadithShareText(hadith, header, narrator, source, notes, storeLinks))
     }
 }
@@ -331,7 +333,7 @@ private fun HadithTranslationCard(
             .fillMaxWidth()
             .surface(palette.hadithCard, Radius.card, border = palette.hairline, shadow = ShadowToken.card(palette))
             .padding(vertical = Spacing.l, horizontal = Spacing.xl),
-        narrator = translation.narrator?.let { stringResource(R.string.hadith_detail_narrator, it) },
+        narrator = translation.narrator,
         source = translation.source?.let { stringResource(R.string.hadith_detail_source, it) },
         belowText = {
             if (translation.notes.isNotEmpty()) {

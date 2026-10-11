@@ -205,7 +205,8 @@ private fun ZikrFullContent(
         val sectionTitle = stringResource(zikr.section.title)
         val repetitions = pluralStringResource(R.plurals.zikr_repetitions, zikr.repetitions, zikr.repetitions)
         val storeLinks = storeLinksBlock()
-        val narratorLine = zikr.translation?.narrator?.let { stringResource(R.string.hadith_detail_narrator, it) }
+        // `rawi` — как есть, без «Передал:» (решение пользователя 2026-10-11).
+        val narratorLine = zikr.translation?.narrator
         ZikrActions(
             hasAudio = zikr.hasAudio,
             isAudioActive = isAudioActive,
@@ -274,7 +275,7 @@ fun ZikrTranslationBlock(translation: ZikrTranslation, modifier: Modifier = Modi
         locale = LocaleList(translation.language.code),
         colors = TranslationColors.azkar(InabahTheme.palette),
         modifier = modifier,
-        narrator = translation.narrator?.let { stringResource(R.string.hadith_detail_narrator, it) },
+        narrator = translation.narrator,
         transliteration = translation.transliteration,
         source = translation.source,
     )
