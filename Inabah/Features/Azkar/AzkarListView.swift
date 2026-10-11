@@ -120,6 +120,9 @@ private struct AzkarFeed: View {
     /// Пользователь сейчас листает ленту — автопрокрутка не должна перехватывать прокрутку.
     @State private var isUserScrolling = false
     @State private var lastUserScroll: ContinuousClock.Instant?
+    /// Виден ли на экране верх каждой карточки. Не `@Observable`: меняется при прокрутке,
+    /// а читается только в момент сворачивания — лента из-за него не перерисовывается.
+    @State private var cardTops = CardTopVisibility()
 
     private static let autoScrollCooldown = Duration.seconds(2)
 
@@ -128,19 +131,28 @@ private struct AzkarFeed: View {
             ScrollView {
                 // Обычный VStack, не Lazy: карточки меняют высоту с анимацией, а LazyVStack
                 // переставляет ленивые элементы без интерполяции. Зикров в разделе — десятки, это дёшево.
-                VStack(spacing: Spacing.l) {
+                // Промежуток над каждой карточкой — `CardTopMarker` (цель прокрутки при сворачивании),
+                // поэтому у стека нет своего интервала и отступа сверху.
+                VStack(spacing: 0) {
                     ForEach(sessions) { session in
-                        ZikrCardView(session: session, audio: player.audioState(of: session.zikr))
-                            .id(session.zikr.audioTrackID)
+                        let trackID = session.zikr.audioTrackID
+                        CardTopMarker(id: trackID, tops: cardTops)
+                        ZikrCardView(session: session, audio: player.audioState(of: session.zikr)) {
+                            revealCollapsed(trackID, proxy: proxy)
+                        }
+                        .id(trackID)
                     }
                     // Записей нет — вместо «Прослушать все» заглушка «Аудио скоро».
-                    if sessions.contains(where: { $0.zikr.hasAudio }) {
-                        AzkarPlayAllCard(section: section, azkar: sessions.map(\.zikr))
-                    } else {
-                        AudioSoonPlaceholder(title: Text("audio.playAll.title"))
+                    Group {
+                        if sessions.contains(where: { $0.zikr.hasAudio }) {
+                            AzkarPlayAllCard(section: section, azkar: sessions.map(\.zikr))
+                        } else {
+                            AudioSoonPlaceholder(title: Text("audio.playAll.title"))
+                        }
                     }
+                    .padding(.top, Spacing.l)
                 }
-                .padding(Spacing.l)
+                .padding([.horizontal, .bottom], Spacing.l)
             }
             .onScrollPhaseChange { _, phase in
                 isUserScrolling = phase.isScrolling
@@ -161,6 +173,49 @@ private struct AzkarFeed: View {
         guard let lastUserScroll else { return true }
         return ContinuousClock.now - lastUserScroll >= Self.autoScrollCooldown
     }
+
+    /// Дочитан длинный зикр, а его верх уже за краем экрана — лента в той же анимации подъезжает
+    /// к свёрнутой строке (на отступ ленты ниже края), сразу под ней начало следующего. Иначе
+    /// следующий уезжал вверх и приходилось листать назад (как на Android, `12a/12b`).
+    /// Вызывается внутри `withAnimation` карточки; палец прерывает прокрутку.
+    private func revealCollapsed(_ trackID: AudioTrack.ID, proxy: ScrollViewProxy) {
+        guard cardTops.isHidden(trackID) else { return }
+        proxy.scrollTo(CardTopMarker.Anchor(trackID: trackID), anchor: .top)
+    }
+}
+
+/// Видимость верха карточек ленты — обычный класс: запись при прокрутке не перерисовывает ленту.
+private final class CardTopVisibility {
+    private var hidden: Set<AudioTrack.ID> = []
+
+    func set(_ trackID: AudioTrack.ID, visible: Bool) {
+        if visible { hidden.remove(trackID) } else { hidden.insert(trackID) }
+    }
+
+    func isHidden(_ trackID: AudioTrack.ID) -> Bool { hidden.contains(trackID) }
+}
+
+/// Промежуток ленты над карточкой: цель прокрутки (карточка встаёт на отступ ниже края,
+/// как на Android) и признак «верх карточки на экране».
+private struct CardTopMarker: View {
+    struct Anchor: Hashable {
+        let trackID: AudioTrack.ID
+    }
+
+    let id: AudioTrack.ID
+    let tops: CardTopVisibility
+
+    var body: some View {
+        Color.clear
+            .frame(height: Spacing.l)
+            .id(Anchor(trackID: id))
+            .onScrollVisibilityChange(threshold: Self.visibleShare) { tops.set(id, visible: $0) }
+            .allowsHitTesting(false)
+            .accessibilityHidden(true)
+    }
+
+    /// Верх «на экране», только если видна полоса над ним почти целиком.
+    private static let visibleShare = 0.9
 }
 
 /// Показывает оверлей «Машаа Аллах!» с паузой после выполнения всех зикров раздела.
