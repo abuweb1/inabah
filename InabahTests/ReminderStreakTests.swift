@@ -78,24 +78,24 @@ struct ReminderStreakTests {
 
     // MARK: План
 
-    @Test("План: серия до вчера — утром в 10:00 и вечером в полночь; дальше серия прервётся — больше нет")
+    @Test("План: серия до вчера — за час до конца утренних (11:00); дальше серия прервётся — больше нет")
     func plannedMoments() {
         let planned = Self.plan(ReminderPreferences(azkarStreak: true), now: Self.date(10, 8), history: Self.twoFullDaysBefore(Self.october10))
 
         // Вечером при непрочитанных утренних серия уже прервана — вечернего нет; завтра серии нет.
         #expect(planned.map(\.kind) == [.morningStreak])
-        #expect(planned.first?.at == Self.date(10, 10))
+        #expect(planned.first?.at == Self.date(10, 11))
         #expect(planned.first?.streak == 2)
     }
 
-    @Test("План: утренние сегодня прочитаны — вечером в полночь; день полный — завтра утром серия больше")
+    @Test("План: утренние сегодня прочитаны — вечером в 01:00; день полный — завтра в 11:00 серия больше")
     func plannedAfterReading() {
         var morningDone = Self.twoFullDaysBefore(Self.october10)
         morningDone[Self.october10] = AzkarDay(morning: Self.complete)
         let evening = Self.plan(ReminderPreferences(azkarStreak: true), now: Self.date(10, 13), history: morningDone)
 
         #expect(evening.map(\.kind) == [.eveningStreak])
-        #expect(evening.first?.at == Self.date(11, 0))
+        #expect(evening.first?.at == Self.date(11, 1))
         #expect(evening.first?.streak == 2)
 
         var dayFull = morningDone
@@ -103,18 +103,19 @@ struct ReminderStreakTests {
         let tomorrow = Self.plan(ReminderPreferences(azkarStreak: true), now: Self.date(10, 23), history: dayFull)
 
         #expect(tomorrow.map(\.kind) == [.morningStreak])
-        #expect(tomorrow.first?.at == Self.date(11, 10))
+        #expect(tomorrow.first?.at == Self.date(11, 11))
         #expect(tomorrow.first?.streak == 3)
     }
 
-    @Test("Без дублей: в момент серии «ещё не прочитаны» того же раздела не ставится; выключено — серии нет")
-    func noDuplicates() {
+    @Test("Оба включены — каждое в своё время: «не прочитаны» за 2 ч, серия за час; выключено — серии нет")
+    func bothInOwnTime() {
         let history = Self.twoFullDaysBefore(Self.october10)
         let both = ReminderPreferences(azkarStart: [.morning], azkarUnfinished: true, azkarStreak: true)
         let planned = Self.plan(both, now: Self.date(10, 8), history: history, days: 1)
             .filter { $0.kind != .morningStart }
 
-        #expect(planned.map(\.kind) == [.morningStreak])
+        #expect(planned.map(\.kind) == [.morningUnfinished, .morningStreak])
+        #expect(planned.map(\.at) == [Self.date(10, 10), Self.date(10, 11)])
 
         let withoutStreak = Self.plan(ReminderPreferences(azkarStart: [.morning], azkarUnfinished: true), now: Self.date(10, 8), history: history, days: 1)
         #expect(withoutStreak.contains { $0.kind == .morningUnfinished })
