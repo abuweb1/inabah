@@ -77,6 +77,8 @@ struct BundledContentTests {
 
         #expect(Set(texts.azkarStart.keys) == Set(AzkarSection.allCases))
         #expect(Set(texts.azkarUnfinished.keys) == Set(AzkarSection.allCases))
+        #expect(Set(texts.streakAtRisk.keys) == Set(AzkarSection.allCases))
+        #expect(texts.streakAtRisk.values.allSatisfy { $0.title.contains("{streak}") })
         let hadith = try #require(texts.hadithOfDay)
         #expect(hadith.title.contains("{collection}"))
     }

@@ -77,6 +77,8 @@ nonisolated struct ReminderTranslationDTO: Decodable, Sendable {
     /// Ключи — `AzkarSection.rawValue`.
     let azkarStart: [String: ReminderTextDTO]?
     let azkarUnfinished: [String: ReminderTextDTO]?
+    /// «Серия под угрозой» (2026-10-11): подстановка `{streak}` — «12 дней подряд».
+    let streakAtRisk: [String: ReminderTextDTO]?
     let hadithOfDay: ReminderTextDTO?
 }
 

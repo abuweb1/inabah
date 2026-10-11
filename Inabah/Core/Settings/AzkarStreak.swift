@@ -15,6 +15,12 @@ nonisolated struct AzkarStreak: Hashable, Sendable {
     /// Самое большое число серии на экране и в уведомлении; дальше — «9999+» (решение пользователя 2026-10-11).
     static let displayMax = 9999
 
+    /// «12 дней подряд»; больше 9999 — «9999+ дней подряд» (капсула, окно «Машаа Аллах!», уведомление).
+    /// Для серии больше нуля.
+    static func daysText(_ days: Int) -> LocalizedStringResource {
+        days > displayMax ? "azkar.streak.daysMax" : "azkar.streak.days \(days)"
+    }
+
     /// Серия по истории `days` на день `today`. Дни позже `today` (перелёт на запад) учитываются
     /// в лучшей серии и в итоге, но не в текущей.
     init(days: [AzkarCalendarDay: AzkarDay], today: AzkarCalendarDay) {

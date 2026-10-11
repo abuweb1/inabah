@@ -10,17 +10,24 @@ nonisolated enum ReminderKind: String, CaseIterable, Sendable {
     case eveningStart
     case morningUnfinished
     case eveningUnfinished
+    /// «Если серия под угрозой» (Android-first 2026-10-11, `MorningStreak` / `EveningStreak`).
+    case morningStreak
+    case eveningStreak
     case hadithOfDay
 
     var section: AzkarSection? {
         switch self {
-        case .morningStart, .morningUnfinished: .morning
-        case .eveningStart, .eveningUnfinished: .evening
+        case .morningStart, .morningUnfinished, .morningStreak: .morning
+        case .eveningStart, .eveningUnfinished, .eveningStreak: .evening
         case .hadithOfDay: nil
         }
     }
 
     var isUnfinished: Bool { self == .morningUnfinished || self == .eveningUnfinished }
+
+    static func streak(_ section: AzkarSection) -> ReminderKind {
+        section == .morning ? .morningStreak : .eveningStreak
+    }
 
     static func start(_ section: AzkarSection) -> ReminderKind {
         section == .morning ? .morningStart : .eveningStart
@@ -35,18 +42,22 @@ nonisolated enum ReminderKind: String, CaseIterable, Sendable {
 nonisolated struct ReminderPreferences: Hashable, Sendable {
     var azkarStart: Set<AzkarSection> = []
     var azkarUnfinished = false
+    /// «Если серия под угрозой» — независимо от напоминаний в начале времени.
+    var azkarStreak = false
     var hadithOfDay = false
     var hadithTime = ReminderPreferences.defaultHadithTime
 
     static let defaultHadithTime = DayTime(hour: 20, minute: 0)
 }
 
-/// Запланированное напоминание: `windowDay` — день окна азкаров (ключ истории), `hadithDay` — номер дня хадиса.
+/// Запланированное напоминание: `windowDay` — день окна азкаров (ключ истории), `hadithDay` — номер дня хадиса,
+/// `streak` — серия, которая прервётся (для текста «серия под угрозой»).
 nonisolated struct PlannedReminder: Hashable, Sendable {
     let kind: ReminderKind
     let at: Date
     var windowDay: String?
     var hadithDay: Int?
+    var streak: Int?
 
     /// Постоянный идентификатор запроса: вид и момент — повтор плана даёт те же идентификаторы.
     var identifier: String {
@@ -64,34 +75,52 @@ nonisolated enum ReminderPlan {
 
     /// Ближайшие напоминания строго после `now` на `days` дней. «Ещё не прочитаны» — только для разделов
     /// с включённым «в начале» и только на окна, где раздел ещё не выполнен (`isCompleted(section, windowDay)`).
+    ///
+    /// «Серия под угрозой» — в тот же момент, что «не прочитаны», независимо от «в начале»: правило Android
+    /// (`streakAtRisk`) считается для будущего момента по истории `history` как есть — будто дальше ничего
+    /// не прочитают. Прочтение пересобирает план, а без него серия прерывается — дальше уведомлений нет,
+    /// как и на Android. Если в момент стоит серия, «не прочитаны» того же раздела не ставится (без дублей).
     static func plan(
         preferences: ReminderPreferences,
         windows: [AzkarSection: AzkarWindow],
         now: Date,
         calendar: Calendar,
         days: Int = horizonDays,
+        history: [AzkarCalendarDay: AzkarDay] = [:],
         isCompleted: (AzkarSection, String) -> Bool
     ) -> [PlannedReminder] {
         var result: [PlannedReminder] = []
-        for section in AzkarSection.allCases where preferences.azkarStart.contains(section) {
+        for section in AzkarSection.allCases {
             guard let window = windows[section], window.isValid else { continue }
             let schedule = AzkarWindowSchedule(window: window, calendar: calendar)
-            var start = schedule.nextStart(after: now)
-            for _ in 0..<days {
-                result.append(PlannedReminder(kind: .start(section), at: start, windowDay: schedule.dayKey(of: start)))
-                start = schedule.nextStart(after: start)
-            }
-            if preferences.azkarUnfinished {
-                var windowStart = schedule.currentOrNextStart(now)
-                var added = 0
-                while added < days {
-                    let reminder = unfinished(section, schedule: schedule, windowStart: windowStart)
-                    if reminder.at > now {
-                        added += 1
-                        if let day = reminder.windowDay, !isCompleted(section, day) { result.append(reminder) }
-                    }
-                    windowStart = schedule.nextStart(after: windowStart)
+            let startsEnabled = preferences.azkarStart.contains(section)
+            if startsEnabled {
+                var start = schedule.nextStart(after: now)
+                for _ in 0..<days {
+                    result.append(PlannedReminder(kind: .start(section), at: start, windowDay: schedule.dayKey(of: start)))
+                    start = schedule.nextStart(after: start)
                 }
+            }
+            let wantsUnfinished = startsEnabled && preferences.azkarUnfinished
+            guard wantsUnfinished || preferences.azkarStreak else { continue }
+            var windowStart = schedule.currentOrNextStart(now)
+            var added = 0
+            while added < days {
+                let reminder = unfinished(section, schedule: schedule, windowStart: windowStart)
+                if reminder.at > now {
+                    added += 1
+                    let streak = preferences.azkarStreak
+                        ? streakAtRisk(section: section, windows: windows, days: history, at: reminder.at, calendar: calendar)
+                        : nil
+                    if let streak {
+                        var atRisk = PlannedReminder(kind: .streak(section), at: reminder.at, windowDay: reminder.windowDay)
+                        atRisk.streak = streak
+                        result.append(atRisk)
+                    } else if wantsUnfinished, let day = reminder.windowDay, !isCompleted(section, day) {
+                        result.append(reminder)
+                    }
+                }
+                windowStart = schedule.nextStart(after: windowStart)
             }
         }
         if preferences.hadithOfDay {
@@ -132,6 +161,34 @@ nonisolated enum ReminderPlan {
         guard period.isWindow else { return false }
         guard kind.isUnfinished else { return true }
         return !isCompleted(record(period.day))
+    }
+
+    /// Самая короткая серия, о которой напоминать (Android `STREAK_AT_RISK_MIN`).
+    static let streakAtRiskMinimum = 1
+
+    /// «Серия под угрозой» (решения пользователя 2026-10-11, Android `streakAtRisk`): длина серии, которая
+    /// прервётся, если не дочитать `section` в окне, открытом в момент `at`, или `nil`. Утро — утренние дня
+    /// не прочитаны полностью; вечер — вечерние не прочитаны, а утренние того же дня прочитаны (иначе серия
+    /// уже прервана). Серия — на «сегодня» по вечернему окну (`AzkarStreak.today`): сегодняшний неполный
+    /// день в неё не входит — это ровно то, что прервётся.
+    static func streakAtRisk(
+        section: AzkarSection,
+        windows: [AzkarSection: AzkarWindow],
+        days: [AzkarCalendarDay: AzkarDay],
+        at moment: Date,
+        calendar: Calendar
+    ) -> Int? {
+        guard let window = windows[section], window.isValid else { return nil }
+        let period = AzkarWindowSchedule(window: window, calendar: calendar).period(at: moment)
+        guard period.isWindow, let windowDay = AzkarCalendarDay(key: period.day) else { return nil }
+        let day = days[windowDay]
+        if day?.record(of: section)?.isComplete == true { return nil }
+        if section == .evening, day?.morning?.isComplete != true { return nil }
+        guard let evening = windows[.evening], evening.isValid,
+              let today = AzkarStreak.today(evening: AzkarWindowSchedule(window: evening, calendar: calendar), at: moment)
+        else { return nil }
+        let streak = AzkarStreak(days: days, today: today).current
+        return streak >= streakAtRiskMinimum ? streak : nil
     }
 
     static func isCompleted(_ record: AzkarDayRecord?) -> Bool {
