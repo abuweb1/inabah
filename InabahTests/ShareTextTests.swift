@@ -72,7 +72,7 @@ struct ShareTextTests {
         ])
     }
 
-    @Test("Сноски — после источника: «Сноски:», слово и пояснение на двух строках, между сносками пустая строка")
+    @Test("Сноски — после источника: «Комментарии учёных:», слово и пояснение на двух строках, между сносками пустая строка")
     func hadithWithNotes() {
         let hadith = Hadith(
             id: HadithID(collection: .nawawi, number: 2),
@@ -86,7 +86,7 @@ struct ShareTextTests {
         #expect(hadith.shareText.hasSuffix("""
             Приводится: Муслим
 
-            Сноски:
+            Комментарии учёных:
             иман
             вера
 
@@ -105,7 +105,7 @@ struct ShareTextTests {
         #expect(AzkarSection.morning.reminderText == """
             ⚠️ Утренние азкары ⚠️
             \(dots)
-            О рабы Аллаха, защитите себя и свою семью от сглаза, зависти и колдовства — прочитайте утренние азкары.
+            О рабы Аллаха, защитите себя и свою семью от сглаза, зависти и колдовства: прочитайте утренние азкары.
             \(dots)
 
             Абу ад-Дарда сказал:
@@ -114,7 +114,7 @@ struct ShareTextTests {
             Ахмад в «аз-Зухд», 726
 
             \(dots)
-            ✅ Лучшее время для чтения утренних азкаров — с Фаджра до восхода солнца.
+            ✅ Лучшее время для чтения утренних азкаров с Фаджра до восхода солнца.
 
             \(Self.link)
             """)
@@ -125,7 +125,8 @@ struct ShareTextTests {
         let text = AzkarSection.evening.reminderText
 
         #expect(text.hasPrefix("⚠️ Вечерние азкары ⚠️\n"))
-        #expect(text.contains("✅ Лучшее время для чтения вечерних азкаров — с Асра до Магриба."))
+        #expect(text.contains("✅ Лучшее время для чтения вечерних азкаров с Асра до Магриба."))
+        #expect(!text.contains("—"))
         #expect(!text.contains("утренние"))
         #expect(!text.contains("*"))
         #expect(!text.contains("_"))
