@@ -4,10 +4,13 @@ import app.inabah.android.core.content.model.AzkarSection
 import app.inabah.android.core.content.model.Hadith
 import app.inabah.android.core.content.model.HadithCollection
 import app.inabah.android.core.content.model.HadithId
+import app.inabah.android.core.settings.AzkarDay
 import app.inabah.android.core.settings.AzkarDayRecord
 import app.inabah.android.core.settings.AzkarWindow
 import app.inabah.android.core.settings.AzkarWindowSchedule
 import app.inabah.android.core.settings.ReminderPreferences
+import app.inabah.android.core.settings.azkarStreak
+import app.inabah.android.core.settings.azkarStreakDay
 import app.inabah.android.core.settings.nextOccurrence
 import java.time.Duration
 import java.time.Instant
@@ -21,9 +24,14 @@ enum class ReminderKind(val requestCode: Int, val section: AzkarSection?) {
     MorningUnfinished(3, AzkarSection.Morning),
     EveningUnfinished(4, AzkarSection.Evening),
     HadithOfDay(5, null),
+    /** «Серия под угрозой» (2026-10-11): в то же время, что «ещё не прочитаны». */
+    MorningStreak(6, AzkarSection.Morning),
+    EveningStreak(7, AzkarSection.Evening),
     ;
 
     val isUnfinished: Boolean get() = this == MorningUnfinished || this == EveningUnfinished
+
+    val isStreak: Boolean get() = this == MorningStreak || this == EveningStreak
 
     /** Канал уведомлений вида — пользователь может выключить его в системе отдельно от остальных. */
     val channel: String get() = if (section == null) ReminderChannels.HADITH else ReminderChannels.AZKAR
@@ -34,6 +42,9 @@ enum class ReminderKind(val requestCode: Int, val section: AzkarSection?) {
 
         fun unfinished(section: AzkarSection): ReminderKind =
             if (section == AzkarSection.Morning) MorningUnfinished else EveningUnfinished
+
+        fun streak(section: AzkarSection): ReminderKind =
+            if (section == AzkarSection.Morning) MorningStreak else EveningStreak
 
         fun fromName(name: String?): ReminderKind? = entries.firstOrNull { it.name == name }
     }
@@ -77,25 +88,30 @@ fun planReminders(
     zone: ZoneId,
 ): List<PlannedReminder> = buildList {
     for (section in AzkarSection.entries) {
-        if (section !in preferences.azkarStart) continue
         val window = windows[section]?.takeIf { it.isValid } ?: continue
         val schedule = AzkarWindowSchedule(window, zone)
+        // «Серия под угрозой» — независимо от напоминаний в начале (решение пользователя 2026-10-11).
+        if (preferences.azkarStreak) add(beforeEnd(ReminderKind.streak(section), schedule, now, zone))
+        if (section !in preferences.azkarStart) continue
         val start = schedule.nextStart(after = now)
         add(PlannedReminder(ReminderKind.start(section), start, start.atZone(zone).toLocalDate()))
-        if (preferences.azkarUnfinished) add(unfinished(section, schedule, now, zone))
+        if (preferences.azkarUnfinished) add(beforeEnd(ReminderKind.unfinished(section), schedule, now, zone))
     }
     if (preferences.hadithOfDay) {
         add(PlannedReminder(ReminderKind.HadithOfDay, preferences.hadithTime.nextOccurrence(after = now, zone)))
     }
 }
 
-/** За [UNFINISHED_LEAD] до конца текущего (если ещё не прошло) или следующего окна; окно короче — в его середине. */
-private fun unfinished(section: AzkarSection, schedule: AzkarWindowSchedule, now: Instant, zone: ZoneId): PlannedReminder {
+/**
+ * [kind] («ещё не прочитаны», «серия под угрозой») — за [UNFINISHED_LEAD] до конца текущего (если ещё не прошло)
+ * или следующего окна; окно короче — в его середине.
+ */
+private fun beforeEnd(kind: ReminderKind, schedule: AzkarWindowSchedule, now: Instant, zone: ZoneId): PlannedReminder {
     fun remindFor(start: Instant): PlannedReminder {
         val end = schedule.windowEnd(start)
         val beforeEnd = end.minus(UNFINISHED_LEAD)
         val at = if (beforeEnd.isAfter(start)) beforeEnd else start.plus(Duration.between(start, end).dividedBy(2))
-        return PlannedReminder(ReminderKind.unfinished(section), at, start.atZone(zone).toLocalDate())
+        return PlannedReminder(kind, at, start.atZone(zone).toLocalDate())
     }
     val current = remindFor(schedule.currentOrNextStart(now))
     return if (current.at.isAfter(now)) current else remindFor(schedule.nextStart(after = now))
@@ -118,6 +134,34 @@ fun isAzkarReminderDue(
     if (!period.isWindow) return false
     if (!kind.isUnfinished) return true
     return record(period.day)?.isComplete != true
+}
+
+/** С какой длины серии предупреждать (решение пользователя 2026-10-11: с 1 дня). */
+const val STREAK_AT_RISK_MIN = 1
+
+/**
+ * «Серия под угрозой» (решения пользователя 2026-10-11): длина серии, которая прервётся, если не дочитать раздел
+ * [section] в его открытом сейчас окне, или `null`. Утро — утренние дня не прочитаны полностью (день уже не станет
+ * полным); вечер — вечерние не прочитаны, а утренние того же дня прочитаны (иначе серия уже прервана). Серия —
+ * [azkarStreak] на «сегодня» [azkarStreakDay]: сегодняшний неполный день в неё не входит, это ровно то, что
+ * прервётся. День раздела — дата начала окна, как пишет история ([days]).
+ */
+fun streakAtRisk(
+    section: AzkarSection,
+    windows: Map<AzkarSection, AzkarWindow>,
+    days: Map<LocalDate, AzkarDay>,
+    now: Instant,
+    zone: ZoneId,
+): Int? {
+    val window = windows[section]?.takeIf { it.isValid } ?: return null
+    val period = AzkarWindowSchedule(window, zone).period(now)
+    if (!period.isWindow) return null
+    val day = days[period.day]
+    if (day?.record(section)?.isComplete == true) return null
+    if (section == AzkarSection.Evening && day?.morning?.isComplete != true) return null
+    val evening = windows[AzkarSection.Evening]?.takeIf { it.isValid } ?: return null
+    val streak = azkarStreak(days, azkarStreakDay(AzkarWindowSchedule(evening, zone), now)).current
+    return streak.takeIf { it >= STREAK_AT_RISK_MIN }
 }
 
 /**

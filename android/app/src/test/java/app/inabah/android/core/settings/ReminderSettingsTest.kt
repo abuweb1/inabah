@@ -54,4 +54,14 @@ class ReminderSettingsTest {
         assertTrue(settings.offerAnswered.value)
         assertTrue(ReminderSettings(storage.restart()).offerAnswered.value)
     }
+
+    @Test
+    fun `Серия под угрозой — сохраняется и сама снимает предложение на главной`() = TestStorage.run { storage ->
+        val settings = ReminderSettings(storage.storage)
+
+        settings.setAzkarStreak(true)
+
+        assertTrue(settings.offerAnswered.value)
+        assertTrue(ReminderSettings(storage.restart()).preferences.value.azkarStreak)
+    }
 }

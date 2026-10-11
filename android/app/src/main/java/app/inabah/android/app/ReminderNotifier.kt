@@ -13,6 +13,7 @@ import app.inabah.android.core.content.model.HadithId
 import app.inabah.android.core.reminders.ReminderChannels
 import app.inabah.android.core.reminders.ReminderKind
 import app.inabah.android.core.reminders.ReminderText
+import app.inabah.android.core.settings.STREAK_DISPLAY_MAX
 import app.inabah.android.feature.settings.notificationsAllowed
 
 /**
@@ -33,6 +34,11 @@ class ReminderNotifier(context: Context) {
 
     /** Строки ресурсов на языке интерфейса — для подстановок (название сборника). */
     fun string(resId: Int): String = context.getString(resId)
+
+    /** «12 дней подряд» для `{streak}`; больше [STREAK_DISPLAY_MAX] — «9999+ дней подряд», как в капсуле. */
+    fun streakText(days: Int): String =
+        if (days > STREAK_DISPLAY_MAX) context.getString(R.string.azkar_streak_days_max)
+        else context.resources.getQuantityString(R.plurals.azkar_streak_days, days, days)
 
     /** Показано ли (`false` — уведомления или канал выключены). */
     fun showAzkar(kind: ReminderKind, section: AzkarSection, text: ReminderText): Boolean {

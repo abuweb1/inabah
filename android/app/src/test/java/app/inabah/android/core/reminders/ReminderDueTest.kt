@@ -1,6 +1,7 @@
 package app.inabah.android.core.reminders
 
 import app.inabah.android.core.content.model.AzkarSection
+import app.inabah.android.core.settings.AzkarDay
 import app.inabah.android.core.settings.AzkarDayRecord
 import app.inabah.android.core.settings.AzkarWindowSettings
 import app.inabah.android.core.settings.berlin
@@ -9,6 +10,7 @@ import java.time.Instant
 import java.time.LocalDate
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import org.junit.Test
 
@@ -65,5 +67,32 @@ class ReminderDueTest {
         assertEquals(ReminderChannels.HADITH, ReminderKind.HadithOfDay.channel)
         ReminderKind.entries.filter { it.section != null }.forEach { assertEquals(ReminderChannels.AZKAR, it.channel, it.name) }
         assertTrue(AzkarSection.entries.all { ReminderKind.start(it).section == it && ReminderKind.unfinished(it).section == it })
+    }
+
+    // «Серия под угрозой» (решения пользователя 2026-10-11).
+    private val windows = AzkarSection.entries.associateWith { AzkarWindowSettings.defaultWindow(it) }
+    private val full = AzkarDay(AzkarDayRecord(16, 16), AzkarDayRecord(16, 16))
+    private val october10: LocalDate = LocalDate.of(2026, 10, 10)
+    private fun twoFullDaysBefore(day: LocalDate) = mapOf(day.minusDays(1) to full, day.minusDays(2) to full)
+    private fun atRisk(section: AzkarSection, now: Instant, days: Map<LocalDate, AzkarDay>) = streakAtRisk(section, windows, days, now, berlin)
+
+    @Test
+    fun `Серия под угрозой утром — утренние не дочитаны`() {
+        val morning = date(2026, 10, 10, 10)
+        assertEquals(2, atRisk(AzkarSection.Morning, morning, twoFullDaysBefore(october10)))
+        assertEquals(2, atRisk(AzkarSection.Morning, morning, twoFullDaysBefore(october10) + (october10 to AzkarDay(morning = AzkarDayRecord(5, 16)))))
+        assertNull(atRisk(AzkarSection.Morning, morning, twoFullDaysBefore(october10) + (october10 to AzkarDay(morning = AzkarDayRecord(16, 16)))), "дочитаны")
+        assertNull(atRisk(AzkarSection.Morning, morning, emptyMap()), "серии нет")
+        assertNull(atRisk(AzkarSection.Morning, date(2026, 10, 10, 13), twoFullDaysBefore(october10)), "окно закрыто")
+    }
+
+    @Test
+    fun `Серия под угрозой вечером — только если утренние этого дня прочитаны`() {
+        val morningDone = twoFullDaysBefore(october10) + (october10 to AzkarDay(morning = AzkarDayRecord(16, 16)))
+        // Вечерние 17:00–02:00: в полночь — ещё день 10 октября.
+        val midnight = date(2026, 10, 11, 0)
+        assertEquals(2, atRisk(AzkarSection.Evening, midnight, morningDone))
+        assertNull(atRisk(AzkarSection.Evening, midnight, twoFullDaysBefore(october10)), "утренние пропущены — серия уже прервана")
+        assertNull(atRisk(AzkarSection.Evening, midnight, morningDone + (october10 to full)), "день полный")
     }
 }

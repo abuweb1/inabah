@@ -41,6 +41,8 @@ const REMINDER_KINDS = {
   azkarStart: { sections: AZKAR_SECTIONS, placeholders: [] },
   azkarUnfinished: { sections: AZKAR_SECTIONS, placeholders: [] },
   hadithOfDay: { sections: null, placeholders: ['collection', 'number', 'text'] },
+  // «Серия под угрозой» (2026-10-11): {streak} — «12 дней подряд» (склонение — приложение).
+  streakAtRisk: { sections: AZKAR_SECTIONS, placeholders: ['streak'] },
 };
 const REMINDER_TEXT_KEYS = ['title', 'body'];
 

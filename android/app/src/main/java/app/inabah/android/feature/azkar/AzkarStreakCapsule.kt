@@ -14,6 +14,7 @@ import app.inabah.android.R
 import app.inabah.android.core.designsystem.InabahTheme
 import app.inabah.android.core.designsystem.InabahType
 import app.inabah.android.core.designsystem.components.GlassCapsuleButton
+import app.inabah.android.core.settings.STREAK_DISPLAY_MAX
 
 /**
  * Серия дней под аятом на главной «Азкаров» (решение пользователя 2026-10-11): «✦ 12 дней подряд ›»,
@@ -55,8 +56,5 @@ fun streakDaysText(days: Int): String =
 @Composable
 fun streakNumberText(days: Int): String =
     if (days > STREAK_DISPLAY_MAX) stringResource(R.string.azkar_streak_number_max) else days.toString()
-
-/** Самое большое число серии на экране; дальше — «9999+». */
-const val STREAK_DISPLAY_MAX = 9999
 
 private const val ICON_SIZE = 16

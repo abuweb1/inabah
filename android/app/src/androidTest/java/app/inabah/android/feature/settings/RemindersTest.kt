@@ -122,6 +122,25 @@ class RemindersTest {
         }
     }
 
+    // «Серия под угрозой» (2026-10-11): доступна без напоминаний в начале, включение и выключение сохраняются.
+    @Test
+    fun streakSwitchWorksWithoutStartReminders() {
+        compose.setContent {
+            InabahTheme { AzkarSettingsScreen(azkarStore(), AzkarHistory(storage) { throw AssertionError(it) }, windows, reminders, onBack = {}, contentPadding = PaddingValues()) }
+        }
+        val streak = compose.onNode(switch("Если серия под угрозой"))
+
+        streak.performScrollTo().assertIsEnabled().performClick()
+        streak.assertIsOn()
+        compose.runOnIdle {
+            check(reminders.preferences.value.azkarStreak)
+            check(reminders.preferences.value.azkarStart.isEmpty())
+        }
+
+        streak.performClick()
+        compose.runOnIdle { check(!reminders.preferences.value.azkarStreak) }
+    }
+
     @Test
     fun hadithOfDaySwitchShowsTimeAndSaves() {
         compose.setContent {
