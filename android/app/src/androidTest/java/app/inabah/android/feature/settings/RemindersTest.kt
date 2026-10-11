@@ -30,6 +30,7 @@ import app.inabah.android.core.settings.AzkarWindowSettings
 import app.inabah.android.core.settings.HadithCollectionOrder
 import app.inabah.android.core.settings.HadithFavorites
 import app.inabah.android.core.settings.HadithProgress
+import app.inabah.android.core.settings.ReadingSettings
 import app.inabah.android.core.settings.ReminderSettings
 import app.inabah.android.core.updates.NoUpdateSource
 import app.inabah.android.core.settings.TestDataStoreRule
@@ -126,7 +127,7 @@ class RemindersTest {
         compose.setContent {
             InabahTheme {
                 HadithSettingsScreen(HadithStore(NoContentRepository), HadithProgress(storage), HadithFavorites(storage),
-                    HadithCollectionOrder(storage), reminders, onOpenOrder = {}, onBack = {}, contentPadding = PaddingValues())
+                    HadithCollectionOrder(storage), reminders, ReadingSettings(storage), onOpenOrder = {}, onBack = {}, contentPadding = PaddingValues())
             }
         }
         compose.onAllNodesWithText("Время").assertCountEquals(0)

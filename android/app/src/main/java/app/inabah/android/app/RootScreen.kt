@@ -265,6 +265,7 @@ private fun TabScreens(tab: AppTab, services: AppServices, contentPadding: Paddi
                     favorites = services.hadithFavorites,
                     order = services.hadithCollectionOrder,
                     reminderSettings = services.reminderSettings,
+                    readingSettings = services.readingSettings,
                     onOpenOrder = { router.push(SettingsRoute.HadithOrder) },
                     onBack = { router.pop(AppTab.Settings) },
                     contentPadding = contentPadding.bottomOnly(),

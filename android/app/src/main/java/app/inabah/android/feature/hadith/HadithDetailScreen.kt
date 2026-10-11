@@ -117,6 +117,7 @@ private fun HadithPages(
     val favoriteIds by favorites.favorites.collectAsStateWithLifecycle()
     val fontSize by readingSettings.arabicFontSize.collectAsStateWithLifecycle()
     val animatedSize by animateFloatAsState(fontSize.toFloat(), Motion.fontSize(), label = "arabicSize")
+    val collapsesArabic by readingSettings.hadithArabicCollapsed.collectAsStateWithLifecycle()
     Column(Modifier.fillMaxSize()) {
         HadithTopBar(readingSettings, onBack, pagerState)
         HorizontalPager(
@@ -131,6 +132,7 @@ private fun HadithPages(
                 status = statuses[hadith.id] ?: HadithStatus.None,
                 isFavorite = hadith.id in favoriteIds,
                 arabicFontSize = animatedSize,
+                collapsesArabic = collapsesArabic,
                 onToggleRead = { progress.toggleRead(hadith.id) },
                 onToggleMemorized = { progress.toggleMemorized(hadith.id) },
                 onToggleFavorite = { favorites.toggle(hadith.id) },

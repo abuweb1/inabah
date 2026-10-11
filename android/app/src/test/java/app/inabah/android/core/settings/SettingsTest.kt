@@ -52,6 +52,17 @@ class ReadingSettingsTest {
 
         assertEquals(40.0, ReadingSettings(restarted).arabicFontSize.value)
     }
+
+    @Test
+    fun `Сворачивание арабского текста хадиса — по умолчанию выключено и сохраняется`() = TestStorage.run { storage ->
+        val settings = ReadingSettings(storage.storage)
+        assertFalse(settings.hadithArabicCollapsed.value)
+
+        settings.setHadithArabicCollapsed(true)
+
+        assertTrue(settings.hadithArabicCollapsed.value)
+        assertTrue(ReadingSettings(storage.restart()).hadithArabicCollapsed.value)
+    }
 }
 
 /** «Настройки „Прослушать все“». */

@@ -78,6 +78,7 @@ import app.inabah.android.core.designsystem.Spacing
 import app.inabah.android.core.designsystem.components.ArabicText
 import app.inabah.android.core.designsystem.components.IconButton
 import app.inabah.android.core.designsystem.components.ParchmentPanel
+import app.inabah.android.core.designsystem.components.arabicPreview
 import app.inabah.android.core.designsystem.components.ProgressRing
 import app.inabah.android.core.designsystem.components.Sparkle
 import app.inabah.android.core.designsystem.components.collapsible
@@ -86,8 +87,6 @@ import app.inabah.android.core.designsystem.components.surface
 import app.inabah.android.core.designsystem.monospacedDigits
 import kotlinx.coroutines.delay
 
-/** Свёрнутая строка показывает одну строку — хватает первых слов (вёрстка длинного текста дороже). */
-private const val MINI_ROW_WORDS = 8
 private const val MINI_ROW_ARABIC_SIZE = 17f
 private val MiniCheckSize = 28.dp
 private val MiniCheckGlyph = 16.dp
@@ -97,13 +96,6 @@ private val CounterCheckGlyph = 26.dp
 private val FlashHaloRadius = 14.dp
 
 
-/** Первые [words] слов арабского текста и «…»; короче — целиком. */
-internal fun miniRowPreview(arabic: String, words: Int = MINI_ROW_WORDS): String {
-    val parts = arabic.split(Whitespace).filter(String::isNotEmpty)
-    return if (parts.size > words) parts.take(words).joinToString(" ") + "…" else arabic
-}
-
-private val Whitespace = Regex("\\s+")
 
 /**
  * Карточка зикра (iOS `ZikrCardView`): пергамент, перевод, действия и счётчик. После выполнения
@@ -154,7 +146,7 @@ fun ZikrCard(
             .clip(RoundedCornerShape(Radius.card)),
     ) {
         ZikrMiniRow(
-            arabic = remember(session) { miniRowPreview(session.zikr.arabic) },
+            arabic = remember(session) { arabicPreview(session.zikr.arabic) },
             isExpanded = state.isExpanded,
             onReset = session::reset,
             onToggleExpanded = { session.setExpanded(!state.isExpanded) },

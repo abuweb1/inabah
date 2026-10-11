@@ -28,16 +28,19 @@ import app.inabah.android.core.designsystem.components.SettingsChevron
 import app.inabah.android.core.designsystem.components.SettingsGroup
 import app.inabah.android.core.designsystem.components.SettingsRow
 import app.inabah.android.core.designsystem.components.SettingsRowText
+import app.inabah.android.core.designsystem.components.SwitchRow
 import app.inabah.android.core.designsystem.components.SettingsScaffold
 import app.inabah.android.core.settings.HadithCollectionOrder
 import app.inabah.android.core.settings.HadithFavorites
 import app.inabah.android.core.settings.HadithProgress
+import app.inabah.android.core.settings.ReadingSettings
 import app.inabah.android.core.settings.ReminderSettings
 import app.inabah.android.feature.hadith.HadithStore
 import app.inabah.android.feature.hadith.title
 
 /**
- * Настройки хадисов (iOS `HadithSettingsView`): порядок сборников на главной и сброс отметок
+ * Настройки хадисов (iOS `HadithSettingsView`): в самом верху — «Сворачивать арабский текст» на экране
+ * хадиса (решение пользователя 2026-10-11), дальше порядок сборников на главной и сброс отметок
  * «прочитан» / «выучен» каждого сборника отдельно — с подтверждением над строкой; внизу — «Очистить
  * избранное» (решение пользователя 2026-10-10), тоже с подтверждением.
  */
@@ -48,6 +51,7 @@ fun HadithSettingsScreen(
     favorites: HadithFavorites,
     order: HadithCollectionOrder,
     reminderSettings: ReminderSettings,
+    readingSettings: ReadingSettings,
     onOpenOrder: () -> Unit,
     onBack: () -> Unit,
     contentPadding: PaddingValues,
@@ -60,6 +64,7 @@ fun HadithSettingsScreen(
     val states by store.collections.collectAsStateWithLifecycle()
     val statuses by progress.statuses.collectAsStateWithLifecycle()
     val favoriteIds by favorites.favorites.collectAsStateWithLifecycle()
+    val arabicCollapsed by readingSettings.hadithArabicCollapsed.collectAsStateWithLifecycle()
     var pendingReset by remember { mutableStateOf<HadithCollection?>(null) }
     var pendingFavoritesClear by remember { mutableStateOf(false) }
     // Время хадиса дня — черновиком (как окна азкаров): сохраняется при уходе с экрана или в фон.
@@ -77,6 +82,21 @@ fun HadithSettingsScreen(
         modifier = modifier,
         topBar = { InabahTopBar(title = stringResource(R.string.settings_hadith_title), tint = tint, onBack = onBack) },
     ) {
+        SettingsGroup(
+            header = stringResource(R.string.settings_hadith_page_header),
+            rows = listOf {
+                SettingsRow {
+                    SwitchRow(
+                        label = stringResource(R.string.settings_hadith_collapse_arabic),
+                        subtitle = stringResource(R.string.settings_hadith_collapse_arabic_subtitle),
+                        checked = arabicCollapsed,
+                        onCheckedChange = readingSettings::setHadithArabicCollapsed,
+                        tint = tint,
+                        labelColor = palette.onAccent,
+                    )
+                }
+            },
+        )
         SettingsGroup(
             header = stringResource(R.string.settings_hadith_home_header),
             rows = listOf {

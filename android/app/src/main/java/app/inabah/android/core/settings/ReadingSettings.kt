@@ -1,16 +1,31 @@
 package app.inabah.android.core.settings
 
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.doublePreferencesKey
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
-/** Кегль арабского текста (iOS `ReadingSettings`): 14…40, шаг 2, по умолчанию 21. */
+/**
+ * Кегль арабского текста (iOS `ReadingSettings`): 14…40, шаг 2, по умолчанию 21; «Сворачивать арабский
+ * текст» на экране хадиса (решение пользователя 2026-10-11) — по умолчанию выключено.
+ */
 class ReadingSettings(private val storage: PreferencesStorage) {
     private val _arabicFontSize = MutableStateFlow(
         (storage.snapshot[KEY] ?: DEFAULT_SIZE).coerceIn(MIN_SIZE, MAX_SIZE),
     )
     val arabicFontSize: StateFlow<Double> = _arabicFontSize.asStateFlow()
+
+    private val _hadithArabicCollapsed = MutableStateFlow(storage.snapshot[COLLAPSE_KEY] ?: false)
+
+    /** Включено — арабский текст каждого хадиса открывается свёрнутым в строку «ХАДИС N + начало текста». */
+    val hadithArabicCollapsed: StateFlow<Boolean> = _hadithArabicCollapsed.asStateFlow()
+
+    fun setHadithArabicCollapsed(collapsed: Boolean) {
+        if (collapsed == _hadithArabicCollapsed.value) return
+        _hadithArabicCollapsed.value = collapsed
+        storage.edit { it[COLLAPSE_KEY] = collapsed }
+    }
 
     fun increaseArabicFontSize() = setArabicFontSize(_arabicFontSize.value + STEP)
 
@@ -36,5 +51,6 @@ class ReadingSettings(private val storage: PreferencesStorage) {
         fun canDecrease(size: Double): Boolean = size > MIN_SIZE
 
         private val KEY = doublePreferencesKey("reading.arabicFontSize")
+        private val COLLAPSE_KEY = booleanPreferencesKey("reading.hadithArabicCollapsed")
     }
 }
