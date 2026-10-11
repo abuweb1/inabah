@@ -26,6 +26,9 @@ final class AzkarStore {
     private var progressBySection: [AzkarSection: SectionProgress] = [:]
     /// Разделы, у которых сейчас время азкаров. Меняется только на границах.
     private var sectionsInWindow: Set<AzkarSection> = []
+    /// «Сегодня» для серии дней — день отрезка вечерних (`AzkarStreak.today`): день кончается вместе
+    /// с вечерним окном. `nil`, пока вечерние не загружены. Меняется только на границах.
+    private(set) var streakDay: AzkarCalendarDay?
 
     /// Отрезок, к которому относится загруженный прогресс раздела.
     @ObservationIgnored private var periods: [AzkarSection: AzkarPeriod] = [:]
@@ -174,6 +177,10 @@ final class AzkarStore {
 
     private func adopt(_ period: AzkarPeriod, for section: AzkarSection) {
         periods[section] = period
+        if section == .evening {
+            let day = AzkarCalendarDay(key: period.day)
+            if streakDay != day { streakDay = day }
+        }
         let isInWindow = period.isWindow
         if sectionsInWindow.contains(section) != isInWindow {
             if isInWindow {

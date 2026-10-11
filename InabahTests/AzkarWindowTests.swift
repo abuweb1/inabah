@@ -470,4 +470,28 @@ struct AzkarProgressPersistenceTests {
 
         #expect(AzkarHistory(defaults: defaults).record(of: .morning, on: "2026-10-03") == nil)
     }
+
+    // MARK: День серии
+
+    @Test("День серии: до загрузки вечерних нет, дальше — день вечернего окна, новый — после его конца")
+    func streakDayFollowsEveningWindow() async throws {
+        let morningOnly = await makeStore(.morning)
+        #expect(morningOnly.streakDay == nil)
+
+        let store = await makeStore(.evening)
+        let october3 = try #require(AzkarCalendarDay(key: "2026-10-03"))
+        #expect(store.streakDay == october3)  // 08:00 — промежуток до вечерних 3-го
+
+        clock.now = date(2026, 10, 3, 18)
+        store.reconcile()
+        #expect(store.streakDay == october3)
+
+        clock.now = date(2026, 10, 4, 1)
+        store.reconcile()
+        #expect(store.streakDay == october3)  // вечерние 3-го ещё идут
+
+        clock.now = date(2026, 10, 4, 3)
+        store.reconcile()
+        #expect(store.streakDay == october3.adding(days: 1))
+    }
 }

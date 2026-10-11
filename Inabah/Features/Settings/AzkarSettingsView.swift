@@ -9,6 +9,7 @@ import SwiftUI
 struct AzkarSettingsView: View {
     @Environment(AzkarStore.self) private var store
     @Environment(AzkarWindowSettings.self) private var windowSettings
+    @Environment(AzkarHistory.self) private var history
     @Environment(ReminderSettings.self) private var reminders
     @Environment(ReminderScheduler.self) private var scheduler
     @Environment(\.scenePhase) private var scenePhase
@@ -19,6 +20,8 @@ struct AzkarSettingsView: View {
 
     /// Раздел, сброс которого ждёт подтверждения.
     @State private var pendingReset: AzkarSection?
+    /// Сброс истории ждёт подтверждения.
+    @State private var pendingHistoryReset: HistoryReset?
     /// Время азкаров, пока экран открыт. Пусто до появления экрана — тогда строки
     /// показывают сохранённое время.
     @State private var drafts: [AzkarSection: AzkarWindow] = [:]
@@ -61,6 +64,8 @@ struct AzkarSettingsView: View {
                 Text("settings.reset.now.footer")
                     .foregroundStyle(theme.palette.onAccentSecondary)
             }
+
+            historySection
         }
         .settingsForm(background: theme.gradients.azkarBackground)
         .navigationTitle(Text("settings.azkar.title"))
@@ -72,11 +77,41 @@ struct AzkarSettingsView: View {
             message: { Text($0.resetConfirmationMessage) },
             perform: { store.resetProgress(of: $0) }
         )
+        .destructiveConfirmation(
+            "settings.azkar.history.reset.confirm.title",
+            item: $pendingHistoryReset,
+            actionLabel: "settings.reset.now.confirm.action",
+            message: { _ in Text("settings.azkar.history.reset.confirm.message") },
+            perform: { _ in
+                history.clear()
+                scheduler.reschedule()
+            }
+        )
         .audioPlayerInset()
         .onAppear(perform: loadDrafts)
         .onDisappear(perform: commitDrafts)
         .onChange(of: scenePhase) { _, phase in
             if phase == .background { commitDrafts() }
+        }
+    }
+
+    /// «История азкаров» (Android-first 2026-10-11, снимок `14a`): одна строка сброса, неактивна при пустой
+    /// истории; счётчики разделов не трогает. После сброса — пересобрать напоминания: «ещё не прочитаны»
+    /// ставятся по истории.
+    private var historySection: some View {
+        Section {
+            Button(role: .destructive) {
+                pendingHistoryReset = .all
+            } label: {
+                Text("settings.azkar.history.reset")
+            }
+            .disabled(history.isEmpty)
+            .settingsRow()
+        } header: {
+            Text("settings.azkar.history.header")
+        } footer: {
+            Text("settings.azkar.history.footer")
+                .foregroundStyle(theme.palette.onAccentSecondary)
         }
     }
 
@@ -228,6 +263,11 @@ private extension AzkarSection {
         case .evening: "settings.reset.now.confirm.evening"
         }
     }
+}
+
+/// Подтверждение «Сбросить историю» ждёт ответа — значение для `destructiveConfirmation(item:)`.
+private enum HistoryReset {
+    case all
 }
 
 #Preview {
