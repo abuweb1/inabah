@@ -574,6 +574,193 @@
         }
       }
     },
+    "azkar.calendar.best" : {
+      "comment" : "Сводка календаря: лучшая серия",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "лучшая серия"
+          }
+        }
+      }
+    },
+    "azkar.calendar.current" : {
+      "comment" : "Сводка календаря: текущая серия",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "подряд"
+          }
+        }
+      }
+    },
+    "azkar.calendar.day.evening %@" : {
+      "comment" : "VoiceOver: день календаря (дата) — только вечерние",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@: прочитаны вечерние"
+          }
+        }
+      }
+    },
+    "azkar.calendar.day.full %@" : {
+      "comment" : "VoiceOver: день календаря (дата) — оба раздела",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@: прочитаны утренние и вечерние"
+          }
+        }
+      }
+    },
+    "azkar.calendar.day.morning %@" : {
+      "comment" : "VoiceOver: день календаря (дата) — только утренние",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@: прочитаны утренние"
+          }
+        }
+      }
+    },
+    "azkar.calendar.day.none %@" : {
+      "comment" : "VoiceOver: день календаря (дата) — ничего полностью",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@: не прочитаны"
+          }
+        }
+      }
+    },
+    "azkar.calendar.emptyHint" : {
+      "comment" : "Календарь: нет ни одного полного дня",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Прочитайте утренние и вечерние азкары за один день — начнётся серия."
+          }
+        }
+      }
+    },
+    "azkar.calendar.legend.evening" : {
+      "comment" : "Легенда календаря: только вечерние",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "вечерние"
+          }
+        }
+      }
+    },
+    "azkar.calendar.legend.full" : {
+      "comment" : "Легенда календаря: полный день",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "полный день"
+          }
+        }
+      }
+    },
+    "azkar.calendar.legend.morning" : {
+      "comment" : "Легенда календаря: только утренние",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "утренние"
+          }
+        }
+      }
+    },
+    "azkar.calendar.next" : {
+      "comment" : "VoiceOver: кнопка «›» месяца",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Следующий месяц"
+          }
+        }
+      }
+    },
+    "azkar.calendar.open" : {
+      "comment" : "VoiceOver: что делает капсула серии",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Открыть календарь"
+          }
+        }
+      }
+    },
+    "azkar.calendar.previous" : {
+      "comment" : "VoiceOver: кнопка «‹» месяца",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Предыдущий месяц"
+          }
+        }
+      }
+    },
+    "azkar.calendar.section.none" : {
+      "comment" : "Подробности дня: раздел не читался",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "не читались"
+          }
+        }
+      }
+    },
+    "azkar.calendar.section.progress %lld %lld" : {
+      "comment" : "Подробности дня: прочитано зикров раздела из всех",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld из %2$lld"
+          }
+        }
+      }
+    },
+    "azkar.calendar.title" : {
+      "comment" : "Навбар экрана календаря азкаров",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Календарь азкаров"
+          }
+        }
+      }
+    },
+    "azkar.calendar.total" : {
+      "comment" : "Сводка календаря: всего полных дней",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "всего дней"
+          }
+        }
+      }
+    },
     "azkar.completion.evening" : {
       "localizations" : {
         "ru" : {
@@ -746,6 +933,74 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Выполнено: %1$lld из %2$lld"
+          }
+        }
+      }
+    },
+    "azkar.streak.days %lld" : {
+      "comment" : "Серия дней азкаров: капсула на главной и окно завершения",
+      "localizations" : {
+        "ru" : {
+          "variations" : {
+            "plural" : {
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld дня подряд"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld дней подряд"
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld день подряд"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld дня подряд"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "azkar.streak.daysMax" : {
+      "comment" : "Серия больше 9999 дней — вместо числа",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "9999+ дней подряд"
+          }
+        }
+      }
+    },
+    "azkar.streak.numberMax" : {
+      "comment" : "Число серии больше 9999 в сводке календаря",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "9999+"
+          }
+        }
+      }
+    },
+    "azkar.streak.start" : {
+      "comment" : "Капсула серии на главной, пока серии нет",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Начните серию сегодня"
           }
         }
       }

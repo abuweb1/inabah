@@ -25,6 +25,8 @@ struct AzkarHomeView: View {
             brand: Self.brand,
             verse: Self.verse
         ) {
+            // Серия дней — первой, под аятом, по центру (решение пользователя 2026-10-11).
+            AzkarStreakCapsule()
             ForEach(AzkarSection.allCases, id: \.self) { section in
                 NavigationLink(value: AzkarRoute.list(section)) {
                     SectionNavCard(

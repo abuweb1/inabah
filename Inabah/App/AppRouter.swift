@@ -11,6 +11,8 @@ enum AppTab: Hashable {
 /// Экраны внутри вкладки «Азкары». `Codable` — для будущих deep links (виджет, уведомления).
 nonisolated enum AzkarRoute: Hashable, Codable, Sendable {
     case list(AzkarSection)
+    /// «Календарь азкаров» — из капсулы серии на главной.
+    case calendar
 }
 
 /// Экраны внутри вкладки «Настройки».
