@@ -44,6 +44,8 @@ struct AzkarHomeView: View {
             if !reminders.offerAnswered {
                 ReminderOfferCard()
             }
+        } leadingAction: {
+            UpdateButton()
         }
         .audioPlayerInset()
         .toolbarVisibility(.hidden, for: .navigationBar)
@@ -118,9 +120,74 @@ private struct ReminderOfferCard: View {
     }
 }
 
+/// «Обновить» — слева вверху, только когда в App Store есть новая версия (как на Android, `10d`):
+/// круглая кнопка как «Избранное» у хадисов и золотая точка. В 1.1.1 источник без сети — значка нет.
+private struct UpdateButton: View {
+    @Environment(\.updateSource) private var updateSource
+    @Environment(\.openURL) private var openURL
+    @Environment(\.theme) private var theme
+
+    @State private var update: AvailableUpdate?
+
+    private static let dotSize: CGFloat = 10
+
+    var body: some View {
+        // ZStack, не Group: у пустой группы `.task` не запустился бы — вопрос не задавался бы вовсе.
+        ZStack {
+            if let update {
+                styledButton
+                    .overlay(alignment: .topTrailing) {
+                        Circle()
+                            .fill(theme.palette.gold)
+                            .frame(width: Self.dotSize, height: Self.dotSize)
+                            .accessibilityHidden(true)
+                    }
+                    .accessibilityLabel(Text("update.available \(update.version)"))
+            }
+        }
+        .task { update = await updateSource.availableUpdate() }
+    }
+
+    @ViewBuilder
+    private var styledButton: some View {
+        if #available(iOS 26, *) {
+            button
+                .buttonStyle(.glass)
+                .buttonBorderShape(.circle)
+                .controlSize(.large)
+        } else {
+            button
+                .buttonStyle(IconButtonStyle(
+                    foreground: theme.palette.tabAzkar,
+                    background: theme.palette.subtleFill,
+                    border: theme.palette.hairline
+                ))
+        }
+    }
+
+    private var button: some View {
+        Button {
+            openURL(AboutLinks.appStore)
+        } label: {
+            Image(systemName: "square.and.arrow.down")
+                .fontWeight(.medium)
+                .foregroundStyle(theme.palette.tabAzkar)
+        }
+        .fixedTextSize()
+    }
+}
+
 #Preview {
     NavigationStack {
         AzkarHomeView()
     }
     .appEnvironment(.preview)
+}
+
+#Preview("Есть обновление") {
+    NavigationStack {
+        AzkarHomeView()
+    }
+    .appEnvironment(.preview)
+    .environment(\.updateSource, FixedUpdateSource(update: AvailableUpdate(version: "1.2.0")))
 }

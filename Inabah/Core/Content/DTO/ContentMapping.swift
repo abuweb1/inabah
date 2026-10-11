@@ -81,6 +81,38 @@ nonisolated extension ReminderTexts {
     }
 }
 
+nonisolated extension ReleaseNote {
+    /// Записи файла в его порядке; запись пропускается (остальные остаются), если версия не `X.Y.Z`,
+    /// дата не `yyyy-MM-dd`, нет перевода на доступных языках или не осталось пунктов — как на Android.
+    static func notes(from dto: VersionsFileDTO, languages: ContentLanguagePriority) -> [ReleaseNote] {
+        dto.versions.compactMap { ReleaseNote(dto: $0, languages: languages) }
+    }
+
+    init?(dto: VersionDTO, languages: ContentLanguagePriority) {
+        guard let version = AppVersionNumber(dto.version),
+              let date = dto.date.flatMap(Self.parseDate),
+              let selected = languages.select(from: (dto.translations ?? [:]).keyedByLanguage)
+        else { return nil }
+        let items = ((selected.translation.items ?? []) + (selected.translation.ios ?? []))
+            .compactMap { Optional($0).nonEmpty }
+        guard !items.isEmpty else { return nil }
+        self.init(version: version, date: date, items: items, language: selected.language)
+    }
+
+    /// Строго `yyyy-MM-dd` и существующий день (`2026-02-30` — нет), полночь UTC.
+    private static func parseDate(_ text: String) -> Date? {
+        let parts = text.split(separator: "-", omittingEmptySubsequences: false)
+        guard parts.count == 3, parts[0].count == 4, parts[1].count == 2, parts[2].count == 2,
+              let year = Int(parts[0]), let month = Int(parts[1]), let day = Int(parts[2])
+        else { return nil }
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = .gmt
+        let components = DateComponents(year: year, month: month, day: day)
+        guard components.isValidDate(in: calendar) else { return nil }
+        return calendar.date(from: components)
+    }
+}
+
 private nonisolated extension ReminderText {
     init?(dto: ReminderTextDTO) {
         guard dto.title.nonEmpty != nil || dto.body.nonEmpty != nil else { return nil }

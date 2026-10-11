@@ -84,3 +84,22 @@ nonisolated struct ReminderTextDTO: Decodable, Sendable {
     let title: String?
     let body: String?
 }
+
+/// `data/versions.json` — история версий, общая с Android; новые версии сверху.
+nonisolated struct VersionsFileDTO: Decodable, Sendable {
+    let versions: [VersionDTO]
+}
+
+nonisolated struct VersionDTO: Decodable, Sendable {
+    let version: String?
+    /// `yyyy-MM-dd`.
+    let date: String?
+    let translations: [String: VersionTranslationDTO]?
+}
+
+nonisolated struct VersionTranslationDTO: Decodable, Sendable {
+    /// Общие пункты обеих платформ.
+    let items: [String]?
+    /// Пункты только для iOS (`android` — для Android, здесь не читается).
+    let ios: [String]?
+}

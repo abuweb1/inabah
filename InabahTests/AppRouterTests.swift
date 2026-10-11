@@ -72,6 +72,7 @@ struct AppRouterTests {
         [.hadith, .hadithOrder],
         [.appIcon],
         [.palette],
+        [.about, .versionHistory],
     ])
     func reselectSettingsPopsToRoot(path: [SettingsRoute]) {
         let router = AppRouter()

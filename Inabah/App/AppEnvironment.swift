@@ -31,14 +31,22 @@ struct AppEnvironment {
     let reminderScheduler: ReminderScheduler
     /// Делегат центра уведомлений — центр держит его слабой ссылкой; ставится `installNotificationDelegate()`.
     let notificationDelegate: ReminderNotificationDelegate
+    /// Окно «Что нового» после обновления.
+    let whatsNew: WhatsNew
+    /// Есть ли новая версия в App Store — в 1.1.1 без сети (`NoUpdateSource`).
+    let updateSource: any UpdateSource
 
     init(
         repository: any ContentRepository = BundleContentRepository(),
         defaults: UserDefaults = .standard,
         audioPlayer: AudioPlayerController? = nil,
         appIconSwitcher: (any AppIconSwitching)? = nil,
-        notificationCenter: (any NotificationCentering)? = nil
+        notificationCenter: (any NotificationCentering)? = nil,
+        updateSource: any UpdateSource = NoUpdateSource()
     ) {
+        // Первым: «новая установка» узнаётся до того, как сторы запишут свои ключи.
+        whatsNew = WhatsNew(defaults: defaults, repository: repository)
+        self.updateSource = updateSource
         router = AppRouter()
         readingSettings = ReadingSettings(defaults: defaults)
         playlistSettings = PlaylistSettings(defaults: defaults)
@@ -150,6 +158,8 @@ extension View {
             .environment(environment.textSizeSettings)
             .environment(environment.reminderSettings)
             .environment(environment.reminderScheduler)
+            .environment(environment.whatsNew)
+            .environment(\.updateSource, environment.updateSource)
             .modifier(ThemedModifier(
                 settings: environment.appearanceSettings,
                 parchment: environment.parchmentSettings,
