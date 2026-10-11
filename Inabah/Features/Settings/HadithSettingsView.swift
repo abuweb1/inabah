@@ -1,7 +1,7 @@
 import SwiftUI
 
-/// Настройки хадисов: сброс отметок «прочитан» / «выучен» каждого сборника отдельно,
-/// «Хадис дня» и очистка «Избранного».
+/// Настройки хадисов: «Сворачивать арабский текст», порядок сборников, сброс отметок «прочитан» /
+/// «выучен» каждого сборника отдельно, «Хадис дня» и очистка «Избранного».
 struct HadithSettingsView: View {
     @Environment(HadithStore.self) private var store
     @Environment(HadithProgress.self) private var progress
@@ -10,6 +10,7 @@ struct HadithSettingsView: View {
     @Environment(ReminderSettings.self) private var reminders
     @Environment(ReminderScheduler.self) private var scheduler
     @Environment(AzkarStore.self) private var azkarStore
+    @Environment(ReadingSettings.self) private var reading
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.theme) private var theme
 
@@ -25,6 +26,8 @@ struct HadithSettingsView: View {
 
     var body: some View {
         Form {
+            hadithPageSection
+
             Section {
                 NavigationLink(value: SettingsRoute.hadithOrder) {
                     Text("settings.hadith.order.title")
@@ -91,6 +94,26 @@ struct HadithSettingsView: View {
         .onDisappear(perform: commitHadithTime)
         .onChange(of: scenePhase) { _, phase in
             if phase == .background { commitHadithTime() }
+        }
+    }
+
+    /// «Экран хадиса» — первой группой (как на Android, `11a`): с чем открывается арабский текст.
+    /// Подпись — под названием, не под группой.
+    private var hadithPageSection: some View {
+        Section {
+            Toggle(isOn: Binding(get: { reading.hadithArabicCollapsed }, set: reading.setHadithArabicCollapsed)) {
+                VStack(alignment: .leading, spacing: Spacing.xxxs) {
+                    Text("settings.hadith.collapseArabic")
+                        .font(.body)
+                    Text("settings.hadith.collapseArabic.subtitle")
+                        .font(.caption)
+                        .foregroundStyle(theme.palette.onAccentSecondary)
+                }
+            }
+            .tint(theme.palette.tabHadith)
+            .settingsRow()
+        } header: {
+            Text("settings.hadith.page.header")
         }
     }
 

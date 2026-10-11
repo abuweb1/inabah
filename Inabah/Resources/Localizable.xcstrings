@@ -903,6 +903,28 @@
         }
       }
     },
+    "hadith.arabic.hide" : {
+      "comment" : "VoiceOver: строка «Хадис N» — свернуть арабский текст",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Скрыть арабский текст"
+          }
+        }
+      }
+    },
+    "hadith.arabic.show" : {
+      "comment" : "VoiceOver: строка «Хадис N» — раскрыть свёрнутый арабский текст",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показать арабский текст"
+          }
+        }
+      }
+    },
     "hadith.audio.title %lld" : {
       "comment" : "Карточка аудио на экране хадиса",
       "localizations" : {
@@ -1818,6 +1840,28 @@
         }
       }
     },
+    "settings.hadith.collapseArabic" : {
+      "comment" : "Настройки хадисов: хадис открывается со свёрнутым арабским текстом",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сворачивать арабский текст"
+          }
+        }
+      }
+    },
+    "settings.hadith.collapseArabic.subtitle" : {
+      "comment" : "Настройки хадисов: подпись под «Сворачивать арабский текст»",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "При открытии хадиса. Свернуть и раскрыть можно нажатием на строку с номером"
+          }
+        }
+      }
+    },
     "settings.hadith.favorites.clear" : {
       "comment" : "Настройки хадисов: кнопка очистки «Избранного»",
       "localizations" : {
@@ -1924,6 +1968,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Порядок сборников"
+          }
+        }
+      }
+    },
+    "settings.hadith.page.header" : {
+      "comment" : "Настройки хадисов: заголовок группы",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Экран хадиса"
           }
         }
       }

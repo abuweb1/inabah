@@ -36,7 +36,7 @@ struct ZikrCardView: View {
     var body: some View {
         VStack(spacing: 0) {
             ZikrMiniRow(
-                arabic: Self.miniRowPreview(of: session.zikr.arabic),
+                arabic: ArabicText.preview(of: session.zikr.arabic),
                 isExpanded: session.isExpanded,
                 onReset: reset,
                 onToggleExpanded: {
@@ -87,14 +87,6 @@ struct ZikrCardView: View {
 
     private func reset() {
         withAnimation(Motion.collapse) { session.reset() }
-    }
-
-    /// Мини-строка показывает одну строку текста — достаточно первых слов: вёрстка и обрезка
-    /// длинного арабского текста ради одной строки заметно дороже.
-    private static func miniRowPreview(of arabic: String, words: Int = 8) -> String {
-        let parts = arabic.split(whereSeparator: \.isWhitespace)
-        guard parts.count > words else { return arabic }
-        return parts.prefix(words).joined(separator: " ") + "…"
     }
 
     private var fullContent: some View {
