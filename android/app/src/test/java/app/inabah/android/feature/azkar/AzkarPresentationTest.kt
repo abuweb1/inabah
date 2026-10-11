@@ -1,5 +1,6 @@
 package app.inabah.android.feature.azkar
 
+import app.inabah.android.core.designsystem.components.arabicPreview
 import kotlin.test.assertEquals
 import org.junit.Test
 
@@ -9,20 +10,20 @@ class AzkarPresentationTest {
     fun `Свёрнутая строка — первые 8 слов и многоточие`() {
         val arabic = "سُبْحَانَ اللَّهِ وَبِحَمْدِهِ عَدَدَ خَلْقِهِ وَرِضَا نَفْسِهِ وَزِنَةَ عَرْشِهِ وَمِدَادَ كَلِمَاتِهِ"
 
-        assertEquals("سُبْحَانَ اللَّهِ وَبِحَمْدِهِ عَدَدَ خَلْقِهِ وَرِضَا نَفْسِهِ وَزِنَةَ…", miniRowPreview(arabic))
+        assertEquals("سُبْحَانَ اللَّهِ وَبِحَمْدِهِ عَدَدَ خَلْقِهِ وَرِضَا نَفْسِهِ وَزِنَةَ…", arabicPreview(arabic))
     }
 
     @Test
     fun `Текст до 8 слов — целиком, без многоточия`() {
         val eight = "١ ٢ ٣ ٤ ٥ ٦ ٧ ٨"
 
-        assertEquals(eight, miniRowPreview(eight))
-        assertEquals("سُبْحَانَ اللَّهِ", miniRowPreview("سُبْحَانَ اللَّهِ"))
+        assertEquals(eight, arabicPreview(eight))
+        assertEquals("سُبْحَانَ اللَّهِ", arabicPreview("سُبْحَانَ اللَّهِ"))
     }
 
     @Test
     fun `Слова разделяют любые пробелы и переводы строк`() {
-        assertEquals("a b c…", miniRowPreview("a  b\nc d", words = 3))
+        assertEquals("a b c…", arabicPreview("a  b\nc d", words = 3))
     }
 
     @Test

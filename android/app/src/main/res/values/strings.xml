@@ -87,6 +87,8 @@
     <string name="hadith_detail_counter">%1$d из %2$d</string>
     <string name="hadith_detail_narrator">Передал: %s</string>
     <string name="hadith_detail_next">Следующий хадис</string>
+    <string name="hadith_arabic_show">Показать арабский текст</string>
+    <string name="hadith_arabic_hide">Скрыть арабский текст</string>
     <string name="hadith_detail_number">Хадис %d</string>
     <string name="hadith_detail_previous">Предыдущий хадис</string>
     <string name="hadith_detail_source">Приводится: %s</string>
@@ -168,6 +170,9 @@
     <string name="settings_hadith_favorites_clear_confirm_message">Все хадисы будут убраны из избранного.</string>
     <string name="settings_hadith_favorites_clear_confirm_title">Очистить избранное?</string>
     <string name="settings_hadith_home_header">Главная</string>
+    <string name="settings_hadith_page_header">Экран хадиса</string>
+    <string name="settings_hadith_collapse_arabic">Сворачивать арабский текст</string>
+    <string name="settings_hadith_collapse_arabic_subtitle">При открытии хадиса. Свернуть и раскрыть можно нажатием на строку с номером</string>
     <string name="settings_hadith_order_footer">Перетащите сборник за ручку справа, чтобы изменить порядок карточек на главной.</string>
     <string name="settings_hadith_order_move_down">Ниже</string>
     <string name="settings_hadith_order_move_up">Выше</string>

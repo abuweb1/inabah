@@ -1,10 +1,13 @@
 package app.inabah.android.feature.hadith
 
+import androidx.compose.ui.test.isToggleable
+import androidx.compose.ui.test.hasText
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertIsEnabled
@@ -56,6 +59,7 @@ private const val NAWAWI_AUTHOR = "Имам ан-Навави"
 private const val NAWAWI_YEARS = "631–676 гг. х."
 private const val ABOUT_PARAGRAPH = "Абзац о сборнике."
 private const val NOTE_TEXT = "Пояснение к слову."
+private const val HADITH_ARABIC = "إِنَّمَا الْأَعْمَالُ بِالنِّيَّاتِ"
 
 /** Экраны хадисов: отметки, листание, порядок сборников, сброс (критерии этапа 4, docs/android/09). */
 @RunWith(AndroidJUnit4::class)
@@ -197,7 +201,7 @@ class HadithScreensTest {
         progress.toggleRead(qudsi)
         compose.setContent {
             InabahTheme {
-                HadithSettingsScreen(store, progress, HadithFavorites(storage), HadithCollectionOrder(storage), ReminderSettings(storage),
+                HadithSettingsScreen(store, progress, HadithFavorites(storage), HadithCollectionOrder(storage), ReminderSettings(storage), ReadingSettings(storage),
                     onOpenOrder = {}, onBack = {},
                     contentPadding = PaddingValues())
             }
@@ -214,6 +218,79 @@ class HadithScreensTest {
             check(progress.status(nawawi) == HadithStatus.None)
             check(progress.status(qudsi) == HadithStatus.Read)
         }
+    }
+
+    @Test
+    fun collapseArabicSwitchIsFirstAndSavesSetting() {
+        val reading = ReadingSettings(storage)
+        compose.setContent {
+            InabahTheme {
+                HadithSettingsScreen(HadithStore(FixedRepository()), HadithProgress(storage), HadithFavorites(storage),
+                    HadithCollectionOrder(storage), ReminderSettings(storage), reading,
+                    onOpenOrder = {}, onBack = {}, contentPadding = PaddingValues())
+            }
+        }
+        val switch = compose.onNode(hasText("Сворачивать арабский текст", substring = true) and isToggleable())
+        switch.assertIsOff()
+        // Самая первая группа экрана — над «Главной».
+        val switchTop = switch.fetchSemanticsNode().positionInRoot.y
+        check(switchTop < compose.onNodeWithText("Главная").fetchSemanticsNode().positionInRoot.y)
+
+        switch.performClick()
+
+        compose.runOnIdle { check(reading.hadithArabicCollapsed.value) }
+    }
+
+    @Test
+    fun collapsedArabicOpensOnTapAndCollapsesAgainAfterPaging() {
+        val reading = ReadingSettings(storage).apply { setHadithArabicCollapsed(true) }
+        compose.setContent {
+            InabahTheme {
+                HadithDetailScreen(HadithId(HadithCollection.Nawawi, 1), HadithStore(FixedRepository()), HadithProgress(storage),
+                    HadithFavorites(storage), reading, onBack = {}, contentPadding = PaddingValues())
+            }
+        }
+        waitForNode("1 из $NAWAWI_COUNT")
+        // Свёрнутый текст и начало в строке TalkBack не читает; пейджер держит и соседнюю страницу.
+        compose.onAllNodesWithText(HADITH_ARABIC).assertCountEquals(0)
+
+        compose.onAllNodes(hasClickLabel("Показать арабский текст"))[0].performClick()
+        compose.onAllNodesWithText(HADITH_ARABIC).assertCountEquals(1)
+        compose.onAllNodes(hasClickLabel("Скрыть арабский текст")).assertCountEquals(1)
+
+        compose.onNodeWithContentDescription("Следующий хадис").performClick()
+        waitForNode("2 из $NAWAWI_COUNT")
+        compose.onNodeWithContentDescription("Предыдущий хадис").performClick()
+        waitForNode("1 из $NAWAWI_COUNT")
+        compose.waitForIdle()
+        compose.onAllNodesWithText(HADITH_ARABIC).assertCountEquals(0)
+    }
+
+    @Test
+    fun withSettingOffArabicOpensExpandedAndCanBeCollapsedOnTap() {
+        compose.setContent {
+            InabahTheme {
+                HadithDetailScreen(HadithId(HadithCollection.Nawawi, 1), HadithStore(FixedRepository()), HadithProgress(storage),
+                    HadithFavorites(storage), ReadingSettings(storage), onBack = {}, contentPadding = PaddingValues())
+            }
+        }
+        waitForNode("1 из $NAWAWI_COUNT")
+        // Открыта и соседняя страница пейджера — обе развёрнуты.
+        compose.waitUntil(TIMEOUT_MILLIS) { compose.onAllNodesWithText(HADITH_ARABIC).fetchSemanticsNodes().size == 2 }
+
+        compose.onAllNodes(hasClickLabel("Скрыть арабский текст"))[0].performClick()
+        compose.onAllNodesWithText(HADITH_ARABIC).assertCountEquals(1)
+
+        compose.onNodeWithContentDescription("Следующий хадис").performClick()
+        waitForNode("2 из $NAWAWI_COUNT")
+        compose.onNodeWithContentDescription("Предыдущий хадис").performClick()
+        waitForNode("1 из $NAWAWI_COUNT")
+        compose.waitForIdle()
+        compose.onAllNodesWithText(HADITH_ARABIC).assertCountEquals(2)
+    }
+
+    private fun hasClickLabel(label: String) = SemanticsMatcher("OnClick label «$label»") {
+        it.config.getOrNull(SemanticsActions.OnClick)?.label == label
     }
 
     @Test
@@ -343,7 +420,7 @@ class HadithScreensTest {
         favorites.toggle(nawawi)
         compose.setContent {
             InabahTheme {
-                HadithSettingsScreen(HadithStore(FixedRepository()), progress, favorites, HadithCollectionOrder(storage), ReminderSettings(storage),
+                HadithSettingsScreen(HadithStore(FixedRepository()), progress, favorites, HadithCollectionOrder(storage), ReminderSettings(storage), ReadingSettings(storage),
                     onOpenOrder = {}, onBack = {}, contentPadding = PaddingValues())
             }
         }
@@ -417,7 +494,7 @@ private open class FixedRepository : ContentRepository {
         return (1..count).map { number ->
             Hadith(
                 id = HadithId(collection, number),
-                arabic = "إِنَّمَا الْأَعْمَالُ بِالنِّيَّاتِ",
+                arabic = HADITH_ARABIC,
                 translation = HadithTranslation(ContentLanguage.Base, "Умар ибн аль-Хаттаб", "Перевод $number", "аль-Бухари"),
             )
         }
