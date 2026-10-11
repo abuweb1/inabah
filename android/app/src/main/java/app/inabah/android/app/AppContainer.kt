@@ -57,6 +57,7 @@ class AppServices(
     val playlistSettings: PlaylistSettings,
     val azkarWindowSettings: AzkarWindowSettings,
     val azkarStore: AzkarStore,
+    val azkarHistory: AzkarHistory,
     val hadithStore: HadithStore,
     val hadithProgress: HadithProgress,
     val hadithFavorites: HadithFavorites,
@@ -174,6 +175,7 @@ class AppContainer(context: Context) {
                     Log.w(TAG, "Прогресс «${section.key}» не читается — отрезок заново", error)
                 },
             ),
+            azkarHistory = azkarHistory,
             hadithStore = hadithStore,
             hadithProgress = hadithProgress,
             hadithFavorites = HadithFavorites(storage),

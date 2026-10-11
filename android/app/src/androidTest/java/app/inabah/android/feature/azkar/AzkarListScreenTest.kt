@@ -63,6 +63,7 @@ import app.inabah.android.core.settings.PreferencesStorage
 import app.inabah.android.core.settings.TestDataStoreRule
 import app.inabah.android.core.settings.ReadingSettings
 import java.time.Instant
+import java.time.LocalDate
 import java.time.ZoneId
 import kotlinx.coroutines.runBlocking
 import org.junit.Before
@@ -346,7 +347,7 @@ class AzkarListScreenTest {
             InabahTheme {
                 val owner = lifecycle ?: LocalLifecycleOwner.current
                 CompositionLocalProvider(LocalLifecycleOwner provides owner) {
-                    if (shown()) AzkarSettingsScreen(store, windowSettings, ReminderSettings(storage), onBack = {}, contentPadding = PaddingValues())
+                    if (shown()) AzkarSettingsScreen(store, AzkarHistory(storage) { throw AssertionError(it) }, windowSettings, ReminderSettings(storage), onBack = {}, contentPadding = PaddingValues())
                 }
             }
         }
@@ -492,7 +493,7 @@ class AzkarListScreenTest {
         }
         compose.setContent {
             InabahTheme {
-                AzkarSettingsScreen(store, windowSettings, ReminderSettings(storage), onBack = {}, contentPadding = PaddingValues())
+                AzkarSettingsScreen(store, AzkarHistory(storage) { throw AssertionError(it) }, windowSettings, ReminderSettings(storage), onBack = {}, contentPadding = PaddingValues())
             }
         }
 
@@ -511,6 +512,25 @@ class AzkarListScreenTest {
         compose.onNodeWithText("Сбросить").performClick()
         compose.runOnIdle { check(!store.hasProgress(AzkarSection.Morning)) }
         resetRow.assertIsNotEnabled()
+    }
+
+    @Test
+    fun settingsHistoryResetClearsCalendarAfterConfirmation() {
+        val history = AzkarHistory(storage) { throw AssertionError(it) }
+        history.record(completed = 2, total = 2, AzkarSection.Morning, LocalDate.of(2026, 10, 10))
+        compose.setContent {
+            InabahTheme {
+                AzkarSettingsScreen(store(1, 1), history, windowSettings, ReminderSettings(storage), onBack = {}, contentPadding = PaddingValues())
+            }
+        }
+
+        val historyRow = compose.onNode(hasText("Сбросить историю") and hasClickAction())
+        historyRow.performScrollTo().performClick()
+        compose.onNodeWithText("Сбросить историю?").assertExists()
+        compose.onNodeWithText("Сбросить").performClick()
+
+        compose.runOnIdle { check(history.days.value.isEmpty()) }
+        historyRow.assertIsNotEnabled()
     }
 
     @androidx.compose.runtime.Composable

@@ -252,6 +252,7 @@ private fun TabScreens(tab: AppTab, services: AppServices, contentPadding: Paddi
             entry<SettingsRoute.Azkar> {
                 AzkarSettingsScreen(
                     store = services.azkarStore,
+                    history = services.azkarHistory,
                     windowSettings = services.azkarWindowSettings,
                     reminderSettings = services.reminderSettings,
                     onBack = { router.pop(AppTab.Settings) },

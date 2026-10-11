@@ -108,7 +108,7 @@ class RemindersTest {
     @Test
     fun azkarSwitchesSaveAndUnfinishedNeedsStart() {
         compose.setContent {
-            InabahTheme { AzkarSettingsScreen(azkarStore(), windows, reminders, onBack = {}, contentPadding = PaddingValues()) }
+            InabahTheme { AzkarSettingsScreen(azkarStore(), AzkarHistory(storage) { throw AssertionError(it) }, windows, reminders, onBack = {}, contentPadding = PaddingValues()) }
         }
         compose.onNode(switch("Если ещё не прочитаны")).performScrollTo().assertIsNotEnabled()
 

@@ -159,6 +159,11 @@
     <string name="settings_app_icon_unsupported">Смена иконки недоступна на этом устройстве.</string>
     <string name="settings_appearance_header">Оформление</string>
     <string name="settings_azkar_subtitle">Время азкаров и сброс прогресса</string>
+    <string name="settings_azkar_history_footer">По ней строятся календарь азкаров и серия дней подряд. Счётчики разделов не обнуляются.</string>
+    <string name="settings_azkar_history_header">История азкаров</string>
+    <string name="settings_azkar_history_reset">Сбросить историю</string>
+    <string name="settings_azkar_history_reset_confirm_message">Все отметки календаря и серия дней будут удалены.</string>
+    <string name="settings_azkar_history_reset_confirm_title">Сбросить историю?</string>
     <string name="settings_azkar_title">Азкары</string>
     <string name="settings_hadith_of_day_footer">Следующий непрочитанный хадис по порядку сборников; все прочитаны — по кругу.</string>
     <string name="settings_hadith_of_day_header">Хадис дня</string>
