@@ -1829,6 +1829,61 @@
         }
       }
     },
+    "settings.azkar.history.footer" : {
+      "comment" : "Настройки азкаров: пояснение к сбросу истории",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "По ней строятся календарь азкаров и серия дней подряд. Счётчики разделов не обнуляются."
+          }
+        }
+      }
+    },
+    "settings.azkar.history.header" : {
+      "comment" : "Настройки азкаров: секция сброса истории (календарь и серия дней)",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "История азкаров"
+          }
+        }
+      }
+    },
+    "settings.azkar.history.reset" : {
+      "comment" : "Настройки азкаров: строка «Сбросить историю»",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сбросить историю"
+          }
+        }
+      }
+    },
+    "settings.azkar.history.reset.confirm.message" : {
+      "comment" : "Подтверждение сброса истории азкаров: что удалится",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Все отметки календаря и серия дней будут удалены."
+          }
+        }
+      }
+    },
+    "settings.azkar.history.reset.confirm.title" : {
+      "comment" : "Подтверждение сброса истории азкаров: заголовок",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сбросить историю?"
+          }
+        }
+      }
+    },
     "settings.azkar.subtitle" : {
       "comment" : "Настройки: подпись раздела «Азкары»",
       "localizations" : {

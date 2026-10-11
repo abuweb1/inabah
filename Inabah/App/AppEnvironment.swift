@@ -145,6 +145,7 @@ extension View {
             .environment(environment.readingSettings)
             .environment(environment.playlistSettings)
             .environment(environment.azkarWindowSettings)
+            .environment(environment.azkarHistory)
             .environment(environment.azkarStore)
             .environment(environment.hadithStore)
             .environment(environment.hadithProgress)

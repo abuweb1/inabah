@@ -135,8 +135,7 @@ nonisolated enum ReminderPlan {
     }
 
     static func isCompleted(_ record: AzkarDayRecord?) -> Bool {
-        guard let record else { return false }
-        return record.total > 0 && record.completed >= record.total
+        record?.isComplete == true
     }
 
     /// Раздел выполнен — по текущему прогрессу (то же правило, что у записи истории).
