@@ -46,6 +46,7 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import app.inabah.android.core.content.ContentRepository
 import app.inabah.android.core.content.model.AzkarSection
@@ -70,6 +71,8 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 private const val TIMEOUT_MILLIS = 5_000L
+private const val LONG_ZIKR_REPEATS = 80
+private const val NEXT_ZIKR_ARABIC = "لَا إِلَٰهَ إِلَّا اللَّهُ"
 private val FIXED_ZONE: ZoneId = ZoneId.of("Europe/Berlin")
 private val FIXED_NOW: Instant = Instant.parse("2026-10-03T06:00:00Z")
 
@@ -94,9 +97,9 @@ class AzkarListScreenTest {
         compose.enableAccessibilityChecks()
     }
 
-    private fun store(vararg repetitions: Int): AzkarStore {
+    private fun store(vararg repetitions: Int, arabic: (number: Int) -> String = { "سُبْحَانَ اللَّهِ" }): AzkarStore {
         val azkar = repetitions.mapIndexed { index, count ->
-            Zikr(ZikrId(AzkarSection.Morning, index + 1), "سُبْحَانَ اللَّهِ", count, audioFile, translation = null)
+            Zikr(ZikrId(AzkarSection.Morning, index + 1), arabic(index + 1), count, audioFile, translation = null)
         }
         return AzkarStore(
             repository = FixedRepository(azkar),
@@ -447,6 +450,22 @@ class AzkarListScreenTest {
 
         increase.assertIsNotEnabled()
         check(reading.arabicFontSize.value == ReadingSettings.MAX_SIZE)
+    }
+
+    @Test
+    fun collapsingLongZikrScrolledPastItsTopKeepsNextZikrOnScreen() {
+        // Первый зикр — на несколько экранов, под ним ещё пять: прокрутке есть куда остаться.
+        val store = store(1, 3, 3, 3, 3, 3) { number ->
+            if (number == 1) "سُبْحَانَ اللَّهِ وَبِحَمْدِهِ ".repeat(LONG_ZIKR_REPEATS).trim() else "$NEXT_ZIKR_ARABIC $number"
+        }
+        compose.setContent { Screen(store) }
+        compose.waitUntil(TIMEOUT_MILLIS) { counters().fetchSemanticsNodes().size == 6 }
+        counters()[0].performScrollTo().performClick()
+
+        waitForNode("Развернуть")
+        compose.waitForIdle()
+        compose.onNodeWithContentDescription("Развернуть").assertIsDisplayed()
+        compose.onNodeWithText("$NEXT_ZIKR_ARABIC 2").assertIsDisplayed()
     }
 
     @Test

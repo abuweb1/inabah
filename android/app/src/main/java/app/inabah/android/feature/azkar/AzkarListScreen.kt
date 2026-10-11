@@ -273,6 +273,7 @@ private fun AzkarFeed(
     val scrollState = rememberScrollState()
     val cardTops = remember { mutableMapOf<String, Float>() }
     AutoScrollToPlaying(scrollState, cardTops, trackId = playerState.track?.id.takeIf { isPlaylistActive })
+    val scope = rememberCoroutineScope()
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -294,6 +295,13 @@ private fun AzkarFeed(
                         isPlaylistCurrent = isPlaylistActive && playerState.track?.id == trackId,
                     ),
                     onPlay = { track?.let(player::play) },
+                    // Верх дочитанного длинного зикра ушёл за экран — без подъезда лента осталась бы на прежнем
+                    // смещении, и начало следующего зикра уехало бы вверх на высоту свёрнутого.
+                    onCollapse = {
+                        cardTops[trackId]?.takeIf { it < scrollState.value }?.let { top ->
+                            scope.launch { scrollState.animateScrollTo(top.toInt(), Motion.collapse()) }
+                        }
+                    },
                     modifier = Modifier.onPlaced { cardTops[trackId] = it.positionInParent().y },
                 )
             }
