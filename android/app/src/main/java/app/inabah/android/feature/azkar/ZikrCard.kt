@@ -35,6 +35,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -109,7 +110,8 @@ private val Whitespace = Regex("\\s+")
  * Карточка зикра (iOS `ZikrCardView`): пергамент, перевод, действия и счётчик. После выполнения
  * сверху раскрывается заголовок с ✓, а полное содержимое складывается под него; ⌄ раскладывает
  * обратно. Оба блока всегда в иерархии и меняют только высоту ([collapsible]) — соседи по ленте
- * сдвигаются в тех же кадрах. Перерисовывается только по состоянию своего [session] и [audio]
+ * сдвигаются в тех же кадрах; в начале сворачивания вызывается [onCollapse] — лента подтягивает к карточке
+ * прокрутку, если её верх ушёл за экран. Перерисовывается только по состоянию своего [session] и [audio]
  * (значение от ленты — карточка не читает плеер); звучащий в «Прослушать все» — в золотой рамке.
  */
 @Composable
@@ -119,8 +121,10 @@ fun ZikrCard(
     modifier: Modifier = Modifier,
     audio: ZikrAudioState = ZikrAudioState.Idle,
     onPlay: () -> Unit = {},
+    onCollapse: () -> Unit = {},
 ) {
     val palette = InabahTheme.palette
+    val currentOnCollapse by rememberUpdatedState(onCollapse)
     val state by session.state.collectAsStateWithLifecycle()
     val borderColor by animateColorAsState(
         if (audio.isPlaylistCurrent) palette.gold else palette.hairline, Motion.highlight(), label = "cardBorder",
@@ -140,6 +144,7 @@ fun ZikrCard(
         } else if (!isCollapsed) {
             delay(Motion.COLLAPSE_DELAY_MILLIS)
             isCollapsed = true
+            currentOnCollapse()
         }
     }
     // Сброс раскрывает сразу, в том же кадре, что и смена счёта: эффект сработал бы кадром позже,
