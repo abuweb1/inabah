@@ -22,6 +22,7 @@ import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -30,6 +31,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -556,5 +558,57 @@ private fun CapsuleTextButton(
         contentAlignment = Alignment.Center,
     ) {
         Text(label, color = InabahTheme.palette.onAccent, style = InabahType.body.copy(fontWeight = FontWeight.SemiBold))
+    }
+}
+
+/**
+ * Стеклянная капсула с содержимым (серия дней под аятом на главной «Азкаров»): то же стекло и тот же
+ * отклик, что у [GlassIconButton] («‹» в шапке): при нажатии подаётся вперёд, заливается цветом раздела,
+ * обводка разгорается, а текст и значки перекрашиваются в цвет нажатого значка. Высота от 40 (зона касания 48).
+ * [onClickLabel] — действие для TalkBack («Открыть календарь»); подпись — из содержимого.
+ */
+@Composable
+fun GlassCapsuleButton(
+    onClick: () -> Unit,
+    tint: Color,
+    modifier: Modifier = Modifier,
+    onClickLabel: String? = null,
+    content: @Composable RowScope.() -> Unit,
+) {
+    val interaction = remember { MutableInteractionSource() }
+    val pressed = rememberPressProgress(interaction, glassPressSpec(), glassReleaseSpec())
+    val colors = glassColors(tint)
+    Box(
+        modifier = modifier
+            .heightIn(min = Size.minTapTarget)
+            .clickable(interaction, indication = null, onClickLabel = onClickLabel, role = Role.Button, onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) {
+        Row(
+            modifier = Modifier
+                .graphicsLayer {
+                    val scale = 1f + (CAPSULE_PRESS_SCALE - 1f) * pressed.value
+                    scaleX = scale
+                    scaleY = scale
+                }
+                .heightIn(min = GlassButtonSize)
+                .drawBehind {
+                    val corner = androidx.compose.ui.geometry.CornerRadius(size.height / 2)
+                    drawRoundRect(colors.fill, cornerRadius = corner)
+                    drawRoundRect(colors.pressedFill, cornerRadius = corner, alpha = pressed.value.coerceIn(0f, 1f))
+                    drawGlassRim(colors, pressed.value, CircleShape)
+                }
+                .padding(horizontal = Spacing.l)
+                // Содержимое (текст, значки в своих цветах) перекрашивается в pressedIcon поверх — в отдельном слое,
+                // чтобы заливка выше по цепочке не окрасилась. Цвет читается при отрисовке: без перестроения.
+                .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
+                .drawWithContent {
+                    drawContent()
+                    drawRect(colors.pressedIcon, alpha = pressed.value.coerceIn(0f, 1f), blendMode = BlendMode.SrcAtop)
+                },
+            horizontalArrangement = Arrangement.spacedBy(Spacing.xs),
+            verticalAlignment = Alignment.CenterVertically,
+            content = content,
+        )
     }
 }

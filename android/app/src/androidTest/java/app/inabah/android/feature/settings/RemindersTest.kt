@@ -80,7 +80,7 @@ class RemindersTest {
     @Test
     fun offerEnableTurnsOnMorningAndEveningAndHidesCard() {
         compose.setContent {
-            InabahTheme { AzkarHomeScreen(azkarStore(), windows, reminders, NoUpdateSource, onOpenSection = {}, contentPadding = PaddingValues()) }
+            InabahTheme { AzkarHomeScreen(azkarStore(), AzkarHistory(storage) { throw AssertionError(it) }, windows, reminders, NoUpdateSource, onOpenSection = {}, onOpenCalendar = {}, contentPadding = PaddingValues()) }
         }
         compose.onNodeWithText("Включить").performScrollTo().performClick()
 
@@ -94,7 +94,7 @@ class RemindersTest {
     @Test
     fun offerLaterHidesCardWithoutEnabling() {
         compose.setContent {
-            InabahTheme { AzkarHomeScreen(azkarStore(), windows, reminders, NoUpdateSource, onOpenSection = {}, contentPadding = PaddingValues()) }
+            InabahTheme { AzkarHomeScreen(azkarStore(), AzkarHistory(storage) { throw AssertionError(it) }, windows, reminders, NoUpdateSource, onOpenSection = {}, onOpenCalendar = {}, contentPadding = PaddingValues()) }
         }
         compose.onNodeWithText("Не сейчас").performScrollTo().performClick()
 
@@ -108,7 +108,7 @@ class RemindersTest {
     @Test
     fun azkarSwitchesSaveAndUnfinishedNeedsStart() {
         compose.setContent {
-            InabahTheme { AzkarSettingsScreen(azkarStore(), windows, reminders, onBack = {}, contentPadding = PaddingValues()) }
+            InabahTheme { AzkarSettingsScreen(azkarStore(), AzkarHistory(storage) { throw AssertionError(it) }, windows, reminders, onBack = {}, contentPadding = PaddingValues()) }
         }
         compose.onNode(switch("Если ещё не прочитаны")).performScrollTo().assertIsNotEnabled()
 

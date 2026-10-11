@@ -52,4 +52,28 @@ class AzkarHistoryTest {
         assertNull(restored.record(AzkarSection.Morning, day))
         assertEquals(AzkarDayRecord(5, 16), restored.record(AzkarSection.Evening, day))
     }
+
+    @Test
+    fun `Дни — разделы по дате, обновляются при записи`() = TestStorage.run { storage ->
+        val history = AzkarHistory(storage.storage) { throw AssertionError(it) }
+        history.record(completed = 16, total = 16, AzkarSection.Morning, day)
+        history.record(completed = 5, total = 16, AzkarSection.Evening, day)
+
+        assertEquals(mapOf(day to AzkarDay(AzkarDayRecord(16, 16), AzkarDayRecord(5, 16))), history.days.value)
+        assertEquals(history.days.value, AzkarHistory(storage.storage) { throw AssertionError(it) }.days.value)
+    }
+
+    @Test
+    fun `Сброс — пустые дни и после перезапуска, отложенная копия тоже удалена`() = TestStorage.run { storage ->
+        storage.seed { it[corruptKey] = "старый сбой" }
+        val history = AzkarHistory(storage.storage) { throw AssertionError(it) }
+        history.record(completed = 16, total = 16, AzkarSection.Morning, day)
+
+        history.clear()
+
+        assertEquals(emptyMap(), history.days.value)
+        storage.restart()
+        assertNull(storage.persisted()[corruptKey])
+        assertEquals(emptyMap(), AzkarHistory(storage.storage) { throw AssertionError(it) }.days.value)
+    }
 }

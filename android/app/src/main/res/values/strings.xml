@@ -58,16 +58,40 @@
     <string name="audio_zikr_listen">Прослушать</string>
     <string name="audio_zikr_open_player">Открыть плеер</string>
     <string name="audio_zikr_title">Зикр №%d</string>
+    <string name="azkar_calendar_best">лучшая серия</string>
+    <string name="azkar_calendar_current">подряд</string>
+    <string name="azkar_calendar_day_evening">%1$s: прочитаны вечерние</string>
+    <string name="azkar_calendar_day_full">%1$s: прочитаны утренние и вечерние</string>
+    <string name="azkar_calendar_day_morning">%1$s: прочитаны утренние</string>
+    <string name="azkar_calendar_day_none">%1$s: не прочитаны</string>
+    <string name="azkar_calendar_empty_hint">Прочитайте утренние и вечерние азкары за один день — начнётся серия.</string>
+    <string name="azkar_calendar_legend_evening">вечерние</string>
+    <string name="azkar_calendar_legend_full">полный день</string>
+    <string name="azkar_calendar_legend_morning">утренние</string>
+    <string name="azkar_calendar_next">Следующий месяц</string>
+    <string name="azkar_calendar_open">Открыть календарь</string>
+    <string name="azkar_calendar_previous">Предыдущий месяц</string>
+    <string name="azkar_calendar_section_none">не читались</string>
+    <string name="azkar_calendar_section_progress">%1$d из %2$d</string>
+    <string name="azkar_calendar_title">Календарь азкаров</string>
+    <string name="azkar_calendar_total">всего дней</string>
     <string name="azkar_completion_evening">Все вечерние азкары прочитаны.\nДа примет Аллах ваше поклонение.</string>
     <string name="azkar_completion_hamd">Хвала Аллаху, Господу миров</string>
     <string name="azkar_completion_home">На главную</string>
     <string name="azkar_completion_morning">Все утренние азкары прочитаны.\nДа примет Аллах ваше поклонение.</string>
+    <string name="azkar_completion_next_evening">Не забудьте прочитать вечерние азкары</string>
+    <string name="azkar_completion_next_morning">Завтра не забудьте прочитать утренние азкары</string>
     <string name="azkar_completion_title">Машаа Аллах!</string>
+    <string name="azkar_completion_verse_reference">Къуран · аль-Ахзаб 33:41–42</string>
+    <string name="azkar_completion_verse_translation">«О те, которые уверовали! Поминайте Аллаха (сердцем, устами и в делах) многократным поминанием, и восславляйте Его по утрам и по вечерам!»</string>
     <string name="azkar_evening_subtitle">После намаза Аср</string>
     <string name="azkar_evening_title">Вечерние азкары</string>
     <string name="azkar_morning_subtitle">После намаза Фаджр</string>
     <string name="azkar_morning_title">Утренние азкары</string>
     <string name="azkar_progress">Выполнено: %1$d из %2$d</string>
+    <string name="azkar_streak_days_max">9999+ дней подряд</string>
+    <string name="azkar_streak_number_max">9999+</string>
+    <string name="azkar_streak_start">Начните серию сегодня</string>
     <string name="azkar_window_notice_evening">Время вечерних азкаров — с %1$s до %2$s</string>
     <string name="azkar_window_notice_morning">Время утренних азкаров — с %1$s до %2$s</string>
     <string name="azkar_window_range">%1$s–%2$s</string>
@@ -158,6 +182,11 @@
     <string name="settings_app_icon_unsupported">Смена иконки недоступна на этом устройстве.</string>
     <string name="settings_appearance_header">Оформление</string>
     <string name="settings_azkar_subtitle">Время азкаров и сброс прогресса</string>
+    <string name="settings_azkar_history_footer">По ней строятся календарь азкаров и серия дней подряд. Счётчики разделов не обнуляются.</string>
+    <string name="settings_azkar_history_header">История азкаров</string>
+    <string name="settings_azkar_history_reset">Сбросить историю</string>
+    <string name="settings_azkar_history_reset_confirm_message">Все отметки календаря и серия дней будут удалены.</string>
+    <string name="settings_azkar_history_reset_confirm_title">Сбросить историю?</string>
     <string name="settings_azkar_title">Азкары</string>
     <string name="settings_hadith_of_day_footer">Следующий непрочитанный хадис по порядку сборников; все прочитаны — по кругу.</string>
     <string name="settings_hadith_of_day_header">Хадис дня</string>
@@ -291,6 +320,12 @@
         <item quantity="few">%d зикра · После фаджра</item>
         <item quantity="many">%d зикров · После фаджра</item>
         <item quantity="other">%d зикра · После фаджра</item>
+    </plurals>
+    <plurals name="azkar_streak_days">
+        <item quantity="one">%d день подряд</item>
+        <item quantity="few">%d дня подряд</item>
+        <item quantity="many">%d дней подряд</item>
+        <item quantity="other">%d дня подряд</item>
     </plurals>
     <!-- Заголовок группы составителей: число — сколько их (у сборника ан-Навави — один). -->
     <plurals name="hadith_about_authors">

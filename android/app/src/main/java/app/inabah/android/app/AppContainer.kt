@@ -27,6 +27,7 @@ import app.inabah.android.core.settings.AppIconSettings
 import app.inabah.android.core.settings.AppearanceSettings
 import app.inabah.android.core.settings.AzkarHistory
 import app.inabah.android.core.settings.AzkarWindowSettings
+import app.inabah.android.core.settings.DEBUG_AZKAR_HISTORY_FILE
 import app.inabah.android.core.settings.HadithCollectionOrder
 import app.inabah.android.core.settings.HadithFavorites
 import app.inabah.android.core.settings.HadithProgress
@@ -38,6 +39,7 @@ import app.inabah.android.core.settings.ReadingSettings
 import app.inabah.android.core.settings.ReminderSettings
 import app.inabah.android.core.settings.TextSizeSettings
 import app.inabah.android.core.settings.TranslationShadeSettings
+import app.inabah.android.core.settings.seedDebugAzkarHistory
 import app.inabah.android.feature.azkar.AzkarStore
 import app.inabah.android.feature.hadith.HadithStore
 import java.time.Instant
@@ -57,6 +59,7 @@ class AppServices(
     val playlistSettings: PlaylistSettings,
     val azkarWindowSettings: AzkarWindowSettings,
     val azkarStore: AzkarStore,
+    val azkarHistory: AzkarHistory,
     val hadithStore: HadithStore,
     val hadithProgress: HadithProgress,
     val hadithFavorites: HadithFavorites,
@@ -127,6 +130,12 @@ class AppContainer(context: Context) {
             // Расписание напоминаний — за настройками и окнами азкаров, пока жив процесс.
             appScope.launch { services.reminders.run() }
             appScope.launch { services.whatsNew.check() }
+            // Прошлые дни для календаря — только debug (R8 убирает ветку из релиза).
+            if (BuildConfig.DEBUG) {
+                appScope.launch {
+                    seedDebugAzkarHistory(services.azkarHistory, appContext.filesDir.resolve(DEBUG_AZKAR_HISTORY_FILE), Dispatchers.IO)
+                }
+            }
             services.azkarStore.loadAll()
             services.hadithStore.loadAll()
             logContentFailures(services)
@@ -174,6 +183,7 @@ class AppContainer(context: Context) {
                     Log.w(TAG, "Прогресс «${section.key}» не читается — отрезок заново", error)
                 },
             ),
+            azkarHistory = azkarHistory,
             hadithStore = hadithStore,
             hadithProgress = hadithProgress,
             hadithFavorites = HadithFavorites(storage),

@@ -67,6 +67,8 @@ data class Palette(
     val tabSettings: Color,
     /** Разрушающее действие («Сбросить»): системный красный iOS в тёмной теме. */
     val destructive: Color,
+    /** Вечерняя дуга дня в календаре азкаров — 🌑, чёрный во всех палитрах (решение пользователя 2026-10-11). */
+    val newMoon: Color = Color.Black,
 ) {
     val onAccentSecondary: Color get() = onAccent.copy(alpha = 0.6f)
     val onAccentTertiary: Color get() = onAccent.copy(alpha = 0.4f)

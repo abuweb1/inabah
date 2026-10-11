@@ -117,8 +117,7 @@ fun isAzkarReminderDue(
     val period = AzkarWindowSchedule(window, zone).period(now)
     if (!period.isWindow) return false
     if (!kind.isUnfinished) return true
-    val done = record(period.day)?.let { it.total > 0 && it.completed >= it.total } ?: false
-    return !done
+    return record(period.day)?.isComplete != true
 }
 
 /**

@@ -77,6 +77,24 @@ class AzkarProgressPersistenceTest {
 
     private fun AzkarStore.completeAll() = sessions(morning).forEach { session -> repeat(3) { session.increment() } }
 
+    // Серия дней (2026-10-11): «сегодня» — день отрезка вечерних, день кончается с вечерним окном.
+    @Test
+    fun `День серии — по отрезку вечерних, меняется после конца вечернего окна`() = TestStorage.run { storage ->
+        val store = makeStore(storage)
+        assertNull(store.streakDay.value) // вечерние ещё не загружены
+
+        store.load(evening)
+        assertEquals(october3, store.streakDay.value) // 08:00 — промежуток перед вечерними 3-го
+
+        clock.now = date(2026, 10, 4, 1, 30)
+        store.reconcile()
+        assertEquals(october3, store.streakDay.value) // вечерние 3-го ещё идут
+
+        clock.now = date(2026, 10, 4, 2, 0)
+        store.reconcile()
+        assertEquals(october3.plusDays(1), store.streakDay.value)
+    }
+
     @Test
     fun `Счёт сохраняется между запусками в пределах окна`() = TestStorage.run { storage ->
         val store = makeStore(storage)

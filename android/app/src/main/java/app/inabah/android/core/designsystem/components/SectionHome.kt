@@ -125,7 +125,7 @@ fun SectionHomeLayout(
                 .padding(top = Spacing.s),
         ) {
             BrandBlock(brand)
-            VerseBox(
+            FeaturedVerseBox(
                 verse,
                 Modifier
                     .padding(horizontal = Spacing.xs)
@@ -206,8 +206,9 @@ private fun Modifier.pullUp(amount: Dp): Modifier =
         layout(placeable.width, (placeable.height + shift).coerceAtLeast(0)) { placeable.place(0, shift) }
     }
 
+/** Аят в рамке, как на главных разделов: арабский, перевод, ссылка (и в окне «Машаа Аллах!»). */
 @Composable
-private fun VerseBox(verse: FeaturedVerse, modifier: Modifier = Modifier) {
+fun FeaturedVerseBox(verse: FeaturedVerse, modifier: Modifier = Modifier) {
     val palette = InabahTheme.palette
     Column(
         modifier = modifier

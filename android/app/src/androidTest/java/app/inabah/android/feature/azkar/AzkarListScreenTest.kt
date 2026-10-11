@@ -63,6 +63,7 @@ import app.inabah.android.core.settings.PreferencesStorage
 import app.inabah.android.core.settings.TestDataStoreRule
 import app.inabah.android.core.settings.ReadingSettings
 import java.time.Instant
+import java.time.LocalDate
 import java.time.ZoneId
 import kotlinx.coroutines.runBlocking
 import org.junit.Before
@@ -75,6 +76,9 @@ private const val LONG_ZIKR_REPEATS = 80
 private const val NEXT_ZIKR_ARABIC = "لَا إِلَٰهَ إِلَّا اللَّهُ"
 private val FIXED_ZONE: ZoneId = ZoneId.of("Europe/Berlin")
 private val FIXED_NOW: Instant = Instant.parse("2026-10-03T06:00:00Z")
+
+/** День серии в [FIXED_NOW]: до вечерних 3-го — 3 октября. */
+private val FIXED_DAY: LocalDate = LocalDate.of(2026, 10, 3)
 
 /** 13:00 в Берлине — после утреннего окна 5:00–12:00. */
 private val OUTSIDE_WINDOW: Instant = Instant.parse("2026-10-03T11:00:00Z")
@@ -105,13 +109,16 @@ class AzkarListScreenTest {
             repository = FixedRepository(azkar),
             storage = storage,
             windowSettings = windowSettings,
-            history = AzkarHistory(storage) { throw AssertionError(it) },
+            history = history,
             // По умолчанию — 08:00 в Берлине, внутри утреннего окна 5:00–12:00: не зависит от часов устройства.
             now = { now },
             zone = { FIXED_ZONE },
             onUnreadableProgress = { _, error -> throw AssertionError(error) },
         )
     }
+
+    /** Общая история стора и экрана: оверлей читает то, что записал стор. */
+    private val history by lazy { AzkarHistory(storage) { throw AssertionError(it) } }
 
     /** «Сейчас» для стора; тест может перенести его вне окна. */
     private var now: Instant = FIXED_NOW
@@ -236,6 +243,43 @@ class AzkarListScreenTest {
         compose.onNodeWithContentDescription("Машаа Аллах!").assertDoesNotExist()
     }
 
+    // Серия дней, шаг 3 (2026-10-11): после утренних — о вечерних, серия и аят аль-Ахзаб 33:41–42.
+    @Test
+    fun completionOverlayRemindsAboutEveningAndShowsStreakAndAyah() {
+        val store = store(1)
+        // Вечерние загружены, как при запуске приложения: от них «сегодня» серии (3 октября).
+        compose.runOnIdle {
+            runBlocking { store.loadAll() }
+            AzkarSection.entries.forEach { history.record(completed = 1, total = 1, it, FIXED_DAY.minusDays(1)) }
+        }
+        compose.setContent { Screen(store) }
+        compose.waitUntil(TIMEOUT_MILLIS) { counters().fetchSemanticsNodes().size == 1 }
+
+        counters()[0].performClick()
+        waitForNode("Машаа Аллах!")
+        compose.onNodeWithText("Не забудьте прочитать вечерние азкары").performScrollTo().assertIsDisplayed()
+        // Сегодня вечерних ещё нет — серия до вчера: 1 день.
+        compose.onNodeWithText("1 день подряд").assertExists()
+        compose.onNodeWithText("Къуран · аль-Ахзаб 33:41–42").performScrollTo().assertIsDisplayed()
+    }
+
+    @Test
+    fun completionOverlayWithoutReminderWhenOtherSectionIsDone() {
+        val store = store(1)
+        compose.runOnIdle {
+            runBlocking { store.loadAll() }
+            history.record(completed = 1, total = 1, AzkarSection.Evening, FIXED_DAY)
+        }
+        compose.setContent { Screen(store) }
+        compose.waitUntil(TIMEOUT_MILLIS) { counters().fetchSemanticsNodes().size == 1 }
+
+        counters()[0].performClick()
+        waitForNode("Машаа Аллах!")
+        compose.onAllNodesWithText("Не забудьте", substring = true).assertCountEquals(0)
+        compose.onAllNodesWithText("Завтра не забудьте", substring = true).assertCountEquals(0)
+        compose.onNodeWithText("1 день подряд").assertExists()
+    }
+
     // Аудит 2026-10-06: правило «ушли раньше 0,6 с — поздравим при следующем открытии» не проверялось.
     @Test
     fun leavingBeforeCompletionDelayShowsOverlayNextTime() {
@@ -265,7 +309,7 @@ class AzkarListScreenTest {
         val store = store(1, 3)
         compose.runOnIdle { runBlocking { store.loadAll() } }
         compose.setContent {
-            InabahTheme { AzkarHomeScreen(store, windowSettings, ReminderSettings(storage), NoUpdateSource, onOpenSection = {}, contentPadding = PaddingValues()) }
+            InabahTheme { AzkarHomeScreen(store, AzkarHistory(storage) { throw AssertionError(it) }, windowSettings, ReminderSettings(storage), NoUpdateSource, onOpenSection = {}, onOpenCalendar = {}, contentPadding = PaddingValues()) }
         }
 
         // 13:00 — вне окна оба раздела: у утренних время окна (в любом формате системы есть «12:00»),
@@ -282,7 +326,7 @@ class AzkarListScreenTest {
         val store = store(1, 3)
         var source by mutableStateOf<UpdateSource>(NoUpdateSource)
         compose.setContent {
-            InabahTheme { AzkarHomeScreen(store, windowSettings, ReminderSettings(storage), source, onOpenSection = {}, contentPadding = PaddingValues()) }
+            InabahTheme { AzkarHomeScreen(store, AzkarHistory(storage) { throw AssertionError(it) }, windowSettings, ReminderSettings(storage), source, onOpenSection = {}, onOpenCalendar = {}, contentPadding = PaddingValues()) }
         }
         compose.waitForIdle()
         compose.onAllNodesWithContentDescription("Доступна версия", substring = true).assertCountEquals(0)
@@ -346,7 +390,7 @@ class AzkarListScreenTest {
             InabahTheme {
                 val owner = lifecycle ?: LocalLifecycleOwner.current
                 CompositionLocalProvider(LocalLifecycleOwner provides owner) {
-                    if (shown()) AzkarSettingsScreen(store, windowSettings, ReminderSettings(storage), onBack = {}, contentPadding = PaddingValues())
+                    if (shown()) AzkarSettingsScreen(store, AzkarHistory(storage) { throw AssertionError(it) }, windowSettings, ReminderSettings(storage), onBack = {}, contentPadding = PaddingValues())
                 }
             }
         }
@@ -492,7 +536,7 @@ class AzkarListScreenTest {
         }
         compose.setContent {
             InabahTheme {
-                AzkarSettingsScreen(store, windowSettings, ReminderSettings(storage), onBack = {}, contentPadding = PaddingValues())
+                AzkarSettingsScreen(store, AzkarHistory(storage) { throw AssertionError(it) }, windowSettings, ReminderSettings(storage), onBack = {}, contentPadding = PaddingValues())
             }
         }
 
@@ -513,6 +557,25 @@ class AzkarListScreenTest {
         resetRow.assertIsNotEnabled()
     }
 
+    @Test
+    fun settingsHistoryResetClearsCalendarAfterConfirmation() {
+        val history = AzkarHistory(storage) { throw AssertionError(it) }
+        history.record(completed = 2, total = 2, AzkarSection.Morning, LocalDate.of(2026, 10, 10))
+        compose.setContent {
+            InabahTheme {
+                AzkarSettingsScreen(store(1, 1), history, windowSettings, ReminderSettings(storage), onBack = {}, contentPadding = PaddingValues())
+            }
+        }
+
+        val historyRow = compose.onNode(hasText("Сбросить историю") and hasClickAction())
+        historyRow.performScrollTo().performClick()
+        compose.onNodeWithText("Сбросить историю?").assertExists()
+        compose.onNodeWithText("Сбросить").performClick()
+
+        compose.runOnIdle { check(history.days.value.isEmpty()) }
+        historyRow.assertIsNotEnabled()
+    }
+
     @androidx.compose.runtime.Composable
     private fun Screen(
         store: AzkarStore,
@@ -523,6 +586,7 @@ class AzkarListScreenTest {
             AzkarListScreen(
                 section = AzkarSection.Morning,
                 store = store,
+                history = history,
                 windowSettings = windowSettings,
                 readingSettings = reading,
                 player = player,

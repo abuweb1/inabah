@@ -81,6 +81,7 @@ private fun Palette.lerp(to: Palette, t: Float): Palette = Palette(
     tabMakharij = lerp(tabMakharij, to.tabMakharij, t),
     tabSettings = lerp(tabSettings, to.tabSettings, t),
     destructive = lerp(destructive, to.destructive, t),
+    newMoon = lerp(newMoon, to.newMoon, t),
 )
 
 private fun ThemeGradients.lerp(to: ThemeGradients, t: Float): ThemeGradients = ThemeGradients(

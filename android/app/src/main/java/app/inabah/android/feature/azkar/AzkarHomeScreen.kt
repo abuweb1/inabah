@@ -8,6 +8,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -31,7 +32,9 @@ import app.inabah.android.core.designsystem.components.SectionHomeLayout
 import app.inabah.android.core.designsystem.components.SectionNavCard
 import app.inabah.android.core.designsystem.components.TextButton
 import app.inabah.android.core.reminders.ReminderChannels
+import app.inabah.android.core.settings.AzkarHistory
 import app.inabah.android.core.settings.AzkarWindowSettings
+import app.inabah.android.core.settings.azkarStreak
 import app.inabah.android.core.settings.ReminderSettings
 import app.inabah.android.core.updates.AvailableUpdate
 import app.inabah.android.core.updates.UpdateSource
@@ -46,14 +49,16 @@ private const val VERSE_ARABIC = "وَأَنِيبُوا إِلَىٰ رَبِّ
 private const val PLAY_STORE_URL = "https://play.google.com/store/apps/details?id="
 private val UpdateDotSize = 10.dp
 
-/** Главная «Азкары» (iOS `AzkarHomeView`): бренд, аят Аз-Зумар 39:54, карточки разделов. */
+/** Главная «Азкары» (iOS `AzkarHomeView`): бренд, аят Аз-Зумар 39:54, серия дней, карточки разделов. */
 @Composable
 fun AzkarHomeScreen(
     store: AzkarStore,
+    history: AzkarHistory,
     windowSettings: AzkarWindowSettings,
     reminderSettings: ReminderSettings,
     updateSource: UpdateSource,
     onOpenSection: (AzkarSection) -> Unit,
+    onOpenCalendar: () -> Unit,
     contentPadding: PaddingValues,
     modifier: Modifier = Modifier,
 ) {
@@ -76,6 +81,13 @@ fun AzkarHomeScreen(
         modifier = modifier,
         leadingAction = update?.let { available -> { UpdateButton(available) } },
     ) {
+        val today by store.streakDay.collectAsStateWithLifecycle()
+        val days by history.days.collectAsStateWithLifecycle()
+        // До загрузки вечерних «сегодня» неизвестно — капсулы нет, чтобы не мелькнул ноль.
+        today?.let { day ->
+            val streak = remember(days, day) { azkarStreak(days, day) }
+            AzkarStreakCapsule(streak.current, onClick = onOpenCalendar, modifier = Modifier.align(Alignment.CenterHorizontally))
+        }
         AzkarSection.entries.forEach { section ->
             AzkarSectionCard(store, windowSettings, section, onClick = { onOpenSection(section) })
         }

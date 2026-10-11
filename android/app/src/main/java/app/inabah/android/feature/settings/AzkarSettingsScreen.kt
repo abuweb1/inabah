@@ -43,6 +43,7 @@ import app.inabah.android.core.designsystem.components.SettingsScaffold
 import app.inabah.android.core.designsystem.components.SettingsValueChip
 import app.inabah.android.core.designsystem.components.TimePickerPopover
 import app.inabah.android.core.designsystem.components.pressFeedback
+import app.inabah.android.core.settings.AzkarHistory
 import app.inabah.android.core.settings.AzkarWindow
 import app.inabah.android.core.settings.AzkarWindowSettings
 import app.inabah.android.core.settings.DayTime
@@ -54,11 +55,12 @@ import app.inabah.android.feature.azkar.title
 /**
  * Настройки азкаров (iOS `AzkarSettingsView`): время азкаров «с — до» — барабан под капсулой времени
  * правит черновик, он сохраняется и применяется к прогрессу при уходе с экрана или в фон; напоминания;
- * ручной сброс раздела — с подтверждением над строкой.
+ * ручной сброс раздела и истории (календарь, серия дней) — с подтверждением над строкой.
  */
 @Composable
 fun AzkarSettingsScreen(
     store: AzkarStore,
+    history: AzkarHistory,
     windowSettings: AzkarWindowSettings,
     reminderSettings: ReminderSettings,
     onBack: () -> Unit,
@@ -85,6 +87,8 @@ fun AzkarSettingsScreen(
     // по времени при частичном счёте) и после сброса отсюда.
     var resets by remember { mutableIntStateOf(0) }
     val progress = AzkarSection.entries.map { store.progress(it).collectAsStateWithLifecycle().value }
+    val historyDays by history.days.collectAsStateWithLifecycle()
+    var pendingHistoryReset by remember { mutableStateOf(false) }
 
     SettingsScaffold(
         background = theme.gradients.azkarBackground,
@@ -164,6 +168,26 @@ fun AzkarSettingsScreen(
                             onDismiss = { pendingReset = null },
                         )
                     }
+                }
+            },
+        )
+        SettingsGroup(
+            header = stringResource(R.string.settings_azkar_history_header),
+            footer = stringResource(R.string.settings_azkar_history_footer),
+            rows = listOf {
+                Box {
+                    SettingsRow(onClick = { pendingHistoryReset = true }, enabled = historyDays.isNotEmpty()) {
+                        SettingsRowText(stringResource(R.string.settings_azkar_history_reset))
+                    }
+                    ConfirmationPopover(
+                        expanded = pendingHistoryReset,
+                        title = stringResource(R.string.settings_azkar_history_reset_confirm_title),
+                        message = stringResource(R.string.settings_azkar_history_reset_confirm_message),
+                        actionLabel = stringResource(R.string.settings_reset_now_confirm_action),
+                        tint = tint,
+                        onConfirm = history::clear,
+                        onDismiss = { pendingHistoryReset = false },
+                    )
                 }
             },
         )
