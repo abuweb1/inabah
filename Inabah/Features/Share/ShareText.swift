@@ -108,12 +108,17 @@ extension Hadith {
         )
     }
 
-    /// «Комментарии учёных:» (на экране — «Сноски»), затем каждая сноска двумя строками — слово
-    /// (без кавычек), пояснение; между сносками пустая строка, иначе текст сливается
-    /// (решения пользователя 2026-10-11). Сносок нет — `nil`.
+    /// «Комментарии учёных:» (на экране — «Сноски») и пустая строка, затем каждая сноска двумя строками —
+    /// слово, пояснение; слово из перевода — в «кавычках», как на экране (`HadithNoteTerm`); между
+    /// сносками пустая строка, иначе текст сливается (решения пользователя 2026-10-11). Сносок нет — `nil`.
     private var notesBlock: String? {
-        guard let notes = translation?.notes, !notes.isEmpty else { return nil }
-        let entries = notes.map { "\($0.term)\n\($0.text)" }.joined(separator: ShareText.blockSeparator)
-        return String(localized: "share.text.hadith.notes") + "\n" + entries
+        guard let translation, !translation.notes.isEmpty else { return nil }
+        let notes = translation.notes
+        let quoted = HadithNoteTerm.quoted(notes.map(\.term), in: translation.text)
+        let entries = zip(notes, quoted).map { note, isQuoted in
+            let term = isQuoted ? String(localized: "hadith.note.quote \(note.term)") : note.term
+            return "\(term)\n\(note.text)"
+        }
+        return ([String(localized: "share.text.hadith.notes")] + entries).joined(separator: ShareText.blockSeparator)
     }
 }
