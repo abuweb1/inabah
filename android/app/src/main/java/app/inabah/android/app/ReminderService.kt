@@ -8,6 +8,7 @@ import app.inabah.android.core.reminders.ReminderTextsSource
 import app.inabah.android.core.reminders.isAzkarReminderDue
 import app.inabah.android.core.reminders.pickHadithOfDay
 import app.inabah.android.core.reminders.planReminders
+import app.inabah.android.core.reminders.streakAtRisk
 import app.inabah.android.core.settings.AzkarHistory
 import app.inabah.android.core.settings.AzkarWindowSettings
 import app.inabah.android.core.settings.HadithCollectionOrder
@@ -64,7 +65,16 @@ class ReminderService(
             notifyHadith(text)
             return
         }
+        if (kind.isStreak) {
+            val streak = streakAtRisk(section, windowSettings.windows.value, history.days.value, now(), zone()) ?: return
+            notifier.showAzkar(kind, section, text.fill(mapOf(ReminderPlaceholders.STREAK to notifier.streakText(streak))))
+            return
+        }
         if (!isAzkarReminderDue(kind, windowSettings.window(section), now(), zone()) { history.record(section, it) }) return
+        // Одно уведомление, а не два в одно время (решение пользователя 2026-10-11): серия под угрозой — покажет её будильник.
+        if (kind.isUnfinished && settings.preferences.value.azkarStreak &&
+            streakAtRisk(section, windowSettings.windows.value, history.days.value, now(), zone()) != null
+        ) return
         notifier.showAzkar(kind, section, text)
     }
 

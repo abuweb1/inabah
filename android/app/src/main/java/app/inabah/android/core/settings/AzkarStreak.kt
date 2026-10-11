@@ -3,6 +3,9 @@ package app.inabah.android.core.settings
 import java.time.Instant
 import java.time.LocalDate
 
+/** Самое большое число серии на экране и в уведомлении; дальше — «9999+» (решение пользователя 2026-10-11). */
+const val STREAK_DISPLAY_MAX = 9999
+
 /** Отметка дня в календаре: оба раздела полностью — день, один — половина. */
 enum class AzkarDayStatus { Full, MorningOnly, EveningOnly }
 

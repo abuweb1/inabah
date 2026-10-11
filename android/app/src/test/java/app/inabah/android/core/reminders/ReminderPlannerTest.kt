@@ -127,4 +127,16 @@ class ReminderPlannerTest {
         assertEquals(HadithId(HadithCollection.Nawawi, 1), pickHadithOfDay(order, content, { true }, last = null)?.id)
         assertNull(pickHadithOfDay(order, emptyMap(), { false }, last = null))
     }
+
+    // «Серия под угрозой» (2026-10-11): в то же время, что «не прочитаны», и без напоминаний в начале.
+    @Test
+    fun `Серия под угрозой — у обоих разделов за 2 часа до конца, независимо от начала`() {
+        val planned = plan(ReminderPreferences(azkarStreak = true), date(2026, 10, 10, 8))
+
+        assertEquals(setOf(ReminderKind.MorningStreak, ReminderKind.EveningStreak), planned.keys)
+        assertEquals(date(2026, 10, 10, 10), planned.getValue(ReminderKind.MorningStreak).at)
+        assertEquals(date(2026, 10, 11, 0), planned.getValue(ReminderKind.EveningStreak).at, "вечерние до 02:00 — в полночь")
+        assertTrue(ReminderPreferences(azkarStreak = true).isAnyEnabled)
+        assertTrue(ReminderKind.MorningStreak !in plan(all, date(2026, 10, 10, 8)).keys, "выключено — не планируется")
+    }
 }

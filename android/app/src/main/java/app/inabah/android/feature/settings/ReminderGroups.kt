@@ -45,7 +45,7 @@ internal fun AzkarRemindersGroup(settings: ReminderSettings, windows: Map<AzkarS
             permission.request { granted -> if (granted) apply(true) else denied = true }
         }
     }
-    val blocked = !permission.allowed && (denied || preferences.azkarStart.isNotEmpty())
+    val blocked = !permission.allowed && (denied || preferences.azkarStart.isNotEmpty() || preferences.azkarStreak)
     SettingsGroup(
         header = stringResource(R.string.settings_reminders_header),
         notice = if (blocked) stringResource(R.string.settings_reminders_blocked) else null,
@@ -73,6 +73,19 @@ internal fun AzkarRemindersGroup(settings: ReminderSettings, windows: Map<AzkarS
                         onCheckedChange = { toggle(it, settings::setAzkarUnfinished) },
                         tint = tint,
                         enabled = preferences.azkarStart.isNotEmpty(),
+                        labelColor = palette.onAccent,
+                    )
+                }
+            }
+            // Независимо от напоминаний в начале (решение пользователя 2026-10-11).
+            add {
+                SettingsRow {
+                    SwitchRow(
+                        label = stringResource(R.string.settings_reminders_streak),
+                        subtitle = stringResource(R.string.settings_reminders_streak_subtitle),
+                        checked = preferences.azkarStreak && permission.allowed,
+                        onCheckedChange = { toggle(it, settings::setAzkarStreak) },
+                        tint = tint,
                         labelColor = palette.onAccent,
                     )
                 }

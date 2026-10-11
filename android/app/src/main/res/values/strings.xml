@@ -231,6 +231,8 @@
     <string name="settings_reminders_header">Напоминания</string>
     <string name="settings_reminders_open_settings">Открыть настройки</string>
     <string name="settings_reminders_start_subtitle">в начале времени, %1$s</string>
+    <string name="settings_reminders_streak">Если серия под угрозой</string>
+    <string name="settings_reminders_streak_subtitle">за 2 часа до конца времени, пока день не полный</string>
     <string name="settings_reminders_unfinished">Если ещё не прочитаны</string>
     <string name="settings_reminders_unfinished_subtitle">за 2 часа до конца времени</string>
     <string name="settings_reset_now_footer">Счётчики раздела обнулятся сразу, не дожидаясь конца времени азкаров.</string>

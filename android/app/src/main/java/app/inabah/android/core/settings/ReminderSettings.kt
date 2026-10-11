@@ -18,8 +18,10 @@ data class ReminderPreferences(
     val azkarUnfinished: Boolean = false,
     val hadithOfDay: Boolean = false,
     val hadithTime: DayTime = ReminderSettings.DEFAULT_HADITH_TIME,
+    /** «Серия под угрозой» за 2 часа до конца — у обоих разделов, независимо от [azkarStart] (2026-10-11). */
+    val azkarStreak: Boolean = false,
 ) {
-    val isAnyEnabled: Boolean get() = azkarStart.isNotEmpty() || hadithOfDay
+    val isAnyEnabled: Boolean get() = azkarStart.isNotEmpty() || hadithOfDay || azkarStreak
 }
 
 /**
@@ -46,6 +48,8 @@ class ReminderSettings(private val storage: PreferencesStorage) {
 
     fun setAzkarUnfinished(enabled: Boolean) = update { it.copy(azkarUnfinished = enabled) }
 
+    fun setAzkarStreak(enabled: Boolean) = update { it.copy(azkarStreak = enabled) }
+
     fun setHadithOfDay(enabled: Boolean) = update { it.copy(hadithOfDay = enabled) }
 
     fun setHadithTime(time: DayTime) = update { it.copy(hadithTime = time) }
@@ -69,6 +73,7 @@ class ReminderSettings(private val storage: PreferencesStorage) {
         storage.edit { preferences ->
             AzkarSection.entries.forEach { preferences[startKey(it)] = it in next.azkarStart }
             preferences[UNFINISHED_KEY] = next.azkarUnfinished
+            preferences[STREAK_KEY] = next.azkarStreak
             preferences[HADITH_KEY] = next.hadithOfDay
             preferences[HADITH_TIME_KEY] = next.hadithTime.minutesSinceMidnight
         }
@@ -79,6 +84,7 @@ class ReminderSettings(private val storage: PreferencesStorage) {
         return ReminderPreferences(
             azkarStart = AzkarSection.entries.filterTo(mutableSetOf()) { snapshot[startKey(it)] == true },
             azkarUnfinished = snapshot[UNFINISHED_KEY] ?: false,
+            azkarStreak = snapshot[STREAK_KEY] ?: false,
             hadithOfDay = snapshot[HADITH_KEY] ?: false,
             hadithTime = snapshot[HADITH_TIME_KEY]?.let(DayTime::fromMinutes) ?: DEFAULT_HADITH_TIME,
         )
@@ -89,6 +95,7 @@ class ReminderSettings(private val storage: PreferencesStorage) {
 
         private fun startKey(section: AzkarSection) = booleanPreferencesKey("reminders.azkar.${section.key}")
         private val UNFINISHED_KEY = booleanPreferencesKey("reminders.azkar.unfinished")
+        private val STREAK_KEY = booleanPreferencesKey("reminders.azkar.streak")
         private val HADITH_KEY = booleanPreferencesKey("reminders.hadith.enabled")
         private val HADITH_TIME_KEY = intPreferencesKey("reminders.hadith.time")
         private val OFFER_KEY = booleanPreferencesKey("reminders.offer.answered")
