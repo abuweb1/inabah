@@ -1,6 +1,7 @@
 import SwiftUI
 
-/// «Передал» (если есть), транслитерация, перевод и источник зикра (раскрывается кнопкой «Аа»).
+/// Передатчик (если есть — как в данных, без подписи), транслитерация, перевод и источник зикра
+/// (раскрывается кнопкой «Аа»).
 /// Общий блок перевода в цветах азкаров (`TranslationBlock`, как на Android); шаг — из «Размера текста».
 struct ZikrTranslationView: View {
     let translation: ZikrTranslation
@@ -12,7 +13,7 @@ struct ZikrTranslationView: View {
             text: translation.text,
             language: translation.language,
             colors: .azkar(theme.palette),
-            narrator: translation.narrator.map { String(localized: "translation.narrator \($0)") },
+            narrator: translation.narrator,
             transliteration: translation.transliteration,
             source: translation.source
         )

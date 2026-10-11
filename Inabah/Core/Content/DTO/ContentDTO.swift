@@ -28,7 +28,7 @@ nonisolated struct ZikrTranslationDTO: Decodable, Sendable {
     let text: String
     let translit: String?
     let source: String?
-    /// «Передал: …»; поле необязательное — пока ни у одного зикра (2026-10-10).
+    /// Передатчик (показывается как есть, без подписи); поле необязательное — пока ни у одного зикра (2026-10-10).
     let rawi: String?
 }
 

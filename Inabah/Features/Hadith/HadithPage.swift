@@ -103,7 +103,7 @@ private struct HadithStatusButtons: View {
 }
 
 /// Перевод хадиса — на своей тёмной карточке, как у зикра (решение пользователя 2026-10-10): общий
-/// `TranslationBlock` в цветах хадисов — «Передал: …», линия, перевод (без пузыря), сноски «N ⌄»,
+/// `TranslationBlock` в цветах хадисов — вступление («Передаётся от …»), линия, перевод (без пузыря), сноски «N ⌄»,
 /// «Приводится: …» и справа на уровне его последней строки — закладка и «Поделиться».
 private struct HadithTranslationCard: View {
     let hadith: Hadith
@@ -120,9 +120,10 @@ private struct HadithTranslationCard: View {
             text: translation.text,
             language: translation.language,
             colors: .hadith(theme.palette),
-            narrator: translation.narrator.map { String(localized: "translation.narrator \($0)") },
+            // Вступление («Передаётся от …») — как в данных, без подписи (решение пользователя 2026-10-11).
+            narrator: translation.narrator,
             source: translation.source.map { String(localized: "hadith.detail.source \($0)") },
-            // Основной перевод — просто текстом под линией после «Передал»; пузырь — у сносок.
+            // Основной перевод — просто текстом под линией после вступления; пузырь — у сносок.
             bubble: false,
             narratorDivider: true,
             trailingInset: HadithCardActions.textInset(scale: scale),
