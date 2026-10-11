@@ -19,12 +19,19 @@ nonisolated enum ShareText {
 
 /// «Сделать напоминание» — заготовленный текст рассылки, отдельно для утренних и вечерних
 /// (решения пользователя 2026-10-06: без звёздочек WhatsApp, «до восхода солнца», слова
-/// Абу ад-Дарды с арабским текстом и источником). Религиозные формулировки — пользователя.
-/// Тот же текст на Android — `AzkarReminder.kt`.
+/// Абу ад-Дарды с арабским текстом и источником; 2026-10-11: «⚠️ … ⚠️», «✅» и разделители из точек).
+/// Религиозные формулировки — пользователя. Тот же текст на Android — `AzkarReminder.kt`.
 extension AzkarSection {
-    /// Заголовок, призыв, слова Абу ад-Дарды (четыре строки подряд), черта и лучшее время,
-    /// ссылка на приложение.
+    /// Заголовок, разделитель и призыв с разделителем — подряд; слова Абу ад-Дарды (четыре строки);
+    /// разделитель и лучшее время — подряд; ссылка на приложение. Между частями — пустая строка
+    /// (`docs/02-screen-azkar.md`, «Новый вид»).
     var reminderText: String {
+        let header = [
+            String(localized: reminderTitle),
+            Self.reminderSeparator,
+            String(localized: reminderCall),
+            Self.reminderSeparator,
+        ].joined(separator: "\n")
         let quote = [
             String(localized: "share.text.reminder.quote.intro"),
             Self.abuAdDardaArabic,
@@ -32,8 +39,7 @@ extension AzkarSection {
             String(localized: "share.text.reminder.quote.source"),
         ].joined(separator: "\n")
         return ShareText.blocks(
-            String(localized: reminderTitle),
-            String(localized: reminderCall),
+            header,
             quote,
             Self.reminderSeparator + "\n" + String(localized: reminderBestTime),
             AboutLinks.appStore.absoluteString
@@ -43,8 +49,8 @@ extension AzkarSection {
     /// Слова Абу ад-Дарды по-арабски (Ахмад в «аз-Зухд», 726) — текст пользователя, не переводится.
     static let abuAdDardaArabic = "إِنَّ الَّذِينَ أَلْسِنَتُهُمْ رَطْبَةٌ بِذِكْرِ اللَّهِ يَدْخُلُ الْجَنَّةَ وَهُوَ يَضْحَكُ"
 
-    /// Черта перед лучшим временем чтения — как в рассылке.
-    static let reminderSeparator = "______________________"
+    /// Разделитель — 30 точек «•»: черта из «_» в WhatsApp — разметка курсива и ломается.
+    static let reminderSeparator = String(repeating: "•", count: 30)
 
     private var reminderTitle: LocalizedStringResource {
         switch self {
@@ -71,13 +77,14 @@ extension AzkarSection {
 // Названия раздела и сборника (`title`) — в расширениях оформления на главном акторе,
 // поэтому и тексты ниже — на нём; строит их вьюха.
 extension Zikr {
-    /// Раздел, арабский, «N раз», «Передал: …», транскрипция, перевод, источник, ссылка на приложение.
+    /// Раздел, арабский, «N раз», передатчик (без подписи), транскрипция, перевод, источник,
+    /// ссылка на приложение.
     var shareText: String {
         ShareText.blocks(
             String(localized: section.title),
             arabic,
             String(localized: "zikr.repetitions \(repetitions)"),
-            translation?.narrator.map { String(localized: "translation.narrator \($0)") },
+            translation?.narrator,
             translation?.transliteration,
             translation?.text,
             translation?.source,
@@ -87,13 +94,13 @@ extension Zikr {
 }
 
 extension Hadith {
-    /// «Сборник · Хадис N», арабский одним абзацем, «Передал: …», перевод, «Приводится: …»,
-    /// сноски, ссылка на приложение.
+    /// «Сборник · Хадис N», арабский одним абзацем, вступление («Передаётся от …», без подписи),
+    /// перевод, «Приводится: …», сноски, ссылка на приложение.
     var shareText: String {
         ShareText.blocks(
             String(localized: "share.hadith.header \(String(localized: collection.title)) \(number)"),
             arabicDisplayText,
-            translation?.narrator.map { String(localized: "translation.narrator \($0)") },
+            translation?.narrator,
             translation?.text,
             translation?.source.map { String(localized: "hadith.detail.source \($0)") },
             notesBlock,
@@ -101,10 +108,11 @@ extension Hadith {
         )
     }
 
-    /// «Сноски:» и по строке «слово — пояснение» (без кавычек, как на Android); сносок нет — `nil`.
+    /// «Сноски:», затем каждая сноска двумя строками — слово (без кавычек), пояснение; между сносками
+    /// пустая строка, иначе текст сливается (решение пользователя 2026-10-11). Сносок нет — `nil`.
     private var notesBlock: String? {
         guard let notes = translation?.notes, !notes.isEmpty else { return nil }
-        let lines = notes.map { String(localized: "share.text.hadith.noteLine \($0.term) \($0.text)") }
-        return ([String(localized: "share.text.hadith.notes")] + lines).joined(separator: "\n")
+        let entries = notes.map { "\($0.term)\n\($0.text)" }.joined(separator: ShareText.blockSeparator)
+        return String(localized: "share.text.hadith.notes") + "\n" + entries
     }
 }
