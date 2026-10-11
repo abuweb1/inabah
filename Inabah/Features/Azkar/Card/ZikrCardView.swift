@@ -11,6 +11,9 @@ struct ZikrCardView: View {
     /// иначе любое изменение плеера (старт, загрузка, повтор) перерисовывало бы все карточки
     /// с тяжёлой арабской вёрсткой, а так — только ту, у которой состояние поменялось.
     let audio: ZikrAudioState
+    /// Вызывается при автосворачивании дочитанной карточки — внутри той же анимации: лента
+    /// подтягивает свёрнутую строку на экран (не при сворачивании кнопкой ⌄).
+    var onAutoCollapse: () -> Void = {}
 
     @Environment(ReadingSettings.self) private var settings
     /// Только для команды ▶ — в `body` свойства плеера не читаются.
@@ -22,9 +25,10 @@ struct ZikrCardView: View {
     /// (прокрутка, возврат на экран) выполненная карточка сразу свёрнута.
     @State private var isCollapsed: Bool
 
-    init(session: ZikrSession, audio: ZikrAudioState = .idle) {
+    init(session: ZikrSession, audio: ZikrAudioState = .idle, onAutoCollapse: @escaping () -> Void = {}) {
         self.session = session
         self.audio = audio
+        self.onAutoCollapse = onAutoCollapse
         _isCollapsed = State(initialValue: session.isCompleted)
     }
 
@@ -77,7 +81,10 @@ struct ZikrCardView: View {
             guard !isCollapsed else { return }
             try? await Task.sleep(for: Motion.collapseDelay)
             guard !Task.isCancelled else { return }
-            withAnimation(Motion.collapse) { isCollapsed = true }
+            withAnimation(Motion.collapse) {
+                isCollapsed = true
+                onAutoCollapse()
+            }
         }
     }
 
