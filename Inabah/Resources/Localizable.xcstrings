@@ -803,6 +803,28 @@
         }
       }
     },
+    "azkar.completion.nextEvening" : {
+      "comment" : "Окно «Машаа Аллах!» после утренних: вечерние за этот день не прочитаны",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не забудьте прочитать вечерние азкары"
+          }
+        }
+      }
+    },
+    "azkar.completion.nextMorning" : {
+      "comment" : "Окно «Машаа Аллах!» после вечерних: утренние этого дня не прочитаны — их время прошло",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Завтра не забудьте прочитать утренние азкары"
+          }
+        }
+      }
+    },
     "azkar.completion.title" : {
       "comment" : "Заголовок после прочтения всех азкаров",
       "localizations" : {
@@ -810,6 +832,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Машаа Аллах!"
+          }
+        }
+      }
+    },
+    "azkar.completion.verse.reference" : {
+      "comment" : "Окно «Машаа Аллах!»: ссылка на аят",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Къуран · аль-Ахзаб 33:41–42"
+          }
+        }
+      }
+    },
+    "azkar.completion.verse.translation" : {
+      "comment" : "Окно «Машаа Аллах!»: перевод аята аль-Ахзаб 33:41–42 (Абу Адель)",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "«О те, которые уверовали! Поминайте Аллаха (сердцем, устами и в делах) многократным поминанием, и восславляйте Его по утрам и по вечерам!»"
           }
         }
       }

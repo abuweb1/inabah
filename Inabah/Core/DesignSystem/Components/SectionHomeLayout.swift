@@ -115,6 +115,18 @@ struct SectionHomeLayout<Cards: View, TopAction: View, LeadingAction: View>: Vie
     }
 
     private var verseBox: some View {
+        FeaturedVerseBox(verse: verse)
+    }
+}
+
+/// Аят: арабский, перевод и ссылка — в рамке на подложке или свободным текстом (`FeaturedVerse.isFramed`).
+/// Общий у главных разделов и окна «Машаа Аллах!» (Android `FeaturedVerseBox`).
+struct FeaturedVerseBox: View {
+    let verse: FeaturedVerse
+
+    @Environment(\.theme) private var theme
+
+    var body: some View {
         VStack(spacing: Spacing.xs) {
             ArabicText(
                 text: verse.arabic,

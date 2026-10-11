@@ -135,20 +135,47 @@ struct ProminentRoundButtonStyle: ButtonStyle {
 }
 
 /// Основная кнопка действия на всю ширину («На главную», «Слушать»).
+///
+/// `compact` — две кнопки в ряд («На главную» и «Сделать напоминание» в окне «Машаа Аллах!», Android
+/// `PrimaryButton(compact = true)`): мельче текст, уже поля, текст переносится по центру, а высота
+/// растягивается до соседней — кнопки ряда одной высоты (ряду нужен `fixedSize(vertical:)`).
 struct PrimaryButtonStyle: ButtonStyle {
+    var compact = false
+
     @Environment(\.theme) private var theme
     @Environment(\.isEnabled) private var isEnabled
 
     func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .font(.body.weight(.semibold))
+        Group {
+            if compact {
+                configuration.label
+                    .labelStyle(CompactButtonLabelStyle())
+                    .font(.subheadline.weight(.semibold))
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: .infinity, minHeight: Size.primaryButtonHeight, maxHeight: .infinity)
+                    .padding(.horizontal, Spacing.m)
+            } else {
+                configuration.label
+                    .font(.body.weight(.semibold))
+                    .frame(maxWidth: .infinity, minHeight: Size.primaryButtonHeight)
+                    .padding(.horizontal, Spacing.xl)
+            }
+        }
             .foregroundStyle(theme.palette.onAccent)
-            .frame(maxWidth: .infinity, minHeight: Size.primaryButtonHeight)
-            .padding(.horizontal, Spacing.xl)
             .surface(theme.palette.accent, cornerRadius: Radius.box)
             .opacity(isEnabled ? (configuration.isPressed ? PressFeedback.wideOpacity : 1) : PressFeedback.disabledOpacity)
             .scaleEffect(configuration.isPressed ? PressFeedback.wideScale : 1)
             .animation(Motion.press, value: configuration.isPressed)
             .fixedTextSize()
+    }
+}
+
+/// Значок и текст компактной кнопки — ближе друг к другу, чем у системной `Label`.
+private struct CompactButtonLabelStyle: LabelStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        HStack(spacing: Spacing.xs) {
+            configuration.icon
+            configuration.title
+        }
     }
 }
