@@ -56,6 +56,7 @@ class AzkarStore(
     }
     private val progressBySection = AzkarSection.entries.associateWith { MutableStateFlow(SectionProgress(0, 0)) }
     private val inWindowBySection = AzkarSection.entries.associateWith { MutableStateFlow(false) }
+    private val _streakDay = MutableStateFlow<LocalDate?>(null)
 
     // Одни и те же объекты на каждый вызов: Compose собирает поток по ключу-объекту и иначе
     // перезапускал бы сборщик на каждой перерисовке.
@@ -85,6 +86,13 @@ class AzkarStore(
 
     /** Сейчас время азкаров раздела (раздел загружен): прогресс идёт в отметку и историю. Меняется только на границах. */
     fun isInWindow(section: AzkarSection): StateFlow<Boolean> = inWindowViews.getValue(section)
+
+    /**
+     * «Сегодня» для серии дней (`azkarStreakDay`): дата отрезка вечерних — идущего окна или следующего.
+     * Меняется вместе с отрезком — на границах, при возврате приложения и смене времени; `null`, пока
+     * вечерние не загружены.
+     */
+    val streakDay: StateFlow<LocalDate?> = _streakDay.asStateFlow()
 
     /** Загружен или загружается — ничего; после ошибки — повторная попытка. Повторная загрузка не сбрасывает счёт. */
     suspend fun load(section: AzkarSection) {
@@ -199,6 +207,7 @@ class AzkarStore(
     private fun adopt(period: AzkarPeriod, section: AzkarSection) {
         periods[section] = period
         inWindowBySection.getValue(section).value = period.isWindow
+        if (section == AzkarSection.Evening) _streakDay.value = period.day
     }
 
     private fun schedule(section: AzkarSection) = AzkarWindowSchedule(windowSettings.window(section), zone())

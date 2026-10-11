@@ -38,6 +38,7 @@ import app.inabah.android.core.designsystem.InterfaceTextScale
 import app.inabah.android.core.designsystem.LocalInabahTheme
 import app.inabah.android.core.designsystem.components.bottomOnly
 import app.inabah.android.core.audio.ui.AudioPlayerHost
+import app.inabah.android.feature.azkar.AzkarCalendarScreen
 import app.inabah.android.feature.azkar.AzkarHomeScreen
 import app.inabah.android.feature.azkar.AzkarListScreen
 import app.inabah.android.feature.hadith.CollectionAboutScreen
@@ -169,11 +170,21 @@ private fun TabScreens(tab: AppTab, services: AppServices, contentPadding: Paddi
             entry<TabRoot> {
                 AzkarHomeScreen(
                     services.azkarStore,
+                    services.azkarHistory,
                     services.azkarWindowSettings,
                     services.reminderSettings,
                     services.updateSource,
                     onOpenSection = { router.push(AzkarRoute.SectionList(it)) },
-                    contentPadding,
+                    onOpenCalendar = { router.push(AzkarRoute.Calendar) },
+                    contentPadding = contentPadding,
+                )
+            }
+            entry<AzkarRoute.Calendar> {
+                AzkarCalendarScreen(
+                    history = services.azkarHistory,
+                    store = services.azkarStore,
+                    onBack = { router.pop(AppTab.Azkar) },
+                    contentPadding = contentPadding.bottomOnly(),
                 )
             }
             entry<AzkarRoute.SectionList> { route ->

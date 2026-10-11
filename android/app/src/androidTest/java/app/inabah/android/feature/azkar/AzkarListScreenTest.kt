@@ -266,7 +266,7 @@ class AzkarListScreenTest {
         val store = store(1, 3)
         compose.runOnIdle { runBlocking { store.loadAll() } }
         compose.setContent {
-            InabahTheme { AzkarHomeScreen(store, windowSettings, ReminderSettings(storage), NoUpdateSource, onOpenSection = {}, contentPadding = PaddingValues()) }
+            InabahTheme { AzkarHomeScreen(store, AzkarHistory(storage) { throw AssertionError(it) }, windowSettings, ReminderSettings(storage), NoUpdateSource, onOpenSection = {}, onOpenCalendar = {}, contentPadding = PaddingValues()) }
         }
 
         // 13:00 — вне окна оба раздела: у утренних время окна (в любом формате системы есть «12:00»),
@@ -283,7 +283,7 @@ class AzkarListScreenTest {
         val store = store(1, 3)
         var source by mutableStateOf<UpdateSource>(NoUpdateSource)
         compose.setContent {
-            InabahTheme { AzkarHomeScreen(store, windowSettings, ReminderSettings(storage), source, onOpenSection = {}, contentPadding = PaddingValues()) }
+            InabahTheme { AzkarHomeScreen(store, AzkarHistory(storage) { throw AssertionError(it) }, windowSettings, ReminderSettings(storage), source, onOpenSection = {}, onOpenCalendar = {}, contentPadding = PaddingValues()) }
         }
         compose.waitForIdle()
         compose.onAllNodesWithContentDescription("Доступна версия", substring = true).assertCountEquals(0)

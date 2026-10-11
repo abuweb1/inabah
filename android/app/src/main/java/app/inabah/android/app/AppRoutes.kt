@@ -13,6 +13,10 @@ import kotlinx.serialization.Serializable
 sealed interface AzkarRoute {
     @Serializable
     data class SectionList(val section: AzkarSection) : AzkarRoute
+
+    /** «Календарь азкаров» — из капсулы серии дней на главной. */
+    @Serializable
+    data object Calendar : AzkarRoute
 }
 
 @Serializable
