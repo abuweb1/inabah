@@ -1,3 +1,4 @@
+import Foundation
 import Testing
 @testable import Inabah
 
@@ -34,6 +35,19 @@ struct AppRouterTests {
 
         #expect(router.selectedTab == .azkar)
         #expect(router.azkarPath == [.list(.morning)])
+    }
+
+    @Test("«Календарь азкаров» открывается с главной азкаров и переживает кодирование маршрута")
+    func openCalendar() throws {
+        let router = AppRouter()
+        router.select(.settings)
+
+        router.open(.calendar)
+
+        #expect(router.selectedTab == .azkar)
+        #expect(router.azkarPath == [.calendar])
+        let data = try JSONEncoder().encode(AzkarRoute.calendar)
+        #expect(try JSONDecoder().decode(AzkarRoute.self, from: data) == .calendar)
     }
 
     @Test("Хадис открывается поверх списка своего сборника")

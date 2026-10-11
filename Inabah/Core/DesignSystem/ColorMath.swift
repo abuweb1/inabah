@@ -70,6 +70,35 @@ nonisolated struct SRGBColor: Hashable, Sendable {
         return (max(text, back) + 0.05) / (min(text, back) + 0.05)
     }
 
+    /// Тот же цвет с другой прозрачностью.
+    func opacity(_ value: Double) -> SRGBColor {
+        var result = self
+        result.alpha = value
+        return result
+    }
+
+    // MARK: - OKLCH
+
+    /// Светлота (0…1), насыщенность и оттенок в градусах — как `OkLch.of` Android.
+    var oklch: (l: Double, c: Double, h: Double) {
+        let lab = oklab
+        let hue = atan2(lab.2, lab.1) * 180 / .pi
+        return (lab.0, hypot(lab.1, lab.2), (hue + 360).truncatingRemainder(dividingBy: 360))
+    }
+
+    /// Цвет из OKLCH, непрозрачный; вне охвата sRGB — обрезка по каналам (как `OkLch.toColor`).
+    init(oklch: (l: Double, c: Double, h: Double)) {
+        let radians = oklch.h * .pi / 180
+        self.init(oklab: (oklch.l, oklch.c * cos(radians), oklch.c * sin(radians)))
+    }
+
+    /// Сдвиг светлоты, насыщенности и оттенка в OKLCH (`OkLch.shifted`): светлота — в 0…1,
+    /// насыщенность — не ниже нуля. Результат непрозрачный.
+    func shiftedOKLCH(lightness dl: Double, chroma dc: Double, hue dh: Double) -> SRGBColor {
+        let base = oklch
+        return SRGBColor(oklch: (min(max(base.l + dl, 0), 1), max(base.c + dc, 0), base.h + dh))
+    }
+
     // MARK: - Пространства
 
     private static func decode(_ c: Double) -> Double {

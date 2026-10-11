@@ -27,6 +27,7 @@ struct RootTabView: View {
                             Group {
                                 switch route {
                                 case .list(let section): AzkarListView(section: section)
+                                case .calendar: AzkarCalendarView()
                                 }
                             }
                             .interfaceTextSize()

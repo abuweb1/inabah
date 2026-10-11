@@ -144,6 +144,9 @@ nonisolated extension Palette {
     /// «Оттенок транскрипции» раздела хадисов: белый с примесью `tabHadith`. Смешивание — в OKLab
     /// (`.perceptual`), как `lerp` цветов в Compose, — иначе цвет разойдётся с Android.
     var noteText: Color { onAccent.mix(with: tabHadith, by: Self.noteTextTint, in: .perceptual) }
+
+    /// Вечерняя дуга дня в календаре азкаров — 🌑, чёрный во всех палитрах (Android `Palette.newMoon`).
+    var newMoon: Color { .black }
 }
 
 nonisolated extension Palette {

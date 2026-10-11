@@ -104,6 +104,12 @@ enum Motion {
     static let overlay = Animation.easeOut(duration: 0.4)
     /// Окно поверх экрана («Что нового»): пружина как на Android (затухание 0.82, жёсткость MediumLow).
     static let dialog = Animation.spring(response: 0.31, dampingFraction: 0.82)
+    /// Нажатие своего стекла (капсула серии, ‹ › календаря): пружина с отскоком, как на Android
+    /// (затухание 0.6, жёсткость Medium); отпускание — плавно, 0.3 с.
+    static let glassPress = Animation.spring(response: 0.16, dampingFraction: 0.6)
+    static let glassRelease = Animation.easeInOut(duration: 0.3)
+    /// Закрытие всплывающей карточки (подробности дня).
+    static let popoverClose = Animation.easeIn(duration: 0.2)
     /// Подсветка звучащей карточки.
     static let highlight = Animation.easeInOut(duration: 0.3)
     /// Медленная пульсация (каллиграфия экрана завершения).
