@@ -10,6 +10,7 @@ final class ReminderSettings {
         static let morning = "reminders.azkar.morning"
         static let evening = "reminders.azkar.evening"
         static let unfinished = "reminders.azkar.unfinished"
+        static let streak = "reminders.azkar.streak"
         static let hadithEnabled = "reminders.hadith.enabled"
         static let hadithTime = "reminders.hadith.time"
         static let offerAnswered = "reminders.offer.answered"
@@ -28,6 +29,7 @@ final class ReminderSettings {
         if defaults.bool(forKey: Key.morning) { preferences.azkarStart.insert(.morning) }
         if defaults.bool(forKey: Key.evening) { preferences.azkarStart.insert(.evening) }
         preferences.azkarUnfinished = defaults.bool(forKey: Key.unfinished)
+        preferences.azkarStreak = defaults.bool(forKey: Key.streak)
         preferences.hadithOfDay = defaults.bool(forKey: Key.hadithEnabled)
         if let minutes = defaults.object(forKey: Key.hadithTime) as? Int {
             preferences.hadithTime = DayTime(minutesSinceMidnight: minutes)
@@ -50,6 +52,14 @@ final class ReminderSettings {
         guard isOn != preferences.azkarUnfinished else { return }
         preferences.azkarUnfinished = isOn
         defaults.set(isOn, forKey: Key.unfinished)
+        if isOn { answerOffer() }
+    }
+
+    /// «Если серия под угрозой» (Android-first 2026-10-11) — независимо от напоминаний в начале времени.
+    func setStreak(_ isOn: Bool) {
+        guard isOn != preferences.azkarStreak else { return }
+        preferences.azkarStreak = isOn
+        defaults.set(isOn, forKey: Key.streak)
         if isOn { answerOffer() }
     }
 

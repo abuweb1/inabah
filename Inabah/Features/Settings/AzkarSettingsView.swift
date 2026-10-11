@@ -116,14 +116,15 @@ struct AzkarSettingsView: View {
     }
 
     /// «Напоминания» (решения пользователя 2026-10-10, вид — как на Android): в начале времени каждого
-    /// раздела (время — из черновика) и «если ещё не прочитаны». Переключатели сохраняются сразу и
+    /// раздела (время — из черновика), «если ещё не прочитаны» и «если серия под угрозой». Переключатели сохраняются сразу и
     /// показывают сохранённое — и при запрете уведомлений, тогда ниже «Открыть настройки», а выключить
     /// можно всегда (решение пользователя 2026-10-10, аудит iOS 1.1.1, Р2).
     @ViewBuilder
     private var remindersSection: some View {
         let allowed = scheduler.isAllowed
         let preferences = reminders.preferences
-        let blocked = !allowed && (permissionDenied || !preferences.azkarStart.isEmpty || preferences.azkarUnfinished)
+        let blocked = !allowed
+            && (permissionDenied || !preferences.azkarStart.isEmpty || preferences.azkarUnfinished || preferences.azkarStreak)
         let toggle = ReminderToggleAction(scheduler: scheduler) { permissionDenied = true }
         Section {
             ForEach(AzkarSection.allCases, id: \.self) { section in
@@ -146,6 +147,16 @@ struct AzkarSettingsView: View {
                 toggle(isOn) { reminders.setUnfinished($0) }
             }
             .disabled(preferences.azkarStart.isEmpty)
+            .settingsRow()
+            // «Если серия под угрозой» (Android-first 2026-10-11, снимок `14a`) — доступна всегда.
+            ReminderToggleRow(
+                title: "settings.reminders.streak",
+                subtitle: Text("settings.reminders.streak.subtitle"),
+                isOn: preferences.azkarStreak,
+                tint: theme.palette.tabAzkar
+            ) { isOn in
+                toggle(isOn) { reminders.setStreak($0) }
+            }
             .settingsRow()
             if blocked {
                 ReminderOpenSettingsRow()

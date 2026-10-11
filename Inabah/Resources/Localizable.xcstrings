@@ -2568,6 +2568,28 @@
         }
       }
     },
+    "settings.reminders.streak" : {
+      "comment" : "Настройки азкаров → «Напоминания»: переключатель «серия под угрозой»",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Если серия под угрозой"
+          }
+        }
+      }
+    },
+    "settings.reminders.streak.subtitle" : {
+      "comment" : "Настройки азкаров → «Напоминания»: когда приходит напоминание о серии",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "за 2 часа до конца времени, пока день не полный"
+          }
+        }
+      }
+    },
     "settings.reminders.unfinished" : {
       "comment" : "Напоминание, если азкары ещё не прочитаны",
       "localizations" : {

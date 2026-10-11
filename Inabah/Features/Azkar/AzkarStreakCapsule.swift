@@ -41,10 +41,8 @@ struct AzkarStreakCapsule: View {
     /// SF-шеврон с полями уже Material-значка: при равном кегле он крупнее — уменьшаем до вида Android.
     private static let chevronScale: CGFloat = 0.75
 
-    /// «12 дней подряд»; больше 9999 — «9999+ дней подряд»; без серии — «Начните серию сегодня».
+    /// «12 дней подряд» (`AzkarStreak.daysText`); без серии — «Начните серию сегодня».
     static func text(current: Int) -> LocalizedStringResource {
-        if current > AzkarStreak.displayMax { return "azkar.streak.daysMax" }
-        if current > 0 { return "azkar.streak.days \(current)" }
-        return "azkar.streak.start"
+        current > 0 ? AzkarStreak.daysText(current) : "azkar.streak.start"
     }
 }

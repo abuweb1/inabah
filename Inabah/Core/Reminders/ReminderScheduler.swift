@@ -153,7 +153,13 @@ final class ReminderScheduler {
         let moment = now()
         let preferences = settings.preferences
         let windows = Dictionary(uniqueKeysWithValues: AzkarSection.allCases.map { ($0, windowSettings.window(for: $0)) })
-        let planned = ReminderPlan.plan(preferences: preferences, windows: windows, now: moment, calendar: calendar) { section, day in
+        let planned = ReminderPlan.plan(
+            preferences: preferences,
+            windows: windows,
+            now: moment,
+            calendar: calendar,
+            history: history.days
+        ) { section, day in
             ReminderPlan.isCompleted(history.record(of: section, on: day))
         }
         let hadiths = await hadithsOfDay(for: planned.filter { $0.kind == .hadithOfDay }, now: moment)
@@ -219,6 +225,11 @@ final class ReminderScheduler {
             text = reminder.kind.section.flatMap { texts.azkarStart[$0] }
         case .morningUnfinished, .eveningUnfinished:
             text = reminder.kind.section.flatMap { texts.azkarUnfinished[$0] }
+        case .morningStreak, .eveningStreak:
+            guard let streak = reminder.streak else { return nil }
+            text = reminder.kind.section
+                .flatMap { texts.streakAtRisk[$0] }?
+                .filled([.streak: String(localized: AzkarStreak.daysText(streak))])
         }
         // Пустой заголовок и тело после подстановок — уведомления нет (аудит Android, К6).
         guard let text, !(text.title.isEmpty && text.body.isEmpty) else { return nil }

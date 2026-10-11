@@ -97,7 +97,7 @@ struct AzkarCompletionView: View {
                 }
             }
             if streak > 0 {
-                CompletionLine(text: AzkarStreakCapsule.text(current: streak)) {
+                CompletionLine(text: AzkarStreak.daysText(streak)) {
                     Image("tabIconAzkar")
                         .renderingMode(.template)
                         .resizable()
