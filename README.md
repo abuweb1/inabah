@@ -1,5 +1,5 @@
 <p align="center">
-  <img src=".github/readme-cover.jpg" alt="Inabah — азкары утром и вечером, хадисы" width="100%">
+  <img src=".github/readme-cover.jpg" alt="Inabah — азкары и хадисы" width="100%">
 </p>
 
 # Inabah · إنابة
