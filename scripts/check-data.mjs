@@ -15,9 +15,9 @@
 // Код выхода 1 — есть ошибки (пустые обязательные поля, нет аудиофайла и т.п.).
 // Предупреждения (подозрения на артефакты PDF) на код выхода не влияют.
 
-import { readFileSync, existsSync } from 'node:fs';
+import { readFileSync, existsSync, readdirSync, statSync } from 'node:fs';
 import { createHash } from 'node:crypto';
-import { join } from 'node:path';
+import { join, extname } from 'node:path';
 import { ROOT, BASE_LANGUAGE, loadAll, readData, legacyZikr, legacyHadith } from './lib/content.mjs';
 
 const AUDIO_DIR = join(ROOT, 'audio');
@@ -129,33 +129,68 @@ function checkAzkar(AZKAR) {
     list.forEach((item, i) => {
       const where = `${type} id ${item.id ?? '?'}`;
       checkId(where, item, i);
-      // `audio` необязательно: записей пока нет (с 2026-10-06). Если поле есть — файл должен лежать в audio/.
+      // `audio` необязательно; свои записи с 2026-10-12 (`.m4a`, docs/process/audio.md). Файл — в audio/<раздел>/.
       for (const f of ['arabic', 'translit', 'russian', 'source']) requireString(where, item, f);
       if (!Number.isInteger(item.max) || item.max < 1) error(where, `некорректный max: ${item.max}`);
       if (item.arabic) checkArabic(where, item.arabic);
       if (item.russian) checkRussian(where, item.russian);
       for (const f of ['russian', 'translit', 'source']) if (item[f]) checkMixedScript(where, f, item[f]);
 
-      const expectedAudio = `${type}_${String(i + 1).padStart(2, '0')}.mp3`;
-      if (item.audio && item.audio !== expectedAudio) {
-        warn('Имя аудио не совпадает с порядковым номером', where, `${item.audio}, ожидалось ${expectedAudio}`);
-      }
+      // Запись другого раздела (вечерний зикр с тем же арабским, что утренний) — норма: текст сверяет checkSharedAudio.
       if (item.audio) {
+        const ownSection = audioSection(item.audio) === type;
+        const expected = `${type}_${String(i + 1).padStart(2, '0')}`;
+        if (!AUDIO_EXTENSIONS.includes(extname(item.audio))) {
+          error(where, `аудио ${item.audio}: формат не ${AUDIO_EXTENSIONS.join(' / ')}`);
+        }
+        if (ownSection && item.audio.slice(0, -extname(item.audio).length) !== expected) {
+          warn('Имя аудио не совпадает с порядковым номером', where, `${item.audio}, ожидалось ${expected}.m4a`);
+        }
         if (seenAudio.has(item.audio)) error(where, `аудио ${item.audio} уже используется другим зикром`);
         seenAudio.add(item.audio);
-        if (!existsSync(join(AUDIO_DIR, type, item.audio))) error(where, `нет файла audio/${type}/${item.audio}`);
+        if (!existsSync(audioPath(item.audio, type))) error(where, `нет файла audio/${audioSection(item.audio) ?? type}/${item.audio}`);
       }
     });
   }
   checkSharedAudio(AZKAR);
+  checkUniqueAudioNames();
 }
 
-// Одинаковые MP3 у утреннего и вечернего зикра допустимы, только если и тексты совпадают.
+// Форматы записей: свои записи — AAC `.m4a` (2026-10-12); `.mp3` — по-прежнему допустим.
+const AUDIO_EXTENSIONS = ['.m4a', '.mp3'];
+
+/** Раздел файла по имени (`morning_03.m4a` → `morning`); не по разделу — `null`. */
+function audioSection(name) {
+  const prefix = name.split('_')[0];
+  return ['morning', 'evening'].includes(prefix) ? prefix : null;
+}
+
+/** Путь к файлу: по разделу в имени, иначе — в папке раздела зикра. */
+function audioPath(name, type) {
+  return join(AUDIO_DIR, audioSection(name) ?? type, name);
+}
+
+// В приложении (iOS Bundle, Android assets/audio) файлы лежат в одной папке — имена уникальны во всём audio/.
+function checkUniqueAudioNames() {
+  if (!existsSync(AUDIO_DIR)) return;
+  const seen = new Map();
+  for (const dir of readdirSync(AUDIO_DIR)) {
+    const path = join(AUDIO_DIR, dir);
+    if (!statSync(path).isDirectory()) continue;
+    for (const name of readdirSync(path)) {
+      if (seen.has(name)) error('audio', `${name} — и в ${seen.get(name)}/, и в ${dir}/`);
+      seen.set(name, dir);
+    }
+  }
+}
+
+// Один аудиофайл у разных зикров (вечерний ссылается на утренний или файлы совпадают по содержимому)
+// допустим, только если совпадает и арабский текст.
 function checkSharedAudio(AZKAR) {
   const byHash = new Map();
   for (const type of ['morning', 'evening']) {
     AZKAR[type].forEach((item, i) => {
-      const path = join(AUDIO_DIR, type, item.audio ?? '');
+      const path = audioPath(item.audio ?? '', type);
       if (!item.audio || !existsSync(path)) return;
       const hash = createHash('md5').update(readFileSync(path)).digest('hex');
       if (!byHash.has(hash)) byHash.set(hash, []);

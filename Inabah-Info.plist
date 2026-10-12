@@ -8,5 +8,10 @@
 	     не спрашивает про экспорт криптографии при каждой загрузке. -->
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
+	<!-- Фоновый звук: «Прослушать все» продолжает играть на заблокированном экране (свои записи — 2026-10-12). -->
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>audio</string>
+	</array>
 </dict>
 </plist>

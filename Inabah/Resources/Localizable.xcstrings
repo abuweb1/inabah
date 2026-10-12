@@ -122,6 +122,28 @@
         }
       }
     },
+    "about.sources.audio.text" : {
+      "comment" : "О приложении → Источники: кто читает азкары",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Читает автор приложения."
+          }
+        }
+      }
+    },
+    "about.sources.audio.title" : {
+      "comment" : "О приложении → Источники: аудиозаписи азкаров",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Аудиозаписи"
+          }
+        }
+      }
+    },
     "about.sources.azkar.text" : {
       "comment" : "О приложении: источник азкаров",
       "localizations" : {

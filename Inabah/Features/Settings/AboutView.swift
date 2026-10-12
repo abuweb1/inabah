@@ -25,6 +25,9 @@ struct AboutView: View {
                     .settingsRow()
                 AboutTextRow(title: "about.sources.hadith.title", text: "about.sources.hadith.text")
                     .settingsRow()
+                // Свои записи (2026-10-12, решение пользователя — без имени).
+                AboutTextRow(title: "about.sources.audio.title", text: "about.sources.audio.text")
+                    .settingsRow()
             } header: {
                 Text("about.sources.header")
             } footer: {
