@@ -105,6 +105,8 @@ fun AboutScreen(
             rows = listOf(
                 { AboutTextRow(R.string.about_sources_azkar_title, R.string.about_sources_azkar_text) },
                 { AboutTextRow(R.string.about_sources_hadith_title, R.string.about_sources_hadith_text) },
+                // Свои записи (2026-10-12, решение пользователя — без имени).
+                { AboutTextRow(R.string.about_sources_audio_title, R.string.about_sources_audio_text) },
             ),
         )
         SettingsGroup(
