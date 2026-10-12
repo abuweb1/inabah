@@ -71,10 +71,6 @@ class ReminderService(
             return
         }
         if (!isAzkarReminderDue(kind, windowSettings.window(section), now(), zone()) { history.record(section, it) }) return
-        // Одно уведомление, а не два в одно время (решение пользователя 2026-10-11): серия под угрозой — покажет её будильник.
-        if (kind.isUnfinished && settings.preferences.value.azkarStreak &&
-            streakAtRisk(section, windowSettings.windows.value, history.days.value, now(), zone()) != null
-        ) return
         notifier.showAzkar(kind, section, text)
     }
 
