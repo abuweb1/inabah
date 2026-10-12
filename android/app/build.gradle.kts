@@ -149,6 +149,12 @@ abstract class CopySharedContentTask : DefaultTask() {
     @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val licenseFiles: ConfigurableFileCollection
 
+    // Свои записи азкаров (2026-10-12) — плоско в audio/: плеер ищет asset:///audio/<файл>, имена уникальны
+    // во всём audio/ (проверяет check-data), подпапки morning/ и evening/ — только для порядка в репозитории.
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val audioFiles: ConfigurableFileCollection
+
     @get:OutputDirectory
     abstract val outputDir: DirectoryProperty
 
@@ -161,12 +167,18 @@ abstract class CopySharedContentTask : DefaultTask() {
             into(outputDir)
             from(dataFiles) { into("data") }
             from(licenseFiles) { into("licenses") }
+            from(audioFiles) {
+                // Плоско: audio/morning/morning_01.m4a → audio/morning_01.m4a; одинаковые имена — ошибка сборки.
+                eachFile { path = "audio/$name" }
+                duplicatesStrategy = DuplicatesStrategy.FAIL
+            }
+            includeEmptyDirs = false
         }
     }
 }
 
 // Тестовые тоны (свои, 8 с; общие с тестами iOS) → assets/audio/ только debug-сборки: тесту службы
-// воспроизведения нужен звук, а записей в приложении нет. В release не попадают.
+// воспроизведения нужен звук предсказуемой длины. В release не попадают.
 abstract class CopyTestTonesTask : DefaultTask() {
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
@@ -192,6 +204,7 @@ val repositoryRoot: Directory = rootProject.layout.projectDirectory.dir("..")
 val copySharedContent = tasks.register<CopySharedContentTask>("copySharedContent") {
     dataFiles.from(repositoryRoot.dir("data").asFileTree.matching { include("*.json") })
     licenseFiles.from(repositoryRoot.file("Inabah/Resources/Fonts/ScheherazadeNew-OFL.txt"))
+    audioFiles.from(repositoryRoot.dir("audio").asFileTree.matching { include("*/*.m4a") })
 }
 
 val copyTestTones = tasks.register<CopyTestTonesTask>("copyTestTones") {

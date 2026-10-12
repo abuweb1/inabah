@@ -42,16 +42,37 @@ class AssetContentRepositoryTest {
         }
     }
 
-    // 2026-10-06: аудиозаписи были чужими — удалены; свои подключатся полем audio в данных.
+    // Свои записи (2026-10-12, docs/process/audio.md): у каждого зикра — файл в assets/audio/.
     @Test
-    fun `Записей азкаров в сборке нет — у зикров нет аудио, в ассетах нет audio`() = runTest {
+    fun `Записи азкаров — у каждого зикра есть файл в ассетах, 20 файлов m4a`() = runTest {
         val repository = repository(dispatcher = StandardTestDispatcher(testScheduler))
+        val bundled = File(assetsDir, "audio").listFiles().orEmpty().map { it.name }.toSet()
         for (section in AzkarSection.entries) {
-            assertTrue(repository.azkar(section).none { it.hasAudio }, "запись у зикра в разделе $section")
+            for (zikr in repository.azkar(section)) {
+                assertTrue(zikr.audioFileName in bundled, "$section ${zikr.number}: нет файла ${zikr.audioFileName}")
+            }
         }
-        val bundled = File(assetsDir, "audio").listFiles().orEmpty()
-        assertEquals(emptyList(), bundled.map { it.name })
+        assertEquals(20, bundled.size)
+        assertTrue(bundled.all { it.endsWith(".m4a") }, "только .m4a: $bundled")
     }
+
+    // Вечерний зикр, совпадающий с утренним, берёт его запись — только если арабский тот же (без огласовок:
+    // у утреннего и вечернего 7 знаки в «اللَّهُمَّ» набраны в другом порядке).
+    @Test
+    fun `Общая запись утреннего и вечернего — только при одинаковом арабском`() = runTest {
+        val repository = repository(dispatcher = StandardTestDispatcher(testScheduler))
+        val all = AzkarSection.entries.flatMap { repository.azkar(it) }
+        val shared = all.groupBy { it.audioFileName }.filterValues { it.size > 1 }
+
+        assertEquals(12, shared.size)
+        for ((file, azkar) in shared) {
+            assertEquals(1, azkar.map { bareArabic(it.arabic) }.toSet().size, "$file: разный арабский текст")
+        }
+    }
+
+    /** Арабский без огласовок и пробелов — для сравнения текстов. */
+    private fun bareArabic(text: String): String =
+        text.filterNot { it in '\u064B'..'\u0652' || it == '\u0670' || it.isWhitespace() }
 
     @Test
     fun `Сборник хадисов загружается`() = runTest {

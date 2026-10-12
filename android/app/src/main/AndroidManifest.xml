@@ -2,10 +2,11 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- Аудиозаписей в приложении пока нет (2026-10-06): служба воспроизведения (PlaybackService,
-         foregroundServiceType="mediaPlayback") и разрешения FOREGROUND_SERVICE / _MEDIA_PLAYBACK не
-         объявлены — фоновый звук без звука вызывал бы вопросы Google Play. Код плеера на месте: со своими
-         записями вернуть сюда блок из src/debug/AndroidManifest.xml (там он — для теста службы). -->
+    <!-- Свои записи азкаров (2026-10-12): «Прослушать все» играет в фоне и на экране блокировки — служба
+         переднего плана типа mediaPlayback (в Play Console — декларация «Воспроизведение мультимедиа»).
+         Медиауведомлению POST_NOTIFICATIONS не нужно: Android 13+ делает исключение для медиасессий. -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
 
     <!-- Напоминания (docs/07-screen-settings.md, «Напоминания»): уведомления — по согласию пользователя
          (по умолчанию выключены); после перезагрузки будильники ставятся заново. Точные будильники не нужны. -->
@@ -79,6 +80,19 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity-alias>
+        <!-- Экспортирована: к сессии подключаются системные контроллеры (уведомление, экран блокировки,
+             Bluetooth) — разрешением их не ограничить (ExportedService). Посторонние приложения
+             отклоняет PlaybackService.SessionCallback.onConnect, записи — только из ассетов. -->
+        <service
+            android:name=".core.audio.PlaybackService"
+            android:exported="true"
+            android:foregroundServiceType="mediaPlayback"
+            tools:ignore="ExportedService">
+            <intent-filter>
+                <action android:name="androidx.media3.session.MediaSessionService" />
+            </intent-filter>
+        </service>
+
         <!-- Будильник напоминания — только свой (явный интент ReminderAlarms). -->
         <receiver
             android:name=".app.ReminderReceiver"
