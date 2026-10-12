@@ -74,3 +74,15 @@ fun ArabicText(
         )
     }
 }
+
+/**
+ * Начало арабского текста для свёрнутой строки (зикр, хадис): первые [words] слов и «…»; короче —
+ * целиком. Строка показывает одну строку — хватает первых слов (вёрстка длинного текста дороже).
+ */
+fun arabicPreview(arabic: String, words: Int = PREVIEW_WORDS): String {
+    val parts = arabic.split(Whitespace).filter(String::isNotEmpty)
+    return if (parts.size > words) parts.take(words).joinToString(" ") + "…" else parts.joinToString(" ")
+}
+
+private const val PREVIEW_WORDS = 8
+private val Whitespace = Regex("\\s+")

@@ -1,16 +1,36 @@
 import SwiftUI
 
 /// Общий каркас главных экранов разделов («Азкары», «Хадисы»):
-/// градиентный фон, бренд-блок, аят и навигационные карточки.
-struct SectionHomeLayout<Cards: View>: View {
+/// градиентный фон, бренд-блок, аят и навигационные карточки; необязательные круглые кнопки
+/// справа вверху (вход в «Избранное» у хадисов) и слева вверху («Обновить» у азкаров) — поверх
+/// прокрутки, как на Android.
+struct SectionHomeLayout<Cards: View, TopAction: View, LeadingAction: View>: View {
     let background: ThemeGradient
     let brand: SectionBrand
     let verse: FeaturedVerse
     @ViewBuilder let cards: Cards
+    @ViewBuilder let topAction: TopAction
+    @ViewBuilder let leadingAction: LeadingAction
 
     @Environment(\.theme) private var theme
 
     private typealias Layout = SectionHomeLayoutMetrics
+
+    init(
+        background: ThemeGradient,
+        brand: SectionBrand,
+        verse: FeaturedVerse,
+        @ViewBuilder cards: () -> Cards,
+        @ViewBuilder topAction: () -> TopAction,
+        @ViewBuilder leadingAction: () -> LeadingAction
+    ) {
+        self.background = background
+        self.brand = brand
+        self.verse = verse
+        self.cards = cards()
+        self.topAction = topAction()
+        self.leadingAction = leadingAction()
+    }
 
     var body: some View {
         // Контент растягивается минимум на видимую область (без статус-бара и таб-бара),
@@ -35,6 +55,17 @@ struct SectionHomeLayout<Cards: View>: View {
                 .frame(minHeight: viewport.size.height)
             }
             .scrollBounceBehavior(.basedOnSize)
+        }
+        .overlay(alignment: .topTrailing) {
+            topAction
+                .padding(.trailing, Spacing.xl)
+                // Визуально вверху — и VoiceOver читает первой, а не после карточек (аудит iOS 1.1.1, А11).
+                .accessibilitySortPriority(1)
+        }
+        .overlay(alignment: .topLeading) {
+            leadingAction
+                .padding(.leading, Spacing.xl)
+                .accessibilitySortPriority(1)
         }
         .background { background.linear.ignoresSafeArea() }
     }
@@ -84,6 +115,18 @@ struct SectionHomeLayout<Cards: View>: View {
     }
 
     private var verseBox: some View {
+        FeaturedVerseBox(verse: verse)
+    }
+}
+
+/// Аят: арабский, перевод и ссылка — в рамке на подложке или свободным текстом (`FeaturedVerse.isFramed`).
+/// Общий у главных разделов и окна «Машаа Аллах!» (Android `FeaturedVerseBox`).
+struct FeaturedVerseBox: View {
+    let verse: FeaturedVerse
+
+    @Environment(\.theme) private var theme
+
+    var body: some View {
         VStack(spacing: Spacing.xs) {
             ArabicText(
                 text: verse.arabic,
@@ -108,6 +151,41 @@ struct SectionHomeLayout<Cards: View>: View {
             border: verse.isFramed ? theme.palette.hairline : .clear
         )
         .accessibilityElement(children: .combine)
+    }
+}
+
+extension SectionHomeLayout where TopAction == EmptyView, LeadingAction == EmptyView {
+    init(
+        background: ThemeGradient,
+        brand: SectionBrand,
+        verse: FeaturedVerse,
+        @ViewBuilder cards: () -> Cards
+    ) {
+        self.init(background: background, brand: brand, verse: verse, cards: cards, topAction: { EmptyView() }, leadingAction: { EmptyView() })
+    }
+}
+
+extension SectionHomeLayout where LeadingAction == EmptyView {
+    init(
+        background: ThemeGradient,
+        brand: SectionBrand,
+        verse: FeaturedVerse,
+        @ViewBuilder cards: () -> Cards,
+        @ViewBuilder topAction: () -> TopAction
+    ) {
+        self.init(background: background, brand: brand, verse: verse, cards: cards, topAction: topAction, leadingAction: { EmptyView() })
+    }
+}
+
+extension SectionHomeLayout where TopAction == EmptyView {
+    init(
+        background: ThemeGradient,
+        brand: SectionBrand,
+        verse: FeaturedVerse,
+        @ViewBuilder cards: () -> Cards,
+        @ViewBuilder leadingAction: () -> LeadingAction
+    ) {
+        self.init(background: background, brand: brand, verse: verse, cards: cards, topAction: { EmptyView() }, leadingAction: leadingAction)
     }
 }
 

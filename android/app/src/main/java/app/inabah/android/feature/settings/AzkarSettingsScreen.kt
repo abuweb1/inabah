@@ -43,22 +43,26 @@ import app.inabah.android.core.designsystem.components.SettingsScaffold
 import app.inabah.android.core.designsystem.components.SettingsValueChip
 import app.inabah.android.core.designsystem.components.TimePickerPopover
 import app.inabah.android.core.designsystem.components.pressFeedback
+import app.inabah.android.core.settings.AzkarHistory
 import app.inabah.android.core.settings.AzkarWindow
 import app.inabah.android.core.settings.AzkarWindowSettings
 import app.inabah.android.core.settings.DayTime
+import app.inabah.android.core.settings.ReminderSettings
 import app.inabah.android.feature.azkar.AzkarStore
 import app.inabah.android.feature.azkar.rememberDayTimeFormatter
 import app.inabah.android.feature.azkar.title
 
 /**
  * Настройки азкаров (iOS `AzkarSettingsView`): время азкаров «с — до» — барабан под капсулой времени
- * правит черновик, он сохраняется и применяется к прогрессу при уходе с экрана или в фон; ручной сброс раздела —
- * с подтверждением над строкой.
+ * правит черновик, он сохраняется и применяется к прогрессу при уходе с экрана или в фон; напоминания;
+ * ручной сброс раздела и истории (календарь, серия дней) — с подтверждением над строкой.
  */
 @Composable
 fun AzkarSettingsScreen(
     store: AzkarStore,
+    history: AzkarHistory,
     windowSettings: AzkarWindowSettings,
+    reminderSettings: ReminderSettings,
     onBack: () -> Unit,
     contentPadding: PaddingValues,
     modifier: Modifier = Modifier,
@@ -83,6 +87,8 @@ fun AzkarSettingsScreen(
     // по времени при частичном счёте) и после сброса отсюда.
     var resets by remember { mutableIntStateOf(0) }
     val progress = AzkarSection.entries.map { store.progress(it).collectAsStateWithLifecycle().value }
+    val historyDays by history.days.collectAsStateWithLifecycle()
+    var pendingHistoryReset by remember { mutableStateOf(false) }
 
     SettingsScaffold(
         background = theme.gradients.azkarBackground,
@@ -137,6 +143,7 @@ fun AzkarSettingsScreen(
                 }
             },
         )
+        AzkarRemindersGroup(reminderSettings, drafts, tint)
         SettingsGroup(
             header = stringResource(R.string.settings_reset_now_header),
             footer = stringResource(R.string.settings_reset_now_footer),
@@ -164,6 +171,26 @@ fun AzkarSettingsScreen(
                 }
             },
         )
+        SettingsGroup(
+            header = stringResource(R.string.settings_azkar_history_header),
+            footer = stringResource(R.string.settings_azkar_history_footer),
+            rows = listOf {
+                Box {
+                    SettingsRow(onClick = { pendingHistoryReset = true }, enabled = historyDays.isNotEmpty()) {
+                        SettingsRowText(stringResource(R.string.settings_azkar_history_reset))
+                    }
+                    ConfirmationPopover(
+                        expanded = pendingHistoryReset,
+                        title = stringResource(R.string.settings_azkar_history_reset_confirm_title),
+                        message = stringResource(R.string.settings_azkar_history_reset_confirm_message),
+                        actionLabel = stringResource(R.string.settings_reset_now_confirm_action),
+                        tint = tint,
+                        onConfirm = history::clear,
+                        onDismiss = { pendingHistoryReset = false },
+                    )
+                }
+            },
+        )
     }
 }
 
@@ -178,7 +205,7 @@ private fun WindowEdgeLabel(text: String) {
 
 /** Капсула «05:00» (формат системы); нажатие — барабан под ней. TalkBack: «Начало утренних азкаров, 05:00». */
 @Composable
-private fun WindowTimeChip(
+internal fun WindowTimeChip(
     time: DayTime,
     description: String,
     isEditing: Boolean,

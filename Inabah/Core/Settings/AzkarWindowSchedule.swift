@@ -93,6 +93,29 @@ nonisolated struct AzkarWindowSchedule: Sendable {
         return String(format: "%04d-%02d-%02d", components.year ?? 0, components.month ?? 0, components.day ?? 0)
     }
 
+    // MARK: - Для напоминаний
+
+    /// Начало окна строго после `date`.
+    func nextStart(after date: Date) -> Date {
+        nextOccurrence(of: window.start, after: date)
+    }
+
+    /// Начало окна, в котором `date`, или следующего, если сейчас промежуток.
+    func currentOrNextStart(_ date: Date) -> Date {
+        let start = lastOccurrence(of: window.start, notAfter: date)
+        return date < windowEnd(startingAt: start) ? start : nextStart(after: date)
+    }
+
+    /// Конец окна, начавшегося в `start`.
+    func windowEnd(startingAt start: Date) -> Date {
+        nextOccurrence(of: window.end, after: start)
+    }
+
+    /// Ближайшее наступление времени суток строго после `date` (хадис дня).
+    func nextOccurrence(ofTime time: DayTime, after date: Date) -> Date {
+        nextOccurrence(of: time, after: date)
+    }
+
     private func components(of time: DayTime) -> DateComponents {
         DateComponents(hour: time.hour, minute: time.minute, second: 0)
     }

@@ -41,14 +41,17 @@ private class ThemeRun(val from: Theme, val progress: Animatable<Float, *>)
 private fun Palette.lerp(to: Palette, t: Float): Palette = Palette(
     background = lerp(background, to.background, t),
     card = lerp(card, to.card, t),
+    zikrCard = lerp(zikrCard, to.zikrCard, t),
     actionBackground = lerp(actionBackground, to.actionBackground, t),
     header = lerp(header, to.header, t),
     eveningHeader = lerp(eveningHeader, to.eveningHeader, t),
     hadithHeader = lerp(hadithHeader, to.hadithHeader, t),
+    hadithCard = lerp(hadithCard, to.hadithCard, t),
     shadow = lerp(shadow, to.shadow, t),
     textPrimary = lerp(textPrimary, to.textPrimary, t),
     textSecondary = lerp(textSecondary, to.textSecondary, t),
     textTertiary = lerp(textTertiary, to.textTertiary, t),
+    zikrSource = lerp(zikrSource, to.zikrSource, t),
     onAccent = lerp(onAccent, to.onAccent, t),
     accent = lerp(accent, to.accent, t),
     accentLight = lerp(accentLight, to.accentLight, t),
@@ -78,6 +81,7 @@ private fun Palette.lerp(to: Palette, t: Float): Palette = Palette(
     tabMakharij = lerp(tabMakharij, to.tabMakharij, t),
     tabSettings = lerp(tabSettings, to.tabSettings, t),
     destructive = lerp(destructive, to.destructive, t),
+    newMoon = lerp(newMoon, to.newMoon, t),
 )
 
 private fun ThemeGradients.lerp(to: ThemeGradients, t: Float): ThemeGradients = ThemeGradients(

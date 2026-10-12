@@ -21,6 +21,17 @@ struct HadithListView: View {
             .toolbarColorScheme(.dark, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .principal) { titleView }
+                // «О сборнике» — круглая кнопка справа, как «‹» слева (решение пользователя 2026-10-08,
+                // вид — как на Android). Видна и пока список грузится: сведения грузятся отдельно.
+                ToolbarItem(placement: .topBarTrailing) {
+                    NavigationLink(value: HadithRoute.about(collection)) {
+                        Image(systemName: "info.circle")
+                            .fontWeight(.medium)
+                            .foregroundStyle(theme.palette.tabHadith)
+                    }
+                    .accessibilityLabel(Text("hadith.about.title"))
+                    .fixedTextSize()
+                }
             }
             .task { await store.load(collection) }
     }

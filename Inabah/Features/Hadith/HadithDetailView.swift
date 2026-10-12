@@ -64,7 +64,8 @@ struct HadithDetailView: View {
         ScrollView(.horizontal) {
             LazyHStack(spacing: 0) {
                 ForEach(hadiths, id: \.number) { hadith in
-                    HadithPageContainer(hadith: hadith)
+                    // `isCurrent` меняется только у двух страниц при перелистывании — остальные не перестраиваются.
+                    HadithPageContainer(hadith: hadith, isCurrent: hadith.number == currentNumber)
                         .containerRelativeFrame(.horizontal)
                 }
             }
@@ -79,11 +80,12 @@ struct HadithDetailView: View {
 /// Страница с готовым статусом: только эта обёртка читает отметки, сама страница получает значение.
 private struct HadithPageContainer: View {
     let hadith: Hadith
+    let isCurrent: Bool
 
     @Environment(HadithProgress.self) private var progress
 
     var body: some View {
-        HadithPage(hadith: hadith, status: progress.status(of: hadith.id))
+        HadithPage(hadith: hadith, status: progress.status(of: hadith.id), isCurrent: isCurrent)
     }
 }
 

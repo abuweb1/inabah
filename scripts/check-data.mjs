@@ -8,24 +8,47 @@
 //   node scripts/check-data.mjs            — проверка, первые 5 предупреждений каждого типа
 //   node scripts/check-data.mjs --verbose  — все предупреждения
 //
+// Плюс data/collections.json — сведения о сборниках для экрана «О сборнике»,
+// data/reminders.json — тексты напоминаний и data/versions.json — история версий («Что нового»),
+// общие для iOS и Android.
+//
 // Код выхода 1 — есть ошибки (пустые обязательные поля, нет аудиофайла и т.п.).
 // Предупреждения (подозрения на артефакты PDF) на код выхода не влияют.
 
-import { readFileSync, existsSync } from 'node:fs';
+import { readFileSync, existsSync, readdirSync, statSync } from 'node:fs';
 import { createHash } from 'node:crypto';
-import { join } from 'node:path';
-import { ROOT, BASE_LANGUAGE, loadAll, legacyZikr, legacyHadith } from './lib/content.mjs';
+import { join, extname } from 'node:path';
+import { ROOT, BASE_LANGUAGE, loadAll, readData, legacyZikr, legacyHadith } from './lib/content.mjs';
 
 const AUDIO_DIR = join(ROOT, 'audio');
 
 const VERBOSE = process.argv.includes('--verbose');
 
-const EXPECTED = { morning: 16, evening: 16, nawawi: 50, qudsi: 40, ajurri: 40 };
+const EXPECTED = { morning: 16, evening: 16, nawawi: 50, qudsi: 42, ajurri: 40 };
 
 const AZKAR_KEYS = ['id', 'arabic', 'max', 'audio', 'translations'];
 const HADITH_KEYS = ['id', 'arabic', 'translations'];
-const AZKAR_TRANSLATION_KEYS = ['translit', 'text', 'source'];
-const HADITH_TRANSLATION_KEYS = ['rawi', 'text', 'source'];
+const AZKAR_TRANSLATION_KEYS = ['translit', 'text', 'source', 'rawi'];
+const HADITH_TRANSLATION_KEYS = ['rawi', 'text', 'source', 'notes'];
+const NOTE_KEYS = ['term', 'text'];
+const COLLECTION_KEYS = ['translations'];
+const COLLECTION_TRANSLATION_KEYS = ['authors', 'about'];
+const AUTHOR_KEYS = ['name', 'years'];
+
+// reminders.json: translations.<язык>.<вид>[.<раздел>] = { title, body }; в каждом виде — свои подстановки.
+const AZKAR_SECTIONS = ['morning', 'evening'];
+const REMINDER_KINDS = {
+  azkarStart: { sections: AZKAR_SECTIONS, placeholders: [] },
+  azkarUnfinished: { sections: AZKAR_SECTIONS, placeholders: [] },
+  hadithOfDay: { sections: null, placeholders: ['collection', 'number', 'text'] },
+  // «Серия под угрозой» (2026-10-11): {streak} — «12 дней подряд» (склонение — приложение).
+  streakAtRisk: { sections: AZKAR_SECTIONS, placeholders: ['streak'] },
+};
+const REMINDER_TEXT_KEYS = ['title', 'body'];
+
+// versions.json: versions[] сверху вниз = { version, date, translations.<язык> = { items, android?, ios? } }.
+const VERSION_KEYS = ['version', 'date', 'translations'];
+const VERSION_ITEM_LISTS = ['items', 'android', 'ios'];
 
 // ── Проверки ─────────────────────────────────────────────────
 
@@ -106,33 +129,68 @@ function checkAzkar(AZKAR) {
     list.forEach((item, i) => {
       const where = `${type} id ${item.id ?? '?'}`;
       checkId(where, item, i);
-      // `audio` необязательно: записей пока нет (с 2026-10-06). Если поле есть — файл должен лежать в audio/.
+      // `audio` необязательно; свои записи с 2026-10-12 (`.m4a`, docs/process/audio.md). Файл — в audio/<раздел>/.
       for (const f of ['arabic', 'translit', 'russian', 'source']) requireString(where, item, f);
       if (!Number.isInteger(item.max) || item.max < 1) error(where, `некорректный max: ${item.max}`);
       if (item.arabic) checkArabic(where, item.arabic);
       if (item.russian) checkRussian(where, item.russian);
       for (const f of ['russian', 'translit', 'source']) if (item[f]) checkMixedScript(where, f, item[f]);
 
-      const expectedAudio = `${type}_${String(i + 1).padStart(2, '0')}.mp3`;
-      if (item.audio && item.audio !== expectedAudio) {
-        warn('Имя аудио не совпадает с порядковым номером', where, `${item.audio}, ожидалось ${expectedAudio}`);
-      }
+      // Запись другого раздела (вечерний зикр с тем же арабским, что утренний) — норма: текст сверяет checkSharedAudio.
       if (item.audio) {
+        const ownSection = audioSection(item.audio) === type;
+        const expected = `${type}_${String(i + 1).padStart(2, '0')}`;
+        if (!AUDIO_EXTENSIONS.includes(extname(item.audio))) {
+          error(where, `аудио ${item.audio}: формат не ${AUDIO_EXTENSIONS.join(' / ')}`);
+        }
+        if (ownSection && item.audio.slice(0, -extname(item.audio).length) !== expected) {
+          warn('Имя аудио не совпадает с порядковым номером', where, `${item.audio}, ожидалось ${expected}.m4a`);
+        }
         if (seenAudio.has(item.audio)) error(where, `аудио ${item.audio} уже используется другим зикром`);
         seenAudio.add(item.audio);
-        if (!existsSync(join(AUDIO_DIR, type, item.audio))) error(where, `нет файла audio/${type}/${item.audio}`);
+        if (!existsSync(audioPath(item.audio, type))) error(where, `нет файла audio/${audioSection(item.audio) ?? type}/${item.audio}`);
       }
     });
   }
   checkSharedAudio(AZKAR);
+  checkUniqueAudioNames();
 }
 
-// Одинаковые MP3 у утреннего и вечернего зикра допустимы, только если и тексты совпадают.
+// Форматы записей: свои записи — AAC `.m4a` (2026-10-12); `.mp3` — по-прежнему допустим.
+const AUDIO_EXTENSIONS = ['.m4a', '.mp3'];
+
+/** Раздел файла по имени (`morning_03.m4a` → `morning`); не по разделу — `null`. */
+function audioSection(name) {
+  const prefix = name.split('_')[0];
+  return ['morning', 'evening'].includes(prefix) ? prefix : null;
+}
+
+/** Путь к файлу: по разделу в имени, иначе — в папке раздела зикра. */
+function audioPath(name, type) {
+  return join(AUDIO_DIR, audioSection(name) ?? type, name);
+}
+
+// В приложении (iOS Bundle, Android assets/audio) файлы лежат в одной папке — имена уникальны во всём audio/.
+function checkUniqueAudioNames() {
+  if (!existsSync(AUDIO_DIR)) return;
+  const seen = new Map();
+  for (const dir of readdirSync(AUDIO_DIR)) {
+    const path = join(AUDIO_DIR, dir);
+    if (!statSync(path).isDirectory()) continue;
+    for (const name of readdirSync(path)) {
+      if (seen.has(name)) error('audio', `${name} — и в ${seen.get(name)}/, и в ${dir}/`);
+      seen.set(name, dir);
+    }
+  }
+}
+
+// Один аудиофайл у разных зикров (вечерний ссылается на утренний или файлы совпадают по содержимому)
+// допустим, только если совпадает и арабский текст.
 function checkSharedAudio(AZKAR) {
   const byHash = new Map();
   for (const type of ['morning', 'evening']) {
     AZKAR[type].forEach((item, i) => {
-      const path = join(AUDIO_DIR, type, item.audio ?? '');
+      const path = audioPath(item.audio ?? '', type);
       if (!item.audio || !existsSync(path)) return;
       const hash = createHash('md5').update(readFileSync(path)).digest('hex');
       if (!byHash.has(hash)) byHash.set(hash, []);
@@ -173,6 +231,174 @@ function checkHadith(HADITH_DATA) {
       // Арабский текст показывается только в карточке хадиса — передатчик пишется по-русски.
       if (item.rawi && ARABIC.test(item.rawi)) error(where, `rawi на арабском: ${item.rawi}`);
     });
+  }
+}
+
+// collections.json: { <сборник>: { translations: { <язык>: { authors?: [{ name, years? }], about: [абзац…] } } } }.
+// Названия сборников — в приложении, число хадисов — длина data/<сборник>.json: сюда не дублируются.
+function checkCollections(collections, hadithTypes) {
+  if (!collections || typeof collections !== 'object' || Array.isArray(collections)) {
+    error('collections', 'ожидается объект { <сборник>: … }');
+    return;
+  }
+  for (const type of hadithTypes) if (!(type in collections)) error('collections', `нет сведений о сборнике «${type}»`);
+  for (const [type, entry] of Object.entries(collections)) {
+    const where = `collections ${type}`;
+    if (!hadithTypes.includes(type)) error(where, `нет такого сборника (data/${type}.json)`);
+    for (const k of Object.keys(entry ?? {})) if (!COLLECTION_KEYS.includes(k)) error(where, `неизвестное поле «${k}»`);
+    const translations = entry?.translations;
+    if (!translations || typeof translations !== 'object' || Array.isArray(translations)) {
+      error(where, 'нет объекта translations');
+      continue;
+    }
+    if (!translations[BASE_LANGUAGE]) error(where, `нет перевода translations.${BASE_LANGUAGE}`);
+    for (const [lang, t] of Object.entries(translations)) {
+      const at = `${where} ${lang}`;
+      if (!/^[a-z]{2}$/.test(lang)) error(where, `код языка «${lang}» — ожидается ISO 639-1 (ru, en…)`);
+      for (const k of Object.keys(t ?? {})) {
+        if (!COLLECTION_TRANSLATION_KEYS.includes(k)) error(where, `неизвестное поле translations.${lang}.${k}`);
+      }
+      // authors — необязательно (у подборки может не быть известного составителя), но не пустой массив.
+      if (t?.authors !== undefined) {
+        if (!Array.isArray(t.authors) || !t.authors.length) error(at, 'authors — непустой массив или поля нет');
+        else t.authors.forEach((a, i) => {
+          for (const k of Object.keys(a ?? {})) if (!AUTHOR_KEYS.includes(k)) error(at, `неизвестное поле authors[${i}].${k}`);
+          // { name: "", years: "" } — заготовка «составитель не указан»: приложение её не показывает.
+          if (a?.name === '' && !a.years) return;
+          if (requireString(at, a ?? {}, 'name')) checkMixedScript(at, 'authors.name', a.name);
+          if (a?.years !== undefined) requireString(at, a, 'years');
+        });
+      }
+      if (!Array.isArray(t?.about) || !t.about.length) {
+        error(at, 'about — непустой массив абзацев');
+        continue;
+      }
+      t.about.forEach((paragraph, i) => {
+        if (typeof paragraph !== 'string' || !paragraph.trim()) { error(at, `about[${i}] — пустой абзац`); return; }
+        if (lang === BASE_LANGUAGE) checkRussian(`${at} about[${i}]`, paragraph);
+        checkMixedScript(at, `about[${i}]`, paragraph);
+      });
+    }
+  }
+}
+
+// Сноски к словам перевода: notes — массив { term, text } (пустой — сносок пока нет).
+// term — слово или выражение из text перевода; пока способ показа не решён, несовпадение — предупреждение.
+function checkNotes(collections) {
+  const fold = s => s.toLowerCase().replace(/ё/g, 'е').replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
+  for (const [type, list] of Object.entries(collections)) {
+    for (const item of list ?? []) {
+      for (const [lang, t] of Object.entries(item.translations ?? {})) {
+        if (t?.notes === undefined) continue;
+        const where = `${type} id ${item.id ?? '?'}`;
+        if (!Array.isArray(t.notes)) { error(where, `translations.${lang}.notes — ожидается массив`); continue; }
+        t.notes.forEach((note, i) => {
+          const at = `${where} notes[${i}]`;
+          for (const k of Object.keys(note ?? {})) if (!NOTE_KEYS.includes(k)) error(at, `неизвестное поле «${k}»`);
+          const hasTerm = requireString(at, note ?? {}, 'term');
+          // Пояснение может приводить арабский термин и продолжать term со строчной — проверки checkRussian не для него.
+          if (requireString(at, note ?? {}, 'text')) checkMixedScript(at, 'notes.text', note.text);
+          if (hasTerm && typeof t.text === 'string' && !fold(t.text).includes(fold(note.term))) {
+            warn('Слово сноски не найдено в тексте перевода', at, `«${note.term}»`);
+          }
+        });
+      }
+    }
+  }
+}
+
+// reminders.json: у каждого языка все виды (и разделы азкаров), непустые title/body,
+// подстановки {…} — только свои для вида (неизвестная — ошибка: приложение её не заменит).
+function checkReminders(reminders) {
+  const translations = reminders?.translations;
+  if (!translations || typeof translations !== 'object' || Array.isArray(translations)) {
+    error('reminders', 'нет объекта translations');
+    return;
+  }
+  for (const k of Object.keys(reminders)) if (k !== 'translations') error('reminders', `неизвестное поле «${k}»`);
+  if (!translations[BASE_LANGUAGE]) error('reminders', `нет перевода translations.${BASE_LANGUAGE}`);
+  const checkText = (where, text, placeholders) => {
+    for (const k of Object.keys(text ?? {})) if (!REMINDER_TEXT_KEYS.includes(k)) error(where, `неизвестное поле «${k}»`);
+    for (const field of REMINDER_TEXT_KEYS) {
+      if (!requireString(where, text ?? {}, field)) continue;
+      for (const [, name] of text[field].matchAll(/\{(\w*)\}/g)) {
+        if (!placeholders.includes(name)) error(where, `${field}: неизвестная подстановка {${name}} (можно: ${placeholders.map(p => `{${p}}`).join(', ') || 'никаких'})`);
+      }
+      checkMixedScript(where, field, text[field]);
+    }
+  };
+  for (const [lang, t] of Object.entries(translations)) {
+    const at = `reminders ${lang}`;
+    if (!/^[a-z]{2}$/.test(lang)) error('reminders', `код языка «${lang}» — ожидается ISO 639-1 (ru, en…)`);
+    for (const k of Object.keys(t ?? {})) if (!(k in REMINDER_KINDS)) error(at, `неизвестный вид «${k}»`);
+    for (const [kind, spec] of Object.entries(REMINDER_KINDS)) {
+      const entry = t?.[kind];
+      if (!entry) { error(at, `нет вида «${kind}»`); continue; }
+      if (!spec.sections) { checkText(`${at} ${kind}`, entry, spec.placeholders); continue; }
+      for (const k of Object.keys(entry)) if (!spec.sections.includes(k)) error(`${at} ${kind}`, `неизвестный раздел «${k}»`);
+      for (const section of spec.sections) {
+        if (!entry[section]) error(`${at} ${kind}`, `нет раздела «${section}»`);
+        else checkText(`${at} ${kind}.${section}`, entry[section], spec.placeholders);
+      }
+    }
+  }
+}
+
+// versions.json: номера X.Y.Z без повторов и строго по убыванию (как числа: 1.10.0 > 1.9.0), даты ГГГГ-ММ-ДД,
+// у каждой версии — базовый язык и хотя бы один непустой пункт. Нет записи для текущей версии приложения —
+// предупреждение: окно «Что нового» тогда не покажется.
+function checkVersions(file) {
+  const versions = file?.versions;
+  if (!Array.isArray(versions) || versions.length === 0) {
+    error('versions', 'нет непустого массива versions');
+    return;
+  }
+  for (const k of Object.keys(file)) if (k !== 'versions') error('versions', `неизвестное поле «${k}»`);
+  const parse = v => (/^\d+\.\d+\.\d+$/.test(v ?? '') ? v.split('.').map(Number) : null);
+  const compare = (a, b) => a[0] - b[0] || a[1] - b[1] || a[2] - b[2];
+  const isDate = d => /^\d{4}-\d{2}-\d{2}$/.test(d) && !Number.isNaN(Date.parse(`${d}T00:00:00Z`)) &&
+    new Date(`${d}T00:00:00Z`).toISOString().slice(0, 10) === d;
+  let previous = null;
+  for (const [index, entry] of versions.entries()) {
+    const at = `versions ${entry?.version ?? `#${index + 1}`}`;
+    for (const k of Object.keys(entry ?? {})) if (!VERSION_KEYS.includes(k)) error(at, `неизвестное поле «${k}»`);
+    const number = parse(entry?.version);
+    if (!number) error(at, `номер «${entry?.version ?? ''}» — ожидается X.Y.Z`);
+    else if (previous && compare(previous, number) <= 0) error(at, 'номера должны идти сверху вниз по убыванию, без повторов');
+    if (number) previous = number;
+    if (!isDate(entry?.date ?? '')) error(at, `дата «${entry?.date ?? ''}» — ожидается ГГГГ-ММ-ДД`);
+    const translations = entry?.translations;
+    if (!translations || typeof translations !== 'object' || Array.isArray(translations)) {
+      error(at, 'нет объекта translations');
+      continue;
+    }
+    if (!translations[BASE_LANGUAGE]) error(at, `нет перевода translations.${BASE_LANGUAGE}`);
+    for (const [lang, t] of Object.entries(translations)) {
+      const where = `${at} ${lang}`;
+      if (!/^[a-z]{2}$/.test(lang)) error(at, `код языка «${lang}» — ожидается ISO 639-1 (ru, en…)`);
+      for (const k of Object.keys(t ?? {})) if (!VERSION_ITEM_LISTS.includes(k)) error(where, `неизвестный список «${k}»`);
+      let count = 0;
+      for (const list of VERSION_ITEM_LISTS) {
+        const items = t?.[list];
+        if (items === undefined) continue;
+        if (!Array.isArray(items)) { error(where, `${list} — ожидается массив строк`); continue; }
+        items.forEach((item, i) => {
+          if (typeof item !== 'string' || !item.trim()) error(where, `${list}[${i}] — пустой пункт`);
+          else { count++; checkMixedScript(where, `${list}[${i}]`, item); }
+        });
+      }
+      if (count === 0) error(where, 'нет ни одного пункта');
+    }
+  }
+  const known = new Set(versions.map(v => v?.version));
+  const appVersions = [
+    ['Android', 'android/app/build.gradle.kts', /versionName\s*=\s*"([^"]+)"/],
+    ['iOS', 'Inabah.xcodeproj/project.pbxproj', /MARKETING_VERSION = ([^;]+);/],
+  ];
+  for (const [platform, path, pattern] of appVersions) {
+    const full = join(ROOT, path);
+    const current = existsSync(full) ? readFileSync(full, 'utf8').match(pattern)?.[1] : null;
+    if (current && !known.has(current)) warn('versions', platform, `нет записи для текущей версии ${current} — «Что нового» не покажется`);
   }
 }
 
@@ -217,6 +443,10 @@ const HADITH_DATA = Object.fromEntries(
   Object.entries(data.hadith).map(([type, list]) => [type, list?.map(h => legacyHadith(h))]));
 checkAzkar(AZKAR);
 checkHadith(HADITH_DATA);
+checkNotes(data.hadith);
+checkCollections(readData('collections.json'), Object.keys(data.hadith));
+checkReminders(readData('reminders.json'));
+checkVersions(readData('versions.json'));
 
 const counts = Object.entries(EXPECTED)
   .map(([t]) => `${t}: ${(AZKAR[t] ?? HADITH_DATA[t])?.length ?? 0}`).join(', ');

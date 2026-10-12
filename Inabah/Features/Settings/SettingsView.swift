@@ -107,7 +107,7 @@ private enum SettingsSection {
     }
 }
 
-/// «Инаба 1.0.0 · О приложении» — мелкая ссылка по центру у нижнего края экрана.
+/// «Inabah 1.1.1 · О приложении» — мелкая ссылка по центру у нижнего края экрана.
 private struct AboutFooterLink: View {
     @Environment(\.theme) private var theme
 

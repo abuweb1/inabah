@@ -1,6 +1,8 @@
 package app.inabah.android.feature.hadith
 
-import androidx.compose.foundation.background
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -8,34 +10,47 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.LastBaseline
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.font.FontStyle
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.intl.LocaleList
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.toggleableState
+import androidx.compose.ui.state.ToggleableState
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.intl.LocaleList
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import app.inabah.android.R
 import app.inabah.android.core.content.model.Hadith
 import app.inabah.android.core.content.model.HadithTranslation
 import app.inabah.android.core.designsystem.InabahTheme
 import app.inabah.android.core.designsystem.InabahType
+import app.inabah.android.core.designsystem.Motion
+import app.inabah.android.core.designsystem.PressFeedback
 import app.inabah.android.core.designsystem.Radius
+import app.inabah.android.core.designsystem.ShadowToken
 import app.inabah.android.core.designsystem.Size
 import app.inabah.android.core.designsystem.Spacing
 import app.inabah.android.core.designsystem.Tracking
@@ -46,29 +61,51 @@ import app.inabah.android.core.designsystem.components.ParchmentPanel
 import app.inabah.android.core.designsystem.components.StatusGlyph
 import app.inabah.android.core.designsystem.components.StatusGlyphKind
 import app.inabah.android.core.designsystem.components.ToggleTile
+import app.inabah.android.core.designsystem.components.TranslationBlock
+import app.inabah.android.core.designsystem.components.TranslationColors
+import app.inabah.android.core.designsystem.components.arabicPreview
+import app.inabah.android.core.designsystem.components.collapsible
+import app.inabah.android.core.designsystem.components.pressFeedback
 import app.inabah.android.core.designsystem.components.surface
 import app.inabah.android.core.settings.HadithStatus
 import app.inabah.android.core.share.shareText
 import app.inabah.android.core.share.storeLinksBlock
-import kotlin.math.roundToInt
 
-/** Значок «Поделиться» — как ▶ заглушки аудио (`AudioSoonPlaceholder`): в sp, растёт с шагом интерфейса. */
-private const val SHARE_ICON_SIZE = 20f
+/** Значки «Избранное» и «Поделиться» — как ▶ заглушки аудио (`AudioSoonPlaceholder`): в sp, растут с шагом интерфейса. */
+private const val ACTION_ICON_SIZE = 20f
 
 /**
  * Страница экрана хадиса (iOS `HadithPage`): арабский текст на пергаменте, отметки, заглушка аудио,
- * перевод. Статус и кегль приходят значениями — отметка другого хадиса страницу не перестраивает.
+ * перевод со сносками (скрыты, справа «N ⌄»), закладкой «Избранное» и «Поделиться». Статус, закладка
+ * и кегль приходят значениями — отметка другого хадиса страницу не перестраивает. Раскрытые сноски
+ * сворачиваются, когда страница перестаёт быть текущей ([isCurrentPage]): пейджер держит соседнюю
+ * в композиции. Арабский текст сворачивается и раскрывается нажатием на строку «ХАДИС N ⌄» всегда;
+ * настройка «Сворачивать арабский текст» ([collapsesArabic]) — только состояние при открытии страницы,
+ * к нему же страница возвращается при уходе (выбор не запоминается).
  */
 @Composable
 fun HadithPage(
     hadith: Hadith,
     status: HadithStatus,
+    isFavorite: Boolean,
     arabicFontSize: Float,
     onToggleRead: () -> Unit,
     onToggleMemorized: () -> Unit,
+    onToggleFavorite: () -> Unit,
     contentPadding: PaddingValues,
     modifier: Modifier = Modifier,
+    collapsesArabic: Boolean = false,
+    isCurrentPage: Boolean = true,
 ) {
+    var notesExpanded by remember { mutableStateOf(false) }
+    // Смена настройки — новое начальное состояние и на уже открытых страницах.
+    var arabicExpanded by remember(collapsesArabic) { mutableStateOf(!collapsesArabic) }
+    LaunchedEffect(isCurrentPage) {
+        if (!isCurrentPage) {
+            notesExpanded = false
+            arabicExpanded = !collapsesArabic
+        }
+    }
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -77,16 +114,22 @@ fun HadithPage(
             .padding(bottom = contentPadding.calculateBottomPadding()),
         verticalArrangement = Arrangement.spacedBy(Spacing.m),
     ) {
-        ArabicPanel(hadith, arabicFontSize)
+        ArabicPanel(
+            hadith,
+            arabicFontSize,
+            expanded = arabicExpanded,
+            onToggle = { arabicExpanded = !arabicExpanded },
+        )
         HadithStatusButtons(status, onToggleRead, onToggleMemorized)
         AudioSoonPlaceholder(stringResource(R.string.hadith_audio_title, hadith.number))
         val onShare = hadithShareAction(hadith)
+        val actions: @Composable (Modifier) -> Unit = { HadithActions(isFavorite, onToggleFavorite, onShare, it) }
         val translation = hadith.translation
         if (translation != null) {
-            HadithTranslationCard(translation, onShare)
+            HadithTranslationCard(translation, notesExpanded, onToggleNotes = { notesExpanded = !notesExpanded }, actions)
         } else {
-            // Без перевода — кнопка одна, справа внизу страницы.
-            Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) { HadithShareButton(onShare) }
+            // Без перевода — кнопки справа внизу страницы.
+            Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) { actions(Modifier) }
         }
     }
 }
@@ -96,42 +139,148 @@ fun HadithPage(
 private fun hadithShareAction(hadith: Hadith): () -> Unit {
     val context = LocalContext.current
     val header = stringResource(R.string.share_hadith_header, stringResource(hadith.id.collection.title), hadith.number)
-    val narrator = hadith.translation?.narrator?.let { stringResource(R.string.hadith_detail_narrator, it) }
+    // Вступление — как есть, без «Передал:» (решение пользователя 2026-10-11).
+    val narrator = hadith.translation?.narrator
     val source = hadith.translation?.source?.let { stringResource(R.string.hadith_detail_source, it) }
     val storeLinks = storeLinksBlock()
-    return { context.shareText(hadithShareText(hadith, header, narrator, source, storeLinks)) }
+    val notesTitle = stringResource(R.string.share_text_hadith_notes)
+    val quote = stringResource(R.string.hadith_note_quote)
+    return {
+        val translation = hadith.translation
+        val notes = hadithNotesBlock(translation?.notes.orEmpty(), notesTitle, translation?.text.orEmpty()) { quote.format(it) }
+        context.shareText(hadithShareText(hadith, header, narrator, source, notes, storeLinks))
+    }
 }
 
-/** Значок «Поделиться» без подложки — в правом нижнем углу хадиса (решение пользователя 2026-10-06). */
+/**
+ * Закладка «Избранное» и «Поделиться» — значки без подложки в правом нижнем углу хадиса (решения
+ * пользователя 2026-10-06 и 2026-10-10); закладка в избранном — залитая, для TalkBack — переключатель.
+ */
 @Composable
-private fun HadithShareButton(onShare: () -> Unit, modifier: Modifier = Modifier) {
-    val iconSize = with(LocalDensity.current) { SHARE_ICON_SIZE.sp.toDp() }
-    BareIconButton(
-        onClick = onShare,
-        icon = painterResource(R.drawable.ic_share),
-        contentDescription = stringResource(R.string.share_action),
-        foreground = InabahTheme.palette.onAccentSecondary,
-        iconSize = iconSize,
-        // Значок — вровень с краем текста; лишняя зона касания уходит в поле карточки.
-        modifier = modifier.offset(x = (Size.visibleTapTarget - iconSize) / 2),
-    )
-}
-
-/** «ХАДИС 3» и арабский текст одним абзацем. */
-@Composable
-private fun ArabicPanel(hadith: Hadith, arabicFontSize: Float) {
+private fun HadithActions(isFavorite: Boolean, onToggleFavorite: () -> Unit, onShare: () -> Unit, modifier: Modifier = Modifier) {
     val palette = InabahTheme.palette
+    val iconSize = with(LocalDensity.current) { ACTION_ICON_SIZE.sp.toDp() }
+    // Правый значок — вровень с краем текста; лишняя зона касания уходит в поле карточки.
+    Row(modifier.offset(x = (Size.visibleTapTarget - iconSize) / 2)) {
+        BareIconButton(
+            onClick = onToggleFavorite,
+            icon = painterResource(if (isFavorite) R.drawable.ic_bookmark_filled else R.drawable.ic_bookmark),
+            contentDescription = stringResource(R.string.hadith_favorite),
+            foreground = if (isFavorite) palette.gold else palette.onAccentSecondary,
+            iconSize = iconSize,
+            modifier = Modifier.semantics { toggleableState = ToggleableState(isFavorite) },
+        )
+        BareIconButton(
+            onClick = onShare,
+            icon = painterResource(R.drawable.ic_share),
+            contentDescription = stringResource(R.string.share_action),
+            foreground = palette.onAccentSecondary,
+            iconSize = iconSize,
+        )
+    }
+}
+
+/**
+ * Строка-кнопка «ХАДИС 3 ⌄» и арабский текст одним абзацем под ней: нажатие сворачивает текст в строку
+ * (в ней — начало текста) и раскрывает обратно — как свёрнутый зикр, `Modifier.collapsible`.
+ */
+@Composable
+private fun ArabicPanel(hadith: Hadith, arabicFontSize: Float, expanded: Boolean, onToggle: () -> Unit) {
+    val palette = InabahTheme.palette
+    val number = stringResource(R.string.hadith_detail_number, hadith.number).uppercase()
     ParchmentPanel(Modifier.fillMaxWidth(), topCornerRadius = Radius.card, bottomCornerRadius = Radius.card) {
-        Column(verticalArrangement = Arrangement.spacedBy(Spacing.m)) {
-            Text(
-                stringResource(R.string.hadith_detail_number, hadith.number).uppercase(),
-                color = palette.parchmentText,
-                style = InabahType.caption2.copy(fontWeight = FontWeight.Bold, letterSpacing = Tracking.label),
+        Column {
+            ArabicPanelHeader(number, remember(hadith) { arabicPreview(hadith.arabicDisplayText) }, expanded, onToggle)
+            // Отступ — внутри сворачиваемой части: свёрнутый текст не оставляет промежутка под строкой.
+            ArabicText(
+                hadith.arabicDisplayText,
+                arabicFontSize,
+                palette.parchmentText,
+                Modifier
+                    .fillMaxWidth()
+                    .collapsible(expanded)
+                    .padding(top = Spacing.m),
             )
-            ArabicText(hadith.arabicDisplayText, arabicFontSize, palette.parchmentText, Modifier.fillMaxWidth())
         }
     }
 }
+
+@Composable
+private fun NumberLabel(number: String, modifier: Modifier = Modifier) {
+    Text(
+        number,
+        color = InabahTheme.palette.parchmentText,
+        style = InabahType.caption2.copy(fontWeight = FontWeight.Bold, letterSpacing = Tracking.label),
+        modifier = modifier,
+    )
+}
+
+/**
+ * Строка-кнопка пергамента: «ХАДИС 3», начало текста (гаснет, когда текст раскрыт) и круглая ⌄, как у
+ * свёрнутого зикра (повёрнута на 180° в раскрытом виде — та же кривая, что и раскрытие). Нажатие — вся строка,
+ * без ряби: отзывается только круглая кнопка (`pressFeedback`, решение пользователя 2026-10-11), плюс
+ * тактильный отклик. Для TalkBack — «ХАДИС 3» и действие «Показать / Скрыть арабский текст», начало текста
+ * не читается.
+ */
+@Composable
+private fun ArabicPanelHeader(number: String, preview: String, expanded: Boolean, onToggle: () -> Unit) {
+    val palette = InabahTheme.palette
+    val rotation by animateFloatAsState(if (expanded) HALF_TURN else 0f, Motion.collapse(), label = "arabicChevron")
+    val previewAlpha by animateFloatAsState(if (expanded) 0f else 1f, Motion.collapse(), label = "arabicPreview")
+    val interaction = remember { MutableInteractionSource() }
+    val haptics = LocalHapticFeedback.current
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(min = HEADER_MIN_HEIGHT)
+            .clickable(
+                interactionSource = interaction,
+                indication = null,
+                onClickLabel = stringResource(if (expanded) R.string.hadith_arabic_hide else R.string.hadith_arabic_show),
+                role = Role.Button,
+            ) {
+                haptics.performHapticFeedback(if (expanded) HapticFeedbackType.ToggleOff else HapticFeedbackType.ToggleOn)
+                onToggle()
+            },
+        horizontalArrangement = Arrangement.spacedBy(Spacing.s),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        NumberLabel(number)
+        ArabicText(
+            preview,
+            PREVIEW_ARABIC_SIZE,
+            palette.parchmentText,
+            modifier = Modifier
+                .weight(1f)
+                .graphicsLayer { alpha = previewAlpha }
+                .clearAndSetSemantics {},
+            maxLines = 1,
+        )
+        Box(
+            modifier = Modifier
+                .pressFeedback(interaction, scale = PressFeedback.ICON_SCALE)
+                .size(Size.miniButton)
+                .surface(palette.parchmentAccentTint, Size.miniButton / 2, border = palette.parchmentAccentBorder),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                painterResource(R.drawable.ic_expand_more),
+                contentDescription = null,
+                tint = palette.parchmentAccent,
+                modifier = Modifier
+                    .size(CHEVRON_SIZE)
+                    .graphicsLayer { rotationZ = rotation },
+            )
+        }
+    }
+}
+
+/** Строка-кнопка — не ниже зоны касания 48 dp (проверки доступности). */
+private val HEADER_MIN_HEIGHT = 48.dp
+private val CHEVRON_SIZE = 20.dp
+/** Начало текста в строке — кегль свёрнутого зикра, не растёт с «А+». */
+private const val PREVIEW_ARABIC_SIZE = 17f
+private const val HALF_TURN = 180f
 
 /** «Прочитать / Прочитан» и «Выучить / Выучен»; правило «выучен ⇒ прочитан» — в `HadithProgress`. */
 @Composable
@@ -162,55 +311,38 @@ private fun HadithStatusButtons(status: HadithStatus, onToggleRead: () -> Unit, 
 }
 
 /**
- * «Передал: …», перевод и «Приводится: …» — стили переводов (настройка «Размер текста»);
- * справа от источника, в правом нижнем углу, — «Поделиться».
+ * Перевод хадиса — на своей тёмной карточке, как у зикра (решение пользователя 2026-10-10): общий
+ * [TranslationBlock] в цветах хадисов — «Передал: …», линия, перевод (без пузыря), сноски «N ⌄» (если есть),
+ * «Приводится: …» и справа, в правом нижнем углу, — закладка «Избранное» и «Поделиться».
  */
 @Composable
-private fun HadithTranslationCard(translation: HadithTranslation, onShare: () -> Unit) {
+private fun HadithTranslationCard(
+    translation: HadithTranslation,
+    notesExpanded: Boolean,
+    onToggleNotes: () -> Unit,
+    actions: @Composable (Modifier) -> Unit,
+) {
     val palette = InabahTheme.palette
     // Язык перевода — только для его текста (переносы); подписи — на языке интерфейса.
     val locale = LocaleList(translation.language.code)
-    Column(
+    TranslationBlock(
+        text = translation.text,
+        locale = locale,
+        colors = TranslationColors.hadith(palette),
         modifier = Modifier
             .fillMaxWidth()
-            .surface(palette.subtleFill, Radius.box)
+            .surface(palette.hadithCard, Radius.card, border = palette.hairline, shadow = ShadowToken.card(palette))
             .padding(vertical = Spacing.l, horizontal = Spacing.xl),
-        verticalArrangement = Arrangement.spacedBy(Spacing.s),
-    ) {
-        translation.narrator?.let {
-            Text(stringResource(R.string.hadith_detail_narrator, it), color = palette.onAccentSecondary,
-                style = InabahType.contentNote.copy(fontWeight = FontWeight.SemiBold))
-        }
-        Text(translation.text, color = palette.onAccent, style = InabahType.contentTranslation.copy(localeList = locale))
-        val source = translation.source
-        if (source == null) {
-            // Без источника — линии нет (нечего отделять), «Поделиться» одна справа внизу.
-            HadithShareButton(onShare, Modifier.align(Alignment.End))
-        } else {
-            // Линия над источником, под ней отступ 8 (iOS: overlay сверху у padding(.top)).
-            Column {
-                Box(Modifier.fillMaxWidth().height(Size.hairline).background(palette.hairline))
-                SourceWithShare(stringResource(R.string.hadith_detail_source, source), onShare)
+        narrator = translation.narrator,
+        source = translation.source?.let { stringResource(R.string.hadith_detail_source, it) },
+        belowText = {
+            if (translation.notes.isNotEmpty()) {
+                HadithNotes(translation.notes, translation.text, locale, notesExpanded, onToggleNotes)
             }
-        }
-    }
+        },
+        sourceTrailing = actions,
+        // Основной перевод — просто текстом, под линией после «Передал»; пузырь — у сносок (решение пользователя 2026-10-10).
+        bubble = false,
+        narratorDivider = true,
+    )
 }
-
-/**
- * «Приводится: …» и справа «Поделиться» — значок на уровне последней строки источника (их бывает 3–4),
- * в правом нижнем углу карточки; отступ 8 под линией — как без кнопки.
- */
-@Composable
-private fun SourceWithShare(text: String, onShare: () -> Unit) {
-    val style = InabahType.contentNote.copy(fontStyle = FontStyle.Italic)
-    // Середина значка — на середине строчных букв последней строки: выше базовой линии на ~треть кегля.
-    val baselineToCenter = with(LocalDensity.current) { (style.fontSize.toPx() * X_HEIGHT_CENTER).roundToInt() }
-    Row(Modifier.fillMaxWidth().padding(top = Spacing.s)) {
-        Text(text, color = InabahTheme.palette.onAccentTertiary, style = style,
-            modifier = Modifier.weight(1f).alignBy(LastBaseline))
-        HadithShareButton(onShare, Modifier.alignBy { it.measuredHeight / 2 + baselineToCenter })
-    }
-}
-
-/** Середина строчных букв над базовой линией — доля кегля (x-height Inter ≈ 0,55 → половина). */
-private const val X_HEIGHT_CENTER = 0.27f

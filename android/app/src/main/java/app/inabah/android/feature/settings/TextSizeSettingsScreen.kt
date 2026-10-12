@@ -113,7 +113,7 @@ private fun ContentStep(size: ContentTextSize, onSelect: (ContentTextSize) -> Un
                     it,
                     Modifier
                         .padding(vertical = Spacing.xs)
-                        .surface(palette.card, Radius.box)
+                        .surface(palette.zikrCard, Radius.box)
                         .padding(Spacing.l),
                 )
             }

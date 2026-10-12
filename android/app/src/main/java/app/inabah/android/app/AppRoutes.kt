@@ -13,6 +13,10 @@ import kotlinx.serialization.Serializable
 sealed interface AzkarRoute {
     @Serializable
     data class SectionList(val section: AzkarSection) : AzkarRoute
+
+    /** «Календарь азкаров» — из капсулы серии дней на главной. */
+    @Serializable
+    data object Calendar : AzkarRoute
 }
 
 @Serializable
@@ -22,6 +26,14 @@ sealed interface HadithRoute {
 
     @Serializable
     data class Detail(val id: HadithId) : HadithRoute
+
+    /** «О сборнике» — из шапки списка сборника. */
+    @Serializable
+    data class About(val collection: HadithCollection) : HadithRoute
+
+    /** «Избранное» — из кнопки справа вверху главной хадисов. */
+    @Serializable
+    data object Favorites : HadithRoute
 }
 
 @Serializable
@@ -51,6 +63,10 @@ sealed interface SettingsRoute {
     /** «О приложении» — ссылка внизу корня настроек. */
     @Serializable
     data object About : SettingsRoute
+
+    /** «История версий» — все версии из `data/versions.json` (из «О приложении»). */
+    @Serializable
+    data object VersionHistory : SettingsRoute
 
     /** Полный текст лицензии шрифта или значков (из «О приложении»). */
     @Serializable

@@ -1,10 +1,13 @@
 package app.inabah.android.feature.hadith
 
+import androidx.compose.ui.test.isToggleable
+import androidx.compose.ui.test.hasText
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertIsEnabled
@@ -22,19 +25,25 @@ import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.onLast
 import androidx.compose.ui.test.performScrollTo
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import app.inabah.android.core.content.ContentError
 import app.inabah.android.core.content.ContentLanguage
 import app.inabah.android.core.content.ContentRepository
 import app.inabah.android.core.content.model.AzkarSection
+import app.inabah.android.core.content.model.CollectionAuthor
+import app.inabah.android.core.content.model.CollectionInfo
 import app.inabah.android.core.content.model.Hadith
 import app.inabah.android.core.content.model.HadithCollection
 import app.inabah.android.core.content.model.HadithId
+import app.inabah.android.core.content.model.HadithNote
 import app.inabah.android.core.content.model.HadithTranslation
 import app.inabah.android.core.content.model.Zikr
 import app.inabah.android.core.designsystem.InabahTheme
 import app.inabah.android.core.settings.HadithCollectionOrder
+import app.inabah.android.core.settings.HadithFavorites
 import app.inabah.android.core.settings.HadithProgress
 import app.inabah.android.core.settings.HadithStatus
 import app.inabah.android.core.settings.PreferencesStorage
+import app.inabah.android.core.settings.ReminderSettings
 import app.inabah.android.core.settings.TestDataStoreRule
 import app.inabah.android.core.settings.ReadingSettings
 import app.inabah.android.feature.settings.HadithOrderSettingsScreen
@@ -46,6 +55,11 @@ import org.junit.runner.RunWith
 
 private const val NAWAWI_COUNT = 3
 private const val TIMEOUT_MILLIS = 5_000L
+private const val NAWAWI_AUTHOR = "Имам ан-Навави"
+private const val NAWAWI_YEARS = "631–676 гг. х."
+private const val ABOUT_PARAGRAPH = "Абзац о сборнике."
+private const val NOTE_TEXT = "Пояснение к слову."
+private const val HADITH_ARABIC = "إِنَّمَا الْأَعْمَالُ بِالنِّيَّاتِ"
 
 /** Экраны хадисов: отметки, листание, порядок сборников, сброс (критерии этапа 4, docs/android/09). */
 @RunWith(AndroidJUnit4::class)
@@ -76,11 +90,12 @@ class HadithScreensTest {
         compose.setContent {
             InabahTheme {
                 when (screen) {
-                    Screen.Detail -> HadithDetailScreen(HadithId(HadithCollection.Nawawi, 1), store, progress,
+                    Screen.Detail -> HadithDetailScreen(HadithId(HadithCollection.Nawawi, 1), store, progress, HadithFavorites(storage),
                         ReadingSettings(storage), onBack = {}, contentPadding = PaddingValues())
                     Screen.List -> HadithListScreen(HadithCollection.Nawawi, store, progress, onBack = {},
-                        onOpenHadith = {}, contentPadding = PaddingValues())
-                    Screen.Home -> HadithHomeScreen(store, progress, order, onOpenCollection = {}, contentPadding = PaddingValues())
+                        onOpenHadith = {}, onOpenAbout = {}, contentPadding = PaddingValues())
+                    Screen.Home -> HadithHomeScreen(store, progress, order, onOpenCollection = {}, onOpenFavorites = {},
+                        contentPadding = PaddingValues())
                 }
             }
         }
@@ -107,7 +122,7 @@ class HadithScreensTest {
         compose.setContent {
             InabahTheme {
                 HadithDetailScreen(HadithId(HadithCollection.Nawawi, 1), store, HadithProgress(storage),
-                    ReadingSettings(storage), onBack = {}, contentPadding = PaddingValues())
+                    HadithFavorites(storage), ReadingSettings(storage), onBack = {}, contentPadding = PaddingValues())
             }
         }
         waitForNode("1 из $NAWAWI_COUNT")
@@ -125,7 +140,7 @@ class HadithScreensTest {
         compose.setContent {
             InabahTheme {
                 HadithDetailScreen(HadithId(HadithCollection.Nawawi, 1), store, HadithProgress(storage),
-                    ReadingSettings(storage), onBack = {}, contentPadding = PaddingValues())
+                    HadithFavorites(storage), ReadingSettings(storage), onBack = {}, contentPadding = PaddingValues())
             }
         }
         waitForNode("1 из $NAWAWI_COUNT")
@@ -141,7 +156,7 @@ class HadithScreensTest {
         compose.setContent {
             InabahTheme {
                 HadithDetailScreen(HadithId(HadithCollection.Nawawi, 1), store, HadithProgress(storage),
-                    ReadingSettings(storage), onBack = {}, contentPadding = PaddingValues())
+                    HadithFavorites(storage), ReadingSettings(storage), onBack = {}, contentPadding = PaddingValues())
             }
         }
         waitForNode("1 из 2")
@@ -186,7 +201,8 @@ class HadithScreensTest {
         progress.toggleRead(qudsi)
         compose.setContent {
             InabahTheme {
-                HadithSettingsScreen(store, progress, HadithCollectionOrder(storage), onOpenOrder = {}, onBack = {},
+                HadithSettingsScreen(store, progress, HadithFavorites(storage), HadithCollectionOrder(storage), ReminderSettings(storage), ReadingSettings(storage),
+                    onOpenOrder = {}, onBack = {},
                     contentPadding = PaddingValues())
             }
         }
@@ -204,6 +220,245 @@ class HadithScreensTest {
         }
     }
 
+    @Test
+    fun collapseArabicSwitchIsFirstAndSavesSetting() {
+        val reading = ReadingSettings(storage)
+        compose.setContent {
+            InabahTheme {
+                HadithSettingsScreen(HadithStore(FixedRepository()), HadithProgress(storage), HadithFavorites(storage),
+                    HadithCollectionOrder(storage), ReminderSettings(storage), reading,
+                    onOpenOrder = {}, onBack = {}, contentPadding = PaddingValues())
+            }
+        }
+        val switch = compose.onNode(hasText("Сворачивать арабский текст", substring = true) and isToggleable())
+        switch.assertIsOff()
+        // Самая первая группа экрана — над «Главной».
+        val switchTop = switch.fetchSemanticsNode().positionInRoot.y
+        check(switchTop < compose.onNodeWithText("Главная").fetchSemanticsNode().positionInRoot.y)
+
+        switch.performClick()
+
+        compose.runOnIdle { check(reading.hadithArabicCollapsed.value) }
+    }
+
+    @Test
+    fun collapsedArabicOpensOnTapAndCollapsesAgainAfterPaging() {
+        val reading = ReadingSettings(storage).apply { setHadithArabicCollapsed(true) }
+        compose.setContent {
+            InabahTheme {
+                HadithDetailScreen(HadithId(HadithCollection.Nawawi, 1), HadithStore(FixedRepository()), HadithProgress(storage),
+                    HadithFavorites(storage), reading, onBack = {}, contentPadding = PaddingValues())
+            }
+        }
+        waitForNode("1 из $NAWAWI_COUNT")
+        // Свёрнутый текст и начало в строке TalkBack не читает; пейджер держит и соседнюю страницу.
+        compose.onAllNodesWithText(HADITH_ARABIC).assertCountEquals(0)
+
+        compose.onAllNodes(hasClickLabel("Показать арабский текст"))[0].performClick()
+        compose.onAllNodesWithText(HADITH_ARABIC).assertCountEquals(1)
+        compose.onAllNodes(hasClickLabel("Скрыть арабский текст")).assertCountEquals(1)
+
+        compose.onNodeWithContentDescription("Следующий хадис").performClick()
+        waitForNode("2 из $NAWAWI_COUNT")
+        compose.onNodeWithContentDescription("Предыдущий хадис").performClick()
+        waitForNode("1 из $NAWAWI_COUNT")
+        compose.waitForIdle()
+        compose.onAllNodesWithText(HADITH_ARABIC).assertCountEquals(0)
+    }
+
+    @Test
+    fun withSettingOffArabicOpensExpandedAndCanBeCollapsedOnTap() {
+        compose.setContent {
+            InabahTheme {
+                HadithDetailScreen(HadithId(HadithCollection.Nawawi, 1), HadithStore(FixedRepository()), HadithProgress(storage),
+                    HadithFavorites(storage), ReadingSettings(storage), onBack = {}, contentPadding = PaddingValues())
+            }
+        }
+        waitForNode("1 из $NAWAWI_COUNT")
+        // Открыта и соседняя страница пейджера — обе развёрнуты.
+        compose.waitUntil(TIMEOUT_MILLIS) { compose.onAllNodesWithText(HADITH_ARABIC).fetchSemanticsNodes().size == 2 }
+
+        compose.onAllNodes(hasClickLabel("Скрыть арабский текст"))[0].performClick()
+        compose.onAllNodesWithText(HADITH_ARABIC).assertCountEquals(1)
+
+        compose.onNodeWithContentDescription("Следующий хадис").performClick()
+        waitForNode("2 из $NAWAWI_COUNT")
+        compose.onNodeWithContentDescription("Предыдущий хадис").performClick()
+        waitForNode("1 из $NAWAWI_COUNT")
+        compose.waitForIdle()
+        compose.onAllNodesWithText(HADITH_ARABIC).assertCountEquals(2)
+    }
+
+    private fun hasClickLabel(label: String) = SemanticsMatcher("OnClick label «$label»") {
+        it.config.getOrNull(SemanticsActions.OnClick)?.label == label
+    }
+
+    @Test
+    fun aboutButtonInListOpensCollectionAbout() {
+        var opened = false
+        compose.setContent {
+            InabahTheme {
+                HadithListScreen(HadithCollection.Nawawi, HadithStore(FixedRepository()), HadithProgress(storage),
+                    onBack = {}, onOpenHadith = {}, onOpenAbout = { opened = true }, contentPadding = PaddingValues())
+            }
+        }
+        waitForNode("О сборнике")
+        compose.onNodeWithContentDescription("О сборнике").performClick()
+        compose.runOnIdle { check(opened) }
+    }
+
+    @Test
+    fun collectionAboutShowsAuthorBookAndProgress() {
+        val progress = HadithProgress(storage)
+        progress.toggleMemorized(HadithId(HadithCollection.Nawawi, 1))
+        compose.setContent {
+            InabahTheme {
+                CollectionAboutScreen(HadithCollection.Nawawi, HadithStore(FixedRepository()), progress,
+                    onBack = {}, contentPadding = PaddingValues())
+            }
+        }
+        waitForText("Составитель")
+        compose.onNodeWithText(NAWAWI_AUTHOR).assertExists()
+        compose.onNodeWithText(NAWAWI_YEARS).assertExists()
+        compose.onNodeWithText("О книге").assertExists()
+        compose.onNodeWithText(ABOUT_PARAGRAPH).performScrollTo()
+        compose.onNodeWithText("Прочитано: 1 из $NAWAWI_COUNT · выучено: 1").performScrollTo()
+    }
+
+    @Test
+    fun collectionAboutWithoutAuthorsHasNoAuthorsGroup() {
+        compose.setContent {
+            InabahTheme {
+                CollectionAboutScreen(HadithCollection.Qudsi, HadithStore(FixedRepository()), HadithProgress(storage),
+                    onBack = {}, contentPadding = PaddingValues())
+            }
+        }
+        waitForText("О книге")
+        compose.onAllNodesWithText("Составитель").assertCountEquals(0)
+        compose.onAllNodesWithText("Составители").assertCountEquals(0)
+    }
+
+    @Test
+    fun collectionAboutRetriesAfterLoadError() {
+        compose.setContent {
+            InabahTheme {
+                CollectionAboutScreen(HadithCollection.Nawawi, HadithStore(InfoFailsOnceRepository()), HadithProgress(storage),
+                    onBack = {}, contentPadding = PaddingValues())
+            }
+        }
+        waitForText("Повторить")
+        compose.onNodeWithText("Повторить").performClick()
+        waitForText("О книге")
+    }
+
+    @Test
+    fun bookmarkOnDetailAddsHadithToFavoritesUnderItsCollection() {
+        val store = HadithStore(FixedRepository())
+        val progress = HadithProgress(storage)
+        val favorites = HadithFavorites(storage)
+        val order = HadithCollectionOrder(storage)
+        favorites.toggle(HadithId(HadithCollection.Ajurri, 1))
+        var showFavorites by mutableStateOf(false)
+        compose.setContent {
+            InabahTheme {
+                if (showFavorites) {
+                    FavoritesScreen(store, progress, favorites, order, onBack = {}, onOpenHadith = {},
+                        contentPadding = PaddingValues())
+                } else {
+                    HadithDetailScreen(HadithId(HadithCollection.Nawawi, 1), store, progress, favorites,
+                        ReadingSettings(storage), onBack = {}, contentPadding = PaddingValues())
+                }
+            }
+        }
+        waitForNode("В избранном")
+        // Пейджер заранее строит и соседнюю страницу — первая в дереве открытая.
+        compose.onAllNodesWithContentDescription("В избранном")[0].performScrollTo().performClick()
+        compose.onAllNodesWithContentDescription("В избранном")[0].assertIsOn()
+        compose.onAllNodesWithContentDescription("В избранном")[1].assertIsOff()
+
+        showFavorites = true
+        waitForText("40 хадисов ан-Навави")
+        // Группы — в порядке главной (по умолчанию ан-Навави выше аль-Аджурри).
+        val nawawiTop = compose.onNodeWithText("40 хадисов ан-Навави").fetchSemanticsNode().boundsInRoot.top
+        val ajurriTop = compose.onNodeWithText("40 хадисов аль-Аджурри").fetchSemanticsNode().boundsInRoot.top
+        check(nawawiTop < ajurriTop) { "ан-Навави ($nawawiTop) должен быть выше аль-Аджурри ($ajurriTop)" }
+        compose.onAllNodesWithContentDescription("Хадис 1", substring = true).assertCountEquals(2)
+        compose.onAllNodesWithText("40 хадисов аль-Къудси").assertCountEquals(0)
+    }
+
+    @Test
+    fun emptyFavoritesShowsNotice() {
+        compose.setContent {
+            InabahTheme {
+                FavoritesScreen(HadithStore(FixedRepository()), HadithProgress(storage), HadithFavorites(storage),
+                    HadithCollectionOrder(storage), onBack = {}, onOpenHadith = {}, contentPadding = PaddingValues())
+            }
+        }
+        waitForText("Здесь появятся хадисы, которые вы добавите")
+    }
+
+    @Test
+    fun favoritesButtonOnHomeOpensFavorites() {
+        var opened = false
+        compose.setContent {
+            InabahTheme {
+                HadithHomeScreen(HadithStore(FixedRepository()), HadithProgress(storage), HadithCollectionOrder(storage),
+                    onOpenCollection = {}, onOpenFavorites = { opened = true }, contentPadding = PaddingValues())
+            }
+        }
+        waitForNode("Избранное")
+        compose.onNodeWithContentDescription("Избранное").performClick()
+        compose.runOnIdle { check(opened) }
+    }
+
+    @Test
+    fun clearFavoritesAfterConfirmationKeepsMarks() {
+        val progress = HadithProgress(storage)
+        val favorites = HadithFavorites(storage)
+        val nawawi = HadithId(HadithCollection.Nawawi, 1)
+        progress.toggleRead(nawawi)
+        favorites.toggle(nawawi)
+        compose.setContent {
+            InabahTheme {
+                HadithSettingsScreen(HadithStore(FixedRepository()), progress, favorites, HadithCollectionOrder(storage), ReminderSettings(storage), ReadingSettings(storage),
+                    onOpenOrder = {}, onBack = {}, contentPadding = PaddingValues())
+            }
+        }
+        compose.onNodeWithText("Очистить избранное").performScrollTo().performClick()
+        compose.onNodeWithText("Очистить").performClick()
+
+        compose.runOnIdle {
+            check(favorites.favorites.value.isEmpty())
+            check(progress.status(nawawi) == HadithStatus.Read)
+        }
+        compose.onNodeWithText("Очистить избранное").assertIsNotEnabled()
+    }
+
+    @Test
+    fun notesHiddenUntilToggledAndCollapsedAgainAfterPaging() {
+        compose.setContent {
+            InabahTheme {
+                HadithDetailScreen(HadithId(HadithCollection.Nawawi, 1), HadithStore(NotesRepository()), HadithProgress(storage),
+                    HadithFavorites(storage), ReadingSettings(storage), onBack = {}, contentPadding = PaddingValues())
+            }
+        }
+        waitForNode("1 из 2")
+        // Свёрнутые сноски не в дереве доступности — их не видно и TalkBack.
+        compose.onAllNodesWithText(NOTE_TEXT).assertCountEquals(0)
+        compose.onNodeWithContentDescription("Сноски: 2").performScrollTo().performClick()
+        compose.onNodeWithText(NOTE_TEXT).assertExists()
+
+        compose.onNodeWithContentDescription("Следующий хадис").performClick()
+        waitForNode("2 из 2")
+        compose.onNodeWithContentDescription("Предыдущий хадис").performClick()
+        waitForNode("1 из 2")
+        compose.waitUntil(TIMEOUT_MILLIS) { compose.onAllNodesWithText(NOTE_TEXT).fetchSemanticsNodes().isEmpty() }
+    }
+
+    private fun waitForText(text: String) {
+        compose.waitUntil(TIMEOUT_MILLIS) { compose.onAllNodesWithText(text).fetchSemanticsNodes().isNotEmpty() }
+    }
+
     private fun waitForNode(description: String) {
         compose.waitUntil(TIMEOUT_MILLIS) {
             // Карточка главной объединяет обе подписи показателей — достаточно одной из них.
@@ -216,6 +471,8 @@ class HadithScreensTest {
 private class PartialRepository : ContentRepository {
     override suspend fun azkar(section: AzkarSection): List<Zikr> = emptyList()
 
+    override suspend fun collectionInfo(collection: HadithCollection): CollectionInfo = CollectionInfo.Empty
+
     override suspend fun hadiths(collection: HadithCollection): List<Hadith> = listOf(
         Hadith(HadithId(collection, 1), "إِنَّمَا الْأَعْمَالُ بِالنِّيَّاتِ",
             HadithTranslation(ContentLanguage.Base, narrator = null, text = "Перевод 1", source = null)),
@@ -223,18 +480,48 @@ private class PartialRepository : ContentRepository {
     )
 }
 
-/** Три хадиса ан-Навави, по одному в других сборниках. */
-private class FixedRepository : ContentRepository {
+/** Три хадиса ан-Навави, по одному в других сборниках; составитель — только у ан-Навави. */
+private open class FixedRepository : ContentRepository {
     override suspend fun azkar(section: AzkarSection): List<Zikr> = emptyList()
+
+    override suspend fun collectionInfo(collection: HadithCollection): CollectionInfo = CollectionInfo(
+        authors = if (collection == HadithCollection.Nawawi) listOf(CollectionAuthor(NAWAWI_AUTHOR, NAWAWI_YEARS)) else emptyList(),
+        about = listOf(ABOUT_PARAGRAPH),
+    )
 
     override suspend fun hadiths(collection: HadithCollection): List<Hadith> {
         val count = if (collection == HadithCollection.Nawawi) NAWAWI_COUNT else 1
         return (1..count).map { number ->
             Hadith(
                 id = HadithId(collection, number),
-                arabic = "إِنَّمَا الْأَعْمَالُ بِالنِّيَّاتِ",
+                arabic = HADITH_ARABIC,
                 translation = HadithTranslation(ContentLanguage.Base, "Умар ибн аль-Хаттаб", "Перевод $number", "аль-Бухари"),
             )
         }
     }
+}
+
+/** Как [FixedRepository], но первый запрос «О сборнике» — ошибка: проверка «Повторить». */
+private class InfoFailsOnceRepository : FixedRepository() {
+    private var failed = false
+
+    override suspend fun collectionInfo(collection: HadithCollection): CollectionInfo {
+        if (!failed) {
+            failed = true
+            throw ContentError.ResourceMissing("collections.json")
+        }
+        return super.collectionInfo(collection)
+    }
+}
+
+/** Два хадиса ан-Навави: у первого две сноски, у второго — нет. */
+private class NotesRepository : FixedRepository() {
+    override suspend fun hadiths(collection: HadithCollection): List<Hadith> = listOf(
+        Hadith(HadithId(collection, 1), "إِنَّمَا الْأَعْمَالُ بِالنِّيَّاتِ", HadithTranslation(
+            ContentLanguage.Base, "Умар ибн аль-Хаттаб", "Перевод 1", "аль-Бухари",
+            notes = listOf(HadithNote("Слово", NOTE_TEXT), HadithNote("Различия передач", "Иначе у ат-Тирмизи.")),
+        )),
+        Hadith(HadithId(collection, 2), "إِنَّمَا الْأَعْمَالُ بِالنِّيَّاتِ",
+            HadithTranslation(ContentLanguage.Base, "Умар ибн аль-Хаттаб", "Перевод 2", "аль-Бухари")),
+    )
 }

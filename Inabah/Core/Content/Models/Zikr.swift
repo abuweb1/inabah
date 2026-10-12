@@ -33,4 +33,6 @@ nonisolated struct ZikrTranslation: Hashable, Sendable {
     let transliteration: String?
     /// Источник («(Бухари)»); `nil`, если в данных не указан.
     let source: String?
+    /// Передатчик — показывается как есть, без подписи; `nil`, если в данных не указан.
+    var narrator: String? = nil
 }

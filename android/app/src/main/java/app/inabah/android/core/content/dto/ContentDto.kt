@@ -27,6 +27,8 @@ data class ZikrTranslationDto(
     val text: String,
     val translit: String? = null,
     val source: String? = null,
+    /** Передатчик, как у хадисов; необязательное (2026-10-10 — пользователь заполнит позже). */
+    val rawi: String? = null,
 )
 
 @Serializable
@@ -41,4 +43,32 @@ data class HadithTranslationDto(
     val text: String,
     val rawi: String? = null,
     val source: String? = null,
+    /** Сноски к словам перевода (docs/06-data-structure.md); `[]` — сносок пока нет. */
+    val notes: List<HadithNoteDto> = emptyList(),
+)
+
+@Serializable
+data class HadithNoteDto(
+    val term: String = "",
+    val text: String = "",
+)
+
+// data/collections.json: { <ключ сборника>: CollectionInfoDto }.
+
+@Serializable
+data class CollectionInfoDto(
+    val translations: Map<String, CollectionTranslationDto> = emptyMap(),
+)
+
+@Serializable
+data class CollectionTranslationDto(
+    val authors: List<CollectionAuthorDto> = emptyList(),
+    val about: List<String> = emptyList(),
+)
+
+/** `{ "name": "", "years": "" }` — заготовка «составитель не указан» (у своей подборки). */
+@Serializable
+data class CollectionAuthorDto(
+    val name: String = "",
+    val years: String? = null,
 )

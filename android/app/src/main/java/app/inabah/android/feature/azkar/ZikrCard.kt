@@ -35,6 +35,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -61,6 +62,8 @@ import androidx.compose.ui.text.intl.LocaleList
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.inabah.android.R
+import app.inabah.android.core.designsystem.components.TranslationBlock
+import app.inabah.android.core.designsystem.components.TranslationColors
 import app.inabah.android.core.share.shareText
 import app.inabah.android.core.share.storeLinksBlock
 import app.inabah.android.core.content.model.ZikrTranslation
@@ -76,6 +79,7 @@ import app.inabah.android.core.designsystem.Spacing
 import app.inabah.android.core.designsystem.components.ArabicText
 import app.inabah.android.core.designsystem.components.IconButton
 import app.inabah.android.core.designsystem.components.ParchmentPanel
+import app.inabah.android.core.designsystem.components.arabicPreview
 import app.inabah.android.core.designsystem.components.ProgressRing
 import app.inabah.android.core.designsystem.components.Sparkle
 import app.inabah.android.core.designsystem.components.collapsible
@@ -84,31 +88,22 @@ import app.inabah.android.core.designsystem.components.surface
 import app.inabah.android.core.designsystem.monospacedDigits
 import kotlinx.coroutines.delay
 
-/** Свёрнутая строка показывает одну строку — хватает первых слов (вёрстка длинного текста дороже). */
-private const val MINI_ROW_WORDS = 8
 private const val MINI_ROW_ARABIC_SIZE = 17f
 private val MiniCheckSize = 28.dp
 private val MiniCheckGlyph = 16.dp
-private val BubbleRadius = 8.dp
 private val CounterCheckGlyph = 26.dp
 
 /** Ореол вспышки выполненного счётчика — на столько выходит за кнопку. */
 private val FlashHaloRadius = 14.dp
 
 
-/** Первые [words] слов арабского текста и «…»; короче — целиком. */
-internal fun miniRowPreview(arabic: String, words: Int = MINI_ROW_WORDS): String {
-    val parts = arabic.split(Whitespace).filter(String::isNotEmpty)
-    return if (parts.size > words) parts.take(words).joinToString(" ") + "…" else arabic
-}
-
-private val Whitespace = Regex("\\s+")
 
 /**
  * Карточка зикра (iOS `ZikrCardView`): пергамент, перевод, действия и счётчик. После выполнения
  * сверху раскрывается заголовок с ✓, а полное содержимое складывается под него; ⌄ раскладывает
  * обратно. Оба блока всегда в иерархии и меняют только высоту ([collapsible]) — соседи по ленте
- * сдвигаются в тех же кадрах. Перерисовывается только по состоянию своего [session] и [audio]
+ * сдвигаются в тех же кадрах; в начале сворачивания вызывается [onCollapse] — лента подтягивает к карточке
+ * прокрутку, если её верх ушёл за экран. Перерисовывается только по состоянию своего [session] и [audio]
  * (значение от ленты — карточка не читает плеер); звучащий в «Прослушать все» — в золотой рамке.
  */
 @Composable
@@ -118,8 +113,10 @@ fun ZikrCard(
     modifier: Modifier = Modifier,
     audio: ZikrAudioState = ZikrAudioState.Idle,
     onPlay: () -> Unit = {},
+    onCollapse: () -> Unit = {},
 ) {
     val palette = InabahTheme.palette
+    val currentOnCollapse by rememberUpdatedState(onCollapse)
     val state by session.state.collectAsStateWithLifecycle()
     val borderColor by animateColorAsState(
         if (audio.isPlaylistCurrent) palette.gold else palette.hairline, Motion.highlight(), label = "cardBorder",
@@ -139,6 +136,7 @@ fun ZikrCard(
         } else if (!isCollapsed) {
             delay(Motion.COLLAPSE_DELAY_MILLIS)
             isCollapsed = true
+            currentOnCollapse()
         }
     }
     // Сброс раскрывает сразу, в том же кадре, что и смена счёта: эффект сработал бы кадром позже,
@@ -149,11 +147,11 @@ fun ZikrCard(
     Column(
         modifier
             .fillMaxWidth()
-            .surface(palette.card, Radius.card, border = borderColor, lineWidth = borderWidth, shadow = ShadowToken.card(palette))
+            .surface(palette.zikrCard, Radius.card, border = borderColor, lineWidth = borderWidth, shadow = ShadowToken.card(palette))
             .clip(RoundedCornerShape(Radius.card)),
     ) {
         ZikrMiniRow(
-            arabic = remember(session) { miniRowPreview(session.zikr.arabic) },
+            arabic = remember(session) { arabicPreview(session.zikr.arabic) },
             isExpanded = state.isExpanded,
             onReset = session::reset,
             onToggleExpanded = { session.setExpanded(!state.isExpanded) },
@@ -207,6 +205,8 @@ private fun ZikrFullContent(
         val sectionTitle = stringResource(zikr.section.title)
         val repetitions = pluralStringResource(R.plurals.zikr_repetitions, zikr.repetitions, zikr.repetitions)
         val storeLinks = storeLinksBlock()
+        // `rawi` — как есть, без «Передал:» (решение пользователя 2026-10-11).
+        val narratorLine = zikr.translation?.narrator
         ZikrActions(
             hasAudio = zikr.hasAudio,
             isAudioActive = isAudioActive,
@@ -216,7 +216,7 @@ private fun ZikrFullContent(
             canReset = state.count > 0,
             onToggleTranslation = { session.setTranslationVisible(!state.isTranslationVisible) },
             onReset = session::reset,
-            onShare = { context.shareText(zikrShareText(zikr, sectionTitle, repetitions, storeLinks)) },
+            onShare = { context.shareText(zikrShareText(zikr, sectionTitle, repetitions, narratorLine, storeLinks)) },
             modifier = Modifier.padding(vertical = Spacing.l),
         )
         CardDivider()
@@ -226,7 +226,7 @@ private fun ZikrFullContent(
             total = zikr.repetitions,
             onIncrement = {
                 when (session.increment()) {
-                    IncrementResult.Counted -> haptics.performHapticFeedback(HapticFeedbackType.SegmentFrequentTick)
+                    IncrementResult.Counted -> haptics.performHapticFeedback(HapticFeedbackType.ContextClick)
                     IncrementResult.Completed -> haptics.performHapticFeedback(HapticFeedbackType.Confirm)
                     IncrementResult.AlreadyCompleted -> Unit
                 }
@@ -265,38 +265,20 @@ private fun RepetitionsBadge(repetitions: Int) {
 private const val SPARKLE_IN_BADGE = 0.8f
 
 /**
- * Транскрипция, перевод на подложке с полосой и источник (iOS `ZikrTranslationView`); язык текста —
- * язык перевода (переносы). Стили переводов — растут с шагом «Размера переводов»; также образец
- * на экране «Размер текста».
+ * «Передал» (когда есть), транскрипция, перевод в пузыре и источник (iOS `ZikrTranslationView`) — общий
+ * [TranslationBlock] в цветах азкаров. Также образец на экране «Размер текста».
  */
 @Composable
 fun ZikrTranslationBlock(translation: ZikrTranslation, modifier: Modifier = Modifier) {
-    val palette = InabahTheme.palette
-    val locale = LocaleList(translation.language.code)
-    Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
-        translation.transliteration?.let {
-            Text(it, color = palette.textSecondary, style = InabahType.contentTransliteration.copy(localeList = locale))
-        }
-        val stripeColor = palette.accent
-        Text(
-            translation.text,
-            color = palette.textPrimary,
-            style = InabahType.contentTranslation.copy(localeList = locale),
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(palette.accentDim, RoundedCornerShape(topEnd = BubbleRadius, bottomEnd = BubbleRadius))
-                .drawBehind {
-                    val stripe = Size.accentStripe.toPx()
-                    val x = if (layoutDirection == androidx.compose.ui.unit.LayoutDirection.Ltr) 0f else size.width - stripe
-                    drawRect(stripeColor, topLeft = androidx.compose.ui.geometry.Offset(x, 0f),
-                        size = androidx.compose.ui.geometry.Size(stripe, size.height))
-                }
-                .padding(horizontal = Spacing.m, vertical = Spacing.s),
-        )
-        translation.source?.let {
-            Text(it, color = palette.textTertiary, style = InabahType.contentNote.copy(localeList = locale))
-        }
-    }
+    TranslationBlock(
+        text = translation.text,
+        locale = LocaleList(translation.language.code),
+        colors = TranslationColors.azkar(InabahTheme.palette),
+        modifier = modifier,
+        narrator = translation.narrator,
+        transliteration = translation.transliteration,
+        source = translation.source,
+    )
 }
 
 /**

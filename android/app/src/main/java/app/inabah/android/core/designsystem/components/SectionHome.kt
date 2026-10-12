@@ -94,6 +94,9 @@ data class FeaturedVerse(
 /**
  * Каркас главных экранов разделов (iOS `SectionHomeLayout`): фон до краёв, бренд, аят и карточки.
  * Прокручивается, если не помещается; если помещается — карточки стоят по центру свободного места.
+ * [topAction] — круглая кнопка в правом верхнем углу (вход в «Избранное» у хадисов): поверх
+ * прокрутки, на уровне начала содержимого — бренд по центру она не задевает. [leadingAction] — то же
+ * в левом верхнем углу («Обновить» на главной «Азкаров», когда вышла новая версия).
  */
 @Composable
 fun SectionHomeLayout(
@@ -102,6 +105,8 @@ fun SectionHomeLayout(
     verse: FeaturedVerse,
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(),
+    leadingAction: (@Composable () -> Unit)? = null,
+    topAction: (@Composable () -> Unit)? = null,
     cards: @Composable ColumnScope.() -> Unit,
 ) {
     BoxWithConstraints(
@@ -120,7 +125,7 @@ fun SectionHomeLayout(
                 .padding(top = Spacing.s),
         ) {
             BrandBlock(brand)
-            VerseBox(
+            FeaturedVerseBox(
                 verse,
                 Modifier
                     .padding(horizontal = Spacing.xs)
@@ -133,6 +138,20 @@ fun SectionHomeLayout(
             Column(verticalArrangement = Arrangement.spacedBy(Spacing.m), content = cards)
             Spacer(Modifier.weight(1f))
             Spacer(Modifier.height(CardsBottomSpacer))
+        }
+        if (topAction != null) {
+            Box(
+                Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(top = contentPadding.calculateTopPadding(), end = Spacing.xl),
+            ) { topAction() }
+        }
+        if (leadingAction != null) {
+            Box(
+                Modifier
+                    .align(Alignment.TopStart)
+                    .padding(top = contentPadding.calculateTopPadding(), start = Spacing.xl),
+            ) { leadingAction() }
         }
     }
 }
@@ -187,8 +206,9 @@ private fun Modifier.pullUp(amount: Dp): Modifier =
         layout(placeable.width, (placeable.height + shift).coerceAtLeast(0)) { placeable.place(0, shift) }
     }
 
+/** Аят в рамке, как на главных разделов: арабский, перевод, ссылка (и в окне «Машаа Аллах!»). */
 @Composable
-private fun VerseBox(verse: FeaturedVerse, modifier: Modifier = Modifier) {
+fun FeaturedVerseBox(verse: FeaturedVerse, modifier: Modifier = Modifier) {
     val palette = InabahTheme.palette
     Column(
         modifier = modifier

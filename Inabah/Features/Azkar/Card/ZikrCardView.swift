@@ -11,6 +11,9 @@ struct ZikrCardView: View {
     /// иначе любое изменение плеера (старт, загрузка, повтор) перерисовывало бы все карточки
     /// с тяжёлой арабской вёрсткой, а так — только ту, у которой состояние поменялось.
     let audio: ZikrAudioState
+    /// Вызывается при автосворачивании дочитанной карточки — внутри той же анимации: лента
+    /// подтягивает свёрнутую строку на экран (не при сворачивании кнопкой ⌄).
+    var onAutoCollapse: () -> Void = {}
 
     @Environment(ReadingSettings.self) private var settings
     /// Только для команды ▶ — в `body` свойства плеера не читаются.
@@ -22,9 +25,10 @@ struct ZikrCardView: View {
     /// (прокрутка, возврат на экран) выполненная карточка сразу свёрнута.
     @State private var isCollapsed: Bool
 
-    init(session: ZikrSession, audio: ZikrAudioState = .idle) {
+    init(session: ZikrSession, audio: ZikrAudioState = .idle, onAutoCollapse: @escaping () -> Void = {}) {
         self.session = session
         self.audio = audio
+        self.onAutoCollapse = onAutoCollapse
         _isCollapsed = State(initialValue: session.isCompleted)
     }
 
@@ -36,7 +40,7 @@ struct ZikrCardView: View {
     var body: some View {
         VStack(spacing: 0) {
             ZikrMiniRow(
-                arabic: Self.miniRowPreview(of: session.zikr.arabic),
+                arabic: ArabicText.preview(of: session.zikr.arabic),
                 isExpanded: session.isExpanded,
                 onReset: reset,
                 onToggleExpanded: {
@@ -55,7 +59,8 @@ struct ZikrCardView: View {
         // Звучащая в плейлисте карточка подсвечена золотой рамкой. Фон и тень — у фигуры-подложки
         // (`surface`), а не у содержимого: иначе тень пересчитывалась бы на каждом кадре анимации.
         .surface(
-            theme.palette.card,
+            // Фон зикра — свой токен: его сдвигает «Фон перевода».
+            theme.palette.zikrCard,
             cornerRadius: Radius.card,
             border: isPlaylistCurrent ? theme.palette.gold : theme.palette.hairline,
             lineWidth: isPlaylistCurrent ? 2 : 1,
@@ -76,7 +81,10 @@ struct ZikrCardView: View {
             guard !isCollapsed else { return }
             try? await Task.sleep(for: Motion.collapseDelay)
             guard !Task.isCancelled else { return }
-            withAnimation(Motion.collapse) { isCollapsed = true }
+            withAnimation(Motion.collapse) {
+                isCollapsed = true
+                onAutoCollapse()
+            }
         }
     }
 
@@ -86,14 +94,6 @@ struct ZikrCardView: View {
 
     private func reset() {
         withAnimation(Motion.collapse) { session.reset() }
-    }
-
-    /// Мини-строка показывает одну строку текста — достаточно первых слов: вёрстка и обрезка
-    /// длинного арабского текста ради одной строки заметно дороже.
-    private static func miniRowPreview(of arabic: String, words: Int = 8) -> String {
-        let parts = arabic.split(whereSeparator: \.isWhitespace)
-        guard parts.count > words else { return arabic }
-        return parts.prefix(words).joined(separator: " ") + "…"
     }
 
     private var fullContent: some View {

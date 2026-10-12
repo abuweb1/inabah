@@ -9,11 +9,19 @@ import SwiftUI
 struct AzkarSettingsView: View {
     @Environment(AzkarStore.self) private var store
     @Environment(AzkarWindowSettings.self) private var windowSettings
+    @Environment(AzkarHistory.self) private var history
+    @Environment(ReminderSettings.self) private var reminders
+    @Environment(ReminderScheduler.self) private var scheduler
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.theme) private var theme
 
+    /// В разрешении только что отказали — показать «заблокировано», даже если ничего не включено.
+    @State private var permissionDenied = false
+
     /// Раздел, сброс которого ждёт подтверждения.
     @State private var pendingReset: AzkarSection?
+    /// Сброс истории ждёт подтверждения.
+    @State private var pendingHistoryReset: HistoryReset?
     /// Время азкаров, пока экран открыт. Пусто до появления экрана — тогда строки
     /// показывают сохранённое время.
     @State private var drafts: [AzkarSection: AzkarWindow] = [:]
@@ -38,6 +46,8 @@ struct AzkarSettingsView: View {
                 }
             }
 
+            remindersSection
+
             Section {
                 ForEach(AzkarSection.allCases, id: \.self) { section in
                     Button(role: .destructive) {
@@ -54,6 +64,8 @@ struct AzkarSettingsView: View {
                 Text("settings.reset.now.footer")
                     .foregroundStyle(theme.palette.onAccentSecondary)
             }
+
+            historySection
         }
         .settingsForm(background: theme.gradients.azkarBackground)
         .navigationTitle(Text("settings.azkar.title"))
@@ -65,11 +77,98 @@ struct AzkarSettingsView: View {
             message: { Text($0.resetConfirmationMessage) },
             perform: { store.resetProgress(of: $0) }
         )
+        .destructiveConfirmation(
+            "settings.azkar.history.reset.confirm.title",
+            item: $pendingHistoryReset,
+            actionLabel: "settings.reset.now.confirm.action",
+            message: { _ in Text("settings.azkar.history.reset.confirm.message") },
+            perform: { _ in
+                history.clear()
+                scheduler.reschedule()
+            }
+        )
         .audioPlayerInset()
         .onAppear(perform: loadDrafts)
         .onDisappear(perform: commitDrafts)
         .onChange(of: scenePhase) { _, phase in
             if phase == .background { commitDrafts() }
+        }
+    }
+
+    /// «История азкаров» (Android-first 2026-10-11, снимок `14a`): одна строка сброса, неактивна при пустой
+    /// истории; счётчики разделов не трогает. После сброса — пересобрать напоминания: «ещё не прочитаны»
+    /// ставятся по истории.
+    private var historySection: some View {
+        Section {
+            Button(role: .destructive) {
+                pendingHistoryReset = .all
+            } label: {
+                Text("settings.azkar.history.reset")
+            }
+            .disabled(history.isEmpty)
+            .settingsRow()
+        } header: {
+            Text("settings.azkar.history.header")
+        } footer: {
+            Text("settings.azkar.history.footer")
+                .foregroundStyle(theme.palette.onAccentSecondary)
+        }
+    }
+
+    /// «Напоминания» (решения пользователя 2026-10-10, вид — как на Android): в начале времени каждого
+    /// раздела (время — из черновика), «если ещё не прочитаны» и «если серия под угрозой». Переключатели сохраняются сразу и
+    /// показывают сохранённое — и при запрете уведомлений, тогда ниже «Открыть настройки», а выключить
+    /// можно всегда (решение пользователя 2026-10-10, аудит iOS 1.1.1, Р2).
+    @ViewBuilder
+    private var remindersSection: some View {
+        let allowed = scheduler.isAllowed
+        let preferences = reminders.preferences
+        let blocked = !allowed
+            && (permissionDenied || !preferences.azkarStart.isEmpty || preferences.azkarUnfinished || preferences.azkarStreak)
+        let toggle = ReminderToggleAction(scheduler: scheduler) { permissionDenied = true }
+        Section {
+            ForEach(AzkarSection.allCases, id: \.self) { section in
+                ReminderToggleRow(
+                    title: section.title,
+                    subtitle: Text("settings.reminders.start.subtitle \(draft(for: section).wrappedValue.start.text(in: store.calendar))"),
+                    isOn: reminders.isStartEnabled(section),
+                    tint: theme.palette.tabAzkar
+                ) { isOn in
+                    toggle(isOn) { reminders.setStart($0, for: section) }
+                }
+                .settingsRow()
+            }
+            ReminderToggleRow(
+                title: "settings.reminders.unfinished",
+                subtitle: Text("settings.reminders.unfinished.subtitle"),
+                isOn: preferences.azkarUnfinished,
+                tint: theme.palette.tabAzkar
+            ) { isOn in
+                toggle(isOn) { reminders.setUnfinished($0) }
+            }
+            .disabled(preferences.azkarStart.isEmpty)
+            .settingsRow()
+            // «Если серия под угрозой» (Android-first 2026-10-11, снимок `14a`) — доступна всегда.
+            ReminderToggleRow(
+                title: "settings.reminders.streak",
+                subtitle: Text("settings.reminders.streak.subtitle"),
+                isOn: preferences.azkarStreak,
+                tint: theme.palette.tabAzkar
+            ) { isOn in
+                toggle(isOn) { reminders.setStreak($0) }
+            }
+            .settingsRow()
+            if blocked {
+                ReminderOpenSettingsRow()
+                    .settingsRow()
+            }
+        } header: {
+            Text("settings.reminders.header")
+        } footer: {
+            if blocked {
+                Text("settings.reminders.blocked")
+                    .foregroundStyle(theme.palette.onAccent)
+            }
         }
     }
 
@@ -97,6 +196,8 @@ struct AzkarSettingsView: View {
             windowSettings.set(window, for: section)
         }
         store.reconcile()
+        // Новое время азкаров — новое время напоминаний.
+        scheduler.reschedule()
     }
 }
 
@@ -173,6 +274,11 @@ private extension AzkarSection {
         case .evening: "settings.reset.now.confirm.evening"
         }
     }
+}
+
+/// Подтверждение «Сбросить историю» ждёт ответа — значение для `destructiveConfirmation(item:)`.
+private enum HistoryReset {
+    case all
 }
 
 #Preview {

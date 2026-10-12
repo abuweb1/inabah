@@ -67,6 +67,7 @@ private val ProminentIconSize = 28.dp
 
 /** Значок в кнопке на всю ширину — как символ body. */
 private val PrimaryIconSize = 20.dp
+private val PrimaryCompactIconSize = 17.dp
 
 /** Значок плитки-переключателя — как title3 (плитка закреплена — не растёт с шагом интерфейса). */
 private val ToggleIconSize = 22.sp
@@ -191,7 +192,11 @@ fun ProminentRoundButton(
     }
 }
 
-/** Кнопка на всю ширину (iOS `PrimaryButtonStyle`): 50 dp, фон accent, при нажатии 0,98 и 0,8. */
+/**
+ * Кнопка на всю ширину (iOS `PrimaryButtonStyle`): 50 dp, фон accent, при нажатии 0,98 и 0,8.
+ * [compact] — две кнопки в ряд («На главную» и «Сделать напоминание» в окне «Машаа Аллах!»):
+ * мельче текст и значок, уже поля.
+ */
 @Composable
 fun PrimaryButton(
     onClick: () -> Unit,
@@ -200,6 +205,7 @@ fun PrimaryButton(
     enabled: Boolean = true,
     /** Значок перед текстом («←» у «На главную»), для TalkBack не озвучивается. */
     leadingIcon: Painter? = null,
+    compact: Boolean = false,
 ) = FixedTextSize {
     val palette = InabahTheme.palette
     val interaction = remember { MutableInteractionSource() }
@@ -211,13 +217,36 @@ fun PrimaryButton(
             .pressFeedback(interaction, scale = PressFeedback.WIDE_SCALE, opacity = PressFeedback.WIDE_OPACITY)
             .defaultMinSize(minHeight = Size.primaryButtonHeight)
             .surface(palette.accent, Radius.box)
-            .padding(horizontal = Spacing.xl),
-        horizontalArrangement = Arrangement.spacedBy(Spacing.s, Alignment.CenterHorizontally),
+            .padding(horizontal = if (compact) Spacing.m else Spacing.xl),
+        horizontalArrangement = Arrangement.spacedBy(if (compact) Spacing.xs else Spacing.s, Alignment.CenterHorizontally),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        leadingIcon?.let { Icon(it, contentDescription = null, tint = palette.onAccent, modifier = Modifier.size(PrimaryIconSize)) }
+        leadingIcon?.let {
+            Icon(it, contentDescription = null, tint = palette.onAccent,
+                modifier = Modifier.size(if (compact) PrimaryCompactIconSize else PrimaryIconSize))
+        }
         Text(text, color = palette.onAccent, textAlign = TextAlign.Center,
-            style = InabahType.body.copy(fontWeight = FontWeight.SemiBold))
+            style = (if (compact) InabahType.subheadline else InabahType.body).copy(fontWeight = FontWeight.SemiBold))
+    }
+}
+
+/** Второе действие под [PrimaryButton] («Не сейчас»): текст без подложки, зона касания — по ширине. */
+@Composable
+fun TextButton(
+    onClick: () -> Unit,
+    text: String,
+    modifier: Modifier = Modifier,
+) = FixedTextSize {
+    val interaction = remember { MutableInteractionSource() }
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .defaultMinSize(minHeight = Size.minTapTarget)
+            .clickable(interaction, indication = null, role = Role.Button, onClick = onClick)
+            .pressFeedback(interaction, opacity = PressFeedback.ROW_OPACITY),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(text, color = InabahTheme.palette.onAccentSecondary, style = InabahType.body.copy(fontWeight = FontWeight.SemiBold))
     }
 }
 

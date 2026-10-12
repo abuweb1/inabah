@@ -5,9 +5,18 @@ import SwiftUI
 struct HadithPage: View {
     let hadith: Hadith
     let status: HadithStatus
+    /// Страница на экране; ушли с неё — раскрытые сноски сворачиваются, а арабский текст
+    /// возвращается к настройке (как на Android).
+    var isCurrent = true
 
     @Environment(ReadingSettings.self) private var settings
     @Environment(\.theme) private var theme
+
+    /// Свёрнут или раскрыт арабский текст нажатием на этой странице; `nil` — как в настройке
+    /// «Сворачивать арабский текст». Выбор не запоминается (решение пользователя, как на Android).
+    @State private var arabicExpandedChoice: Bool?
+
+    private var isArabicExpanded: Bool { arabicExpandedChoice ?? !settings.hadithArabicCollapsed }
 
     var body: some View {
         ScrollView {
@@ -16,34 +25,122 @@ struct HadithPage: View {
                 HadithStatusButtons(id: hadith.id, status: status)
                 AudioSoonPlaceholder(title: Text("hadith.audio.title \(hadith.number)"))
                 if let translation = hadith.translation {
-                    HadithTranslationCard(hadith: hadith, translation: translation)
+                    HadithTranslationCard(hadith: hadith, translation: translation, isCurrent: isCurrent)
                 } else {
-                    // Перевода нет — «Поделиться» справа внизу страницы.
-                    HadithShareButton(hadith: hadith)
+                    // Перевода нет — закладка и «Поделиться» справа внизу страницы.
+                    HadithCardActions(hadith: hadith)
                         .frame(maxWidth: .infinity, alignment: .trailing)
                 }
             }
             .padding(Spacing.m)
         }
         .scrollIndicators(.hidden)
+        .onChange(of: isCurrent) { _, current in
+            if !current { arabicExpandedChoice = nil }
+        }
+        .onChange(of: settings.hadithArabicCollapsed) { arabicExpandedChoice = nil }
     }
 
+    /// Строка «ХАДИС N ⌄» сворачивает текст в строку с его началом и раскрывает обратно — всегда,
+    /// независимо от настройки (Android 6.6, п. 1). Отступ над текстом — внутри сворачиваемой части:
+    /// свёрнутая панель без пустого места.
     private var arabicPanel: some View {
         ParchmentPanel(bottomCornerRadius: Radius.card) {
-            VStack(alignment: .leading, spacing: Spacing.m) {
-                Text("hadith.detail.number \(hadith.number)")
-                    .font(.caption2.weight(.bold))
-                    .textCase(.uppercase)
-                    .tracking(Tracking.label)
-                    .foregroundStyle(theme.palette.parchmentText)
+            VStack(alignment: .leading, spacing: 0) {
+                HadithArabicHeader(
+                    number: hadith.number,
+                    preview: ArabicText.preview(of: hadith.arabicDisplayText),
+                    isExpanded: isArabicExpanded
+                ) {
+                    let expand = !isArabicExpanded
+                    withAnimation(Motion.collapse) { arabicExpandedChoice = expand }
+                }
                 ArabicText(
                     text: hadith.arabicDisplayText,
                     size: settings.arabicFontSize,
                     color: theme.palette.parchmentText
                 )
+                .padding(.top, Spacing.m)
+                .collapsible(isExpanded: isArabicExpanded)
             }
         }
     }
+}
+
+/// «ХАДИС N», начало текста (только когда свёрнут) и круглая ⌄ на пергаменте. Нажимается вся строка,
+/// без затемнения — отзывается только круг (как на Android: без ряби).
+private struct HadithArabicHeader: View {
+    let number: Int
+    let preview: String
+    let isExpanded: Bool
+    let onToggle: () -> Void
+
+    @Environment(\.theme) private var theme
+
+    private static let previewSize: Double = 17
+    private static let chevronSize: CGFloat = 14
+
+    @State private var toggles = 0
+
+    var body: some View {
+        Button {
+            toggles += 1
+            onToggle()
+        } label: {
+            HStack(spacing: Spacing.s) {
+                Text("hadith.detail.number \(number)")
+                    .font(.caption2.weight(.bold))
+                    .textCase(.uppercase)
+                    .tracking(Tracking.label)
+                    .foregroundStyle(theme.palette.parchmentText)
+                ArabicText(text: preview, size: Self.previewSize, color: theme.palette.parchmentText, lineLimit: 1)
+                    .opacity(isExpanded ? 0 : 1)
+                    .accessibilityHidden(true)
+                Image(systemName: "chevron.down")
+                    .font(.system(size: Self.chevronSize, weight: .semibold))
+                    .foregroundStyle(theme.palette.parchmentAccent)
+                    .rotationEffect(.degrees(isExpanded ? 180 : 0))
+                    .frame(width: Size.miniButton, height: Size.miniButton)
+                    .surface(
+                        theme.palette.parchmentAccentTint,
+                        cornerRadius: Size.miniButton / 2,
+                        border: theme.palette.parchmentAccentBorder
+                    )
+                    .modifier(PressedScale())
+                    .fixedTextSize()
+            }
+            .frame(minHeight: Size.minTapTarget)
+            .contentShape(.rect)
+        }
+        .buttonStyle(PressStateButtonStyle())
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Text("hadith.detail.number \(number)"))
+        .accessibilityHint(Text(isExpanded ? "hadith.arabic.hide" : "hadith.arabic.show"))
+        .sensoryFeedback(.selection, trigger: toggles)
+    }
+}
+
+/// Стиль без своего отклика: передаёт «нажата» внутрь, чтобы отозвалась только часть строки.
+private struct PressStateButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .environment(\.isHeaderPressed, configuration.isPressed)
+    }
+}
+
+/// Нажатая строка — круг сжимается, как круглые кнопки дизайн-системы.
+private struct PressedScale: ViewModifier {
+    @Environment(\.isHeaderPressed) private var isPressed
+
+    func body(content: Content) -> some View {
+        content
+            .scaleEffect(isPressed ? PressFeedback.iconScale : 1)
+            .animation(Motion.press, value: isPressed)
+    }
+}
+
+private extension EnvironmentValues {
+    @Entry var isHeaderPressed = false
 }
 
 /// «◎ Прочитать / ✓ Прочитан» и «☆ Выучить / ★ Выучен». Статус приходит значением.
@@ -100,75 +197,66 @@ private struct HadithStatusButtons: View {
     }
 }
 
-/// «Передал: …», перевод и «Приводится: …»; «Поделиться» — справа на уровне последней
-/// строки источника (решение пользователя 2026-10-06), без источника — справа внизу карточки.
+/// Перевод хадиса — на своей тёмной карточке, как у зикра (решение пользователя 2026-10-10): общий
+/// `TranslationBlock` в цветах хадисов — вступление («Передаётся от …»), линия, перевод (без пузыря), сноски «N ⌄»,
+/// «Приводится: …» и справа на уровне его последней строки — закладка и «Поделиться».
 private struct HadithTranslationCard: View {
     let hadith: Hadith
     let translation: HadithTranslation
+    let isCurrent: Bool
 
     @Environment(\.theme) private var theme
     @Environment(\.contentTextScale) private var scale
 
+    @State private var isNotesExpanded = false
+
     var body: some View {
-        // Размеры — общие с переводом зикра (`ContentTextStyle`), шаг — из настройки «Размер текста».
-        VStack(alignment: .leading, spacing: Spacing.s) {
-            if let narrator = translation.narrator {
-                Text("hadith.detail.narrator \(narrator)")
-                    .font(.content(.note, scale: scale, weight: .semibold))
-                    .foregroundStyle(theme.palette.onAccentSecondary)
+        TranslationBlock(
+            text: translation.text,
+            language: translation.language,
+            colors: .hadith(theme.palette),
+            // Вступление («Передаётся от …») — как в данных, без подписи (решение пользователя 2026-10-11).
+            narrator: translation.narrator,
+            source: translation.source.map { String(localized: "hadith.detail.source \($0)") },
+            // Основной перевод — просто текстом под линией после вступления; пузырь — у сносок.
+            bubble: false,
+            narratorDivider: true,
+            trailingInset: HadithCardActions.textInset(scale: scale),
+            // Правый значок — вровень с правым краем текста; зона нажатия выходит в поля карточки.
+            trailingOffset: HadithCardActions.iconInset(scale: scale)
+        ) {
+            if !translation.notes.isEmpty {
+                HadithNotes(
+                    notes: translation.notes,
+                    translation: translation.text,
+                    language: translation.language,
+                    isExpanded: $isNotesExpanded
+                )
+                .onChange(of: isCurrent) { _, isCurrent in
+                    if !isCurrent { isNotesExpanded = false }
+                }
             }
-            Text(verbatim: translation.text)
-                .font(.content(.translation, scale: scale))
-                .lineSpacing(ContentTextStyle.translationLineSpacing * scale)
-                .foregroundStyle(theme.palette.onAccent)
-                // Язык перевода — только для его текста (переносы); подписи «Передал:» /
-                // «Приводится:» — на языке интерфейса.
-                .environment(\.locale, Locale(identifier: translation.language.rawValue))
-            if let source = translation.source {
-                Text("hadith.detail.source \(source)")
-                    .font(.content(.note, scale: scale).italic())
-                    .foregroundStyle(theme.palette.onAccentTertiary)
-                    // Место под значок справа: сам значок — в наложении и вёрстку не раздвигает.
-                    .padding(.trailing, HadithShareButton.iconSize(scale: scale) + Spacing.s)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .overlay(alignment: Self.lastLineTrailing) {
-                        let iconCenterAboveBaseline = ContentTextStyle.note.baseSize * scale * Self.xHeightRatio
-                        let iconInset = (Size.minTapTarget - HadithShareButton.iconSize(scale: scale)) / 2
-                        HadithShareButton(hadith: hadith)
-                            // Центр значка — на середине строчных букв последней строки.
-                            .alignmentGuide(.lastTextBaseline) { dimensions in
-                                dimensions[VerticalAlignment.center] + iconCenterAboveBaseline
-                            }
-                            // Значок — вровень с правым краем текста; зона нажатия выходит в поля карточки.
-                            .offset(x: iconInset)
-                    }
-                    .padding(.top, Spacing.s)
-                    .overlay(alignment: .top) {
-                        Rectangle()
-                            .fill(theme.palette.hairline)
-                            .frame(height: Size.hairline)
-                    }
-            } else {
-                HadithShareButton(hadith: hadith)
-                    .frame(maxWidth: .infinity, alignment: .trailing)
-            }
+        } sourceTrailing: {
+            HadithCardActions(hadith: hadith)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.vertical, Spacing.l)
         .padding(.horizontal, Spacing.xl)
-        .surface(theme.palette.subtleFill, cornerRadius: Radius.box)
+        .surface(
+            theme.palette.hadithCard,
+            cornerRadius: Radius.card,
+            border: theme.palette.hairline,
+            shadow: .card(theme.palette)
+        )
     }
-
-    private static let lastLineTrailing = Alignment(horizontal: .trailing, vertical: .lastTextBaseline)
-    /// Половина высоты строчных букв относительно кегля.
-    private static let xHeightRatio: CGFloat = 0.27
 }
 
-/// «Поделиться» хадисом: значок без подложки цвета подписей; растёт вместе с переводом
-/// (шаг «Размер текста»), а не по системному размеру.
-private struct HadithShareButton: View {
+/// Закладка «В избранном» и «Поделиться» хадисом (как на Android: закладка слева): значки без
+/// подложки, растут вместе с переводом (шаг «Размер текста»), а не по системному размеру.
+/// Избранное читает только этот ряд — закладка не перестраивает страницу.
+private struct HadithCardActions: View {
     let hadith: Hadith
 
+    @Environment(HadithFavorites.self) private var favorites
     @Environment(\.theme) private var theme
     @Environment(\.contentTextScale) private var scale
 
@@ -176,10 +264,34 @@ private struct HadithShareButton: View {
         baseIconSize * scale
     }
 
+    /// Поле от правого значка до края его зоны нажатия — на столько ряд сдвигается вправо.
+    static func iconInset(scale: Double) -> CGFloat {
+        (Size.minTapTarget - iconSize(scale: scale)) / 2
+    }
+
+    /// Отступ текста источника справа: место под два значка, видимые части которых стоят в тексте.
+    static func textInset(scale: Double) -> CGFloat {
+        Size.minTapTarget * 2 - iconInset(scale: scale) + Spacing.s
+    }
+
     private static let baseIconSize: CGFloat = 19
 
     var body: some View {
-        ShareButton(iconSize: Self.iconSize(scale: scale)) { hadith.shareText }
-            .buttonStyle(BareIconButtonStyle(foreground: theme.palette.onAccentSecondary))
+        let isFavorite = favorites.isFavorite(hadith.id)
+        HStack(spacing: 0) {
+            Button {
+                favorites.toggle(hadith.id)
+            } label: {
+                Image(systemName: isFavorite ? "bookmark.fill" : "bookmark")
+                    .font(.system(size: Self.iconSize(scale: scale)))
+            }
+            .buttonStyle(BareIconButtonStyle(foreground: isFavorite ? theme.palette.gold : theme.palette.onAccentSecondary))
+            .accessibilityLabel(Text("hadith.favorite"))
+            .accessibilityAddTraits(isFavorite ? [.isToggle, .isSelected] : .isToggle)
+            .sensoryFeedback(.selection, trigger: isFavorite)
+
+            ShareButton(iconSize: Self.iconSize(scale: scale)) { hadith.shareText }
+                .buttonStyle(BareIconButtonStyle(foreground: theme.palette.onAccentSecondary))
+        }
     }
 }

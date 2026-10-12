@@ -62,23 +62,37 @@ fun ConfirmationPopover(
             Text(title, color = palette.onAccent, style = InabahType.headline.copy(fontWeight = FontWeight.Bold),
                 modifier = Modifier.semantics { heading() })
             Text(message, color = palette.onAccentSecondary, style = InabahType.footnote)
-            val interaction = remember { MutableInteractionSource() }
-            Box(
-                contentAlignment = Alignment.Center,
-                modifier = Modifier
-                    .padding(top = Spacing.m)
-                    .fillMaxWidth()
-                    .heightIn(min = Size.primaryButtonHeight)
-                    .surface(SolidColor(palette.onAccent.copy(alpha = ACTION_FILL_ALPHA)), RoundedCornerShape(percent = 50))
-                    .clickable(interaction, indication = null, role = Role.Button) {
-                        onConfirm()
-                        onDismiss()
-                    }
-                    .pressFeedback(interaction, opacity = PressFeedback.ROW_OPACITY),
-            ) {
-                Text(actionLabel, color = palette.destructive, style = InabahType.body.copy(fontWeight = FontWeight.SemiBold))
-            }
+            PopoverActionButton(
+                label = actionLabel,
+                color = palette.destructive,
+                onClick = {
+                    onConfirm()
+                    onDismiss()
+                },
+                modifier = Modifier.padding(top = Spacing.m),
+            )
         }
+    }
+}
+
+/**
+ * Действие во всплывающем окне — светлая полупрозрачная капсула во всю ширину, текст [color]
+ * («Сбросить» — красный, «ОК» в «Что нового» — цвет раздела).
+ */
+@Composable
+fun PopoverActionButton(label: String, color: Color, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val palette = InabahTheme.palette
+    val interaction = remember { MutableInteractionSource() }
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = modifier
+            .fillMaxWidth()
+            .heightIn(min = Size.primaryButtonHeight)
+            .surface(SolidColor(palette.onAccent.copy(alpha = ACTION_FILL_ALPHA)), RoundedCornerShape(percent = 50))
+            .clickable(interaction, indication = null, role = Role.Button, onClick = onClick)
+            .pressFeedback(interaction, opacity = PressFeedback.ROW_OPACITY),
+    ) {
+        Text(label, color = color, style = InabahType.body.copy(fontWeight = FontWeight.SemiBold))
     }
 }
 

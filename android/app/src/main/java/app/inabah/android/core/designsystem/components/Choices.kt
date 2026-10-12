@@ -4,7 +4,9 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -23,6 +25,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -34,6 +37,8 @@ import androidx.compose.ui.unit.dp
 import app.inabah.android.core.designsystem.InabahTheme
 import app.inabah.android.core.designsystem.InabahType
 import app.inabah.android.core.designsystem.Motion
+import app.inabah.android.core.designsystem.PressFeedback
+import app.inabah.android.core.designsystem.Spacing
 
 // Переключатель и сегменты как в iOS (решение пользователя 2026-10-05, снимок android/docs/player):
 // не Material 3 — в одном стиле с остальным приложением.
@@ -46,8 +51,9 @@ private val SegmentInset = 2.dp
 private const val SELECTED_SEGMENT_ALPHA = 0.28f
 
 /**
- * Строка с переключателем (iOS `Toggle`): подпись [label] слева, капсула справа; нажатие — вся строка,
- * для TalkBack — переключатель. Включён — подложка [tint], белая ручка справа; смена — 300 мс.
+ * Строка с переключателем (iOS `Toggle`): подпись [label] слева (под ней — [subtitle], если есть),
+ * капсула справа; нажатие — вся строка, для TalkBack — переключатель. Включён — подложка [tint],
+ * белая ручка справа; смена — 300 мс. [enabled] = false — приглушена и не нажимается.
  */
 @Composable
 fun SwitchRow(
@@ -56,6 +62,9 @@ fun SwitchRow(
     onCheckedChange: (Boolean) -> Unit,
     tint: Color,
     modifier: Modifier = Modifier,
+    subtitle: String? = null,
+    enabled: Boolean = true,
+    labelColor: Color = InabahTheme.palette.textPrimary,
 ) {
     val palette = InabahTheme.palette
     val haptics = LocalHapticFeedback.current
@@ -64,13 +73,18 @@ fun SwitchRow(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .toggleable(checked, remember { MutableInteractionSource() }, indication = null, role = Role.Switch) {
+            .toggleable(checked, remember { MutableInteractionSource() }, indication = null, enabled = enabled, role = Role.Switch) {
                 haptics.performHapticFeedback(if (it) HapticFeedbackType.ToggleOn else HapticFeedbackType.ToggleOff)
                 onCheckedChange(it)
-            },
+            }
+            .alpha(if (enabled) 1f else PressFeedback.DISABLED_OPACITY),
         verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(Spacing.m),
     ) {
-        Text(label, color = palette.textPrimary, style = InabahType.body, modifier = Modifier.weight(1f))
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Spacing.xxxs)) {
+            Text(label, color = labelColor, style = InabahType.body)
+            subtitle?.let { Text(it, color = palette.onAccentSecondary, style = InabahType.caption) }
+        }
         Box(Modifier.size(SwitchWidth, SwitchHeight).background(track, CircleShape).padding(SwitchKnobInset)) {
             Box(
                 Modifier

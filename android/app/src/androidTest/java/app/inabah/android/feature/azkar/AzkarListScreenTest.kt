@@ -2,6 +2,8 @@ package app.inabah.android.feature.azkar
 
 import android.text.format.DateFormat
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.test.SemanticsMatcher
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LifecycleRegistry
@@ -34,15 +36,21 @@ import androidx.compose.ui.test.isEnabled
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.onNodeWithText
 import androidx.test.espresso.Espresso
+import app.inabah.android.core.settings.ReminderSettings
+import app.inabah.android.core.updates.AvailableUpdate
+import app.inabah.android.core.updates.NoUpdateSource
+import app.inabah.android.core.updates.UpdateSource
 import app.inabah.android.feature.settings.AzkarSettingsScreen
 import androidx.compose.ui.test.junit4.accessibility.enableAccessibilityChecks
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import app.inabah.android.core.content.ContentRepository
 import app.inabah.android.core.content.model.AzkarSection
+import app.inabah.android.core.content.model.CollectionInfo
 import app.inabah.android.core.content.model.Hadith
 import app.inabah.android.core.content.model.HadithCollection
 import app.inabah.android.core.content.model.Zikr
@@ -55,6 +63,7 @@ import app.inabah.android.core.settings.PreferencesStorage
 import app.inabah.android.core.settings.TestDataStoreRule
 import app.inabah.android.core.settings.ReadingSettings
 import java.time.Instant
+import java.time.LocalDate
 import java.time.ZoneId
 import kotlinx.coroutines.runBlocking
 import org.junit.Before
@@ -63,8 +72,13 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 private const val TIMEOUT_MILLIS = 5_000L
+private const val LONG_ZIKR_REPEATS = 80
+private const val NEXT_ZIKR_ARABIC = "لَا إِلَٰهَ إِلَّا اللَّهُ"
 private val FIXED_ZONE: ZoneId = ZoneId.of("Europe/Berlin")
 private val FIXED_NOW: Instant = Instant.parse("2026-10-03T06:00:00Z")
+
+/** День серии в [FIXED_NOW]: до вечерних 3-го — 3 октября. */
+private val FIXED_DAY: LocalDate = LocalDate.of(2026, 10, 3)
 
 /** 13:00 в Берлине — после утреннего окна 5:00–12:00. */
 private val OUTSIDE_WINDOW: Instant = Instant.parse("2026-10-03T11:00:00Z")
@@ -87,21 +101,24 @@ class AzkarListScreenTest {
         compose.enableAccessibilityChecks()
     }
 
-    private fun store(vararg repetitions: Int): AzkarStore {
+    private fun store(vararg repetitions: Int, arabic: (number: Int) -> String = { "سُبْحَانَ اللَّهِ" }): AzkarStore {
         val azkar = repetitions.mapIndexed { index, count ->
-            Zikr(ZikrId(AzkarSection.Morning, index + 1), "سُبْحَانَ اللَّهِ", count, audioFile, translation = null)
+            Zikr(ZikrId(AzkarSection.Morning, index + 1), arabic(index + 1), count, audioFile, translation = null)
         }
         return AzkarStore(
             repository = FixedRepository(azkar),
             storage = storage,
             windowSettings = windowSettings,
-            history = AzkarHistory(storage) { throw AssertionError(it) },
+            history = history,
             // По умолчанию — 08:00 в Берлине, внутри утреннего окна 5:00–12:00: не зависит от часов устройства.
             now = { now },
             zone = { FIXED_ZONE },
             onUnreadableProgress = { _, error -> throw AssertionError(error) },
         )
     }
+
+    /** Общая история стора и экрана: оверлей читает то, что записал стор. */
+    private val history by lazy { AzkarHistory(storage) { throw AssertionError(it) } }
 
     /** «Сейчас» для стора; тест может перенести его вне окна. */
     private var now: Instant = FIXED_NOW
@@ -226,6 +243,43 @@ class AzkarListScreenTest {
         compose.onNodeWithContentDescription("Машаа Аллах!").assertDoesNotExist()
     }
 
+    // Серия дней, шаг 3 (2026-10-11): после утренних — о вечерних, серия и аят аль-Ахзаб 33:41–42.
+    @Test
+    fun completionOverlayRemindsAboutEveningAndShowsStreakAndAyah() {
+        val store = store(1)
+        // Вечерние загружены, как при запуске приложения: от них «сегодня» серии (3 октября).
+        compose.runOnIdle {
+            runBlocking { store.loadAll() }
+            AzkarSection.entries.forEach { history.record(completed = 1, total = 1, it, FIXED_DAY.minusDays(1)) }
+        }
+        compose.setContent { Screen(store) }
+        compose.waitUntil(TIMEOUT_MILLIS) { counters().fetchSemanticsNodes().size == 1 }
+
+        counters()[0].performClick()
+        waitForNode("Машаа Аллах!")
+        compose.onNodeWithText("Не забудьте прочитать вечерние азкары").performScrollTo().assertIsDisplayed()
+        // Сегодня вечерних ещё нет — серия до вчера: 1 день.
+        compose.onNodeWithText("1 день подряд").assertExists()
+        compose.onNodeWithText("Къуран · аль-Ахзаб 33:41–42").performScrollTo().assertIsDisplayed()
+    }
+
+    @Test
+    fun completionOverlayWithoutReminderWhenOtherSectionIsDone() {
+        val store = store(1)
+        compose.runOnIdle {
+            runBlocking { store.loadAll() }
+            history.record(completed = 1, total = 1, AzkarSection.Evening, FIXED_DAY)
+        }
+        compose.setContent { Screen(store) }
+        compose.waitUntil(TIMEOUT_MILLIS) { counters().fetchSemanticsNodes().size == 1 }
+
+        counters()[0].performClick()
+        waitForNode("Машаа Аллах!")
+        compose.onAllNodesWithText("Не забудьте", substring = true).assertCountEquals(0)
+        compose.onAllNodesWithText("Завтра не забудьте", substring = true).assertCountEquals(0)
+        compose.onNodeWithText("1 день подряд").assertExists()
+    }
+
     // Аудит 2026-10-06: правило «ушли раньше 0,6 с — поздравим при следующем открытии» не проверялось.
     @Test
     fun leavingBeforeCompletionDelayShowsOverlayNextTime() {
@@ -255,7 +309,7 @@ class AzkarListScreenTest {
         val store = store(1, 3)
         compose.runOnIdle { runBlocking { store.loadAll() } }
         compose.setContent {
-            InabahTheme { AzkarHomeScreen(store, windowSettings, onOpenSection = {}, contentPadding = PaddingValues()) }
+            InabahTheme { AzkarHomeScreen(store, AzkarHistory(storage) { throw AssertionError(it) }, windowSettings, ReminderSettings(storage), NoUpdateSource, onOpenSection = {}, onOpenCalendar = {}, contentPadding = PaddingValues()) }
         }
 
         // 13:00 — вне окна оба раздела: у утренних время окна (в любом формате системы есть «12:00»),
@@ -264,6 +318,24 @@ class AzkarListScreenTest {
             compose.onAllNodesWithText("12:00", substring = true).fetchSemanticsNodes().isNotEmpty()
         }
         compose.onAllNodesWithContentDescription("Выполнено на", substring = true).assertCountEquals(0)
+    }
+
+    // «Обновить» (2026-10-10): в релизе обновления нет — значка нет; есть (подделка) — значок с номером для TalkBack.
+    @Test
+    fun homeShowsUpdateButtonOnlyWhenUpdateIsAvailable() {
+        val store = store(1, 3)
+        var source by mutableStateOf<UpdateSource>(NoUpdateSource)
+        compose.setContent {
+            InabahTheme { AzkarHomeScreen(store, AzkarHistory(storage) { throw AssertionError(it) }, windowSettings, ReminderSettings(storage), source, onOpenSection = {}, onOpenCalendar = {}, contentPadding = PaddingValues()) }
+        }
+        compose.waitForIdle()
+        compose.onAllNodesWithContentDescription("Доступна версия", substring = true).assertCountEquals(0)
+
+        source = UpdateSource { AvailableUpdate("1.2.0") }
+
+        compose.waitUntil(TIMEOUT_MILLIS) {
+            compose.onAllNodesWithContentDescription("Доступна версия 1.2.0").fetchSemanticsNodes().isNotEmpty()
+        }
     }
 
     // 2026-10-06: записей в приложении нет — ▶ неактивна, вместо «Прослушать все» заглушка.
@@ -318,7 +390,7 @@ class AzkarListScreenTest {
             InabahTheme {
                 val owner = lifecycle ?: LocalLifecycleOwner.current
                 CompositionLocalProvider(LocalLifecycleOwner provides owner) {
-                    if (shown()) AzkarSettingsScreen(store, windowSettings, onBack = {}, contentPadding = PaddingValues())
+                    if (shown()) AzkarSettingsScreen(store, AzkarHistory(storage) { throw AssertionError(it) }, windowSettings, ReminderSettings(storage), onBack = {}, contentPadding = PaddingValues())
                 }
             }
         }
@@ -425,6 +497,22 @@ class AzkarListScreenTest {
     }
 
     @Test
+    fun collapsingLongZikrScrolledPastItsTopKeepsNextZikrOnScreen() {
+        // Первый зикр — на несколько экранов, под ним ещё пять: прокрутке есть куда остаться.
+        val store = store(1, 3, 3, 3, 3, 3) { number ->
+            if (number == 1) "سُبْحَانَ اللَّهِ وَبِحَمْدِهِ ".repeat(LONG_ZIKR_REPEATS).trim() else "$NEXT_ZIKR_ARABIC $number"
+        }
+        compose.setContent { Screen(store) }
+        compose.waitUntil(TIMEOUT_MILLIS) { counters().fetchSemanticsNodes().size == 6 }
+        counters()[0].performScrollTo().performClick()
+
+        waitForNode("Развернуть")
+        compose.waitForIdle()
+        compose.onNodeWithContentDescription("Развернуть").assertIsDisplayed()
+        compose.onNodeWithText("$NEXT_ZIKR_ARABIC 2").assertIsDisplayed()
+    }
+
+    @Test
     fun resetOnCollapsedRowRestoresFullCard() {
         val store = store(1, 3)
         compose.setContent { Screen(store) }
@@ -448,12 +536,12 @@ class AzkarListScreenTest {
         }
         compose.setContent {
             InabahTheme {
-                AzkarSettingsScreen(store, windowSettings, onBack = {}, contentPadding = PaddingValues())
+                AzkarSettingsScreen(store, AzkarHistory(storage) { throw AssertionError(it) }, windowSettings, ReminderSettings(storage), onBack = {}, contentPadding = PaddingValues())
             }
         }
 
         // «Утренние азкары» — и в строке времени, и в строке сброса: нужна строка-кнопка.
-        val resetRow = compose.onNode(hasText("Утренние азкары") and hasClickAction())
+        val resetRow = compose.onNode(hasText("Утренние азкары") and hasClickAction() and SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Button))
 
         // Закрыли подтверждение «Назад» — прогресс на месте.
         resetRow.performClick()
@@ -469,6 +557,25 @@ class AzkarListScreenTest {
         resetRow.assertIsNotEnabled()
     }
 
+    @Test
+    fun settingsHistoryResetClearsCalendarAfterConfirmation() {
+        val history = AzkarHistory(storage) { throw AssertionError(it) }
+        history.record(completed = 2, total = 2, AzkarSection.Morning, LocalDate.of(2026, 10, 10))
+        compose.setContent {
+            InabahTheme {
+                AzkarSettingsScreen(store(1, 1), history, windowSettings, ReminderSettings(storage), onBack = {}, contentPadding = PaddingValues())
+            }
+        }
+
+        val historyRow = compose.onNode(hasText("Сбросить историю") and hasClickAction())
+        historyRow.performScrollTo().performClick()
+        compose.onNodeWithText("Сбросить историю?").assertExists()
+        compose.onNodeWithText("Сбросить").performClick()
+
+        compose.runOnIdle { check(history.days.value.isEmpty()) }
+        historyRow.assertIsNotEnabled()
+    }
+
     @androidx.compose.runtime.Composable
     private fun Screen(
         store: AzkarStore,
@@ -479,6 +586,7 @@ class AzkarListScreenTest {
             AzkarListScreen(
                 section = AzkarSection.Morning,
                 store = store,
+                history = history,
                 windowSettings = windowSettings,
                 readingSettings = reading,
                 player = player,
@@ -495,4 +603,6 @@ private class FixedRepository(private val azkar: List<Zikr>) : ContentRepository
     override suspend fun azkar(section: AzkarSection): List<Zikr> = azkar
 
     override suspend fun hadiths(collection: HadithCollection): List<Hadith> = emptyList()
+
+    override suspend fun collectionInfo(collection: HadithCollection): CollectionInfo = CollectionInfo.Empty
 }

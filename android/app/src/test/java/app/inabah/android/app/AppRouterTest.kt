@@ -54,6 +54,35 @@ class AppRouterTest {
     }
 
     @Test
+    fun `«О сборнике» открывается поверх списка своего сборника и переживает снимок`() {
+        val router = AppRouter()
+        val about = HadithRoute.About(HadithCollection.Ajurri)
+
+        router.open(about)
+
+        assertEquals(AppTab.Hadith, router.selectedTab)
+        assertEquals(listOf(HadithRoute.CollectionList(HadithCollection.Ajurri), about), router.hadithStack.toList())
+        val restored = AppRouter()
+        restored.restore(router.snapshot())
+        assertEquals(router.hadithStack.toList(), restored.hadithStack.toList())
+    }
+
+    @Test
+    fun `«Избранное» — отдельный экран вкладки хадисов, хадис из него — поверх, снимок восстанавливает`() {
+        val router = AppRouter()
+        val id = HadithId(HadithCollection.Qudsi, 2)
+
+        router.open(HadithRoute.Favorites)
+        router.push(HadithRoute.Detail(id))
+
+        assertEquals(AppTab.Hadith, router.selectedTab)
+        assertEquals(listOf(HadithRoute.Favorites, HadithRoute.Detail(id)), router.hadithStack.toList())
+        val restored = AppRouter()
+        restored.restore(router.snapshot())
+        assertEquals(router.hadithStack.toList(), restored.hadithStack.toList())
+    }
+
+    @Test
     fun `Повторный выбор вкладки «Настройки» возвращает к списку разделов`() {
         val paths = listOf(
             listOf(SettingsRoute.Hadith),

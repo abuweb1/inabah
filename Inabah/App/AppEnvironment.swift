@@ -1,4 +1,5 @@
 import SwiftUI
+import UserNotifications
 
 /// Корень композиции: создаёт зависимости приложения один раз и передаёт их в окружение.
 ///
@@ -13,6 +14,7 @@ struct AppEnvironment {
     let azkarStore: AzkarStore
     let hadithStore: HadithStore
     let hadithProgress: HadithProgress
+    let hadithFavorites: HadithFavorites
     let hadithCollectionOrder: HadithCollectionOrder
     let appIconSettings: AppIconSettings
     let audioPlayer: AudioPlayerController
@@ -20,15 +22,31 @@ struct AppEnvironment {
     let appearanceSettings: AppearanceSettings
     /// Фон под арабским текстом — накладывается на тему палитры (`Theme.withParchment`).
     let parchmentSettings: ParchmentSettings
+    /// «Фон перевода» — накладывается на тему после пергамента (`Theme.withTranslationShade`).
+    let translationShadeSettings: TranslationShadeSettings
     /// Размер переводов и интерфейса — применяется к окружению в `appEnvironment`.
     let textSizeSettings: TextSizeSettings
+    /// Напоминания: настройки и их планировщик (центр уведомлений iOS).
+    let reminderSettings: ReminderSettings
+    let reminderScheduler: ReminderScheduler
+    /// Делегат центра уведомлений — центр держит его слабой ссылкой; ставится `installNotificationDelegate()`.
+    let notificationDelegate: ReminderNotificationDelegate
+    /// Окно «Что нового» после обновления.
+    let whatsNew: WhatsNew
+    /// Есть ли новая версия в App Store — в 1.1.1 без сети (`NoUpdateSource`).
+    let updateSource: any UpdateSource
 
     init(
         repository: any ContentRepository = BundleContentRepository(),
         defaults: UserDefaults = .standard,
         audioPlayer: AudioPlayerController? = nil,
-        appIconSwitcher: (any AppIconSwitching)? = nil
+        appIconSwitcher: (any AppIconSwitching)? = nil,
+        notificationCenter: (any NotificationCentering)? = nil,
+        updateSource: any UpdateSource = NoUpdateSource()
     ) {
+        // Первым: «новая установка» узнаётся до того, как сторы запишут свои ключи.
+        whatsNew = WhatsNew(defaults: defaults, repository: repository)
+        self.updateSource = updateSource
         router = AppRouter()
         readingSettings = ReadingSettings(defaults: defaults)
         playlistSettings = PlaylistSettings(defaults: defaults)
@@ -42,6 +60,7 @@ struct AppEnvironment {
         )
         hadithStore = HadithStore(repository: repository)
         hadithProgress = HadithProgress(defaults: defaults)
+        hadithFavorites = HadithFavorites(defaults: defaults)
         hadithCollectionOrder = HadithCollectionOrder(defaults: defaults)
         appIconSettings = AppIconSettings(switcher: appIconSwitcher ?? SystemAppIconSwitcher())
         self.audioPlayer = audioPlayer ?? AudioPlayerController(
@@ -51,7 +70,27 @@ struct AppEnvironment {
         )
         appearanceSettings = AppearanceSettings(defaults: defaults)
         parchmentSettings = ParchmentSettings(defaults: defaults)
+        translationShadeSettings = TranslationShadeSettings(defaults: defaults)
         textSizeSettings = TextSizeSettings(defaults: defaults)
+        reminderSettings = ReminderSettings(defaults: defaults)
+        reminderScheduler = ReminderScheduler(
+            center: notificationCenter ?? SystemNotificationCenter(),
+            settings: reminderSettings,
+            windowSettings: azkarWindowSettings,
+            history: azkarHistory,
+            hadithStore: hadithStore,
+            progress: hadithProgress,
+            order: hadithCollectionOrder,
+            repository: repository,
+            calendar: azkarStore.calendar
+        )
+        notificationDelegate = ReminderNotificationDelegate(router: router)
+    }
+
+    /// Нажатия на напоминания ведут через роутер приложения — вызывается один раз при запуске,
+    /// не в превью и тестах (там центр уведомлений не трогается).
+    func installNotificationDelegate() {
+        UNUserNotificationCenter.current().delegate = notificationDelegate
     }
 
     /// Превью: контент в памяти, отметки — в отдельном наборе `UserDefaults`; плеер без
@@ -62,7 +101,8 @@ struct AppEnvironment {
             repository: InMemoryContentRepository.preview,
             defaults: previewDefaults(),
             audioPlayer: AudioPlayerController(engine: AVAudioEngineAdapter()),
-            appIconSwitcher: PreviewAppIconSwitcher()
+            appIconSwitcher: PreviewAppIconSwitcher(),
+            notificationCenter: InertNotificationCenter()
         )
     }
 
@@ -77,6 +117,15 @@ struct AppEnvironment {
         defaults.set("1", forKey: HadithProgress.memorizedKey(read[0]))
         return defaults
     }
+}
+
+/// Центр уведомлений для превью: ничего не спрашивает и не ставит.
+private final class InertNotificationCenter: NotificationCentering {
+    func authorization() async -> ReminderAuthorization { .notDetermined }
+    func requestAuthorization() async -> Bool { false }
+    func pendingIdentifiers() async -> [String] { [] }
+    func removePending(_ identifiers: [String]) {}
+    func add(_ request: UNNotificationRequest) async throws {}
 }
 
 /// Смена иконки для превью: выбор только запоминается, иконка процесса не меняется.
@@ -96,16 +145,27 @@ extension View {
             .environment(environment.readingSettings)
             .environment(environment.playlistSettings)
             .environment(environment.azkarWindowSettings)
+            .environment(environment.azkarHistory)
             .environment(environment.azkarStore)
             .environment(environment.hadithStore)
             .environment(environment.hadithProgress)
+            .environment(environment.hadithFavorites)
             .environment(environment.hadithCollectionOrder)
             .environment(environment.appIconSettings)
             .environment(environment.audioPlayer)
             .environment(environment.appearanceSettings)
             .environment(environment.parchmentSettings)
+            .environment(environment.translationShadeSettings)
             .environment(environment.textSizeSettings)
-            .modifier(ThemedModifier(settings: environment.appearanceSettings, parchment: environment.parchmentSettings))
+            .environment(environment.reminderSettings)
+            .environment(environment.reminderScheduler)
+            .environment(environment.whatsNew)
+            .environment(\.updateSource, environment.updateSource)
+            .modifier(ThemedModifier(
+                settings: environment.appearanceSettings,
+                parchment: environment.parchmentSettings,
+                translationShade: environment.translationShadeSettings
+            ))
             .modifier(TextSizeModifier(settings: environment.textSizeSettings))
     }
 }
@@ -141,16 +201,20 @@ extension View {
     }
 }
 
-/// Тема в окружении — из выбранной палитры и фона арабского текста. Только этот модификатор
-/// следит за выбором: смена палитры или фона один раз перерисовывает дерево с новой темой.
+/// Тема в окружении — из выбранной палитры, фона арабского текста и фона перевода. Только этот
+/// модификатор следит за выбором: смена одного из них один раз перерисовывает дерево с новой темой.
 /// Окнам — акцент палитры, чтобы системные диалоги тоже были в её цвет.
 private struct ThemedModifier: ViewModifier {
     let settings: AppearanceSettings
     let parchment: ParchmentSettings
+    let translationShade: TranslationShadeSettings
 
     func body(content: Content) -> some View {
         content
-            .environment(\.theme, settings.style.theme.withParchment(parchment.style))
+            .environment(
+                \.theme,
+                settings.style.theme.withParchment(parchment.style).withTranslationShade(translationShade.value)
+            )
             .onChange(of: settings.style, initial: true) { _, style in
                 WindowTint.apply(style.theme.palette.accentLight)
             }

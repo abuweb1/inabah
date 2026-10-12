@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// «О приложении»: версия, источники текстов и записей, лицензии шрифта и значков,
+/// «О приложении»: версия, «История версий», источники текстов и записей, лицензии шрифта и значков,
 /// политика конфиденциальности и репозиторий. Источники согласованы с пользователем 2026-10-05.
 struct AboutView: View {
     @Environment(\.theme) private var theme
@@ -12,10 +12,21 @@ struct AboutView: View {
                     .settingsRow()
             }
 
+            // Отдельной группой сразу под шапкой (как на Android, `10b`).
+            Section {
+                NavigationLink(value: SettingsRoute.versionHistory) {
+                    Text("about.versionHistory")
+                }
+                .settingsRow()
+            }
+
             Section {
                 AboutTextRow(title: "about.sources.azkar.title", text: "about.sources.azkar.text")
                     .settingsRow()
                 AboutTextRow(title: "about.sources.hadith.title", text: "about.sources.hadith.text")
+                    .settingsRow()
+                // Свои записи (2026-10-12, решение пользователя — без имени).
+                AboutTextRow(title: "about.sources.audio.title", text: "about.sources.audio.text")
                     .settingsRow()
             } header: {
                 Text("about.sources.header")
@@ -136,17 +147,6 @@ private struct AboutLinkLabel: View {
                 .foregroundStyle(theme.palette.onAccentTertiary)
                 .accessibilityHidden(true)
         }
-    }
-}
-
-/// Версия приложения из Info.plist: «1.0.0» и номер сборки.
-enum AppVersion {
-    static var marketing: String {
-        Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? ""
-    }
-
-    static var build: String {
-        Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? ""
     }
 }
 

@@ -1,0 +1,19 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+  <!-- «Обновить» (главная «Азкаров», слева вверху): стрелка вниз в лоток — та же линия 1,8, что у ic_share и ic_bookmark. -->
+  <path
+      android:pathData="M12,3v11.5M7.5,10l4.5,4.5 4.5,-4.5"
+      android:strokeColor="@android:color/white"
+      android:strokeWidth="1.8"
+      android:strokeLineCap="round"
+      android:strokeLineJoin="round" />
+  <path
+      android:pathData="M4,15.5v2.5a2.5,2.5 0,0 0,2.5 2.5h11a2.5,2.5 0,0 0,2.5 -2.5v-2.5"
+      android:strokeColor="@android:color/white"
+      android:strokeWidth="1.8"
+      android:strokeLineCap="round"
+      android:strokeLineJoin="round" />
+</vector>

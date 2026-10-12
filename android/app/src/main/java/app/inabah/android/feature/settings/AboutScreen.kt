@@ -72,10 +72,12 @@ internal val appVersion: String get() = "${BuildConfig.VERSION_NAME} (${BuildCon
 /**
  * «О приложении» (iOS `AboutView`): иконка, название и версия; откуда тексты (без ссылок на сайты); лицензии
  * шрифтов и значков ([onOpenLicense] — полный текст); политика конфиденциальности и репозиторий.
+ * Под версией — «История версий» ([onOpenVersionHistory], Android-first 2026-10-10).
  */
 @Composable
 fun AboutScreen(
     onOpenLicense: (LicenseDocument) -> Unit,
+    onOpenVersionHistory: () -> Unit,
     onBack: () -> Unit,
     contentPadding: PaddingValues,
     modifier: Modifier = Modifier,
@@ -89,6 +91,14 @@ fun AboutScreen(
         topBar = { InabahTopBar(title = stringResource(R.string.about_title), tint = theme.palette.tabSettings, onBack = onBack) },
     ) {
         SettingsGroup(rows = listOf { AboutHeader() })
+        // Под версией — что в ней и в прошлых (data/versions.json).
+        SettingsGroup(
+            rows = listOf {
+                SettingsRow(onClick = onOpenVersionHistory, trailing = { SettingsChevron() }) {
+                    SettingsRowText(title = stringResource(R.string.about_version_history))
+                }
+            },
+        )
         SettingsGroup(
             header = stringResource(R.string.about_sources_header),
             footer = stringResource(R.string.about_sources_footer),
@@ -119,7 +129,7 @@ fun AboutScreen(
     }
 }
 
-/** Иконка «Классическая», «إنابة», «Инаба» и версия — одним элементом для TalkBack. */
+/** Иконка «Классическая», «إنابة», «Inabah» и версия — одним элементом для TalkBack. */
 @Composable
 private fun AboutHeader() {
     val palette = InabahTheme.palette
@@ -162,7 +172,7 @@ private fun AboutLinkRow(@StringRes title: Int, onClick: () -> Unit) {
 }
 
 /**
- * «Инаба 1.0.0 · О приложении» — мелкая ссылка по центру у нижнего края корня настроек, над панелью вкладок
+ * «Inabah 1.1.0 · О приложении» — мелкая ссылка по центру у нижнего края корня настроек, над панелью вкладок
  * (iOS `AboutFooterLink`, решение пользователя 2026-10-05). Для TalkBack — «О приложении».
  */
 @Composable
@@ -208,7 +218,7 @@ private val LicenseDocument.subtitle: Int
     }
 
 /** Браузера на телефоне нет — ссылка просто не открывается (Compose бросает исключение, а не молчит). */
-private fun UriHandler.openSafely(url: String) {
+internal fun UriHandler.openSafely(url: String) {
     try {
         openUri(url)
     } catch (_: ActivityNotFoundException) {

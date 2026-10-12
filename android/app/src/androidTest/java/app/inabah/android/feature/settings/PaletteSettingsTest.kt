@@ -4,13 +4,16 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.junit4.accessibility.enableAccessibilityChecks
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performScrollTo
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import app.inabah.android.core.designsystem.InabahTheme
@@ -18,6 +21,7 @@ import app.inabah.android.core.designsystem.LocalInabahTheme
 import app.inabah.android.core.designsystem.ParchmentStyle
 import app.inabah.android.core.designsystem.Theme
 import app.inabah.android.core.designsystem.withParchment
+import app.inabah.android.core.designsystem.withTranslationShade
 import app.inabah.android.core.settings.ParchmentSettings
 import app.inabah.android.core.designsystem.ThemeGradients
 import app.inabah.android.core.designsystem.ThemeStyle
@@ -25,6 +29,7 @@ import app.inabah.android.core.designsystem.animateTheme
 import app.inabah.android.core.settings.AppearanceSettings
 import app.inabah.android.core.settings.PreferencesStorage
 import app.inabah.android.core.settings.TestDataStoreRule
+import app.inabah.android.core.settings.TranslationShadeSettings
 import app.inabah.android.feature.makharij.MakharijHomeScreen
 import org.junit.Before
 import org.junit.Rule
@@ -61,7 +66,7 @@ class PaletteSettingsTest {
             InabahTheme(theme = animateTheme(style.theme)) {
                 Column {
                     shownGradients = LocalInabahTheme.current.gradients
-                    PaletteSettingsScreen(settings, ParchmentSettings(storage), onBack = {}, contentPadding = PaddingValues())
+                    PaletteSettingsScreen(settings, ParchmentSettings(storage), TranslationShadeSettings(storage), onBack = {}, contentPadding = PaddingValues())
                 }
             }
         }
@@ -90,7 +95,7 @@ class PaletteSettingsTest {
             InabahTheme(theme = animateTheme(style.theme.withParchment(parchmentStyle))) {
                 Column {
                     shown = LocalInabahTheme.current
-                    PaletteSettingsScreen(settings, parchment, onBack = {}, contentPadding = PaddingValues())
+                    PaletteSettingsScreen(settings, parchment, TranslationShadeSettings(storage), onBack = {}, contentPadding = PaddingValues())
                 }
             }
         }
@@ -106,6 +111,41 @@ class PaletteSettingsTest {
         }
         compose.onNodeWithText("Нефрит").assert(SemanticsMatcher.expectValue(SemanticsProperties.Selected, true))
         compose.onNodeWithText("Пергамент").assert(SemanticsMatcher.expectValue(SemanticsProperties.Selected, false))
+    }
+
+    @Test
+    fun translationShadeSliderSavesShadeAndRepaintsTranslationCards() {
+        val settings = AppearanceSettings(storage)
+        val parchment = ParchmentSettings(storage)
+        val shade = TranslationShadeSettings(storage)
+        var shown: Theme? = null
+        compose.setContent {
+            // Как в MainActivity: палитра, фон арабского текста и фон перевода — одной темой.
+            val style by settings.style.collectAsState()
+            val parchmentStyle by parchment.style.collectAsState()
+            val translationShade by shade.shade.collectAsState()
+            InabahTheme(theme = animateTheme(style.theme.withParchment(parchmentStyle).withTranslationShade(translationShade))) {
+                Column {
+                    shown = LocalInabahTheme.current
+                    PaletteSettingsScreen(settings, parchment, shade, onBack = {}, contentPadding = PaddingValues())
+                }
+            }
+        }
+
+        val slider = compose.onNodeWithContentDescription("Фон перевода").performScrollTo()
+        slider.assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "Как задумано"))
+        slider.performSemanticsAction(SemanticsActions.SetProgress) { it(0.5f) }
+        compose.waitForIdle()
+
+        compose.runOnIdle {
+            check(shade.shade.value == 0.5f)
+            val expected = Theme.Sections.withParchment(ParchmentStyle.Classic).withTranslationShade(0.5f).palette
+            check(shown?.palette?.zikrCard == expected.zikrCard)
+            check(shown?.palette?.hadithCard == expected.hadithCard)
+            // Остальные поверхности (мини-плеер, «Прослушать все») — прежние.
+            check(shown?.palette?.card == Theme.Sections.palette.card)
+        }
+        slider.assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "Светлее на 50 %"))
     }
 
     /**

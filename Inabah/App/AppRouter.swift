@@ -11,6 +11,8 @@ enum AppTab: Hashable {
 /// Экраны внутри вкладки «Азкары». `Codable` — для будущих deep links (виджет, уведомления).
 nonisolated enum AzkarRoute: Hashable, Codable, Sendable {
     case list(AzkarSection)
+    /// «Календарь азкаров» — из капсулы серии на главной.
+    case calendar
 }
 
 /// Экраны внутри вкладки «Настройки».
@@ -29,12 +31,18 @@ nonisolated enum SettingsRoute: Hashable, Codable, Sendable {
     case about
     /// Полный текст лицензии (из «О приложении»).
     case license(LicenseDocument)
+    /// «История версий» (из «О приложении»).
+    case versionHistory
 }
 
 /// Экраны внутри вкладки «Хадисы».
 nonisolated enum HadithRoute: Hashable, Codable, Sendable {
     case list(HadithCollection)
     case detail(HadithID)
+    /// «О сборнике» — из шапки списка сборника.
+    case about(HadithCollection)
+    /// «Избранное» — с главной хадисов; хадис из него открывается поверх.
+    case favorites
 }
 
 /// Навигация приложения: выбранная вкладка и типизированный стек каждой вкладки.
@@ -79,14 +87,17 @@ final class AppRouter {
         azkarPath = [route]
     }
 
-    /// Хадис открывается поверх списка своего сборника — «назад» ведёт в список, как в приложении.
+    /// Хадис и «О сборнике» открываются поверх списка своего сборника — «назад» ведёт в список,
+    /// как в приложении.
     func open(_ route: HadithRoute) {
         selectedTab = .hadith
         switch route {
-        case .list:
+        case .list, .favorites:
             hadithPath = [route]
         case .detail(let id):
             hadithPath = [.list(id.collection), route]
+        case .about(let collection):
+            hadithPath = [.list(collection), route]
         }
     }
 }

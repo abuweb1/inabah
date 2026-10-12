@@ -31,6 +31,22 @@ extension AzkarSection {
         }
     }
 
+    /// Окно «Машаа Аллах!» напоминает о втором разделе, если за этот день (`day` — день серии,
+    /// `AzkarStore.streakDay`) он не прочитан полностью; оба прочитаны — `nil` (решение пользователя
+    /// 2026-10-11, Android `completionReminder`).
+    func completionReminder(day: AzkarDay?) -> AzkarSection? {
+        let other: AzkarSection = self == .morning ? .evening : .morning
+        return day?.record(of: other)?.isComplete == true ? nil : other
+    }
+
+    /// Строка-напоминание о разделе: вечерние ещё впереди; утренние этого дня уже прошли — «завтра».
+    var completionReminderMessage: LocalizedStringResource {
+        switch self {
+        case .evening: "azkar.completion.nextEvening"
+        case .morning: "azkar.completion.nextMorning"
+        }
+    }
+
     var symbolName: String {
         switch self {
         case .morning: "sun.max.fill"

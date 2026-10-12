@@ -29,7 +29,7 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Инаба"
+            "value" : "Inabah"
           }
         }
       }
@@ -122,6 +122,28 @@
         }
       }
     },
+    "about.sources.audio.text" : {
+      "comment" : "О приложении → Источники: кто читает азкары",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Читает автор приложения."
+          }
+        }
+      }
+    },
+    "about.sources.audio.title" : {
+      "comment" : "О приложении → Источники: аудиозаписи азкаров",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Аудиозаписи"
+          }
+        }
+      }
+    },
     "about.sources.azkar.text" : {
       "comment" : "О приложении: источник азкаров",
       "localizations" : {
@@ -206,6 +228,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Версия %@"
+          }
+        }
+      }
+    },
+    "about.versionHistory" : {
+      "comment" : "«О приложении»: строка перехода к истории версий",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "История версий"
           }
         }
       }
@@ -563,6 +596,193 @@
         }
       }
     },
+    "azkar.calendar.best" : {
+      "comment" : "Сводка календаря: лучшая серия",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "лучшая серия"
+          }
+        }
+      }
+    },
+    "azkar.calendar.current" : {
+      "comment" : "Сводка календаря: текущая серия",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "подряд"
+          }
+        }
+      }
+    },
+    "azkar.calendar.day.evening %@" : {
+      "comment" : "VoiceOver: день календаря (дата) — только вечерние",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@: прочитаны вечерние"
+          }
+        }
+      }
+    },
+    "azkar.calendar.day.full %@" : {
+      "comment" : "VoiceOver: день календаря (дата) — оба раздела",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@: прочитаны утренние и вечерние"
+          }
+        }
+      }
+    },
+    "azkar.calendar.day.morning %@" : {
+      "comment" : "VoiceOver: день календаря (дата) — только утренние",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@: прочитаны утренние"
+          }
+        }
+      }
+    },
+    "azkar.calendar.day.none %@" : {
+      "comment" : "VoiceOver: день календаря (дата) — ничего полностью",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@: не прочитаны"
+          }
+        }
+      }
+    },
+    "azkar.calendar.emptyHint" : {
+      "comment" : "Календарь: нет ни одного полного дня",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Прочитайте утренние и вечерние азкары за один день — начнётся серия."
+          }
+        }
+      }
+    },
+    "azkar.calendar.legend.evening" : {
+      "comment" : "Легенда календаря: только вечерние",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "вечерние"
+          }
+        }
+      }
+    },
+    "azkar.calendar.legend.full" : {
+      "comment" : "Легенда календаря: полный день",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "полный день"
+          }
+        }
+      }
+    },
+    "azkar.calendar.legend.morning" : {
+      "comment" : "Легенда календаря: только утренние",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "утренние"
+          }
+        }
+      }
+    },
+    "azkar.calendar.next" : {
+      "comment" : "VoiceOver: кнопка «›» месяца",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Следующий месяц"
+          }
+        }
+      }
+    },
+    "azkar.calendar.open" : {
+      "comment" : "VoiceOver: что делает капсула серии",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Открыть календарь"
+          }
+        }
+      }
+    },
+    "azkar.calendar.previous" : {
+      "comment" : "VoiceOver: кнопка «‹» месяца",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Предыдущий месяц"
+          }
+        }
+      }
+    },
+    "azkar.calendar.section.none" : {
+      "comment" : "Подробности дня: раздел не читался",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "не читались"
+          }
+        }
+      }
+    },
+    "azkar.calendar.section.progress %lld %lld" : {
+      "comment" : "Подробности дня: прочитано зикров раздела из всех",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld из %2$lld"
+          }
+        }
+      }
+    },
+    "azkar.calendar.title" : {
+      "comment" : "Навбар экрана календаря азкаров",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Календарь азкаров"
+          }
+        }
+      }
+    },
+    "azkar.calendar.total" : {
+      "comment" : "Сводка календаря: всего полных дней",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "всего дней"
+          }
+        }
+      }
+    },
     "azkar.completion.evening" : {
       "localizations" : {
         "ru" : {
@@ -605,6 +825,28 @@
         }
       }
     },
+    "azkar.completion.nextEvening" : {
+      "comment" : "Окно «Машаа Аллах!» после утренних: вечерние за этот день не прочитаны",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не забудьте прочитать вечерние азкары"
+          }
+        }
+      }
+    },
+    "azkar.completion.nextMorning" : {
+      "comment" : "Окно «Машаа Аллах!» после вечерних: утренние этого дня не прочитаны — их время прошло",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Завтра не забудьте прочитать утренние азкары"
+          }
+        }
+      }
+    },
     "azkar.completion.title" : {
       "comment" : "Заголовок после прочтения всех азкаров",
       "localizations" : {
@@ -612,6 +854,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Машаа Аллах!"
+          }
+        }
+      }
+    },
+    "azkar.completion.verse.reference" : {
+      "comment" : "Окно «Машаа Аллах!»: ссылка на аят",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Къуран · аль-Ахзаб 33:41–42"
+          }
+        }
+      }
+    },
+    "azkar.completion.verse.translation" : {
+      "comment" : "Окно «Машаа Аллах!»: перевод аята аль-Ахзаб 33:41–42 (Абу Адель)",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "«О те, которые уверовали! Поминайте Аллаха (сердцем, устами и в делах) многократным поминанием, и восславляйте Его по утрам и по вечерам!»"
           }
         }
       }
@@ -739,6 +1003,74 @@
         }
       }
     },
+    "azkar.streak.days %lld" : {
+      "comment" : "Серия дней азкаров: капсула на главной и окно завершения",
+      "localizations" : {
+        "ru" : {
+          "variations" : {
+            "plural" : {
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld дня подряд"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld дней подряд"
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld день подряд"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld дня подряд"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "azkar.streak.daysMax" : {
+      "comment" : "Серия больше 9999 дней — вместо числа",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "9999+ дней подряд"
+          }
+        }
+      }
+    },
+    "azkar.streak.numberMax" : {
+      "comment" : "Число серии больше 9999 в сводке календаря",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "9999+"
+          }
+        }
+      }
+    },
+    "azkar.streak.start" : {
+      "comment" : "Капсула серии на главной, пока серии нет",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Начните серию сегодня"
+          }
+        }
+      }
+    },
     "azkar.window.notice.evening %@ %@" : {
       "comment" : "Экран вечерних азкаров вне их времени, %@ — начало и конец",
       "localizations" : {
@@ -802,6 +1134,61 @@
         }
       }
     },
+    "hadith.about.author" : {
+      "comment" : "«О сборнике»: заголовок группы, если составитель один",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Составитель"
+          }
+        }
+      }
+    },
+    "hadith.about.authors" : {
+      "comment" : "«О сборнике»: заголовок группы, если составителей несколько",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Составители"
+          }
+        }
+      }
+    },
+    "hadith.about.book" : {
+      "comment" : "«О сборнике»: заголовок группы с описанием книги",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "О книге"
+          }
+        }
+      }
+    },
+    "hadith.about.hadiths" : {
+      "comment" : "«О сборнике»: заголовок группы с прогрессом",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Хадисы"
+          }
+        }
+      }
+    },
+    "hadith.about.title" : {
+      "comment" : "«О сборнике»: заголовок экрана и подпись кнопки ⓘ в шапке списка хадисов (VoiceOver)",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "О сборнике"
+          }
+        }
+      }
+    },
     "hadith.ajurri.meta %lld" : {
       "comment" : "Подпись карточки сборника аль-Аджурри: число хадисов (арабское название подставляется отдельно — section.card.meta.original)",
       "localizations" : {
@@ -848,6 +1235,28 @@
         }
       }
     },
+    "hadith.arabic.hide" : {
+      "comment" : "VoiceOver: строка «Хадис N» — свернуть арабский текст",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Скрыть арабский текст"
+          }
+        }
+      }
+    },
+    "hadith.arabic.show" : {
+      "comment" : "VoiceOver: строка «Хадис N» — раскрыть свёрнутый арабский текст",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показать арабский текст"
+          }
+        }
+      }
+    },
     "hadith.audio.title %lld" : {
       "comment" : "Карточка аудио на экране хадиса",
       "localizations" : {
@@ -866,17 +1275,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$lld из %2$lld"
-          }
-        }
-      }
-    },
-    "hadith.detail.narrator %@" : {
-      "comment" : "Передатчик хадиса над переводом",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Передал: %@"
           }
         }
       }
@@ -921,6 +1319,50 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Приводится: %@"
+          }
+        }
+      }
+    },
+    "hadith.favorite" : {
+      "comment" : "Закладка на экране хадиса (VoiceOver; состояние — «выбрано»)",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "В избранном"
+          }
+        }
+      }
+    },
+    "hadith.favorites.empty.message" : {
+      "comment" : "«Избранное» пусто: пояснение",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Здесь появятся хадисы, которые вы добавите"
+          }
+        }
+      }
+    },
+    "hadith.favorites.empty.title" : {
+      "comment" : "«Избранное» пусто: заголовок карточки",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пока пусто"
+          }
+        }
+      }
+    },
+    "hadith.favorites.title" : {
+      "comment" : "«Избранное»: заголовок экрана, подпись кнопки на главной хадисов (VoiceOver), группа в настройках хадисов",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Избранное"
           }
         }
       }
@@ -1033,6 +1475,50 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "40 хадисов ан-Навави"
+          }
+        }
+      }
+    },
+    "hadith.note.quote %@" : {
+      "comment" : "Слово сноски, взятое из текста перевода, — в кавычках",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "«%@»"
+          }
+        }
+      }
+    },
+    "hadith.notes.collapsed" : {
+      "comment" : "Состояние кнопки сносок (VoiceOver)",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Свёрнуто"
+          }
+        }
+      }
+    },
+    "hadith.notes.expanded" : {
+      "comment" : "Состояние кнопки сносок (VoiceOver)",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Развёрнуто"
+          }
+        }
+      }
+    },
+    "hadith.notes.toggle %lld" : {
+      "comment" : "Кнопка сносок под переводом хадиса (VoiceOver; на экране — только число и стрелка)",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сноски: %lld"
           }
         }
       }
@@ -1435,18 +1921,6 @@
         }
       }
     },
-    "placeholder.soon" : {
-      "comment" : "Заголовок заглушки раздела в разработке",
-      "extractionState" : "stale",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Скоро"
-          }
-        }
-      }
-    },
     "progress.fraction %lld %lld" : {
       "comment" : "Короткий прогресс рядом со значком: сделано/всего («3/50»)",
       "localizations" : {
@@ -1511,6 +1985,50 @@
         }
       }
     },
+    "reminders.offer.enable" : {
+      "comment" : "Предложение включить напоминания: кнопка",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Включить"
+          }
+        }
+      }
+    },
+    "reminders.offer.later" : {
+      "comment" : "Предложение включить напоминания: отказ",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не сейчас"
+          }
+        }
+      }
+    },
+    "reminders.offer.message" : {
+      "comment" : "Предложение включить напоминания: пояснение",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "В начале утреннего и вечернего времени. Изменить можно в настройках азкаров."
+          }
+        }
+      }
+    },
+    "reminders.offer.title" : {
+      "comment" : "Предложение включить напоминания на главной азкаров: заголовок",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Напоминать об азкарах?"
+          }
+        }
+      }
+    },
     "section.card.meta.original %@ %@" : {
       "comment" : "Подпись карточки и название в оригинале (арабский — контент). Подпись первой — иначе строка выстраивается справа налево Неразрывный пробел держит «·» на строке подписи; арабское название — в изоляте направления (U+2068…U+2069), чтобы при переносе точка не уходила к нему.",
       "localizations" : {
@@ -1550,7 +2068,7 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Инаба %@ · О приложении"
+            "value" : "Inabah %@ · О приложении"
           }
         }
       }
@@ -1632,6 +2150,61 @@
         }
       }
     },
+    "settings.azkar.history.footer" : {
+      "comment" : "Настройки азкаров: пояснение к сбросу истории",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "По ней строятся календарь азкаров и серия дней подряд. Счётчики разделов не обнуляются."
+          }
+        }
+      }
+    },
+    "settings.azkar.history.header" : {
+      "comment" : "Настройки азкаров: секция сброса истории (календарь и серия дней)",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "История азкаров"
+          }
+        }
+      }
+    },
+    "settings.azkar.history.reset" : {
+      "comment" : "Настройки азкаров: строка «Сбросить историю»",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сбросить историю"
+          }
+        }
+      }
+    },
+    "settings.azkar.history.reset.confirm.message" : {
+      "comment" : "Подтверждение сброса истории азкаров: что удалится",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Все отметки календаря и серия дней будут удалены."
+          }
+        }
+      }
+    },
+    "settings.azkar.history.reset.confirm.title" : {
+      "comment" : "Подтверждение сброса истории азкаров: заголовок",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сбросить историю?"
+          }
+        }
+      }
+    },
     "settings.azkar.subtitle" : {
       "comment" : "Настройки: подпись раздела «Азкары»",
       "localizations" : {
@@ -1650,6 +2223,72 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Азкары"
+          }
+        }
+      }
+    },
+    "settings.hadith.collapseArabic" : {
+      "comment" : "Настройки хадисов: хадис открывается со свёрнутым арабским текстом",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сворачивать арабский текст"
+          }
+        }
+      }
+    },
+    "settings.hadith.collapseArabic.subtitle" : {
+      "comment" : "Настройки хадисов: подпись под «Сворачивать арабский текст»",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "При открытии хадиса. Свернуть и раскрыть можно нажатием на строку с номером"
+          }
+        }
+      }
+    },
+    "settings.hadith.favorites.clear" : {
+      "comment" : "Настройки хадисов: кнопка очистки «Избранного»",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Очистить избранное"
+          }
+        }
+      }
+    },
+    "settings.hadith.favorites.clear.confirm.action" : {
+      "comment" : "Подтверждение очистки «Избранного»: кнопка",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Очистить"
+          }
+        }
+      }
+    },
+    "settings.hadith.favorites.clear.confirm.message" : {
+      "comment" : "Подтверждение очистки «Избранного»: пояснение",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Все хадисы будут убраны из избранного."
+          }
+        }
+      }
+    },
+    "settings.hadith.favorites.clear.confirm.title" : {
+      "comment" : "Подтверждение очистки «Избранного»: заголовок",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Очистить избранное?"
           }
         }
       }
@@ -1720,6 +2359,17 @@
         }
       }
     },
+    "settings.hadith.page.header" : {
+      "comment" : "Настройки хадисов: заголовок группы",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Экран хадиса"
+          }
+        }
+      }
+    },
     "settings.hadith.reset" : {
       "comment" : "Настройки хадисов: кнопка сброса отметок сборника",
       "localizations" : {
@@ -1786,6 +2436,61 @@
         }
       }
     },
+    "settings.hadithOfDay.footer" : {
+      "comment" : "«Хадис дня»: подпись группы",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Следующий непрочитанный хадис по порядку сборников; все прочитаны — по кругу."
+          }
+        }
+      }
+    },
+    "settings.hadithOfDay.header" : {
+      "comment" : "Настройки хадисов: заголовок группы «Хадис дня»",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Хадис дня"
+          }
+        }
+      }
+    },
+    "settings.hadithOfDay.time" : {
+      "comment" : "«Хадис дня»: строка времени",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Время"
+          }
+        }
+      }
+    },
+    "settings.hadithOfDay.time.description" : {
+      "comment" : "«Хадис дня»: выбор времени (VoiceOver)",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Время хадиса дня"
+          }
+        }
+      }
+    },
+    "settings.hadithOfDay.toggle" : {
+      "comment" : "«Хадис дня»: переключатель",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Напоминать"
+          }
+        }
+      }
+    },
     "settings.palette.footer" : {
       "comment" : "Палитра: подпись под вариантами",
       "localizations" : {
@@ -1837,6 +2542,94 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Фон арабского текста"
+          }
+        }
+      }
+    },
+    "settings.reminders.blocked" : {
+      "comment" : "Уведомления запрещены в настройках iPhone",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Уведомления выключены в настройках телефона."
+          }
+        }
+      }
+    },
+    "settings.reminders.header" : {
+      "comment" : "Настройки азкаров: заголовок группы напоминаний",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Напоминания"
+          }
+        }
+      }
+    },
+    "settings.reminders.openSettings" : {
+      "comment" : "Кнопка перехода в настройки уведомлений приложения",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Открыть настройки"
+          }
+        }
+      }
+    },
+    "settings.reminders.start.subtitle %@" : {
+      "comment" : "Подпись напоминания в начале времени азкаров: время начала",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "в начале времени, %@"
+          }
+        }
+      }
+    },
+    "settings.reminders.streak" : {
+      "comment" : "Настройки азкаров → «Напоминания»: переключатель «серия под угрозой»",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Если серия под угрозой"
+          }
+        }
+      }
+    },
+    "settings.reminders.streak.subtitle" : {
+      "comment" : "Настройки азкаров → «Напоминания»: когда приходит напоминание о серии",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "за час до конца времени, пока день не полный"
+          }
+        }
+      }
+    },
+    "settings.reminders.unfinished" : {
+      "comment" : "Напоминание, если азкары ещё не прочитаны",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Если ещё не прочитаны"
+          }
+        }
+      }
+    },
+    "settings.reminders.unfinished.subtitle" : {
+      "comment" : "Подпись напоминания «если ещё не прочитаны»",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "за 2 часа до конца времени"
           }
         }
       }
@@ -2006,6 +2799,72 @@
         }
       }
     },
+    "settings.translationShade.darker %lld" : {
+      "comment" : "Значение ползунка «Фон перевода» левее центра, в процентах (VoiceOver)",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Темнее на %lld %%"
+          }
+        }
+      }
+    },
+    "settings.translationShade.default" : {
+      "comment" : "Значение ползунка «Фон перевода» по центру (VoiceOver)",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Как задумано"
+          }
+        }
+      }
+    },
+    "settings.translationShade.footer" : {
+      "comment" : "«Палитра»: подпись под группой «Фон перевода»",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Карточки перевода азкаров и хадисов. По центру — как задумано; светлее — до предела, пока перевод хорошо читается."
+          }
+        }
+      }
+    },
+    "settings.translationShade.header" : {
+      "comment" : "«Палитра»: заголовок группы и подпись ползунка (VoiceOver)",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Фон перевода"
+          }
+        }
+      }
+    },
+    "settings.translationShade.lighter %lld" : {
+      "comment" : "Значение ползунка «Фон перевода» правее центра, в процентах (VoiceOver)",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Светлее на %lld %%"
+          }
+        }
+      }
+    },
+    "settings.translationShade.sample" : {
+      "comment" : "Текст образца карточек перевода в «Палитре»",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Так будет выглядеть перевод на карточке."
+          }
+        }
+      }
+    },
     "settings.window.evening.end" : {
       "comment" : "VoiceOver: выбор конца времени вечерних азкаров",
       "localizations" : {
@@ -2127,13 +2986,24 @@
         }
       }
     },
+    "share.text.hadith.notes" : {
+      "comment" : "«Поделиться» хадисом: заголовок блока сносок",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Комментарии учёных:"
+          }
+        }
+      }
+    },
     "share.text.reminder.evening.call" : {
       "comment" : "Текст напоминания: призыв, вечерние; на iOS пока не используется — «Сделать напоминание» сделано на Android, см. docs/02-screen-azkar.md",
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "О рабы Аллаха, защитите себя и свою семью от сглаза, зависти и колдовства — прочитайте вечерние азкары."
+            "value" : "О рабы Аллаха, защитите себя и свою семью от сглаза, зависти и колдовства: прочитайте вечерние азкары."
           }
         }
       }
@@ -2144,7 +3014,7 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "❗ Лучшее время для чтения вечерних азкаров — с Асра до Магриба."
+            "value" : "✅ Лучшее время для чтения вечерних азкаров с Асра до Магриба."
           }
         }
       }
@@ -2155,7 +3025,7 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "‼️ Вечерние азкары ‼️"
+            "value" : "⚠️ Вечерние азкары ⚠️"
           }
         }
       }
@@ -2166,7 +3036,7 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "О рабы Аллаха, защитите себя и свою семью от сглаза, зависти и колдовства — прочитайте утренние азкары."
+            "value" : "О рабы Аллаха, защитите себя и свою семью от сглаза, зависти и колдовства: прочитайте утренние азкары."
           }
         }
       }
@@ -2177,7 +3047,7 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "❗ Лучшее время для чтения утренних азкаров — с Фаджра до восхода солнца."
+            "value" : "✅ Лучшее время для чтения утренних азкаров с Фаджра до восхода солнца."
           }
         }
       }
@@ -2188,7 +3058,7 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "‼️ Утренние азкары ‼️"
+            "value" : "⚠️ Утренние азкары ⚠️"
           }
         }
       }
@@ -2354,6 +3224,83 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Обычный"
+          }
+        }
+      }
+    },
+    "update.available %@" : {
+      "comment" : "VoiceOver: значок «Обновить» на главной азкаров",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Доступна версия %@"
+          }
+        }
+      }
+    },
+    "versionHistory.empty.message" : {
+      "comment" : "История версий: пояснение, когда файл не загрузился",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Список изменений не удалось загрузить."
+          }
+        }
+      }
+    },
+    "versionHistory.empty.title" : {
+      "comment" : "История версий: файл не загрузился",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Нет истории версий"
+          }
+        }
+      }
+    },
+    "versionHistory.header %@ %@" : {
+      "comment" : "История версий: заголовок группы «версия · дата»",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$@"
+          }
+        }
+      }
+    },
+    "versionHistory.title" : {
+      "comment" : "Заголовок экрана истории версий",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "История версий"
+          }
+        }
+      }
+    },
+    "whatsNew.ok" : {
+      "comment" : "Окно «Что нового»: закрыть (кириллица)",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ОК"
+          }
+        }
+      }
+    },
+    "whatsNew.title %@" : {
+      "comment" : "Окно «Что нового» после обновления: заголовок с номером версии",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Что нового в %@"
           }
         }
       }

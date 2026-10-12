@@ -16,18 +16,30 @@ import app.inabah.android.core.content.LicenseTexts
 import app.inabah.android.core.content.Loadable
 import app.inabah.android.core.content.model.AzkarSection
 import app.inabah.android.core.content.model.HadithCollection
+import app.inabah.android.BuildConfig
+import app.inabah.android.core.releases.ReleaseNotesSource
+import app.inabah.android.core.releases.WhatsNew
+import app.inabah.android.core.reminders.ReminderTextsSource
+import app.inabah.android.core.updates.DebugFileUpdateSource
+import app.inabah.android.core.updates.NoUpdateSource
+import app.inabah.android.core.updates.UpdateSource
 import app.inabah.android.core.settings.AppIconSettings
 import app.inabah.android.core.settings.AppearanceSettings
 import app.inabah.android.core.settings.AzkarHistory
 import app.inabah.android.core.settings.AzkarWindowSettings
+import app.inabah.android.core.settings.DEBUG_AZKAR_HISTORY_FILE
 import app.inabah.android.core.settings.HadithCollectionOrder
+import app.inabah.android.core.settings.HadithFavorites
 import app.inabah.android.core.settings.HadithProgress
 import app.inabah.android.core.settings.PackageManagerAppIconSwitcher
 import app.inabah.android.core.settings.ParchmentSettings
 import app.inabah.android.core.settings.PlaylistSettings
 import app.inabah.android.core.settings.PreferencesStorage
 import app.inabah.android.core.settings.ReadingSettings
+import app.inabah.android.core.settings.ReminderSettings
 import app.inabah.android.core.settings.TextSizeSettings
+import app.inabah.android.core.settings.TranslationShadeSettings
+import app.inabah.android.core.settings.seedDebugAzkarHistory
 import app.inabah.android.feature.azkar.AzkarStore
 import app.inabah.android.feature.hadith.HadithStore
 import java.time.Instant
@@ -47,15 +59,23 @@ class AppServices(
     val playlistSettings: PlaylistSettings,
     val azkarWindowSettings: AzkarWindowSettings,
     val azkarStore: AzkarStore,
+    val azkarHistory: AzkarHistory,
     val hadithStore: HadithStore,
     val hadithProgress: HadithProgress,
+    val hadithFavorites: HadithFavorites,
     val hadithCollectionOrder: HadithCollectionOrder,
     val appearanceSettings: AppearanceSettings,
     val parchmentSettings: ParchmentSettings,
+    val translationShadeSettings: TranslationShadeSettings,
     val textSizeSettings: TextSizeSettings,
     val appIconSettings: AppIconSettings,
     val licenseTexts: LicenseTexts,
     val audioPlayer: AudioPlayerController,
+    val reminderSettings: ReminderSettings,
+    val reminders: ReminderService,
+    val releaseNotes: ReleaseNotesSource,
+    val whatsNew: WhatsNew,
+    val updateSource: UpdateSource,
 )
 
 /**
@@ -82,9 +102,11 @@ class AppContainer(context: Context) {
         onError = { error -> Log.e(TAG, "Ошибка хранилища настроек", error) },
     )
 
+    private val contentLanguagePriority = ContentLanguagePriority.fromLanguageTags(systemLanguageTags())
+
     private val repository: ContentRepository = AssetContentRepository(
         source = appContext.assets::open,
-        priority = ContentLanguagePriority.fromLanguageTags(systemLanguageTags()),
+        priority = contentLanguagePriority,
         ioDispatcher = Dispatchers.IO,
     )
 
@@ -105,6 +127,15 @@ class AppContainer(context: Context) {
             appScope.launch { services.azkarStore.runBoundaryTimer() }
             appScope.launch { services.audioPlayer.run() }
             appScope.launch { services.appIconSettings.refresh() }
+            // Расписание напоминаний — за настройками и окнами азкаров, пока жив процесс.
+            appScope.launch { services.reminders.run() }
+            appScope.launch { services.whatsNew.check() }
+            // Прошлые дни для календаря — только debug (R8 убирает ветку из релиза).
+            if (BuildConfig.DEBUG) {
+                appScope.launch {
+                    seedDebugAzkarHistory(services.azkarHistory, appContext.filesDir.resolve(DEBUG_AZKAR_HISTORY_FILE), Dispatchers.IO)
+                }
+            }
             services.azkarStore.loadAll()
             services.hadithStore.loadAll()
             logContentFailures(services)
@@ -123,6 +154,19 @@ class AppContainer(context: Context) {
     // Порядок — как в iOS AppEnvironment: настройки, затем сторы, которые от них зависят.
     private fun createServices(): AppServices {
         val azkarWindowSettings = AzkarWindowSettings(storage)
+        // Одна история на сторы и напоминания: «ещё не прочитаны» смотрит то, что записал AzkarStore.
+        val azkarHistory = AzkarHistory(storage) { error ->
+            Log.w(TAG, "История азкаров не читается — начата заново (первая испорченная — в azkar.history.corrupt)", error)
+        }
+        val hadithStore = HadithStore(repository) { collection, error ->
+            Log.e(TAG, "Не загружены сведения «${collection.key}»", error)
+        }
+        val hadithProgress = HadithProgress(storage)
+        val hadithCollectionOrder = HadithCollectionOrder(storage)
+        val reminderSettings = ReminderSettings(storage)
+        val releaseNotes = ReleaseNotesSource(appContext.assets::open, contentLanguagePriority, Dispatchers.IO) { message, error ->
+            Log.e(TAG, "История версий: $message", error)
+        }
         return AppServices(
             router = AppRouter(),
             readingSettings = ReadingSettings(storage),
@@ -132,20 +176,21 @@ class AppContainer(context: Context) {
                 repository = repository,
                 storage = storage,
                 windowSettings = azkarWindowSettings,
-                history = AzkarHistory(storage) { error ->
-                    Log.w(TAG, "История азкаров не читается — начата заново (первая испорченная — в azkar.history.corrupt)", error)
-                },
+                history = azkarHistory,
                 now = Instant::now,
                 zone = ZoneId::systemDefault,
                 onUnreadableProgress = { section, error ->
                     Log.w(TAG, "Прогресс «${section.key}» не читается — отрезок заново", error)
                 },
             ),
-            hadithStore = HadithStore(repository),
-            hadithProgress = HadithProgress(storage),
-            hadithCollectionOrder = HadithCollectionOrder(storage),
+            azkarHistory = azkarHistory,
+            hadithStore = hadithStore,
+            hadithProgress = hadithProgress,
+            hadithFavorites = HadithFavorites(storage),
+            hadithCollectionOrder = hadithCollectionOrder,
             appearanceSettings = AppearanceSettings(storage),
             parchmentSettings = ParchmentSettings(storage),
+            translationShadeSettings = TranslationShadeSettings(storage),
             textSizeSettings = TextSizeSettings(storage),
             appIconSettings = AppIconSettings(
                 switcher = PackageManagerAppIconSwitcher(appContext),
@@ -155,7 +200,40 @@ class AppContainer(context: Context) {
             licenseTexts = LicenseTexts(appContext.assets::open, Dispatchers.IO),
             // Служба воспроизведения подключается при первом звуке, не при запуске приложения.
             audioPlayer = AudioPlayerController(MediaControllerEngine(appContext)),
+            reminderSettings = reminderSettings,
+            reminders = ReminderService(
+                settings = reminderSettings,
+                windowSettings = azkarWindowSettings,
+                history = azkarHistory,
+                hadithStore = hadithStore,
+                hadithProgress = hadithProgress,
+                hadithOrder = hadithCollectionOrder,
+                texts = ReminderTextsSource(appContext.assets::open, contentLanguagePriority, Dispatchers.IO) { message, error ->
+                    Log.e(TAG, "Тексты напоминаний: $message", error)
+                },
+                alarms = ReminderAlarms(appContext),
+                notifier = ReminderNotifier(appContext),
+                now = Instant::now,
+                zone = ZoneId::systemDefault,
+            ),
+            releaseNotes = releaseNotes,
+            whatsNew = WhatsNew(storage, releaseNotes, BuildConfig.VERSION_NAME, isFreshInstall()),
+            // До 1.2.0 — без сети: в релизе «обновления нет», подделка — только в debug (R8 убирает ветку).
+            updateSource = if (BuildConfig.DEBUG) {
+                DebugFileUpdateSource(appContext.filesDir.resolve(DebugFileUpdateSource.FILE_NAME), Dispatchers.IO)
+            } else {
+                NoUpdateSource
+            },
         )
+    }
+
+    /**
+     * Установлено, а не обновлено: время установки совпадает со временем последнего обновления
+     * (на iOS такого нет — там признак «в UserDefaults ещё нет ключей приложения»).
+     */
+    private fun isFreshInstall(): Boolean {
+        val info = appContext.packageManager.getPackageInfo(appContext.packageName, 0)
+        return info.firstInstallTime == info.lastUpdateTime
     }
 
     private companion object {

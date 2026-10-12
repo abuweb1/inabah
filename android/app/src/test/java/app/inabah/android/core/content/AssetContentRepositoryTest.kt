@@ -56,7 +56,7 @@ class AssetContentRepositoryTest {
     @Test
     fun `Сборник хадисов загружается`() = runTest {
         val repository = repository(dispatcher = StandardTestDispatcher(testScheduler))
-        val expected = mapOf(HadithCollection.Nawawi to 50, HadithCollection.Qudsi to 40, HadithCollection.Ajurri to 40)
+        val expected = mapOf(HadithCollection.Nawawi to 50, HadithCollection.Qudsi to 42, HadithCollection.Ajurri to 40)
         for ((collection, count) in expected) {
             val hadiths = repository.hadiths(collection)
 
@@ -64,6 +64,32 @@ class AssetContentRepositoryTest {
             assertTrue(hadiths.all { it.translation?.language == ContentLanguage.Base })
             assertTrue(hadiths.all { it.arabic.isNotEmpty() })
         }
+    }
+
+    @Test
+    fun `О сборнике из настоящего collections json — у своей подборки къудси составителя нет`() = runTest {
+        val repository = repository(FileContentSource(assetsDir), StandardTestDispatcher(testScheduler))
+
+        for (collection in HadithCollection.entries) {
+            val info = repository.collectionInfo(collection)
+            assertTrue(info.about.isNotEmpty(), "нет «О книге» у $collection")
+            assertTrue(info.authors.all { it.name.isNotBlank() })
+        }
+        assertEquals(1, repository.collectionInfo(HadithCollection.Nawawi).authors.size)
+        assertEquals(1, repository.collectionInfo(HadithCollection.Ajurri).authors.size)
+        assertTrue(repository.collectionInfo(HadithCollection.Qudsi).authors.isEmpty())
+    }
+
+    @Test
+    fun `О сборнике — нет файла — ResourceMissing, неудача не кэшируется`() = runTest {
+        val source = CountingSource { throw FileNotFoundException(it) }
+        val repository = repository(source, StandardTestDispatcher(testScheduler))
+
+        repeat(2) {
+            val error = assertFailsWith<ContentError.ResourceMissing> { repository.collectionInfo(HadithCollection.Nawawi) }
+            assertEquals("collections.json", error.file)
+        }
+        assertEquals(2, source.opened.get())
     }
 
     @Test

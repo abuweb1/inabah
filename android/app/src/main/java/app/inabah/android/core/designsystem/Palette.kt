@@ -2,6 +2,13 @@ package app.inabah.android.core.designsystem
 
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.lerp
+
+/** Доля `tabHadith` в цвете текста сносок ([Palette.noteText]); контраст — `NoteColorsTest`. */
+private const val NOTE_TEXT_TINT = 0.3f
+
+/** Насколько темнее шапки хадисов карточка перевода хадиса ([Palette.hadithCard]); контраст — `NoteColorsTest`. */
+private const val HADITH_CARD_SHADE = 0.5f
 
 /**
  * Цвета темы. HEX — только здесь, в [ThemeGradients] и сгенерированном [ThemePalettes]; экраны берут
@@ -12,14 +19,20 @@ import androidx.compose.ui.graphics.Color
 data class Palette(
     val background: Color,
     val card: Color,
+    /** Фон карточки зикра и образца перевода в «Размере текста» (по умолчанию — `card`); сдвигается ползунком «Фон перевода» (`withTranslationShade`). */
+    val zikrCard: Color = card,
     val actionBackground: Color,
     val header: Color,
     val eveningHeader: Color,
     val hadithHeader: Color,
+    /** Фон карточки перевода хадиса — тёмный оттенок шапки хадисов (в единых стилях — `card`, как у зикра). */
+    val hadithCard: Color = lerp(hadithHeader, Color.Black, HADITH_CARD_SHADE),
     val shadow: Color,
     val textPrimary: Color,
     val textSecondary: Color,
     val textTertiary: Color,
+    /** Источник под переводом зикра (по умолчанию — `textTertiary`); светлеет вместе с фоном перевода (`withTranslationShade`). */
+    val zikrSource: Color = textTertiary,
     val onAccent: Color,
     val accent: Color,
     val accentLight: Color,
@@ -54,6 +67,8 @@ data class Palette(
     val tabSettings: Color,
     /** Разрушающее действие («Сбросить»): системный красный iOS в тёмной теме. */
     val destructive: Color,
+    /** Вечерняя дуга дня в календаре азкаров — 🌑, чёрный во всех палитрах (решение пользователя 2026-10-11). */
+    val newMoon: Color = Color.Black,
 ) {
     val onAccentSecondary: Color get() = onAccent.copy(alpha = 0.6f)
     val onAccentTertiary: Color get() = onAccent.copy(alpha = 0.4f)
@@ -77,6 +92,13 @@ data class Palette(
     val parchmentGlow: Color get() = parchmentLight.copy(alpha = 0.7f)
     val parchmentAccentTint: Color get() = parchmentAccent.copy(alpha = 0.1f)
     val parchmentAccentBorder: Color get() = parchmentAccent.copy(alpha = 0.25f)
+
+    // Сноски к переводу хадиса — как пузырь перевода азкаров, но в тон раздела хадисов: `tabHadith`
+    // свой в каждой палитре (в единых стилях — цвет стиля), `accent` «По умолчанию» — фиолетовый.
+    val noteStripe: Color get() = tabHadith
+    val noteFill: Color get() = tabHadith.copy(alpha = 0.1f)
+    /** «Оттенок транскрипции» раздела хадисов: белый с примесью `tabHadith`. */
+    val noteText: Color get() = lerp(onAccent, tabHadith, NOTE_TEXT_TINT)
 
     companion object {
         val Sections = Palette(

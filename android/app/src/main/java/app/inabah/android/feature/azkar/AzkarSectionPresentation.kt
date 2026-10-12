@@ -10,6 +10,7 @@ import app.inabah.android.core.content.model.AzkarSection
 import app.inabah.android.core.designsystem.ShadowToken
 import app.inabah.android.core.designsystem.Theme
 import app.inabah.android.core.designsystem.components.NavCardRingStyle
+import app.inabah.android.core.settings.AzkarDay
 
 // Тексты и оформление раздела — в одном месте (iOS AzkarSection+Presentation): новый раздел — один case.
 
@@ -40,6 +41,25 @@ val AzkarSection.completionMessage: Int
     get() = when (this) {
         AzkarSection.Morning -> R.string.azkar_completion_morning
         AzkarSection.Evening -> R.string.azkar_completion_evening
+    }
+
+/**
+ * О каком разделе напомнить в окне «Машаа Аллах!» после [this] (решение пользователя 2026-10-11): о втором
+ * разделе того же дня [day], если он ещё не прочитан полностью; оба прочитаны — `null`.
+ */
+fun AzkarSection.completionReminder(day: AzkarDay?): AzkarSection? {
+    val other = when (this) {
+        AzkarSection.Morning -> AzkarSection.Evening
+        AzkarSection.Evening -> AzkarSection.Morning
+    }
+    return other.takeIf { day?.record(it)?.isComplete != true }
+}
+
+/** Строка-напоминание: вечерние ещё впереди; утренние этого дня уже прошли — «завтра». */
+val AzkarSection.completionReminderMessage: Int
+    get() = when (this) {
+        AzkarSection.Evening -> R.string.azkar_completion_next_evening
+        AzkarSection.Morning -> R.string.azkar_completion_next_morning
     }
 
 @get:DrawableRes

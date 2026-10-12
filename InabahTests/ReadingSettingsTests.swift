@@ -50,4 +50,29 @@ struct ReadingSettingsTests {
         defaults.set(100.0, forKey: "reading.arabicFontSize")
         #expect(ReadingSettings(defaults: defaults).arabicFontSize == 40)
     }
+
+    @Test("«Сворачивать арабский текст»: по умолчанию выключено, сохраняется под ключом Android")
+    func hadithArabicCollapsed() {
+        let settings = ReadingSettings(defaults: defaults)
+        #expect(!settings.hadithArabicCollapsed)
+
+        settings.setHadithArabicCollapsed(true)
+
+        #expect(defaults.bool(forKey: "reading.hadithArabicCollapsed"))
+        #expect(ReadingSettings(defaults: defaults).hadithArabicCollapsed)
+    }
+}
+
+@Suite("Превью арабского текста")
+struct ArabicPreviewTests {
+    @Test("Длиннее 8 слов — первые 8 и «…»")
+    func truncates() {
+        let text = (1...10).map { "ك\($0)" }.joined(separator: " ")
+        #expect(ArabicText.preview(of: text) == (1...8).map { "ك\($0)" }.joined(separator: " ") + "…")
+    }
+
+    @Test("8 слов и меньше — все, через одиночный пробел, без «…»")
+    func keepsShort() {
+        #expect(ArabicText.preview(of: "قَالَ\n  رَسُولُ   اللَّهِ") == "قَالَ رَسُولُ اللَّهِ")
+    }
 }

@@ -33,6 +33,21 @@ final class HadithProgress {
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
         statuses = Self.load(from: defaults)
+        applyRevisions()
+    }
+
+    /// Редакции сборников: при новой редакции хадисы под теми же номерами другие, и отметки
+    /// сбрасываются один раз (1.1.1 — переработка къудси, docs/06-data-structure.md). На новой
+    /// установке отметок нет — сброс ничего не делает, просто записывается редакция.
+    static let revisions: [HadithCollection: Int] = [.qudsi: 2]
+
+    static func revisionKey(_ collection: HadithCollection) -> String { "hadith.\(collection.rawValue).revision" }
+
+    private func applyRevisions() {
+        for (collection, revision) in Self.revisions where defaults.integer(forKey: Self.revisionKey(collection)) < revision {
+            reset(collection)
+            defaults.set(revision, forKey: Self.revisionKey(collection))
+        }
     }
 
     func status(of id: HadithID) -> HadithStatus {
@@ -47,13 +62,12 @@ final class HadithProgress {
         set(status(of: id).isMemorized ? .read : .memorized, for: id)
     }
 
-    /// Сброс всех отметок сборника («прочитан» и «выучен»); другие сборники не затрагиваются.
+    /// Сброс всех отметок сборника («прочитан» и «выучен»), включая ключи, не попавшие в память
+    /// (номер 0, значение не `"1"`); другие сборники и избранное (`h_fav_*`) не затрагиваются.
     func reset(_ collection: HadithCollection) {
-        guard let numbers = statuses[collection]?.keys, !numbers.isEmpty else { return }
-        for number in numbers {
-            let id = HadithID(collection: collection, number: number)
-            defaults.removeObject(forKey: Self.readKey(id))
-            defaults.removeObject(forKey: Self.memorizedKey(id))
+        for key in defaults.dictionaryRepresentation().keys where key.hasPrefix(Self.keyPrefix) {
+            guard let match = key.wholeMatch(of: Self.keyPattern), match.2 == collection.rawValue else { continue }
+            defaults.removeObject(forKey: key)
         }
         statuses[collection] = [:]
     }

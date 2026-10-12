@@ -20,6 +20,10 @@ class ThemeTransitionTest {
         val half = Theme.lerp(from, to, 0.5f)
         assertEquals(lerp(from.palette.background, to.palette.background, 0.5f), half.palette.background)
         assertEquals(lerp(from.palette.tabAzkar, to.palette.tabAzkar, 0.5f), half.palette.tabAzkar)
+        // Производные фоны перевода — тоже, а не формула от шапки (иначе в середине перехода мигали).
+        assertEquals(lerp(from.palette.hadithCard, to.palette.hadithCard, 0.5f), half.palette.hadithCard)
+        assertEquals(lerp(from.palette.zikrCard, to.palette.zikrCard, 0.5f), half.palette.zikrCard)
+        assertEquals(lerp(from.palette.zikrSource, to.palette.zikrSource, 0.5f), half.palette.zikrSource)
     }
 
     @Test

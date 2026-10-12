@@ -1,5 +1,6 @@
 package app.inabah.android.feature.azkar
 
+import android.os.SystemClock
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
@@ -8,25 +9,27 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import android.os.SystemClock
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.collectIsDraggedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material3.Icon
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -36,29 +39,29 @@ import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.snapshotFlow
-import androidx.compose.ui.layout.onPlaced
-import androidx.compose.ui.layout.positionInParent
-import app.inabah.android.core.audio.AudioPlayerController
-import app.inabah.android.core.settings.PlaylistSettings
-import kotlinx.coroutines.flow.drop
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.runtime.setValue
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onPlaced
+import androidx.compose.ui.layout.positionInParent
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.inabah.android.R
+import app.inabah.android.core.audio.AudioPlayerController
 import app.inabah.android.core.content.Loadable
 import app.inabah.android.core.content.model.AzkarSection
 import app.inabah.android.core.designsystem.InabahTheme
@@ -70,22 +73,34 @@ import app.inabah.android.core.designsystem.Size
 import app.inabah.android.core.designsystem.Spacing
 import app.inabah.android.core.designsystem.components.ArabicText
 import app.inabah.android.core.designsystem.components.AudioSoonPlaceholder
+import app.inabah.android.core.designsystem.components.ContentError
+import app.inabah.android.core.designsystem.components.FeaturedVerse
+import app.inabah.android.core.designsystem.components.FeaturedVerseBox
 import app.inabah.android.core.designsystem.components.FontSizeControls
 import app.inabah.android.core.designsystem.components.GlassIconButton
 import app.inabah.android.core.designsystem.components.InabahTopBar
-import app.inabah.android.core.designsystem.components.ContentError
 import app.inabah.android.core.designsystem.components.PrimaryButton
 import app.inabah.android.core.designsystem.components.ProgressHeader
 import app.inabah.android.core.designsystem.components.TopBarSubtitle
 import app.inabah.android.core.designsystem.components.surface
 import app.inabah.android.core.formatting.formatPercent
+import app.inabah.android.core.settings.AzkarHistory
 import app.inabah.android.core.settings.AzkarWindowSettings
+import app.inabah.android.core.settings.PlaylistSettings
 import app.inabah.android.core.settings.ReadingSettings
+import app.inabah.android.core.settings.azkarStreak
 import kotlin.math.floor
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.launch
 
 // Арабский контент оверлея — не переводится.
 private const val COMPLETION_TITLE = "مَا شَاءَ اللَّهُ"
 private const val COMPLETION_HAMD = "الحمد لله رب العالمين"
+
+/** Аль-Ахзаб 33:41–42 — огласовка простая, как у аята на главной. */
+private const val COMPLETION_VERSE = "يَا أَيُّهَا الَّذِينَ آمَنُوا اذْكُرُوا اللَّهَ ذِكْرًا كَثِيرًا وَسَبِّحُوهُ بُكْرَةً وَأَصِيلًا"
+private const val COMPLETION_LINE_ICON_SIZE = 18
 private const val COMPLETION_TITLE_SIZE = 52f
 private const val COMPLETION_HAMD_SIZE = 24f
 
@@ -103,6 +118,7 @@ private const val HALF = 0.5
 fun AzkarListScreen(
     section: AzkarSection,
     store: AzkarStore,
+    history: AzkarHistory,
     windowSettings: AzkarWindowSettings,
     readingSettings: ReadingSettings,
     player: AudioPlayerController,
@@ -123,6 +139,11 @@ fun AzkarListScreen(
     val scope = rememberCoroutineScope()
     LaunchedEffect(section) { store.load(section) }
     CompletionWatcher(store, section, onShow = { showsCompletion = it })
+    // Для оверлея: второй раздел того же дня и серия — день серии совпадает с днём окна (`streakDay`).
+    val today by store.streakDay.collectAsStateWithLifecycle()
+    val days by history.days.collectAsStateWithLifecycle()
+    val day = today?.let(days::get)
+    val streak = today?.let { remember(days, it) { azkarStreak(days, it).current } } ?: 0
 
     Column(modifier.fillMaxSize().background(section.background(theme))) {
         InabahTopBar(
@@ -174,7 +195,7 @@ fun AzkarListScreen(
                 enter = fadeIn(Motion.overlay()),
                 exit = fadeOut(Motion.overlay()),
             ) {
-                CompletionOverlay(section, onGoHome, onRemind, contentPadding)
+                CompletionOverlay(section, section.completionReminder(day), streak, onGoHome, onRemind, contentPadding)
             }
         }
     }
@@ -273,6 +294,7 @@ private fun AzkarFeed(
     val scrollState = rememberScrollState()
     val cardTops = remember { mutableMapOf<String, Float>() }
     AutoScrollToPlaying(scrollState, cardTops, trackId = playerState.track?.id.takeIf { isPlaylistActive })
+    val scope = rememberCoroutineScope()
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -294,6 +316,13 @@ private fun AzkarFeed(
                         isPlaylistCurrent = isPlaylistActive && playerState.track?.id == trackId,
                     ),
                     onPlay = { track?.let(player::play) },
+                    // Верх дочитанного длинного зикра ушёл за экран — без подъезда лента осталась бы на прежнем
+                    // смещении, и начало следующего зикра уехало бы вверх на высоту свёрнутого.
+                    onCollapse = {
+                        cardTops[trackId]?.takeIf { it < scrollState.value }?.let { top ->
+                            scope.launch { scrollState.animateScrollTo(top.toInt(), Motion.collapse()) }
+                        }
+                    },
                     modifier = Modifier.onPlaced { cardTops[trackId] = it.positionInParent().y },
                 )
             }
@@ -351,53 +380,108 @@ private fun AutoScrollToPlaying(scrollState: ScrollState, cardTops: Map<String, 
 
 private const val AUTO_SCROLL_COOLDOWN_MILLIS = 2_000L
 
-/** «مَا شَاءَ اللَّهُ» (iOS `AzkarCompletionView`); «← На главную» очищает стек вкладки. */
+/**
+ * «مَا شَاءَ اللَّهُ» (iOS `AzkarCompletionView`); «← На главную» очищает стек вкладки. Под сообщением
+ * (решения пользователя 2026-10-11) — напоминание о втором разделе [reminder], серия [streak] и аят
+ * аль-Ахзаб 33:41–42; не помещается — прокручивается.
+ */
 @Composable
-private fun CompletionOverlay(section: AzkarSection, onGoHome: () -> Unit, onRemind: () -> Unit, contentPadding: PaddingValues) {
+private fun CompletionOverlay(
+    section: AzkarSection,
+    reminder: AzkarSection?,
+    streak: Int,
+    onGoHome: () -> Unit,
+    onRemind: () -> Unit,
+    contentPadding: PaddingValues,
+) {
     val palette = InabahTheme.palette
     val gradients = InabahTheme.gradients
-    Column(
-        modifier = Modifier
+    BoxWithConstraints(
+        Modifier
             .fillMaxSize()
             // Касания не проходят к скрытой ленте (иначе невидимый ↺ сбросил бы зикр).
             .pointerInput(Unit) { awaitPointerEventScope { while (true) awaitPointerEvent() } }
-            .background(palette.background)
-            .padding(horizontal = Spacing.xxl, vertical = Spacing.section)
-            .padding(bottom = contentPadding.calculateBottomPadding()),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(Spacing.l, Alignment.CenterVertically),
+            .background(palette.background),
     ) {
-        val title = stringResource(R.string.azkar_completion_title)
-        ArabicText(
-            COMPLETION_TITLE, COMPLETION_TITLE_SIZE, palette.gold, bold = true, textAlign = TextAlign.Center,
+        Column(
             modifier = Modifier
-                .pulse()
-                .clearAndSetSemantics {
-                    contentDescription = title
-                    heading()
-                },
-        )
-        val hamd = stringResource(R.string.azkar_completion_hamd)
-        ArabicText(
-            COMPLETION_HAMD, COMPLETION_HAMD_SIZE, palette.parchmentText, textAlign = TextAlign.Center,
-            modifier = Modifier
-                .surface(gradients.parchment, Radius.control, border = palette.parchmentAccent, lineWidth = Size.parchmentBorder)
-                .padding(horizontal = Spacing.xlPlus, vertical = Spacing.m)
-                .clearAndSetSemantics { contentDescription = hamd },
-        )
-        Text(stringResource(section.completionMessage), color = palette.textSecondary,
-            style = InabahType.subheadline, textAlign = TextAlign.Center)
-        // Прочитал сам — напомни другим (решение пользователя 2026-10-06): тот же текст, что у кнопки в шапке.
-        PrimaryButton(
-            onClick = onRemind,
-            text = stringResource(R.string.reminder_action),
-            leadingIcon = painterResource(R.drawable.ic_share),
-        )
-        PrimaryButton(
-            onClick = onGoHome,
-            text = stringResource(R.string.azkar_completion_home),
-            leadingIcon = painterResource(R.drawable.ic_arrow_back),
-        )
+                .verticalScroll(rememberScrollState())
+                // По центру, пока помещается; выше экрана — прокрутка.
+                .heightIn(min = maxHeight)
+                .fillMaxWidth()
+                .padding(horizontal = Spacing.xxl, vertical = Spacing.section)
+                .padding(bottom = contentPadding.calculateBottomPadding()),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(Spacing.l, Alignment.CenterVertically),
+        ) {
+            val title = stringResource(R.string.azkar_completion_title)
+            ArabicText(
+                COMPLETION_TITLE, COMPLETION_TITLE_SIZE, palette.gold, bold = true, textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .pulse()
+                    .clearAndSetSemantics {
+                        contentDescription = title
+                        heading()
+                    },
+            )
+            val hamd = stringResource(R.string.azkar_completion_hamd)
+            ArabicText(
+                COMPLETION_HAMD, COMPLETION_HAMD_SIZE, palette.parchmentText, textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .surface(gradients.parchment, Radius.control, border = palette.parchmentAccent, lineWidth = Size.parchmentBorder)
+                    .padding(horizontal = Spacing.xlPlus, vertical = Spacing.m)
+                    .clearAndSetSemantics { contentDescription = hamd },
+            )
+            Text(stringResource(section.completionMessage), color = palette.textSecondary,
+                style = InabahType.subheadline, textAlign = TextAlign.Center)
+            if (reminder != null) {
+                CompletionLine(reminder.icon, reminder.iconColor(LocalInabahTheme.current), stringResource(reminder.completionReminderMessage))
+            }
+            if (streak > 0) {
+                CompletionLine(R.drawable.ic_auto_awesome, palette.gold, streakDaysText(streak))
+            }
+            FeaturedVerseBox(
+                FeaturedVerse(
+                    arabic = COMPLETION_VERSE,
+                    translation = stringResource(R.string.azkar_completion_verse_translation),
+                    reference = stringResource(R.string.azkar_completion_verse_reference),
+                ),
+            )
+            // В ряд (решение пользователя 2026-10-11): слева «На главную», справа «Сделать напоминание» —
+            // прочитал сам, напомни другим (2026-10-06): тот же текст, что у кнопки в шапке.
+            Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(Spacing.m)) {
+                PrimaryButton(
+                    onClick = onGoHome,
+                    text = stringResource(R.string.azkar_completion_home),
+                    leadingIcon = painterResource(R.drawable.ic_arrow_back),
+                    compact = true,
+                    // Одна высота, даже если текст соседней перенёсся на вторую строку.
+                    modifier = Modifier.weight(1f).fillMaxHeight(),
+                )
+                PrimaryButton(
+                    onClick = onRemind,
+                    text = stringResource(R.string.reminder_action),
+                    leadingIcon = painterResource(R.drawable.ic_share),
+                    compact = true,
+                    // Одна высота, даже если текст соседней перенёсся на вторую строку.
+                    modifier = Modifier.weight(1f).fillMaxHeight(),
+                )
+            }
+        }
+    }
+}
+
+/** Строка оверлея со значком слева: напоминание о втором разделе, серия дней. */
+@Composable
+private fun CompletionLine(icon: Int, iconColor: Color, text: String) {
+    val iconSize = with(LocalDensity.current) { COMPLETION_LINE_ICON_SIZE.sp.toDp() }
+    Row(
+        Modifier.semantics(mergeDescendants = true) {},
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(Spacing.s),
+    ) {
+        Icon(painterResource(icon), contentDescription = null, tint = iconColor, modifier = Modifier.size(iconSize))
+        Text(text, color = InabahTheme.palette.onAccent, style = InabahType.subheadline, textAlign = TextAlign.Center)
     }
 }
 

@@ -11,6 +11,7 @@ final class ReadingSettings {
 
     private enum Key {
         static let arabicFontSize = "reading.arabicFontSize"
+        static let hadithArabicCollapsed = "reading.hadithArabicCollapsed"
     }
 
     @ObservationIgnored private let defaults: UserDefaults
@@ -19,10 +20,22 @@ final class ReadingSettings {
         didSet { defaults.set(arabicFontSize, forKey: Key.arabicFontSize) }
     }
 
+    /// Хадис открывается со свёрнутым арабским текстом (как на Android, ключ тот же). Задаёт только
+    /// начальное состояние страницы: свернуть и раскрыть можно всегда нажатием на строку с номером.
+    private(set) var hadithArabicCollapsed: Bool {
+        didSet { defaults.set(hadithArabicCollapsed, forKey: Key.hadithArabicCollapsed) }
+    }
+
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
         let stored = defaults.object(forKey: Key.arabicFontSize) as? Double
         arabicFontSize = (stored ?? Self.defaultArabicFontSize).clamped(to: Self.arabicFontSizeRange)
+        hadithArabicCollapsed = defaults.bool(forKey: Key.hadithArabicCollapsed)
+    }
+
+    func setHadithArabicCollapsed(_ value: Bool) {
+        guard value != hadithArabicCollapsed else { return }
+        hadithArabicCollapsed = value
     }
 
     var canIncreaseArabicFontSize: Bool { arabicFontSize < Self.arabicFontSizeRange.upperBound }

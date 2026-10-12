@@ -5,11 +5,13 @@ import app.inabah.android.core.content.model.AzkarSection
 import app.inabah.android.core.content.model.Hadith
 import app.inabah.android.core.content.model.HadithCollection
 import app.inabah.android.core.content.model.HadithId
+import app.inabah.android.core.content.model.HadithNote
 import app.inabah.android.core.content.model.HadithTranslation
 import app.inabah.android.core.content.model.Zikr
 import app.inabah.android.core.content.model.ZikrId
 import app.inabah.android.core.content.model.ZikrTranslation
 import app.inabah.android.feature.azkar.zikrShareText
+import app.inabah.android.feature.hadith.hadithNotesBlock
 import app.inabah.android.feature.hadith.hadithShareText
 import kotlin.test.assertEquals
 import org.junit.Test
@@ -39,6 +41,7 @@ class ShareTextTest {
             zikr(ZikrTranslation(ru, "Пречист Аллах и хвала Ему.", "Субхана-Ллахи ва би-хамди-хи.", "Муслим")),
             sectionTitle = "Утренние азкары",
             repetitions = "100 раз",
+            narratorLine = null,
             storeLinks = links,
         )
 
@@ -51,9 +54,24 @@ class ShareTextTest {
 
     @Test
     fun `Зикр без перевода — раздел, арабский и «N раз», без пустых строк`() {
-        val text = zikrShareText(zikr(translation = null), sectionTitle = "Утренние азкары", repetitions = "100 раз", storeLinks = null)
+        val text = zikrShareText(
+            zikr(translation = null), sectionTitle = "Утренние азкары", repetitions = "100 раз", narratorLine = null, storeLinks = null,
+        )
 
         assertEquals("Утренние азкары\n\nسُبْحَانَ اللَّهِ وَ بِحَمْدِهِ\n\n100 раз", text)
+    }
+
+    @Test
+    fun `Зикр с вступлением — как есть, без «Передал», после «N раз», перед транскрипцией`() {
+        val text = zikrShareText(
+            zikr(ZikrTranslation(ru, "Перевод", "Транскрипция", source = null, narrator = "Передаётся от Абу Хурайры")),
+            sectionTitle = "Утренние азкары", repetitions = "1 раз", narratorLine = "Передаётся от Абу Хурайры", storeLinks = null,
+        )
+
+        assertEquals(
+            "Утренние азкары\n\nسُبْحَانَ اللَّهِ وَ بِحَمْدِهِ\n\n1 раз\n\nПередаётся от Абу Хурайры\n\nТранскрипция\n\nПеревод",
+            text,
+        )
     }
 
     @Test
@@ -64,17 +82,19 @@ class ShareTextTest {
     }
 
     @Test
-    fun `Хадис — заголовок, арабский одним абзацем, передатчик, перевод, источник`() {
+    fun `Хадис — заголовок, арабский одним абзацем, вступление без «Передал», перевод, источник`() {
+        val intro = "Передаётся от Умара ибн аль-Хаттаба, да будет доволен им Аллахӏ, что он сказал:"
         val text = hadithShareText(
-            hadith(HadithTranslation(ru, "Умар ибн аль-Хаттаб", "«Приход Джибриля…»", "Муслим (№ 8)")),
+            hadith(HadithTranslation(ru, intro, "«Приход Джибриля…»", "Муслим (№ 8)")),
             header = "40 хадисов ан-Навави · Хадис 2",
-            narratorLine = "Передал: Умар ибн аль-Хаттаб",
+            narratorLine = intro,
             sourceLine = "Приводится: Муслим (№ 8)",
+            notesBlock = null,
             storeLinks = links,
         )
 
         assertEquals(
-            "40 хадисов ан-Навави · Хадис 2\n\nعَنْ عُمَرَ قَالَ: بَيْنَمَا نَحْنُ\n\nПередал: Умар ибн аль-Хаттаб\n\n" +
+            "40 хадисов ан-Навави · Хадис 2\n\nعَنْ عُمَرَ قَالَ: بَيْنَمَا نَحْنُ\n\n$intro\n\n" +
                 "«Приход Джибриля…»\n\nПриводится: Муслим (№ 8)\n\n$links",
             text,
         )
@@ -84,12 +104,34 @@ class ShareTextTest {
     fun `Хадис без передатчика, источника и перевода — только то, что есть`() {
         val withoutNotes = hadithShareText(
             hadith(HadithTranslation(ru, narrator = null, text = "Перевод", source = null)),
-            header = "Хадис 2", narratorLine = null, sourceLine = null, storeLinks = null,
+            header = "Хадис 2", narratorLine = null, sourceLine = null, notesBlock = null, storeLinks = null,
         )
-        val withoutTranslation = hadithShareText(hadith(null), header = "Хадис 2", narratorLine = null, sourceLine = null, storeLinks = null)
+        val withoutTranslation = hadithShareText(
+            hadith(null), header = "Хадис 2", narratorLine = null, sourceLine = null, notesBlock = null, storeLinks = null,
+        )
 
         assertEquals("Хадис 2\n\nعَنْ عُمَرَ قَالَ: بَيْنَمَا نَحْنُ\n\nПеревод", withoutNotes)
         assertEquals("Хадис 2\n\nعَنْ عُمَرَ قَالَ: بَيْنَمَا نَحْنُ", withoutTranslation)
+    }
+
+    @Test
+    // Решения пользователя 2026-10-11 (TASKS §12, пример): «Комментарии учёных:», пустая строка, сноски через
+    // пустую строку — слово и пояснение на двух строках; слово из перевода — в кавычках, общее пояснение — без.
+    fun `Хадис со сносками — «Комментарии учёных» после источника и перед ссылками`() {
+        val notes = listOf(HadithNote("иман", "вера"), HadithNote("Различия передач", "у Муслима иначе"))
+        val translation = "Иман — это вера в Аллаха."
+        val block = hadithNotesBlock(notes, "Комментарии учёных:", translation) { "«$it»" }
+        val text = hadithShareText(
+            hadith(HadithTranslation(ru, narrator = null, text = translation, source = "Муслим", notes = notes)),
+            header = "Хадис 1", narratorLine = null, sourceLine = "Приводится: Муслим", notesBlock = block, storeLinks = links,
+        )
+
+        assertEquals(
+            "Хадис 1\n\nعَنْ عُمَرَ قَالَ: بَيْنَمَا نَحْنُ\n\n$translation\n\nПриводится: Муслим\n\n" +
+                "Комментарии учёных:\n\n«иман»\nвера\n\nРазличия передач\nу Муслима иначе\n\n$links",
+            text,
+        )
+        assertEquals(null, hadithNotesBlock(emptyList(), "Комментарии учёных:", translation) { it }, "без сносок — блока нет")
     }
 
     @Test

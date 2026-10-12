@@ -17,12 +17,17 @@ import app.inabah.android.core.share.storeLinksBlock
 /** Слова Абу ад-Дарды по-арабски (Ахмад в «аз-Зухд», 726) — текст пользователя, не переводится. */
 private const val ABU_AD_DARDA_ARABIC = "إِنَّ الَّذِينَ أَلْسِنَتُهُمْ رَطْبَةٌ بِذِكْرِ اللَّهِ يَدْخُلُ الْجَنَّةَ وَهُوَ يَضْحَكُ"
 
-/** Черта перед временем чтения — как в рассылке. */
-private const val SEPARATOR = "______________________"
+/**
+ * Разделитель — 30 точек «•» (решение пользователя 2026-10-11): черта «______» в WhatsApp — разметка курсива
+ * и ломалась. Одна длина для всех строк, как в iOS (`AzkarSection.reminderSeparator`).
+ */
+private val SEPARATOR = "•".repeat(SEPARATOR_LENGTH)
+private const val SEPARATOR_LENGTH = 30
 
 /**
- * Текст напоминания: заголовок, призыв, слова Абу ад-Дарды (вступление, арабский, перевод, источник —
- * по строке), черта и лучшее время чтения, последним — ссылки на приложение. Подписи — уже из ресурсов.
+ * Текст напоминания (новый вид 2026-10-11, `docs/02-screen-azkar.md`, «Новый вид»): заголовок «⚠️», разделитель,
+ * призыв, разделитель; слова Абу ад-Дарды (вступление, арабский, перевод, источник — по строке) отдельным
+ * абзацем; разделитель и лучшее время «✅»; последним — ссылки на приложение. Подписи — уже из ресурсов.
  */
 fun azkarReminderText(
     title: String,
@@ -33,8 +38,7 @@ fun azkarReminderText(
     bestTime: String,
     storeLinks: String?,
 ): String = shareBlocks(
-    title,
-    call,
+    listOf(title, SEPARATOR, call, SEPARATOR).joinToString("\n"),
     listOf(quoteIntro, ABU_AD_DARDA_ARABIC, quoteTranslation, quoteSource).joinToString("\n"),
     "$SEPARATOR\n$bestTime",
     storeLinks,

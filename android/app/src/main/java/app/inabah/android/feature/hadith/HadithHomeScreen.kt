@@ -16,6 +16,7 @@ import app.inabah.android.core.content.model.HadithCollection
 import app.inabah.android.core.designsystem.LocalInabahTheme
 import app.inabah.android.core.designsystem.components.BrandEpigraph
 import app.inabah.android.core.designsystem.components.FeaturedVerse
+import app.inabah.android.core.designsystem.components.GlassIconButton
 import app.inabah.android.core.designsystem.components.NavCardStat
 import app.inabah.android.core.designsystem.components.SectionBrand
 import app.inabah.android.core.designsystem.components.SectionHomeLayout
@@ -29,13 +30,17 @@ private const val BRAND_ARABIC = "حديث"
 private const val VERSE_ARABIC = "مَنْ يُرِدِ اللَّهُ بِهِ خَيْرًا يُفَقِّهْهُ فِي الدِّينِ"
 private const val NO_BREAK_SPACE = ' '
 
-/** Главная «Хадисы» (iOS `HadithHomeView`): бренд с эпиграфом, хадис о понимании религии, сборники. */
+/**
+ * Главная «Хадисы» (iOS `HadithHomeView`): бренд с эпиграфом, хадис о понимании религии, сборники;
+ * справа вверху — вход в «Избранное» (всегда, даже пустое).
+ */
 @Composable
 fun HadithHomeScreen(
     store: HadithStore,
     progress: HadithProgress,
     order: HadithCollectionOrder,
     onOpenCollection: (HadithCollection) -> Unit,
+    onOpenFavorites: () -> Unit,
     contentPadding: PaddingValues,
     modifier: Modifier = Modifier,
 ) {
@@ -59,6 +64,14 @@ fun HadithHomeScreen(
         ),
         contentPadding = contentPadding,
         modifier = modifier,
+        topAction = {
+            GlassIconButton(
+                onClick = onOpenFavorites,
+                iconRes = R.drawable.ic_bookmark,
+                contentDescription = stringResource(R.string.hadith_favorites_title),
+                tint = theme.palette.tabHadith,
+            )
+        },
     ) {
         // Порядок карточек задаётся в настройках.
         collections.forEach { collection ->

@@ -93,6 +93,10 @@ nonisolated extension Theme {
         palette.tabHadith = tab
         palette.tabMakharij = tab
         palette.tabSettings = tab
+        // Карточки перевода — карточка стиля, как на Android (`ThemeStyle.kt`).
+        palette.zikrCard = palette.card
+        palette.zikrSource = palette.textTertiary
+        palette.hadithCard = palette.card
 
         var gradients = ThemeGradients.inabah
         let background = ThemeGradient(

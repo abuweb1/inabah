@@ -6,6 +6,8 @@ struct RootTabView: View {
     @Environment(AzkarStore.self) private var azkarStore
     @Environment(HadithStore.self) private var hadithStore
     @Environment(AudioPlayerController.self) private var audioPlayer
+    @Environment(ReminderScheduler.self) private var reminderScheduler
+    @Environment(WhatsNew.self) private var whatsNew
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.theme) private var theme
 
@@ -25,6 +27,7 @@ struct RootTabView: View {
                             Group {
                                 switch route {
                                 case .list(let section): AzkarListView(section: section)
+                                case .calendar: AzkarCalendarView()
                                 }
                             }
                             .interfaceTextSize()
@@ -41,6 +44,8 @@ struct RootTabView: View {
                                 switch route {
                                 case .list(let collection): HadithListView(collection: collection)
                                 case .detail(let id): HadithDetailView(id: id)
+                                case .about(let collection): CollectionAboutView(collection: collection)
+                                case .favorites: FavoritesView()
                                 }
                             }
                             .interfaceTextSize()
@@ -72,6 +77,7 @@ struct RootTabView: View {
                                 case .textSize: TextSizeSettingsView()
                                 case .about: AboutView()
                                 case .license(let document): LicenseView(document: document)
+                                case .versionHistory: VersionHistoryView()
                                 }
                             }
                             .interfaceTextSize()
@@ -83,7 +89,11 @@ struct RootTabView: View {
         // Подсветка выбранной вкладки — в тон раздела; содержимому вкладок выше возвращён
         // общий акцент, чтобы оттенок таб-бара не перекрашивал кнопки и переключатели.
         .tint(router.selectedTab.tint(in: theme))
+        // Под окном «Что нового» вкладки скрыты от VoiceOver; окно — поверх всех вкладок.
+        .accessibilityHidden(whatsNew.pending != nil)
+        .overlay { WhatsNewLayer() }
         .task {
+            await whatsNew.check()
             await azkarStore.loadAll()
             await hadithStore.loadAll()
         }
@@ -95,7 +105,11 @@ struct RootTabView: View {
             }
             // Пока приложение было в фоне, время азкаров могло начаться или закончиться.
             if phase == .active { azkarStore.reconcile() }
+            // Напоминания: приложение не запускается в момент уведомления — план на неделю
+            // пересобирается при возврате (разрешение могли поменять) и при уходе в фон.
+            if phase == .active || phase == .background { reminderScheduler.reschedule() }
         }
+        .background { ReminderCompletionWatcher() }
     }
 
     /// Выбор вкладки проходит через роутер — повторный тап по активной вкладке возвращает к её корню.
@@ -104,6 +118,21 @@ struct RootTabView: View {
             get: { router.selectedTab },
             set: { router.select($0) }
         )
+    }
+}
+
+/// Раздел дочитан или снова не дочитан (сброс, новое окно) — «ещё не прочитаны» на это окно снимается
+/// или возвращается. Следит только за выполненностью, а не за каждым зикром (аудит iOS 1.1.1, А3), и
+/// отдельной вьюхой — счёт зикров не перестраивает корень с вкладками.
+private struct ReminderCompletionWatcher: View {
+    @Environment(AzkarStore.self) private var azkarStore
+    @Environment(ReminderScheduler.self) private var reminderScheduler
+
+    var body: some View {
+        Color.clear
+            .onChange(of: AzkarSection.allCases.map { ReminderPlan.isCompleted(azkarStore.progress(of: $0)) }) {
+                reminderScheduler.reschedule()
+            }
     }
 }
 

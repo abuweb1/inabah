@@ -46,6 +46,8 @@ struct HadithHomeView: View {
                 }
                 .buttonStyle(PressScaleButtonStyle())
             }
+        } topAction: {
+            FavoritesEntryButton()
         }
         .audioPlayerInset()
         .toolbarVisibility(.hidden, for: .navigationBar)
@@ -81,6 +83,39 @@ struct HadithHomeView: View {
             value: "progress.fraction \(progress.memorized) \(progress.total)",
             accessibilityLabel: "hadith.progress.card.memorized \(progress.memorized) \(progress.total)"
         )
+    }
+}
+
+/// Вход в «Избранное» — круглая кнопка справа вверху главной (решение пользователя 2026-10-10,
+/// как на Android); есть всегда, и при пустом избранном. Вид — как у круглых кнопок навбара:
+/// на iOS 26 их рисует системное стекло, на iOS 18–25 — кружок дизайн-системы.
+private struct FavoritesEntryButton: View {
+    @Environment(\.theme) private var theme
+
+    var body: some View {
+        if #available(iOS 26, *) {
+            link
+                .buttonStyle(.glass)
+                .buttonBorderShape(.circle)
+                .controlSize(.large)
+        } else {
+            link
+                .buttonStyle(IconButtonStyle(
+                    foreground: theme.palette.tabHadith,
+                    background: theme.palette.subtleFill,
+                    border: theme.palette.hairline
+                ))
+        }
+    }
+
+    private var link: some View {
+        NavigationLink(value: HadithRoute.favorites) {
+            Image(systemName: "bookmark")
+                .fontWeight(.medium)
+                .foregroundStyle(theme.palette.tabHadith)
+        }
+        .accessibilityLabel(Text("hadith.favorites.title"))
+        .fixedTextSize()
     }
 }
 

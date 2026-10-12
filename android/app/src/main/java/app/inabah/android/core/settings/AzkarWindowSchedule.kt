@@ -76,36 +76,51 @@ data class AzkarPeriod(val kind: Kind, val day: LocalDate, val validUntil: Insta
 class AzkarWindowSchedule(val window: AzkarWindow, val zone: ZoneId) {
     /** Отрезок, в который попадает [now]. Ровно в момент начала окна — уже окно, ровно в момент конца — уже промежуток. */
     fun period(now: Instant): AzkarPeriod {
-        val start = lastOccurrence(window.start, notAfter = now)
-        val end = nextOccurrence(window.end, after = start)
+        val start = window.start.lastOccurrence(notAfter = now, zone)
+        val end = windowEnd(start)
         if (now.isBefore(end)) return AzkarPeriod(AzkarPeriod.Kind.Window, localDate(start), validUntil = end)
-        val nextStart = nextOccurrence(window.start, after = now)
+        val nextStart = nextStart(after = now)
         return AzkarPeriod(AzkarPeriod.Kind.Gap, localDate(nextStart), validUntil = nextStart)
     }
 
+    /** Ближайшее начало окна строго после [after] (напоминание «в начале времени»). */
+    fun nextStart(after: Instant): Instant = window.start.nextOccurrence(after, zone)
+
+    /** Начало окна, в котором [now], или следующего, если сейчас промежуток. */
+    fun currentOrNextStart(now: Instant): Instant {
+        val start = window.start.lastOccurrence(notAfter = now, zone)
+        return if (now.isBefore(windowEnd(start))) start else nextStart(after = now)
+    }
+
+    /** Конец окна, начавшегося в [start]: ближайший конец после начала (вечерние — на следующий день). */
+    fun windowEnd(start: Instant): Instant = window.end.nextOccurrence(after = start, zone)
+
     private fun localDate(instant: Instant): LocalDate = instant.atZone(zone).toLocalDate()
+}
 
-    private fun lastOccurrence(time: DayTime, notAfter: Instant): Instant {
-        val date = localDate(notAfter)
-        val sameDay = occurrence(time, date)
-        return if (sameDay.isAfter(notAfter)) occurrence(time, date.minusDays(1)) else sameDay
-    }
+/** Последнее наступление этого времени суток не позже [notAfter] в поясе [zone]. */
+internal fun DayTime.lastOccurrence(notAfter: Instant, zone: ZoneId): Instant {
+    val date = notAfter.atZone(zone).toLocalDate()
+    val sameDay = occurrence(date, zone)
+    return if (sameDay.isAfter(notAfter)) occurrence(date.minusDays(1), zone) else sameDay
+}
 
-    private fun nextOccurrence(time: DayTime, after: Instant): Instant {
-        val date = localDate(after)
-        val sameDay = occurrence(time, date)
-        return if (sameDay.isAfter(after)) sameDay else occurrence(time, date.plusDays(1))
-    }
+/** Ближайшее наступление этого времени суток строго после [after] в поясе [zone] (и для хадиса дня). */
+internal fun DayTime.nextOccurrence(after: Instant, zone: ZoneId): Instant {
+    val date = after.atZone(zone).toLocalDate()
+    val sameDay = occurrence(date, zone)
+    return if (sameDay.isAfter(after)) sameDay else occurrence(date.plusDays(1), zone)
+}
 
-    private fun occurrence(time: DayTime, date: LocalDate): Instant {
-        val local = LocalDateTime.of(date, time.localTime)
-        val rules = zone.rules
-        return if (rules.getValidOffsets(local).isEmpty()) {
-            // Время попало в разрыв перевода часов — первый существующий момент после него.
-            rules.getTransition(local).instant
-        } else {
-            // Для повтора берётся раннее смещение — первое наступление.
-            ZonedDateTime.ofLocal(local, zone, null).toInstant()
-        }
+/** Это время суток в дату [date]; разрыв и повтор при переводе часов — по правилам класса выше. */
+internal fun DayTime.occurrence(date: LocalDate, zone: ZoneId): Instant {
+    val local = LocalDateTime.of(date, localTime)
+    val rules = zone.rules
+    return if (rules.getValidOffsets(local).isEmpty()) {
+        // Время попало в разрыв перевода часов — первый существующий момент после него.
+        rules.getTransition(local).instant
+    } else {
+        // Для повтора берётся раннее смещение — первое наступление.
+        ZonedDateTime.ofLocal(local, zone, null).toInstant()
     }
 }
