@@ -81,13 +81,17 @@ struct BundledContentTests {
         #expect(hadith.title.contains("{collection}"))
     }
 
-    @Test("Сноски у хадисов разбираются; у аль-Аджурри их нет")
+    /// Сноски появляются во всех сборниках по мере правки данных (аль-Аджурри — 2026-10-11), поэтому
+    /// проверяется разбор, а не то, у каких сборников они есть.
+    @Test("Сноски у хадисов разбираются: у къудси есть, у всех — со словом и пояснением")
     func hadithNotesLoad() async throws {
         let qudsi = try await repository.hadiths(in: .qudsi)
-        let ajurri = try await repository.hadiths(in: .ajurri)
-
         #expect(qudsi.contains { !($0.translation?.notes.isEmpty ?? true) })
-        #expect(ajurri.allSatisfy { $0.translation?.notes.isEmpty ?? true })
+
+        for collection in HadithCollection.allCases {
+            let notes = try await repository.hadiths(in: collection).flatMap { $0.translation?.notes ?? [] }
+            #expect(notes.allSatisfy { !$0.term.isEmpty && !$0.text.isEmpty }, "\(collection)")
+        }
     }
 
     @Test("Служебные данные data/pending не попадают в Bundle")
