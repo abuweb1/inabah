@@ -1,3 +1,4 @@
+import AVFoundation
 import Foundation
 import Testing
 @testable import Inabah
@@ -21,15 +22,47 @@ struct BundledContentTests {
         #expect(azkar.allSatisfy { $0.repetitions >= 1 })
     }
 
-    /// Чужих записей в приложении нет (удалены 2026-10-06): ни файлов в Bundle, ни ссылок
-    /// на них в данных. Появятся свои — поменять тест на «файл каждой записи лежит в Bundle».
-    @Test("Аудиозаписей нет: ни MP3 в Bundle, ни поля audio у зикров", arguments: AzkarSection.allCases)
+    /// Свои записи (2026-10-12, `docs/process/audio.md`): у каждого зикра — файл в Bundle.
+    @Test("Записи азкаров: у каждого зикра есть файл в Bundle", arguments: AzkarSection.allCases)
     @MainActor
-    func noBundledAudio(section: AzkarSection) async throws {
+    func everyZikrHasAudio(section: AzkarSection) async throws {
         let azkar = try await repository.azkar(in: section)
 
-        #expect(azkar.allSatisfy { !$0.hasAudio && $0.audioTrack() == nil })
+        for zikr in azkar {
+            #expect(zikr.audioTrack() != nil, "\(section) \(zikr.number): нет файла \(zikr.audioFileName ?? "—")")
+        }
+    }
+
+    /// Вечерний зикр, совпадающий с утренним, берёт его запись — только если арабский тот же
+    /// (без огласовок: у утреннего и вечернего 7 знаки в «اللَّهُمَّ» набраны в другом порядке).
+    @Test("Общая запись утреннего и вечернего — только при одинаковом арабском")
+    func sharedAudioMatchesText() async throws {
+        let all = try await repository.azkar(in: .morning) + repository.azkar(in: .evening)
+        let shared = Dictionary(grouping: all) { $0.audioFileName ?? "" }.filter { $0.value.count > 1 }
+
+        #expect(shared.count == 12)
+        for (file, azkar) in shared {
+            #expect(Set(azkar.map { Self.bare($0.arabic) }).count == 1, "\(file): разный арабский текст")
+        }
+    }
+
+    @Test("Все записи — AAC .m4a и читаются плеером; MP3 нет")
+    func audioFilesPlay() throws {
+        let files = Bundle.main.urls(forResourcesWithExtension: "m4a", subdirectory: nil) ?? []
+
+        #expect(files.count == 20)
         #expect(Bundle.main.urls(forResourcesWithExtension: "mp3", subdirectory: nil) ?? [] == [])
+        for url in files {
+            let player = try AVAudioPlayer(contentsOf: url)
+            #expect(player.duration > 1, "\(url.lastPathComponent)")
+        }
+    }
+
+    /// Арабский без огласовок и пробелов — для сравнения текстов.
+    private static func bare(_ text: String) -> String {
+        String(String.UnicodeScalarView(text.unicodeScalars.filter {
+            !(0x064B...0x0652).contains($0.value) && $0.value != 0x0670 && !$0.properties.isWhitespace
+        }))
     }
 
     @Test("Запись указана, но файла нет в Bundle — трека нет, а не падение")
