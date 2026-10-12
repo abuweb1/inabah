@@ -128,15 +128,26 @@ class ReminderPlannerTest {
         assertNull(pickHadithOfDay(order, emptyMap(), { false }, last = null))
     }
 
-    // «Серия под угрозой» (2026-10-11): в то же время, что «не прочитаны», и без напоминаний в начале.
+    // «Серия под угрозой» (2026-10-11): за час до конца, без напоминаний в начале.
     @Test
-    fun `Серия под угрозой — у обоих разделов за 2 часа до конца, независимо от начала`() {
+    fun `Серия под угрозой — у обоих разделов за час до конца, независимо от начала`() {
         val planned = plan(ReminderPreferences(azkarStreak = true), date(2026, 10, 10, 8))
 
         assertEquals(setOf(ReminderKind.MorningStreak, ReminderKind.EveningStreak), planned.keys)
-        assertEquals(date(2026, 10, 10, 10), planned.getValue(ReminderKind.MorningStreak).at)
-        assertEquals(date(2026, 10, 11, 0), planned.getValue(ReminderKind.EveningStreak).at, "вечерние до 02:00 — в полночь")
+        assertEquals(date(2026, 10, 10, 11), planned.getValue(ReminderKind.MorningStreak).at)
+        assertEquals(date(2026, 10, 11, 1), planned.getValue(ReminderKind.EveningStreak).at, "вечерние до 02:00 — в 01:00")
         assertTrue(ReminderPreferences(azkarStreak = true).isAnyEnabled)
         assertTrue(ReminderKind.MorningStreak !in plan(all, date(2026, 10, 10, 8)).keys, "выключено — не планируется")
+    }
+
+    // Решение пользователя 2026-10-11: при обоих включённых приходят оба, каждое в своё время.
+    @Test
+    fun `Серия и не прочитаны — оба, в разное время`() {
+        val planned = plan(all.copy(azkarStreak = true), date(2026, 10, 10, 8))
+
+        assertEquals(date(2026, 10, 10, 10), planned.getValue(ReminderKind.MorningUnfinished).at)
+        assertEquals(date(2026, 10, 10, 11), planned.getValue(ReminderKind.MorningStreak).at)
+        assertEquals(date(2026, 10, 11, 0), planned.getValue(ReminderKind.EveningUnfinished).at)
+        assertEquals(date(2026, 10, 11, 1), planned.getValue(ReminderKind.EveningStreak).at)
     }
 }

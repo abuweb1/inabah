@@ -24,7 +24,7 @@ enum class ReminderKind(val requestCode: Int, val section: AzkarSection?) {
     MorningUnfinished(3, AzkarSection.Morning),
     EveningUnfinished(4, AzkarSection.Evening),
     HadithOfDay(5, null),
-    /** «Серия под угрозой» (2026-10-11): в то же время, что «ещё не прочитаны». */
+    /** «Серия под угрозой» (2026-10-11): за [STREAK_LEAD] до конца окна. */
     MorningStreak(6, AzkarSection.Morning),
     EveningStreak(7, AzkarSection.Evening),
     ;
@@ -77,6 +77,12 @@ data class PlannedReminder(
 val UNFINISHED_LEAD: Duration = Duration.ofHours(2)
 
 /**
+ * За сколько до конца окна — «серия под угрозой» (решение пользователя 2026-10-11: за час, позже «ещё не прочитаны»;
+ * при обоих включённых приходят оба, каждое в своё время).
+ */
+val STREAK_LEAD: Duration = Duration.ofHours(1)
+
+/**
  * Ближайшее наступление каждого включённого напоминания строго после [now] (`docs/07-screen-settings.md`,
  * «Напоминания»). Окна — из настроек азкаров; переходы через полночь и перевод часов — правилами
  * [AzkarWindowSchedule]. После срабатывания расписание пересчитывается заново.
@@ -91,11 +97,11 @@ fun planReminders(
         val window = windows[section]?.takeIf { it.isValid } ?: continue
         val schedule = AzkarWindowSchedule(window, zone)
         // «Серия под угрозой» — независимо от напоминаний в начале (решение пользователя 2026-10-11).
-        if (preferences.azkarStreak) add(beforeEnd(ReminderKind.streak(section), schedule, now, zone))
+        if (preferences.azkarStreak) add(beforeEnd(ReminderKind.streak(section), STREAK_LEAD, schedule, now, zone))
         if (section !in preferences.azkarStart) continue
         val start = schedule.nextStart(after = now)
         add(PlannedReminder(ReminderKind.start(section), start, start.atZone(zone).toLocalDate()))
-        if (preferences.azkarUnfinished) add(beforeEnd(ReminderKind.unfinished(section), schedule, now, zone))
+        if (preferences.azkarUnfinished) add(beforeEnd(ReminderKind.unfinished(section), UNFINISHED_LEAD, schedule, now, zone))
     }
     if (preferences.hadithOfDay) {
         add(PlannedReminder(ReminderKind.HadithOfDay, preferences.hadithTime.nextOccurrence(after = now, zone)))
@@ -103,13 +109,19 @@ fun planReminders(
 }
 
 /**
- * [kind] («ещё не прочитаны», «серия под угрозой») — за [UNFINISHED_LEAD] до конца текущего (если ещё не прошло)
+ * [kind] («ещё не прочитаны», «серия под угрозой») — за [lead] до конца текущего (если ещё не прошло)
  * или следующего окна; окно короче — в его середине.
  */
-private fun beforeEnd(kind: ReminderKind, schedule: AzkarWindowSchedule, now: Instant, zone: ZoneId): PlannedReminder {
+private fun beforeEnd(
+    kind: ReminderKind,
+    lead: Duration,
+    schedule: AzkarWindowSchedule,
+    now: Instant,
+    zone: ZoneId,
+): PlannedReminder {
     fun remindFor(start: Instant): PlannedReminder {
         val end = schedule.windowEnd(start)
-        val beforeEnd = end.minus(UNFINISHED_LEAD)
+        val beforeEnd = end.minus(lead)
         val at = if (beforeEnd.isAfter(start)) beforeEnd else start.plus(Duration.between(start, end).dividedBy(2))
         return PlannedReminder(kind, at, start.atZone(zone).toLocalDate())
     }
