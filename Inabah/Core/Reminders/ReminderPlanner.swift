@@ -255,6 +255,8 @@ nonisolated enum ReminderPlan {
 
 /// Куда ведёт нажатие на напоминание. Только навигация — данные не меняются (аудит Android, Б7).
 nonisolated enum ReminderTarget: Hashable, Sendable {
+    /// Главная азкаров — «серия под угрозой» (там капсула серии и календарь; решение пользователя 2026-10-13).
+    case azkarHome
     case azkar(AzkarSection)
     case hadith(HadithID)
 }
@@ -276,6 +278,7 @@ nonisolated enum ReminderPayload {
     /// Разбор `userInfo` (аудит Android, Т7): неизвестный вид или сборник, номер < 1 — `nil`.
     static func target(from userInfo: [AnyHashable: Any]) -> ReminderTarget? {
         guard let kind = (userInfo[kindKey] as? String).flatMap(ReminderKind.init(rawValue:)) else { return nil }
+        if kind == .morningStreak || kind == .eveningStreak { return .azkarHome }
         if let section = kind.section { return .azkar(section) }
         guard let collection = (userInfo[collectionKey] as? String).flatMap(HadithCollection.init(rawValue:)),
               let number = (userInfo[numberKey] as? String).flatMap(Int.init), number >= 1 else { return nil }

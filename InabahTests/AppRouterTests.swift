@@ -37,6 +37,32 @@ struct AppRouterTests {
         #expect(router.azkarPath == [.list(.morning)])
     }
 
+    @Test("Напоминание о серии открывает главную азкаров из любого места")
+    func reminderOpensAzkarHome() {
+        let router = AppRouter()
+        router.open(.list(.evening))
+        router.select(.hadith)
+
+        router.open(ReminderTarget.azkarHome)
+
+        #expect(router.selectedTab == .azkar)
+        #expect(router.azkarPath.isEmpty)
+    }
+
+    @Test("Напоминание азкаров открывает раздел, хадиса дня — хадис поверх списка сборника")
+    func reminderOpensSectionAndHadith() {
+        let router = AppRouter()
+        let id = HadithID(collection: .qudsi, number: 7)
+
+        router.open(ReminderTarget.azkar(.morning))
+        #expect(router.selectedTab == .azkar)
+        #expect(router.azkarPath == [.list(.morning)])
+
+        router.open(ReminderTarget.hadith(id))
+        #expect(router.selectedTab == .hadith)
+        #expect(router.hadithPath == [.list(.qudsi), .detail(id)])
+    }
+
     @Test("«Календарь азкаров» открывается с главной азкаров и переживает кодирование маршрута")
     func openCalendar() throws {
         let router = AppRouter()
