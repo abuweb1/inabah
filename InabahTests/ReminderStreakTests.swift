@@ -134,9 +134,9 @@ struct ReminderStreakTests {
         #expect(AzkarStreak.daysText(10_000).key == "azkar.streak.daysMax")
     }
 
-    @Test("Нажатие на «серия под угрозой» открывает раздел")
-    func tapOpensSection() {
-        #expect(ReminderPayload.target(from: ReminderPayload.userInfo(kind: .eveningStreak)) == .azkar(.evening))
+    @Test("Нажатие на «серия под угрозой» открывает главную азкаров", arguments: [ReminderKind.morningStreak, .eveningStreak])
+    func tapOpensAzkarHome(kind: ReminderKind) {
+        #expect(ReminderPayload.target(from: ReminderPayload.userInfo(kind: kind)) == .azkarHome)
     }
 
     @Test("Настройка хранится под ключом Android и сохраняется только при изменении")
