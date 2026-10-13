@@ -243,7 +243,8 @@ final class ReminderScheduler {
     }
 }
 
-/// Нажатие на напоминание открывает раздел азкаров или хадис; в открытом приложении — баннер.
+/// Нажатие на напоминание открывает раздел азкаров, главную азкаров («серия под угрозой») или хадис;
+/// в открытом приложении — баннер.
 /// Ставится делегатом центра при запуске — до первого уведомления (аудит Android, К3).
 final class ReminderNotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
     private let router: AppRouter
@@ -252,25 +253,27 @@ final class ReminderNotificationDelegate: NSObject, UNUserNotificationCenterDele
         self.router = router
     }
 
+    // Варианты с обработчиком завершения, не `async`: в `async` система получает завершение из
+    // фонового потока и тут же обновляет снимок окна — UIKit падал на проверке главного потока
+    // (1.1.1 сборка 3: нажатие на любое напоминание закрывало приложение). Центр вызывает делегата
+    // на главной очереди — переход и завершение идут там же, синхронно.
     nonisolated func userNotificationCenter(
         _ center: UNUserNotificationCenter,
-        willPresent notification: UNNotification
-    ) async -> UNNotificationPresentationOptions {
-        [.banner, .list, .sound]
+        willPresent notification: UNNotification,
+        withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
+    ) {
+        completionHandler([.banner, .list, .sound])
     }
 
     nonisolated func userNotificationCenter(
         _ center: UNUserNotificationCenter,
-        didReceive response: UNNotificationResponse
-    ) async {
-        guard let target = ReminderPayload.target(from: response.notification.request.content.userInfo) else { return }
-        await open(target)
-    }
-
-    private func open(_ target: ReminderTarget) {
-        switch target {
-        case .azkar(let section): router.open(AzkarRoute.list(section))
-        case .hadith(let id): router.open(HadithRoute.detail(id))
+        didReceive response: UNNotificationResponse,
+        withCompletionHandler completionHandler: @escaping () -> Void
+    ) {
+        let target = ReminderPayload.target(from: response.notification.request.content.userInfo)
+        MainActor.assumeIsolated {
+            if let target { router.open(target) }
         }
+        completionHandler()
     }
 }

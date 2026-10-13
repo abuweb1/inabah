@@ -100,4 +100,17 @@ final class AppRouter {
             hadithPath = [.list(collection), route]
         }
     }
+
+    /// Нажатие на напоминание: главная азкаров, раздел азкаров или хадис.
+    func open(_ target: ReminderTarget) {
+        switch target {
+        case .azkarHome:
+            if selectedTab != .azkar { selectedTab = .azkar }
+            popToRoot(.azkar)
+        case .azkar(let section):
+            open(AzkarRoute.list(section))
+        case .hadith(let id):
+            open(HadithRoute.detail(id))
+        }
+    }
 }

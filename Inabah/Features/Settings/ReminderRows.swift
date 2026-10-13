@@ -10,22 +10,22 @@ struct ReminderToggleRow: View {
     let onChange: (Bool) -> Void
 
     @Environment(\.theme) private var theme
-    /// Положение переключателя на экране: возвращается к сохранённому сразу после нажатия — включённым
-    /// он становится, только когда напоминание действительно включено (дали разрешение).
-    @State private var shown: Bool
 
-    init(title: LocalizedStringResource, subtitle: Text?, isOn: Bool, tint: Color, onChange: @escaping (Bool) -> Void) {
-        self.title = title
-        self.subtitle = subtitle
-        self.isOn = isOn
-        self.tint = tint
-        self.onChange = onChange
-        // Сразу сохранённое значение — без кадра «выкл» при появлении (аудит iOS 1.1.1, А7).
-        _shown = State(initialValue: isOn)
+    /// Переключатель показывает только сохранённое значение: нажатие просит изменить его, а включённым
+    /// он становится, когда напоминание действительно включено (дали разрешение). Своего `@State` нет:
+    /// прежняя копия после нажатия сбрасывалась к устаревшему `isOn` и тут же включала напоминание
+    /// обратно — выключить было нельзя (1.1.1 сборка 3).
+    private var binding: Binding<Bool> {
+        Binding(
+            get: { isOn },
+            set: { value in
+                if value != isOn { onChange(value) }
+            }
+        )
     }
 
     var body: some View {
-        Toggle(isOn: $shown) {
+        Toggle(isOn: binding) {
             VStack(alignment: .leading, spacing: Spacing.xxxs) {
                 Text(title)
                     .font(.body)
@@ -37,12 +37,6 @@ struct ReminderToggleRow: View {
             }
         }
         .tint(tint)
-        .onChange(of: isOn) { _, value in shown = value }
-        .onChange(of: shown) { _, value in
-            guard value != isOn else { return }
-            onChange(value)
-            shown = isOn
-        }
     }
 }
 
