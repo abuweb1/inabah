@@ -14,6 +14,9 @@ struct ZikrCardView: View {
     /// Вызывается при автосворачивании дочитанной карточки — внутри той же анимации: лента
     /// подтягивает свёрнутую строку на экран (не при сворачивании кнопкой ⌄).
     var onAutoCollapse: () -> Void = {}
+    /// Вызывается при скрытии перевода кнопкой «Аа» — внутри той же анимации, с рамкой перевода
+    /// в координатах ленты (`NamedCoordinateSpace.azkarFeed`): лента держит «Аа» на месте.
+    var onHideTranslation: (CGRect) -> Void = { _ in }
 
     @Environment(ReadingSettings.self) private var settings
     /// Только для команды ▶ — в `body` свойства плеера не читаются.
@@ -24,11 +27,19 @@ struct ZikrCardView: View {
     /// чтобы была видна вспышка «готово». Начальное значение — одноразовое: при повторном появлении
     /// (прокрутка, возврат на экран) выполненная карточка сразу свёрнута.
     @State private var isCollapsed: Bool
+    /// Рамка перевода в координатах ленты. Меняется только при перевёрстке, не при прокрутке.
+    @State private var translationFrame: CGRect = .zero
 
-    init(session: ZikrSession, audio: ZikrAudioState = .idle, onAutoCollapse: @escaping () -> Void = {}) {
+    init(
+        session: ZikrSession,
+        audio: ZikrAudioState = .idle,
+        onAutoCollapse: @escaping () -> Void = {},
+        onHideTranslation: @escaping (CGRect) -> Void = { _ in }
+    ) {
         self.session = session
         self.audio = audio
         self.onAutoCollapse = onAutoCollapse
+        self.onHideTranslation = onHideTranslation
         _isCollapsed = State(initialValue: session.isCompleted)
     }
 
@@ -113,6 +124,7 @@ struct ZikrCardView: View {
                 ZikrTranslationView(translation: translation)
                     .padding(.horizontal, Spacing.xl)
                     .padding(.top, Spacing.l)
+                    .onGeometryChange(for: CGRect.self) { $0.frame(in: .azkarFeed) } action: { translationFrame = $0 }
                     .collapsible(isExpanded: session.isTranslationVisible)
             }
 
@@ -162,7 +174,11 @@ struct ZikrCardView: View {
             .accessibilityLabel(Text(audioLabel))
 
             Button {
-                withAnimation(Motion.collapse) { session.isTranslationVisible.toggle() }
+                let isHiding = session.isTranslationVisible
+                withAnimation(Motion.collapse) {
+                    session.isTranslationVisible.toggle()
+                    if isHiding { onHideTranslation(translationFrame) }
+                }
             } label: {
                 Text("zikr.translation.toggle.short")
                     .font(.subheadline.weight(.bold))
