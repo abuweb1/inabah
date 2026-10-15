@@ -132,10 +132,17 @@ struct HadithSettingsView: View {
                 toggle(newValue) { reminders.setHadithOfDay($0) }
             }
             if isOn {
-                DatePicker(selection: hadithTime, displayedComponents: .hourAndMinute) {
+                HStack(spacing: Spacing.m) {
                     Text("settings.hadithOfDay.time")
+                        .accessibilityHidden(true)
+                    Spacer(minLength: 0)
+                    TimeField(
+                        label: "settings.hadithOfDay.time.description",
+                        selection: hadithTime,
+                        calendar: azkarStore.calendar,
+                        tint: theme.palette.tabHadith
+                    )
                 }
-                .accessibilityLabel(Text("settings.hadithOfDay.time.description"))
             }
             if blocked {
                 ReminderOpenSettingsRow()

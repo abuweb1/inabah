@@ -205,6 +205,7 @@ private struct AzkarWindowRow: View {
     @Binding var window: AzkarWindow
 
     @Environment(AzkarStore.self) private var store
+    @Environment(\.theme) private var theme
 
     var body: some View {
         ViewThatFits(in: .horizontal) {
@@ -223,11 +224,9 @@ private struct AzkarWindowRow: View {
     private var pickers: some View {
         HStack(spacing: Spacing.xs) {
             Text("settings.window.from")
-            DatePicker(section.windowStartLabel, selection: start, displayedComponents: .hourAndMinute)
-                .labelsHidden()
+            TimeField(label: section.windowStartLabel, selection: start, calendar: store.calendar, tint: theme.palette.tabAzkar)
             Text("settings.window.to")
-            DatePicker(section.windowEndLabel, selection: end, displayedComponents: .hourAndMinute)
-                .labelsHidden()
+            TimeField(label: section.windowEndLabel, selection: end, calendar: store.calendar, tint: theme.palette.tabAzkar)
         }
         .fixedSize()
     }
