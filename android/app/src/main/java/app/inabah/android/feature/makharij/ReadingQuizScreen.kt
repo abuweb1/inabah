@@ -1,5 +1,10 @@
 package app.inabah.android.feature.makharij
 
+import app.inabah.android.core.designsystem.Motion
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -99,6 +104,14 @@ fun ReadingQuizScreen(
                     modifier = Modifier.align(Alignment.Center).padding(Spacing.xl),
                 )
             }
+            // Шаг без слов пройден проверкой - праздник; со словами - «Осталось прочитать слова».
+            index >= step.quiz.size && step.words == null -> StepCompletedOverlay(
+                step = step,
+                next = loaded.steps.firstOrNull { it.number > step.number && it.hasLesson },
+                onOpenStep = onOpenStep,
+                onOpenSteps = onOpenSteps,
+                contentPadding = contentPadding,
+            )
             index >= step.quiz.size -> QuizFinished(
                 // У шага есть слова - сначала «Читаем слова»: без них следующий шаг закрыт.
                 hasWords = step.words != null,
@@ -142,6 +155,7 @@ private fun QuizQuestion(
     val palette = InabahTheme.palette
     val question = step.quiz[index]
     val options = remember(course, question, step) { quizOptions(course, question, step.number) }
+    val haptics = LocalHapticFeedback.current
     Column(
         Modifier
             .fillMaxSize()
@@ -180,7 +194,13 @@ private fun QuizQuestion(
                         solved -> OptionState.Other
                         else -> OptionState.Open
                     },
-                    onClick = { onAnswer(i, option.isCorrect) },
+                    onClick = {
+                        // Отклик: верно - подтверждение, неверно - «отказ» (просьба пользователя: живость).
+                        haptics.performHapticFeedback(
+                            if (option.isCorrect) HapticFeedbackType.Confirm else HapticFeedbackType.Reject,
+                        )
+                        onAnswer(i, option.isCorrect)
+                    },
                     modifier = Modifier.weight(1f),
                 )
             }
@@ -235,30 +255,35 @@ private fun OptionButton(text: String, state: OptionState, onClick: () -> Unit, 
         OptionState.Wrong -> palette.destructive.copy(alpha = WRONG_FILL_ALPHA) to palette.destructive
         OptionState.Open, OptionState.Other -> colors.tile to colors.tileBorder
     }
-    Box(
-        modifier
-            .heightIn(min = OPTION_HEIGHT)
-            .clickable(interaction, indication = null, enabled = state == OptionState.Open, role = Role.Button, onClick = onClick)
-            .pressFeedback(interaction, scale = PressFeedback.WIDE_SCALE)
-            // После верного ответа остальные варианты приглушены.
-            .alpha(
-                when (state) {
-                    OptionState.Open, OptionState.Correct, OptionState.Wrong -> 1f
-                    OptionState.Other -> OTHER_ALPHA
-                },
+    // Неверный - трясётся «нет», верный - толчок и вспышка ✦.
+    Box(modifier.shakeOn(state == OptionState.Wrong).popOn(state == OptionState.Correct)) {
+        Box(
+            Modifier
+                .fillMaxWidth()
+                .heightIn(min = OPTION_HEIGHT)
+                .clickable(interaction, indication = null, enabled = state == OptionState.Open, role = Role.Button, onClick = onClick)
+                .pressFeedback(interaction, scale = PressFeedback.WIDE_SCALE)
+                // После верного ответа остальные варианты приглушены.
+                .alpha(
+                    when (state) {
+                        OptionState.Open, OptionState.Correct, OptionState.Wrong -> 1f
+                        OptionState.Other -> OTHER_ALPHA
+                    },
+                )
+                .surface(fill, Radius.card, border = border, lineWidth = OPTION_BORDER)
+                .padding(horizontal = Spacing.xs)
+                .semantics { stateLabel?.let { stateDescription = it } },
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                text,
+                color = palette.onAccent,
+                style = InabahType.title3.copy(fontWeight = FontWeight.SemiBold),
+                textAlign = TextAlign.Center,
+                maxLines = 1,
             )
-            .surface(fill, Radius.card, border = border, lineWidth = OPTION_BORDER)
-            .padding(horizontal = Spacing.xs)
-            .semantics { stateLabel?.let { stateDescription = it } },
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(
-            text,
-            color = palette.onAccent,
-            style = InabahType.title3.copy(fontWeight = FontWeight.SemiBold),
-            textAlign = TextAlign.Center,
-            maxLines = 1,
-        )
+        }
+        if (state == OptionState.Correct) SparkleBurst(key = text, color = palette.success, modifier = Modifier.matchParentSize())
     }
 }
 
@@ -292,12 +317,18 @@ private fun ProgressDots(count: Int, current: Int) {
     val colors = readingColors
     Row(Modifier.clearAndSetSemantics {}, horizontalArrangement = Arrangement.spacedBy(Spacing.xs)) {
         repeat(count) { i ->
-            val color = when {
-                i < current -> palette.success
-                i == current -> colors.tint
-                else -> palette.track
-            }
-            Box(Modifier.size(Size.statusDot).background(color, CircleShape))
+            // Точка наливается цветом, текущая - вытянута в капсулу.
+            val color by animateColorAsState(
+                when {
+                    i < current -> palette.success
+                    i == current -> colors.tint
+                    else -> palette.track
+                },
+                Motion.collapse(),
+                label = "dotColor",
+            )
+            val width by animateDpAsState(if (i == current) Size.statusDot * CURRENT_DOT_STRETCH else Size.statusDot, Motion.collapse(), label = "dotWidth")
+            Box(Modifier.size(width, Size.statusDot).background(color, CircleShape))
         }
     }
 }
@@ -332,6 +363,7 @@ private fun QuizFinished(
 }
 
 private val QUESTION_BOX = 180.dp
+private const val CURRENT_DOT_STRETCH = 2.5f
 private const val QUESTION_SIZE = 72f
 private val OPTION_HEIGHT = 60.dp
 private val OPTION_BORDER = 1.5.dp

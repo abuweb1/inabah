@@ -2,6 +2,7 @@ package app.inabah.android.core.settings
 
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
+import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -17,12 +18,22 @@ import kotlinx.coroutines.flow.asStateFlow
 class ReadingProgress(private val storage: PreferencesStorage) {
     private val _lessonsDone = MutableStateFlow(readLessons(storage.snapshot))
     private val _wordCounts = MutableStateFlow(readWords(storage.snapshot))
+    private val _unlockSeen = MutableStateFlow(storage.snapshot[UNLOCK_SEEN_KEY] ?: 1)
 
     /** Номера шагов с пройденным уроком. */
     val lessonsDone: StateFlow<Set<Int>> = _lessonsDone.asStateFlow()
 
     /** Шаг → сколько раз прочитано каждое слово (по порядку слов шага); нет шага - ничего не читали. */
     val wordCounts: StateFlow<Map<Int, List<Int>>> = _wordCounts.asStateFlow()
+
+    /** Последний открытый шаг, открытие которого уже показано (замок «отщёлкнулся»); по умолчанию 1. */
+    val unlockSeen: StateFlow<Int> = _unlockSeen.asStateFlow()
+
+    fun markUnlockSeen(step: Int) {
+        if (step <= _unlockSeen.value) return
+        _unlockSeen.value = step
+        storage.edit { it[UNLOCK_SEEN_KEY] = step }
+    }
 
     fun markLessonDone(step: Int) {
         if (step in _lessonsDone.value) return
@@ -45,16 +56,19 @@ class ReadingProgress(private val storage: PreferencesStorage) {
         if (_lessonsDone.value.isEmpty() && _wordCounts.value.isEmpty() && keys.isEmpty()) return
         _lessonsDone.value = emptySet()
         _wordCounts.value = emptyMap()
+        _unlockSeen.value = 1
         storage.edit { preferences ->
             preferences.asMap().keys
                 .filter { LessonPattern.matches(it.name) || WordsPattern.matches(it.name) }
                 .forEach { preferences.remove(it) }
+            preferences.remove(UNLOCK_SEEN_KEY)
         }
     }
 
     companion object {
         private val LessonPattern = Regex("""^reading\.step\.(\d+)\.done$""")
         private val WordsPattern = Regex("""^reading\.words\.(\d+)$""")
+        private val UNLOCK_SEEN_KEY = intPreferencesKey("reading.unlockSeen")
 
         fun lessonKey(step: Int) = booleanPreferencesKey("reading.step.$step.done")
         fun wordsKey(step: Int) = stringPreferencesKey("reading.words.$step")

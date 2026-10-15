@@ -1,5 +1,21 @@
 package app.inabah.android.feature.makharij
 
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.LaunchedEffect
+import app.inabah.android.core.designsystem.Motion
+import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.clip
+import androidx.compose.material3.Icon
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -110,60 +126,80 @@ fun ReadingWordsScreen(
         val groups = words.groups
         val allRead = wordsDone(step, counts)
         val completed = completedSteps(loaded, lessonsDone, wordCounts)
-        // Кнопки групп - внизу экрана, вне прокрутки: не прыгают, когда высота группы меняется
-        // (последняя группа короче) - просьба пользователя 2026-10-15.
-        Column(Modifier.fillMaxSize()) {
-            Column(
-                Modifier
-                    .weight(1f)
-                    .fillMaxWidth()
-                    .verticalScroll(rememberScrollState())
-                    .padding(top = Spacing.s, bottom = Spacing.xl),
-                verticalArrangement = Arrangement.spacedBy(Spacing.m),
-            ) {
-                WordsProgress(
-                    read = wordsReadCount(step, counts),
-                    total = words.items.size,
-                    repeat = words.repeat,
-                    modifier = Modifier.padding(horizontal = Spacing.xl),
-                )
-                // Страница - во всю ширину, отступ - внутри: соседние группы не выглядывают по краям.
-                HorizontalPager(state = pager, verticalAlignment = Alignment.Top) { page ->
-                    val offset = page * words.groupSize
-                    ParchmentPanel(
+        // Праздник - когда шаг стал пройденным на этом экране (дочитано последнее слово), не при повторном входе.
+        val stepDone = step.number in completed
+        var wasDone by rememberSaveable { mutableStateOf(stepDone) }
+        var celebrate by rememberSaveable { mutableStateOf(false) }
+        LaunchedEffect(stepDone) {
+            if (stepDone && !wasDone) celebrate = true
+            wasDone = stepDone
+        }
+        val next = loaded.steps.firstOrNull { it.number > step.number && it.hasLesson && isUnlocked(loaded, completed, it) }
+        Box(Modifier.fillMaxSize()) {
+            // Кнопки групп - внизу экрана, вне прокрутки: не прыгают, когда высота группы меняется
+            // (последняя группа короче) - просьба пользователя 2026-10-15.
+            Column(Modifier.fillMaxSize()) {
+                Column(
+                    Modifier
+                        .weight(1f)
+                        .fillMaxWidth()
+                        .verticalScroll(rememberScrollState())
+                        .padding(top = Spacing.s, bottom = Spacing.xl),
+                    verticalArrangement = Arrangement.spacedBy(Spacing.m),
+                ) {
+                    WordsProgress(
+                        read = wordsReadCount(step, counts),
+                        total = words.items.size,
+                        repeat = words.repeat,
                         modifier = Modifier.padding(horizontal = Spacing.xl),
-                        topCornerRadius = Radius.card,
-                        bottomCornerRadius = Radius.card,
-                    ) {
-                        WordGrid(
-                            words = groups[page],
-                            counts = { counts.getOrNull(offset + it) ?: 0 },
-                            repeat = words.repeat,
-                            hidden = hidden,
-                            onRead = { progress.readWord(step.number, offset + it, words.items.size, words.repeat) },
+                    )
+                    // Страница - во всю ширину, отступ - внутри: соседние группы не выглядывают по краям.
+                    HorizontalPager(state = pager, verticalAlignment = Alignment.Top) { page ->
+                        val offset = page * words.groupSize
+                        ParchmentPanel(
+                            modifier = Modifier.padding(horizontal = Spacing.xl),
+                            topCornerRadius = Radius.card,
+                            bottomCornerRadius = Radius.card,
+                        ) {
+                            WordGrid(
+                                words = groups[page],
+                                counts = { counts.getOrNull(offset + it) ?: 0 },
+                                repeat = words.repeat,
+                                hidden = hidden,
+                                onRead = { progress.readWord(step.number, offset + it, words.items.size, words.repeat) },
+                            )
+                        }
+                    }
+                    if (allRead) {
+                        WordsFinished(
+                            modifier = Modifier.padding(horizontal = Spacing.xl),
+                            lessonDone = step.number in lessonsDone,
+                            next = next,
+                            onOpenStep = onOpenStep,
+                            onOpenQuiz = onOpenQuiz,
+                            onOpenSteps = onOpenSteps,
                         )
                     }
                 }
-                if (allRead) {
-                    WordsFinished(
-                        modifier = Modifier.padding(horizontal = Spacing.xl),
-                        lessonDone = step.number in lessonsDone,
-                        next = loaded.steps.firstOrNull { it.number > step.number && it.hasLesson && isUnlocked(loaded, completed, it) },
-                        onOpenStep = onOpenStep,
-                        onOpenQuiz = onOpenQuiz,
-                        onOpenSteps = onOpenSteps,
-                    )
-                }
+                GroupNavigation(
+                    current = pager.currentPage,
+                    count = groups.size,
+                    onPrevious = { scope.launch { pager.animateScrollToPage(pager.currentPage - 1) } },
+                    onNext = { scope.launch { pager.animateScrollToPage(pager.currentPage + 1) } },
+                    modifier = Modifier
+                        .padding(horizontal = Spacing.xl)
+                        .padding(top = Spacing.s, bottom = Spacing.m + contentPadding.calculateBottomPadding()),
+                )
             }
-            GroupNavigation(
-                current = pager.currentPage,
-                count = groups.size,
-                onPrevious = { scope.launch { pager.animateScrollToPage(pager.currentPage - 1) } },
-                onNext = { scope.launch { pager.animateScrollToPage(pager.currentPage + 1) } },
-                modifier = Modifier
-                    .padding(horizontal = Spacing.xl)
-                    .padding(top = Spacing.s, bottom = Spacing.m + contentPadding.calculateBottomPadding()),
-            )
+            if (celebrate) {
+                StepCompletedOverlay(
+                    step = step,
+                    next = next,
+                    onOpenStep = onOpenStep,
+                    onOpenSteps = onOpenSteps,
+                    contentPadding = contentPadding,
+                )
+            }
         }
     }
 }
@@ -233,45 +269,79 @@ private fun WordTile(
     val palette = InabahTheme.palette
     val colors = readingColors
     val isDone = count >= repeat
+    val initiallyDone = remember(word) { isDone }
     val interaction = remember { MutableInteractionSource() }
+    val haptics = LocalHapticFeedback.current
     val readLabel = stringResource(R.string.makharij_words_read_action)
     val state = stringResource(R.string.makharij_words_tile_state, count, repeat)
     val description = listOfNotNull(word.arabic, transliteration?.takeIf { !hidden }).joinToString(", ")
-    Box(
-        modifier
-            .clickable(interaction, indication = null, enabled = !isDone, role = Role.Button, onClick = onRead)
-            .pressFeedback(interaction, scale = PressFeedback.ICON_SCALE)
-            .surface(
-                if (isDone) palette.success.copy(alpha = DONE_FILL_ALPHA) else colors.parchmentCell,
-                Radius.box,
-                border = if (isDone) palette.parchmentAccent else colors.parchmentCellBorder,
-            )
-            .clearAndSetSemantics {
-                contentDescription = description
-                stateDescription = state
-                if (!isDone) onClick(readLabel) { onRead(); true }
-            },
-    ) {
-        Text(
-            stringResource(R.string.makharij_words_count, count, repeat),
-            color = if (isDone) palette.parchmentAccent else colors.parchmentCaption,
-            style = InabahType.caption2.copy(fontWeight = FontWeight.Bold),
-            modifier = Modifier.align(Alignment.TopStart).padding(start = Spacing.xs, top = Spacing.xxs),
+    // Живость (просьба пользователя 2026-10-15): плитка наливается золотом снизу вверх с каждым
+    // прочтением, толчок и отклик, как у счётчика зикра; на последнем - вспышка ✦ и галочка.
+    val fill by animateFloatAsState((count.toFloat() / repeat).coerceIn(0f, 1f), Motion.progress(), label = "wordFill")
+    // Цвет раздела, не золото: золото на пергаменте почти не видно.
+    val gold = colors.tint.copy(alpha = WORD_FILL_ALPHA)
+    val read = {
+        haptics.performHapticFeedback(
+            if (count + 1 >= repeat) HapticFeedbackType.Confirm else HapticFeedbackType.ContextClick,
         )
-        Column(
-            Modifier.fillMaxWidth().padding(top = Spacing.m, bottom = Spacing.xs),
-            horizontalAlignment = Alignment.CenterHorizontally,
+        onRead()
+    }
+    Box(modifier.popOn(count)) {
+        Box(
+            Modifier
+                .fillMaxWidth()
+                .clickable(interaction, indication = null, enabled = !isDone, role = Role.Button, onClick = read)
+                .pressFeedback(interaction, scale = PressFeedback.ICON_SCALE)
+                .surface(
+                    if (isDone) palette.success.copy(alpha = DONE_FILL_ALPHA) else colors.parchmentCell,
+                    Radius.box,
+                    border = if (isDone) palette.parchmentAccent else colors.parchmentCellBorder,
+                )
+                .clip(RoundedCornerShape(Radius.box))
+                .drawBehind {
+                    if (!isDone && fill > 0f) {
+                        val height = size.height * fill
+                        drawRect(gold, topLeft = Offset(0f, size.height - height), size = size.copy(height = height))
+                    }
+                }
+                .clearAndSetSemantics {
+                    contentDescription = description
+                    stateDescription = state
+                    if (!isDone) onClick(readLabel) { read(); true }
+                },
         ) {
-            ArabicText(word.arabic, WORD_SIZE, palette.parchmentText, bold = true, maxLines = 1, textAlign = TextAlign.Center)
-            if (transliteration != null) {
+            if (isDone) {
+                Icon(
+                    painterResource(R.drawable.ic_check),
+                    contentDescription = null,
+                    tint = palette.parchmentAccent,
+                    modifier = Modifier.align(Alignment.TopStart).padding(start = Spacing.xxs, top = Spacing.xxs).size(DoneIconSize),
+                )
+            } else {
                 Text(
-                    transliteration,
+                    stringResource(R.string.makharij_words_count, count, repeat),
                     color = colors.parchmentCaption,
-                    style = InabahType.caption,
-                    modifier = Modifier.alpha(transliterationAlpha(hidden)),
+                    style = InabahType.caption2.copy(fontWeight = FontWeight.Bold),
+                    modifier = Modifier.align(Alignment.TopStart).padding(start = Spacing.xs, top = Spacing.xxs),
                 )
             }
+            Column(
+                Modifier.fillMaxWidth().padding(top = Spacing.m, bottom = Spacing.xs),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                ArabicText(word.arabic, WORD_SIZE, palette.parchmentText, bold = true, maxLines = 1, textAlign = TextAlign.Center)
+                if (transliteration != null) {
+                    Text(
+                        transliteration,
+                        color = colors.parchmentCaption,
+                        style = InabahType.caption,
+                        modifier = Modifier.alpha(transliterationAlpha(hidden)),
+                    )
+                }
+            }
         }
+        // Вспышка - только в момент, когда слово дочитано (не у уже прочитанных при открытии экрана).
+        if (isDone && !initiallyDone) SparkleBurst(key = word, color = palette.gold, modifier = Modifier.matchParentSize())
     }
 }
 
@@ -330,3 +400,5 @@ private fun WordsFinished(
 private const val WORD_COLUMNS = 3
 private const val WORD_SIZE = 28f
 private const val DONE_FILL_ALPHA = 0.22f
+private const val WORD_FILL_ALPHA = 0.5f
+private val DoneIconSize = 14.dp

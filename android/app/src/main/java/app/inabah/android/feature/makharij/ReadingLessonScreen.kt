@@ -1,5 +1,11 @@
 package app.inabah.android.feature.makharij
 
+import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.layout.width
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -178,6 +184,7 @@ private fun LessonContent(
                 .padding(top = Spacing.s, bottom = Spacing.xl + contentPadding.calculateBottomPadding()),
             verticalArrangement = Arrangement.spacedBy(Spacing.m),
         ) {
+            step.example?.let { LessonHero(it) }
             for (block in step.blocks) {
                 when (block) {
                     is ReadingBlock.Text -> TextBlock(block.text)
@@ -274,13 +281,25 @@ private fun RuleBlock(rule: ReadingBlock.Rule, onLetter: (ReadingLetter) -> Unit
             style = InabahType.subheadline.copy(fontWeight = FontWeight.SemiBold),
             textAlign = TextAlign.Center,
         )
-        Text(
-            withArabicRuns(rule.text),
-            color = palette.onAccentStrong,
-            style = InabahType.contentTranslation,
-            modifier = Modifier.fillMaxWidth().padding(top = Spacing.xxs),
-        )
-        if (rule.letters.isNotEmpty()) {
+        val ruleText: @Composable (Modifier) -> Unit = { textModifier ->
+            Text(
+                withArabicRuns(rule.text),
+                color = palette.onAccentStrong,
+                style = InabahType.contentTranslation,
+                modifier = textModifier.padding(top = Spacing.xxs),
+            )
+        }
+        if (rule.letters.size == 1) {
+            // Одна буква (ро) - в ряд с текстом, не отдельной строкой (просьба пользователя 2026-10-15).
+            val tileWidth = with(LocalDensity.current) { SINGLE_LETTER_TILE.sp.toDp() }
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Spacing.m), verticalAlignment = Alignment.CenterVertically) {
+                ruleText(Modifier.weight(1f))
+                Box(Modifier.width(tileWidth)) { LettersGrid(rule.letters, onLetter, columns = 1) }
+            }
+        } else {
+            ruleText(Modifier.fillMaxWidth())
+        }
+        if (rule.letters.size > 1) {
             Spacer(Modifier.height(Spacing.xs))
             // Плитки не шире, чем в сетке алфавита: одна буква - обычная плитка справа.
             LettersGrid(rule.letters, onLetter, columns = rule.letters.size.coerceIn(LETTER_COLUMNS, RULE_LETTER_COLUMNS))
@@ -407,6 +426,10 @@ private fun SyllableRows(
 }
 
 private const val LETTER_COLUMNS = 5
+private const val SINGLE_LETTER_TILE = 64f
+private const val HERO_SIZE = 46f
+private const val HERO_STAGGER_MILLIS = 350
+private const val HERO_APPEAR_MILLIS = 500
 /** «Послушать алфавит» без записей - сколько подсвечена буква. */
 private const val LETTER_MILLIS = 1_200L
 private const val SYLLABLE_ROWS_PER_CARD = 4
@@ -451,4 +474,48 @@ private fun SyllableCell(
         )
     }
 }
+
+/**
+ * «Лицо» урока (просьба пользователя 2026-10-15: живость): пример шага крупно на пергаменте (بَ بِ بُ),
+ * части появляются по очереди справа налево - как пишутся. При каждом открытии урока заново.
+ */
+@Composable
+private fun LessonHero(example: String) {
+    val palette = InabahTheme.palette
+    val parts = remember(example) { example.split(' ').filter { it.isNotBlank() } }
+    ParchmentPanel(topCornerRadius = Radius.card, bottomCornerRadius = Radius.card) {
+        CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+            Row(
+                Modifier.fillMaxWidth().clearAndSetSemantics { contentDescription = example },
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                parts.forEachIndexed { index, part ->
+                    val appear = remember(example) { Animatable(0f) }
+                    LaunchedEffect(example) {
+                        delay(index * HERO_STAGGER_MILLIS.toLong())
+                        appear.animateTo(1f, tween(HERO_APPEAR_MILLIS, easing = FastOutSlowInEasing))
+                    }
+                    ArabicText(
+                        part,
+                        HERO_SIZE,
+                        palette.parchmentText,
+                        bold = true,
+                        maxLines = 1,
+                        modifier = Modifier.graphicsLayer {
+                            alpha = appear.value
+                            val scale = HERO_START_SCALE + (1 - HERO_START_SCALE) * appear.value
+                            scaleX = scale
+                            scaleY = scale
+                            translationY = (1 - appear.value) * HERO_RISE.toPx()
+                        },
+                    )
+                }
+            }
+        }
+    }
+}
+
+private const val HERO_START_SCALE = 0.6f
+private val HERO_RISE = 12.dp
 
