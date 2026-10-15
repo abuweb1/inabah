@@ -6,6 +6,7 @@ import app.inabah.android.core.content.model.ReadingLetter
 import app.inabah.android.core.content.model.ReadingMark
 import app.inabah.android.core.content.model.ReadingQuestion
 import app.inabah.android.core.content.model.ReadingStep
+import app.inabah.android.core.content.model.ReadingWord
 
 // Правила «Учимся читать» без Compose (docs/08-screen-makharij.md): цепочка листа буквы,
 // варианты ответа, текущий шаг.
@@ -118,6 +119,30 @@ fun completedCount(course: ReadingCourse, completed: Set<Int>): Int =
 /** Курс пройден целиком - все шаги, включая итог. */
 fun isCourseDone(course: ReadingCourse, completed: Set<Int>): Boolean =
     course.steps.isNotEmpty() && course.steps.all { it.number in completed }
+
+/**
+ * Ряды сетки «Читаем слова»: слова - по [columns] в ряд, словосочетание - отдельным рядом (во всю ширину);
+ * порядок и индексы слов в группе сохраняются.
+ */
+fun wordRows(words: List<ReadingWord>, columns: Int): List<List<IndexedValue<ReadingWord>>> {
+    val rows = mutableListOf<List<IndexedValue<ReadingWord>>>()
+    var current = mutableListOf<IndexedValue<ReadingWord>>()
+    for (word in words.withIndex()) {
+        if (word.value.isPhrase) {
+            if (current.isNotEmpty()) rows += current
+            rows += listOf(word)
+            current = mutableListOf()
+        } else {
+            current += word
+            if (current.size == columns) {
+                rows += current
+                current = mutableListOf()
+            }
+        }
+    }
+    if (current.isNotEmpty()) rows += current
+    return rows
+}
 
 /** Все слова шага прочитаны нужное число раз (слов нет - да). */
 fun wordsDone(step: ReadingStep, counts: List<Int>?): Boolean {

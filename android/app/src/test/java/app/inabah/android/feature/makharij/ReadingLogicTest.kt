@@ -3,6 +3,7 @@ package app.inabah.android.feature.makharij
 import app.inabah.android.core.content.loadAssetCourse
 import app.inabah.android.core.content.model.LetterForm
 import app.inabah.android.core.content.model.ReadingQuestion
+import app.inabah.android.core.content.model.ReadingWord
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
@@ -60,9 +61,19 @@ class ReadingLogicTest {
         assertEquals(3, currentStep(course, setOf(1, 2))?.number)
         assertEquals(4, currentStep(course, setOf(1, 2, 3))?.number)
         assertEquals(5, currentStep(course, setOf(1, 2, 3, 4))?.number)
-        assertNull(currentStep(course, setOf(1, 2, 3, 4, 5)), "шаги 6-11 без урока пропускаются")
+        assertEquals(6, currentStep(course, setOf(1, 2, 3, 4, 5))?.number)
+        assertNull(currentStep(course, setOf(1, 2, 3, 4, 5, 6)), "шаги 7-11 без урока пропускаются")
         assertNull(currentStep(course, withLessons.toSet()))
         assertEquals(2.0 / 11, completedFraction(course, setOf(1, 2, 99)), "итог не считается")
+    }
+
+    @Test
+    fun `Словосочетание - отдельным рядом, слова - по 3, индексы сохраняются`() {
+        val words = listOf("ا", "ب", "ت ث", "ج", "ح", "خ", "د", "ذ ر").map { ReadingWord(it, null) }
+
+        val rows = wordRows(words, columns = 3).map { row -> row.map { it.index } }
+
+        assertEquals(listOf(listOf(0, 1), listOf(2), listOf(3, 4, 5), listOf(6), listOf(7)), rows)
     }
 
     @Test

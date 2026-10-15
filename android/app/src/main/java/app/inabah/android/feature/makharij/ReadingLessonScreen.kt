@@ -49,7 +49,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.sp
@@ -220,6 +224,7 @@ private fun LessonContent(
                         SyllablesTable(block.letters, block.marks, hidden, onLetter)
                     }
                     is ReadingBlock.Rule -> RuleBlock(block, onLetter)
+                    is ReadingBlock.Formulas -> FormulasBlock(block, hidden)
                 }
             }
             Spacer(Modifier.height(Spacing.s))
@@ -555,6 +560,71 @@ private fun SampleSyllables(
 }
 
 /**
+ * Формулы (мадд, 2026-10-15): одна карточка пергамента, ячейки по [ReadingBlock.Formulas.columns] в ряд
+ * справа налево; в ячейке «بَ + ا = بَا» - добавленные части выделены (буква мадда), под ней транскрипция
+ * итога (прячется «глазом»). Одна часть - равенство «تَشَٰبَهَ = تَشَابَهَ», без выделения.
+ */
+@Composable
+private fun FormulasBlock(block: ReadingBlock.Formulas, hidden: Boolean) {
+    val palette = InabahTheme.palette
+    val colors = readingColors
+
+    ParchmentPanel(topCornerRadius = Radius.card, bottomCornerRadius = Radius.card) {
+        CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+            Column(verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
+                for (row in block.items.chunked(block.columns)) {
+                    Row(Modifier.height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
+                        for (formula in row) {
+                            val parts = remember(formula, colors.letterHighlight) {
+                                buildAnnotatedString {
+                                    formula.parts.forEachIndexed { index, part ->
+                                        if (index > 0) {
+                                            append(" + ")
+                                            withStyle(SpanStyle(color = colors.letterHighlight)) { append(part) }
+                                        } else append(part)
+                                    }
+                                }
+                            }
+                            val result = "= ${formula.result}"
+                            val text = parts + AnnotatedString(" $result")
+                            Column(
+                                Modifier
+                                    .weight(1f)
+                                    .fillMaxHeight()
+                                    .surface(colors.parchmentCell, Radius.box, border = colors.parchmentCellBorder)
+                                    .padding(horizontal = Spacing.xxs, vertical = Spacing.xs)
+                                    .clearAndSetSemantics {
+                                        contentDescription = listOfNotNull(text.text, formula.transliteration).joinToString(", ")
+                                    },
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center,
+                            ) {
+                                if (block.columns == 1) {
+                                    ArabicText(text, FORMULA_WIDE_SIZE, palette.parchmentText, bold = true, textAlign = TextAlign.Center, maxLines = 1)
+                                } else {
+                                    // Узкая ячейка: части - строкой выше, итог - крупно под ними (в одну строку не влезало).
+                                    ArabicText(parts, FORMULA_PARTS_SIZE, palette.parchmentText, bold = true, textAlign = TextAlign.Center, maxLines = 1)
+                                    ArabicText(result, FORMULA_SIZE, palette.parchmentText, bold = true, textAlign = TextAlign.Center, maxLines = 1)
+                                }
+                                formula.transliteration?.let {
+                                    Text(
+                                        it,
+                                        color = colors.parchmentCaption,
+                                        style = InabahType.caption,
+                                        modifier = Modifier.alpha(transliterationAlpha(hidden)),
+                                    )
+                                }
+                            }
+                        }
+                        repeat(block.columns - row.size) { Spacer(Modifier.weight(1f)) }
+                    }
+                }
+            }
+        }
+    }
+}
+
+/**
  * Таблица слогов: по [SYLLABLE_ROWS_PER_CARD] буквы на карточку пергамента (одна длинная доска
  * растягивала градиент - ячейки терялись, просьба пользователя 2026-10-15). Ряд - буква, столбцы -
  * знаки справа налево; ячейка - свой тон и рамка, под слогом - транскрипция.
@@ -611,6 +681,9 @@ private const val LETTER_MILLIS = 2_000L
 private const val PLAYING_SCALE = 1.2f
 private const val SYLLABLE_ROWS_PER_CARD = 4
 private const val SAMPLE_COLUMNS = 3
+private const val FORMULA_SIZE = 32f
+private const val FORMULA_PARTS_SIZE = 22f
+private const val FORMULA_WIDE_SIZE = 32f
 private const val RULE_LETTER_COLUMNS = 7
 private const val RULE_TITLE_SIZE = 26f
 /** Плитка буквы 64, в sp - растёт с шагом интерфейса. */

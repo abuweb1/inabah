@@ -161,7 +161,7 @@
     <string name="makharij_final_title">Итог · %1$s</string>
     <string name="makharij_done_verse_reference">Къуран · Тӏа Хӏа 20:114</string>
     <string name="makharij_done_verse_translation">«И скажи: „Господи, прибавь мне знания“»</string>
-    <string name="makharij_done_words">Прочитано слов: %1$d, каждое - %2$d раз</string>
+    <string name="makharij_done_words">Прочитано слов: %1$d, каждое - %2$s</string>
     <string name="makharij_form_final">в конце</string>
     <string name="makharij_form_final_place">в конце слова</string>
     <string name="makharij_form_initial">в начале</string>
@@ -221,7 +221,7 @@
     <string name="makharij_words_next">Дальше ›</string>
     <string name="makharij_words_open">Читаем слова</string>
     <string name="makharij_words_previous">‹ Назад</string>
-    <string name="makharij_words_progress">прочитано %1$d из %2$d · каждое слово - %3$d раз</string>
+    <string name="makharij_words_progress">прочитано %1$d из %2$d · каждое слово - %3$s</string>
     <string name="makharij_words_read_action">прочитал ещё раз</string>
     <string name="makharij_words_tile_state">прочитано %1$d из %2$d</string>
     <string name="makharij_words_title">Читаем слова</string>

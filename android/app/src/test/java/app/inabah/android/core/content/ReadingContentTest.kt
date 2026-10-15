@@ -101,7 +101,7 @@ class ReadingContentTest {
         assertEquals(listOf(15, 15, 15, 15), words.groups.map { it.size })
         assertTrue(words.items.take(12).all { it.transliteration != null })
         assertTrue(words.items.drop(12).all { it.transliteration == null })
-        assertEquals("зарода", words.items.first().transliteration)
+        assertEquals("заъама", words.items.first().transliteration, "порядок слов перемешан - решение пользователя 2026-10-16")
     }
 
     @Test
@@ -127,6 +127,23 @@ class ReadingContentTest {
         assertTrue(step.blocks.filterIsInstance<ReadingBlock.Text>().single().info != null)
         assertEquals(8, step.quiz.filterIsInstance<ReadingQuestion.LetterInForm>().size)
         assertEquals(60, step.words?.items?.size)
+    }
+
+    @Test
+    fun `Шаг 6 — формы группы 4 без проверки, формулы мадда, слова-экзамен`() = runTest {
+        val step = requireNotNull(loadAssetCourse().step(6))
+
+        val forms = step.blocks.filterIsInstance<ReadingBlock.Forms>().single()
+        assertEquals(listOf("د ذ ر ز", "و ا"), forms.groups.map { group -> group.joinToString(" ") { it.letter } })
+        assertTrue(step.quiz.isEmpty(), "формы группы 4 без проверки - решение пользователя")
+        val (madd, small) = step.blocks.filterIsInstance<ReadingBlock.Formulas>()
+        assertEquals(3, madd.columns)
+        assertEquals(listOf("بَا", "بِي", "بُو"), madd.items.map { it.result })
+        assertEquals(listOf("баа", "бии", "буу"), madd.items.map { it.transliteration })
+        assertEquals(listOf(listOf("بَ", "ا")), madd.items.take(1).map { it.parts })
+        assertEquals(1, small.columns)
+        assertEquals("تَشَٰبَهَ", small.items.first().parts.single())
+        assertEquals(3, step.words?.repeat)
     }
 
     private fun TestScope.repository(json: String) = AssetContentRepository(

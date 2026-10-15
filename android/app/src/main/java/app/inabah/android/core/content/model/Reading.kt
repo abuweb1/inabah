@@ -155,7 +155,13 @@ data class ReadingWords(val groupSize: Int, val repeat: Int, val items: List<Rea
     val groups: List<List<ReadingWord>> get() = items.chunked(groupSize.coerceAtLeast(1))
 }
 
-data class ReadingWord(val arabic: String, val transliteration: String?)
+data class ReadingWord(val arabic: String, val transliteration: String?) {
+    /** Несколько слов через пробел («لَهُۥ بَنِينَ») - на экране строкой во всю ширину. */
+    val isPhrase: Boolean get() = ' ' in arabic
+}
+
+/** Формула блока [ReadingBlock.Formulas]: части, итог и его транскрипция (`null` - без подписи). */
+data class ReadingFormula(val parts: List<String>, val result: String, val transliteration: String?)
 
 /** Блок урока; неизвестные типы данных сюда не попадают. */
 sealed interface ReadingBlock {
@@ -187,6 +193,12 @@ sealed interface ReadingBlock {
         /** На уроке - столько случайных слогов и «Посмотреть весь алфавит»; `null` - вся таблица на уроке. */
         val sample: Int? = null,
     ) : ReadingBlock
+
+    /**
+     * Формулы на пергаменте (мадд, 2026-10-15): части через «+» и итог после «=», справа налево -
+     * «بَ + ا = بَا»; одна часть - равенство («تَشَٰبَهَ = تَشَابَهَ»). [columns] - формул в ряду.
+     */
+    data class Formulas(val columns: Int, val items: List<ReadingFormula>) : ReadingBlock
 
     /** Правило: арабское название и его транскрипция, пояснение, буквы правила. */
     data class Rule(

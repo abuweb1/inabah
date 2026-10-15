@@ -26,6 +26,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -42,6 +44,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -209,7 +212,7 @@ private fun WordsProgress(read: Int, total: Int, repeat: Int, modifier: Modifier
     val palette = InabahTheme.palette
     Column(modifier, verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
         Text(
-            stringResource(R.string.makharij_words_progress, read, total, repeat),
+            stringResource(R.string.makharij_words_progress, read, total, pluralStringResource(R.plurals.zikr_repetitions, repeat, repeat)),
             color = palette.onAccentSecondary,
             style = InabahType.footnote,
         )
@@ -232,8 +235,10 @@ private fun WordGrid(
 ) {
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
         Column(verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
-            words.withIndex().chunked(WORD_COLUMNS).forEach { row ->
-                Row(horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
+            // Словосочетание - строкой во всю ширину (просьба пользователя 2026-10-16), слова - по 3 в ряд.
+            for (row in wordRows(words, WORD_COLUMNS)) {
+                val isPhrase = row.size == 1 && row.single().value.isPhrase
+                Row(Modifier.height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
                     for ((index, word) in row) {
                         CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
                             WordTile(
@@ -244,11 +249,11 @@ private fun WordGrid(
                                 transliteration = word.transliteration,
                                 hidden = hidden,
                                 onRead = { onRead(index) },
-                                modifier = Modifier.weight(1f),
+                                modifier = Modifier.weight(1f).fillMaxHeight(),
                             )
                         }
                     }
-                    repeat(WORD_COLUMNS - row.size) { Spacer(Modifier.weight(1f)) }
+                    if (!isPhrase) repeat(WORD_COLUMNS - row.size) { Spacer(Modifier.weight(1f)) }
                 }
             }
         }
@@ -289,7 +294,7 @@ private fun WordTile(
     Box(modifier.popOn(count)) {
         Box(
             Modifier
-                .fillMaxWidth()
+                .fillMaxSize()
                 .clickable(interaction, indication = null, enabled = !isDone, role = Role.Button, onClick = read)
                 .pressFeedback(interaction, scale = PressFeedback.ICON_SCALE)
                 .surface(

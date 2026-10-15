@@ -151,6 +151,14 @@ data class ReadingWordDto(
 )
 
 @Serializable
+data class ReadingFormulaDto(
+    val parts: List<String>,
+    val result: String,
+    /** Транскрипция итога; нет - без подписи. */
+    val translations: Map<String, ReadingWordTranslationDto> = emptyMap(),
+)
+
+@Serializable
 data class ReadingWordTranslationDto(
     val translit: String = "",
 )
@@ -177,6 +185,10 @@ data class ReadingBlockDto(
     val examples: Map<String, List<String>> = emptyMap(),
     /** `forms`: буквы третьей карточки «в словах». */
     val exampleCard: List<String> = emptyList(),
+    /** `formulas`: формул в ряду (1…3). */
+    val columns: Int = 1,
+    /** `formulas`: «بَ + ا = بَا», «تَشَٰبَهَ = تَشَابَهَ». */
+    val items: List<ReadingFormulaDto> = emptyList(),
     val translations: Map<String, ReadingTextTranslationDto> = emptyMap(),
 )
 

@@ -8,6 +8,7 @@ import app.inabah.android.core.content.model.FormExamples
 import app.inabah.android.core.content.model.LetterForm
 import app.inabah.android.core.content.model.ReadingBlock
 import app.inabah.android.core.content.model.ReadingCourse
+import app.inabah.android.core.content.model.ReadingFormula
 import app.inabah.android.core.content.model.ReadingLetter
 import app.inabah.android.core.content.model.ReadingMark
 import app.inabah.android.core.content.model.ReadingQuestion
@@ -22,6 +23,7 @@ import app.inabah.android.core.content.model.ReadingWords
 
 private const val EXAMPLE_LETTER = "ب"
 private const val FORM_EXAMPLES = 3
+private const val MAX_FORMULA_COLUMNS = 3
 
 internal fun ReadingFileDto.toReadingCourse(priority: ContentLanguagePriority): ReadingCourse {
     val marks = marks.map { dto ->
@@ -132,6 +134,17 @@ private fun ReadingBlockDto.toBlock(
             letters = letters.orEmpty().map(letter),
         )
     }
+    "formulas" -> ReadingBlock.Formulas(
+        columns = columns.coerceIn(1, MAX_FORMULA_COLUMNS),
+        items = items.map { item ->
+            ReadingFormula(
+                parts = item.parts,
+                result = item.result,
+                transliteration = priority.select(item.translations.keyedByLanguage())
+                    ?.translation?.translit?.trim()?.ifEmpty { null },
+            )
+        },
+    )
     else -> null
 }
 

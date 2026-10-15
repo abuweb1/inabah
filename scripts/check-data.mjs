@@ -418,7 +418,45 @@ const READING_BLOCKS = {
   zikr: ['type', 'section', 'id', 'syllables', 'translations'],
   rule: ['type', 'arabic', 'letters', 'translations'],
   forms: ['type', 'groups', 'examples', 'exampleCard'],
+  formulas: ['type', 'columns', 'items'],
 };
+// Мадд (2026-10-15): буква мадда без знака тянет огласовку перед ней - ا после фатхьи, ي после касры,
+// و после доммы; маленькие буквы мадда (ٰ ۥ ۦ) - сразу после той же огласовки.
+const MADD_LETTERS = { 'ا': 'fatha', 'ي': 'kasra', 'و': 'damma' };
+const SMALL_MADD = { 'ٰ': 'fatha', 'ۦ': 'kasra', 'ۥ': 'damma' };
+// Хамза на подставке вав / йа - как буква хамза.
+const HAMZA_SEATS = ['ؤ', 'ئ'];
+
+/**
+ * Слово «Читаем слова»: слова через один пробел; в слове - буква (подставка хамзы) и пройденный знак,
+ * после знака - необязательная маленькая буква мадда того же звука; буква мадда без знака - только после
+ * своей огласовки. Ошибка - текст, всё верно - `null`.
+ */
+function readingWordProblem(text, { byLetter, bases, signs, passed }) {
+  for (const word of text.split(' ')) {
+    if (!word) return 'лишний пробел';
+    const chars = [...word];
+    let previous = null;
+    for (let c = 0; c < chars.length;) {
+      const char = chars[c];
+      const known = byLetter.has(char) || bases.has(char) || HAMZA_SEATS.includes(char);
+      if (!known) return `неизвестная буква «${char}»`;
+      const mark = signs.get(chars[c + 1]);
+      if (!mark) {
+        if (MADD_LETTERS[char] && previous === MADD_LETTERS[char]) { previous = null; c += 1; continue; }
+        return `после «${char}» нет знака`;
+      }
+      if (!passed.has(mark)) return `знак ${mark} ещё не пройден`;
+      c += 2;
+      if (SMALL_MADD[chars[c]]) {
+        if (SMALL_MADD[chars[c]] !== mark) return 'маленькая буква мадда не к своей огласовке';
+        c += 1;
+        previous = null;
+      } else previous = mark;
+    }
+  }
+  return null;
+}
 const READING_QUIZ = { syllable: ['type', 'letter', 'mark'], letterName: ['type', 'letter'], letterForm: ['type', 'letter', 'form'] };
 // Формы буквы: отдельная, в начале, в середине, в конце слова.
 const READING_FORMS = ['isolated', 'initial', 'medial', 'final'];
@@ -547,13 +585,8 @@ function checkReading(file) {
         if (!requireString(wat, item ?? {}, 'arabic')) continue;
         if (seen.has(item.arabic)) warn('reading: повтор слова', wat, item.arabic);
         seen.add(item.arabic);
-        const chars = [...item.arabic];
-        for (let c = 0; c < chars.length; c += 2) {
-          if (!byLetter.has(chars[c]) && !bases.has(chars[c])) { error(wat, `«${item.arabic}»: неизвестная буква «${chars[c]}»`); break; }
-          const mark = signs.get(chars[c + 1]);
-          if (!mark) { error(wat, `«${item.arabic}»: после «${chars[c]}» нет знака`); break; }
-          if (!passed.has(mark)) { error(wat, `«${item.arabic}»: знак ${mark} ещё не пройден`); break; }
-        }
+        const problem = readingWordProblem(item.arabic, { byLetter, bases, signs, passed });
+        if (problem) error(wat, `«${item.arabic}»: ${problem}`);
         if (item.translations !== undefined) checkTexts(wat, item.translations, ['translit'], ['translit']);
       }
     }
@@ -593,6 +626,19 @@ function checkReading(file) {
           }
         }
         for (const l of block.exampleCard ?? []) if (!block.examples?.[l]) error(where, `exampleCard: у буквы ${l} нет примеров`);
+      }
+      // Формулы (мадд: بَ + ا = بَا; маленькие буквы мадда: تَشَٰبَهَ = تَشَابَهَ): части, итог, транскрипция итога.
+      if (block.type === 'formulas') {
+        if (block.columns !== undefined && (!Number.isInteger(block.columns) || block.columns < 1 || block.columns > 3)) error(where, 'columns - 1…3');
+        const items = Array.isArray(block.items) && block.items.length ? block.items : (error(where, 'items - непустой массив'), []);
+        for (const [n, item] of items.entries()) {
+          const iat = `${where} item ${n + 1}`;
+          for (const k of Object.keys(item ?? {})) if (!['parts', 'result', 'translations'].includes(k)) error(iat, `неизвестное поле «${k}»`);
+          if (!Array.isArray(item?.parts) || !item.parts.length) error(iat, 'parts - непустой массив');
+          for (const p of item?.parts ?? []) if (typeof p !== 'string' || !p) error(iat, 'parts - строки'); else checkArabic(iat, p);
+          if (requireString(iat, item ?? {}, 'result')) checkArabic(iat, item.result);
+          if (item?.translations !== undefined) checkTexts(iat, item.translations, ['translit'], ['translit']);
+        }
       }
       if (block.type === 'compare') for (const pair of block.pairs ?? []) {
         if (!Array.isArray(pair) || pair.length !== 2) { error(where, 'pairs - пары из двух вариантов'); continue; }

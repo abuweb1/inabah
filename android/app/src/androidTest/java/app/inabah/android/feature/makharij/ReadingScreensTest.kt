@@ -145,11 +145,11 @@ class ReadingScreensTest {
             }
         }
         waitForText("группа 1 из 4")
-        val tile = compose.onNodeWithContentDescription("زَرَدَ, зарода")
+        val tile = compose.onNodeWithContentDescription("ذَأَمَ, заъама")
         repeat(3) { tile.performClick() }
         assertEquals(3, progress.wordCounts.value[2]?.first())
         // Свайп - в обе стороны (кнопки - тоже).
-        compose.onNodeWithContentDescription("زَرَدَ, зарода").performTouchInput { swipeLeft() }
+        compose.onNodeWithContentDescription("ذَأَمَ, заъама").performTouchInput { swipeLeft() }
         waitForText("группа 2 из 4")
         compose.onNodeWithText("‹ Назад").performClick()
         waitForText("группа 1 из 4")
