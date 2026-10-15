@@ -1,0 +1,837 @@
+{
+  "marks": [
+    {
+      "id": "fatha",
+      "sign": "َ",
+      "translations": {
+        "ru": {
+          "name": "фатха",
+          "where": "над буквой",
+          "sound": "а"
+        }
+      }
+    },
+    {
+      "id": "kasra",
+      "sign": "ِ",
+      "translations": {
+        "ru": {
+          "name": "кясра",
+          "where": "под буквой",
+          "sound": "и"
+        }
+      }
+    },
+    {
+      "id": "damma",
+      "sign": "ُ",
+      "translations": {
+        "ru": {
+          "name": "дамма",
+          "where": "над буквой",
+          "sound": "у"
+        }
+      }
+    },
+    {
+      "id": "sukun",
+      "sign": "ْ",
+      "translations": {
+        "ru": {
+          "name": "сукун",
+          "where": "над буквой",
+          "sound": "без гласного"
+        }
+      }
+    },
+    {
+      "id": "shadda",
+      "sign": "ّ",
+      "translations": {
+        "ru": {
+          "name": "шадда",
+          "where": "над буквой",
+          "sound": "буква дважды"
+        }
+      }
+    },
+    {
+      "id": "fathatan",
+      "sign": "ً",
+      "translations": {
+        "ru": {
+          "name": "фатхатан",
+          "where": "над буквой",
+          "sound": "ан"
+        }
+      }
+    },
+    {
+      "id": "kasratan",
+      "sign": "ٍ",
+      "translations": {
+        "ru": {
+          "name": "кясратан",
+          "where": "под буквой",
+          "sound": "ин"
+        }
+      }
+    },
+    {
+      "id": "dammatan",
+      "sign": "ٌ",
+      "translations": {
+        "ru": {
+          "name": "дамматан",
+          "where": "над буквой",
+          "sound": "ун"
+        }
+      }
+    }
+  ],
+  "letters": [
+    {
+      "id": 1,
+      "letter": "ا",
+      "name": "أَلِف",
+      "joinsNext": false,
+      "syllableBase": "ء",
+      "audio": {},
+      "translations": {
+        "ru": {
+          "name": "Алиф",
+          "nameTranslit": "ъалиф",
+          "sound": "ъ",
+          "syllables": {
+            "fatha": "ъа",
+            "kasra": "ъи",
+            "damma": "ъу"
+          }
+        }
+      }
+    },
+    {
+      "id": 2,
+      "letter": "ب",
+      "name": "بَاء",
+      "audio": {},
+      "translations": {
+        "ru": {
+          "name": "Ба",
+          "nameTranslit": "баа",
+          "sound": "б",
+          "syllables": {
+            "fatha": "ба",
+            "kasra": "би",
+            "damma": "бу"
+          }
+        }
+      }
+    },
+    {
+      "id": 3,
+      "letter": "ت",
+      "name": "تَاء",
+      "audio": {},
+      "translations": {
+        "ru": {
+          "name": "Та",
+          "nameTranslit": "таа",
+          "sound": "т",
+          "syllables": {
+            "fatha": "та",
+            "kasra": "ти",
+            "damma": "ту"
+          }
+        }
+      }
+    },
+    {
+      "id": 4,
+      "letter": "ث",
+      "name": "ثَاء",
+      "audio": {},
+      "translations": {
+        "ru": {
+          "name": "Са",
+          "nameTranslit": "саа",
+          "sound": "с",
+          "syllables": {
+            "fatha": "са",
+            "kasra": "си",
+            "damma": "су"
+          }
+        }
+      }
+    },
+    {
+      "id": 5,
+      "letter": "ج",
+      "name": "جِيم",
+      "audio": {},
+      "translations": {
+        "ru": {
+          "name": "Джим",
+          "nameTranslit": "джиим",
+          "sound": "дж",
+          "syllables": {
+            "fatha": "джа",
+            "kasra": "джи",
+            "damma": "джу"
+          }
+        }
+      }
+    },
+    {
+      "id": 6,
+      "letter": "ح",
+      "name": "حَاء",
+      "audio": {},
+      "translations": {
+        "ru": {
+          "name": "Хьа",
+          "nameTranslit": "хьаа",
+          "sound": "хь",
+          "syllables": {
+            "fatha": "хьа",
+            "kasra": "хьи",
+            "damma": "хьу"
+          }
+        }
+      }
+    },
+    {
+      "id": 7,
+      "letter": "خ",
+      "name": "خَاء",
+      "audio": {},
+      "translations": {
+        "ru": {
+          "name": "Хо",
+          "nameTranslit": "хоо",
+          "sound": "х",
+          "syllables": {
+            "fatha": "хо",
+            "kasra": "хи",
+            "damma": "ху"
+          }
+        }
+      }
+    },
+    {
+      "id": 8,
+      "letter": "د",
+      "name": "دَال",
+      "joinsNext": false,
+      "audio": {},
+      "translations": {
+        "ru": {
+          "name": "Даль",
+          "nameTranslit": "дааль",
+          "sound": "д",
+          "syllables": {
+            "fatha": "да",
+            "kasra": "ди",
+            "damma": "ду"
+          }
+        }
+      }
+    },
+    {
+      "id": 9,
+      "letter": "ذ",
+      "name": "ذَال",
+      "joinsNext": false,
+      "audio": {},
+      "translations": {
+        "ru": {
+          "name": "Заль",
+          "nameTranslit": "зааль",
+          "sound": "з",
+          "syllables": {
+            "fatha": "за",
+            "kasra": "зи",
+            "damma": "зу"
+          }
+        }
+      }
+    },
+    {
+      "id": 10,
+      "letter": "ر",
+      "name": "رَاء",
+      "joinsNext": false,
+      "audio": {},
+      "translations": {
+        "ru": {
+          "name": "Ро",
+          "nameTranslit": "роо",
+          "sound": "р",
+          "syllables": {
+            "fatha": "ро",
+            "kasra": "ри",
+            "damma": "ру"
+          }
+        }
+      }
+    },
+    {
+      "id": 11,
+      "letter": "ز",
+      "name": "زَاي",
+      "joinsNext": false,
+      "audio": {},
+      "translations": {
+        "ru": {
+          "name": "Зай",
+          "nameTranslit": "заай",
+          "sound": "з",
+          "syllables": {
+            "fatha": "за",
+            "kasra": "зи",
+            "damma": "зу"
+          }
+        }
+      }
+    },
+    {
+      "id": 12,
+      "letter": "س",
+      "name": "سِين",
+      "audio": {},
+      "translations": {
+        "ru": {
+          "name": "Син",
+          "nameTranslit": "сиин",
+          "sound": "с",
+          "syllables": {
+            "fatha": "са",
+            "kasra": "си",
+            "damma": "су"
+          }
+        }
+      }
+    },
+    {
+      "id": 13,
+      "letter": "ش",
+      "name": "شِين",
+      "audio": {},
+      "translations": {
+        "ru": {
+          "name": "Шин",
+          "nameTranslit": "шиин",
+          "sound": "ш",
+          "syllables": {
+            "fatha": "ша",
+            "kasra": "ши",
+            "damma": "шу"
+          }
+        }
+      }
+    },
+    {
+      "id": 14,
+      "letter": "ص",
+      "name": "صَاد",
+      "audio": {},
+      "translations": {
+        "ru": {
+          "name": "Сод",
+          "nameTranslit": "соод",
+          "sound": "с",
+          "syllables": {
+            "fatha": "со",
+            "kasra": "сы",
+            "damma": "су"
+          }
+        }
+      }
+    },
+    {
+      "id": 15,
+      "letter": "ض",
+      "name": "ضَاد",
+      "audio": {},
+      "translations": {
+        "ru": {
+          "name": "Дод",
+          "nameTranslit": "доод",
+          "sound": "д",
+          "syllables": {
+            "fatha": "до",
+            "kasra": "ды",
+            "damma": "ду"
+          }
+        }
+      }
+    },
+    {
+      "id": 16,
+      "letter": "ط",
+      "name": "طَاء",
+      "audio": {},
+      "translations": {
+        "ru": {
+          "name": "Тӏо",
+          "nameTranslit": "тӏоо",
+          "sound": "тӏ",
+          "syllables": {
+            "fatha": "тӏо",
+            "kasra": "тӏы",
+            "damma": "тӏу"
+          }
+        }
+      }
+    },
+    {
+      "id": 17,
+      "letter": "ظ",
+      "name": "ظَاء",
+      "audio": {},
+      "translations": {
+        "ru": {
+          "name": "Зо",
+          "nameTranslit": "зоо",
+          "sound": "з",
+          "syllables": {
+            "fatha": "зо",
+            "kasra": "зы",
+            "damma": "зу"
+          }
+        }
+      }
+    },
+    {
+      "id": 18,
+      "letter": "ع",
+      "name": "عَيْن",
+      "audio": {},
+      "translations": {
+        "ru": {
+          "name": "Ӏайн",
+          "nameTranslit": "ӏайн",
+          "sound": "ӏ",
+          "syllables": {
+            "fatha": "ӏа",
+            "kasra": "ӏи",
+            "damma": "ӏу"
+          }
+        }
+      }
+    },
+    {
+      "id": 19,
+      "letter": "غ",
+      "name": "غَيْن",
+      "audio": {},
+      "translations": {
+        "ru": {
+          "name": "Гӏойн",
+          "nameTranslit": "гӏойн",
+          "sound": "гӏ",
+          "syllables": {
+            "fatha": "гӏо",
+            "kasra": "гӏи",
+            "damma": "гӏу"
+          }
+        }
+      }
+    },
+    {
+      "id": 20,
+      "letter": "ف",
+      "name": "فَاء",
+      "audio": {},
+      "translations": {
+        "ru": {
+          "name": "Фа",
+          "nameTranslit": "фаа",
+          "sound": "ф",
+          "syllables": {
+            "fatha": "фа",
+            "kasra": "фи",
+            "damma": "фу"
+          }
+        }
+      }
+    },
+    {
+      "id": 21,
+      "letter": "ق",
+      "name": "قَاف",
+      "audio": {},
+      "translations": {
+        "ru": {
+          "name": "Къоф",
+          "nameTranslit": "къооф",
+          "sound": "къ",
+          "syllables": {
+            "fatha": "къо",
+            "kasra": "къи",
+            "damma": "къу"
+          }
+        }
+      }
+    },
+    {
+      "id": 22,
+      "letter": "ك",
+      "name": "كَاف",
+      "audio": {},
+      "translations": {
+        "ru": {
+          "name": "Каф",
+          "nameTranslit": "кааф",
+          "sound": "к",
+          "syllables": {
+            "fatha": "ка",
+            "kasra": "ки",
+            "damma": "ку"
+          }
+        }
+      }
+    },
+    {
+      "id": 23,
+      "letter": "ل",
+      "name": "لَام",
+      "audio": {},
+      "translations": {
+        "ru": {
+          "name": "Лям",
+          "nameTranslit": "льаам",
+          "sound": "ль",
+          "syllables": {
+            "fatha": "льа",
+            "kasra": "ли",
+            "damma": "льу"
+          }
+        }
+      }
+    },
+    {
+      "id": 24,
+      "letter": "م",
+      "name": "مِيم",
+      "audio": {},
+      "translations": {
+        "ru": {
+          "name": "Мим",
+          "nameTranslit": "миим",
+          "sound": "м",
+          "syllables": {
+            "fatha": "ма",
+            "kasra": "ми",
+            "damma": "му"
+          }
+        }
+      }
+    },
+    {
+      "id": 25,
+      "letter": "ن",
+      "name": "نُون",
+      "audio": {},
+      "translations": {
+        "ru": {
+          "name": "Нун",
+          "nameTranslit": "нуун",
+          "sound": "н",
+          "syllables": {
+            "fatha": "на",
+            "kasra": "ни",
+            "damma": "ну"
+          }
+        }
+      }
+    },
+    {
+      "id": 26,
+      "letter": "ه",
+      "name": "هَاء",
+      "audio": {},
+      "translations": {
+        "ru": {
+          "name": "Хӏа",
+          "nameTranslit": "хӏаа",
+          "sound": "хӏ",
+          "syllables": {
+            "fatha": "хӏа",
+            "kasra": "хӏи",
+            "damma": "хӏу"
+          }
+        }
+      }
+    },
+    {
+      "id": 27,
+      "letter": "و",
+      "name": "وَاو",
+      "joinsNext": false,
+      "audio": {},
+      "translations": {
+        "ru": {
+          "name": "Вав",
+          "nameTranslit": "ваав",
+          "sound": "в",
+          "syllables": {
+            "fatha": "ва",
+            "kasra": "ви",
+            "damma": "ву"
+          }
+        }
+      }
+    },
+    {
+      "id": 28,
+      "letter": "ي",
+      "name": "يَاء",
+      "audio": {},
+      "translations": {
+        "ru": {
+          "name": "Йа",
+          "nameTranslit": "йаа",
+          "sound": "й",
+          "syllables": {
+            "fatha": "йа",
+            "kasra": "йи",
+            "damma": "йу"
+          }
+        }
+      }
+    }
+  ],
+  "steps": [
+    {
+      "id": 1,
+      "marks": [],
+      "translations": {
+        "ru": {
+          "title": "Буквы",
+          "subtitle": "28 букв, название и звук"
+        }
+      },
+      "blocks": [
+        {
+          "type": "text",
+          "translations": {
+            "ru": {
+              "text": "В арабском алфавите 28 букв. Пишут и читают справа налево. Нажмите на букву, чтобы услышать её звук и название."
+            }
+          }
+        },
+        {
+          "type": "letters"
+        }
+      ],
+      "quiz": [
+        {
+          "type": "letterName",
+          "letter": "ب"
+        },
+        {
+          "type": "letterName",
+          "letter": "ج"
+        },
+        {
+          "type": "letterName",
+          "letter": "ع"
+        },
+        {
+          "type": "letterName",
+          "letter": "ق"
+        },
+        {
+          "type": "letterName",
+          "letter": "ه"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "marks": [],
+      "translations": {
+        "ru": {
+          "title": "Похожие буквы",
+          "subtitle": "отличаются точками"
+        }
+      },
+      "blocks": [],
+      "quiz": []
+    },
+    {
+      "id": 3,
+      "marks": [],
+      "translations": {
+        "ru": {
+          "title": "Формы букв",
+          "subtitle": "в начале, середине и конце слова"
+        }
+      },
+      "blocks": [],
+      "quiz": []
+    },
+    {
+      "id": 4,
+      "marks": [
+        "fatha",
+        "kasra",
+        "damma"
+      ],
+      "translations": {
+        "ru": {
+          "title": "Огласовки",
+          "subtitle": "фатха, кясра, дамма"
+        }
+      },
+      "blocks": [
+        {
+          "type": "text",
+          "translations": {
+            "ru": {
+              "text": "Буква - это согласный звук. Гласный ей даёт маленький знак над буквой или под ней - огласовка."
+            }
+          }
+        },
+        {
+          "type": "marks",
+          "marks": [
+            "fatha",
+            "kasra",
+            "damma"
+          ]
+        },
+        {
+          "type": "text",
+          "translations": {
+            "ru": {
+              "text": "Читаем справа налево: буква и сразу её огласовка - это слог."
+            }
+          }
+        },
+        {
+          "type": "syllables",
+          "letters": [
+            "ب",
+            "م",
+            "ن",
+            "ل"
+          ]
+        }
+      ],
+      "quiz": [
+        {
+          "type": "syllable",
+          "letter": "ب",
+          "mark": "damma"
+        },
+        {
+          "type": "syllable",
+          "letter": "م",
+          "mark": "fatha"
+        },
+        {
+          "type": "syllable",
+          "letter": "ن",
+          "mark": "kasra"
+        },
+        {
+          "type": "syllable",
+          "letter": "ل",
+          "mark": "damma"
+        },
+        {
+          "type": "syllable",
+          "letter": "ب",
+          "mark": "kasra"
+        },
+        {
+          "type": "syllable",
+          "letter": "م",
+          "mark": "damma"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "marks": [
+        "sukun"
+      ],
+      "translations": {
+        "ru": {
+          "title": "Сукун",
+          "subtitle": "закрытый слог"
+        }
+      },
+      "blocks": [],
+      "quiz": []
+    },
+    {
+      "id": 6,
+      "marks": [],
+      "translations": {
+        "ru": {
+          "title": "Долгие гласные",
+          "subtitle": "алиф, вав и йа после огласовки"
+        }
+      },
+      "blocks": [],
+      "quiz": []
+    },
+    {
+      "id": 7,
+      "marks": [
+        "fathatan",
+        "kasratan",
+        "dammatan"
+      ],
+      "translations": {
+        "ru": {
+          "title": "Танвин",
+          "subtitle": "двойная огласовка"
+        }
+      },
+      "blocks": [],
+      "quiz": []
+    },
+    {
+      "id": 8,
+      "marks": [
+        "shadda"
+      ],
+      "translations": {
+        "ru": {
+          "title": "Шадда",
+          "subtitle": "удвоение буквы"
+        }
+      },
+      "blocks": [],
+      "quiz": []
+    },
+    {
+      "id": 9,
+      "marks": [],
+      "translations": {
+        "ru": {
+          "title": "Особые случаи",
+          "subtitle": "хамза, та марбута, артикль, слово «Аллах»"
+        }
+      },
+      "blocks": [],
+      "quiz": []
+    },
+    {
+      "id": 10,
+      "marks": [],
+      "translations": {
+        "ru": {
+          "title": "Читаем зикр",
+          "subtitle": "строка из азкаров по слогам"
+        }
+      },
+      "blocks": [],
+      "quiz": []
+    }
+  ]
+}

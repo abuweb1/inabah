@@ -9,8 +9,8 @@
 //   node scripts/check-data.mjs --verbose  — все предупреждения
 //
 // Плюс data/collections.json — сведения о сборниках для экрана «О сборнике»,
-// data/reminders.json — тексты напоминаний и data/versions.json — история версий («Что нового»),
-// общие для iOS и Android.
+// data/reminders.json — тексты напоминаний, data/versions.json — история версий («Что нового»)
+// и data/reading.json - «Учимся читать» в разделе «Махрадж», общие для iOS и Android.
 //
 // Код выхода 1 — есть ошибки (пустые обязательные поля, нет аудиофайла и т.п.).
 // Предупреждения (подозрения на артефакты PDF) на код выхода не влияют.
@@ -402,6 +402,173 @@ function checkVersions(file) {
   }
 }
 
+// reading.json - «Учимся читать» в разделе «Махрадж» (docs/06-data-structure.md, «Учимся читать»):
+// знаки огласовок, 28 букв и 10 шагов. Слоги и формы букв не хранятся - их строят приложения из буквы и знака;
+// хранится транскрипция слогов (нерегулярна: «ли», а не «льи»). В текстах - «-», не «-» (решение пользователя).
+const READING_KEYS = ['marks', 'letters', 'steps'];
+const READING_MARK_KEYS = ['id', 'sign', 'translations'];
+const READING_MARK_TEXT_KEYS = ['name', 'where', 'sound'];
+const READING_LETTER_KEYS = ['id', 'letter', 'name', 'joinsNext', 'syllableBase', 'audio', 'translations'];
+const READING_LETTER_TEXT_KEYS = ['name', 'nameTranslit', 'sound', 'syllables'];
+const READING_STEP_KEYS = ['id', 'marks', 'translations', 'blocks', 'quiz'];
+const READING_STEP_TEXT_KEYS = ['title', 'subtitle'];
+const READING_BLOCKS = {
+  text: ['type', 'translations'], marks: ['type', 'marks'], letters: ['type', 'letters'], groups: ['type', 'groups'],
+  syllables: ['type', 'letters'], compare: ['type', 'pairs'], join: ['type', 'arabic', 'audio', 'translations'],
+  zikr: ['type', 'section', 'id', 'syllables', 'translations'],
+};
+const READING_QUIZ = { syllable: ['type', 'letter', 'mark'], letterName: ['type', 'letter'] };
+const READING_ALPHABET = 28;
+// Слоги с этими знаками читаются по-своему у каждой буквы - их транскрипция нужна в letters[].syllables.
+const VOWEL_MARKS = ['fatha', 'kasra', 'damma', 'fathatan', 'kasratan', 'dammatan'];
+const READING_AUDIO_DIR = join(AUDIO_DIR, 'reading');
+
+function checkReading(file) {
+  if (!file || typeof file !== 'object') { error('reading', 'нет файла или он не объект'); return; }
+  for (const k of Object.keys(file)) if (!READING_KEYS.includes(k)) error('reading', `неизвестное поле «${k}»`);
+
+  // Тексты одного языка: известные поля, без «-», без латиницы внутри русских слов.
+  const checkTexts = (at, translations, keys, required) => {
+    if (!translations || typeof translations !== 'object' || Array.isArray(translations)) {
+      error(at, 'нет объекта translations');
+      return null;
+    }
+    if (!translations[BASE_LANGUAGE]) error(at, `нет перевода translations.${BASE_LANGUAGE}`);
+    for (const [lang, t] of Object.entries(translations)) {
+      if (!/^[a-z]{2}$/.test(lang)) error(at, `код языка «${lang}» - ожидается ISO 639-1 (ru, en…)`);
+      for (const k of Object.keys(t ?? {})) if (!keys.includes(k)) error(at, `неизвестное поле translations.${lang}.${k}`);
+      for (const k of required) requireString(`${at} ${lang}`, t ?? {}, k);
+      const strings = JSON.stringify(t ?? {});
+      if (strings.includes('—')) error(`${at} ${lang}`, '«—» в тексте - только «-» (решение пользователя)');
+      for (const [k, v] of Object.entries(t ?? {})) if (typeof v === 'string') checkMixedScript(`${at} ${lang}`, k, v);
+    }
+    return translations[BASE_LANGUAGE] ?? null;
+  };
+  const checkAudio = (at, name) => {
+    if (name === null) return;
+    if (typeof name !== 'string' || !AUDIO_EXTENSIONS.includes(extname(name))) {
+      error(at, `аудио «${name}» - ожидается имя файла .m4a / .mp3 или null`);
+    } else if (!existsSync(join(READING_AUDIO_DIR, name))) {
+      error(at, `нет файла audio/reading/${name}`);
+    }
+  };
+
+  const marks = Array.isArray(file.marks) ? file.marks : [];
+  if (!marks.length) error('reading marks', 'нет непустого массива marks');
+  const markIds = new Set();
+  for (const [i, mark] of marks.entries()) {
+    const at = `reading mark ${mark?.id ?? `#${i + 1}`}`;
+    if (Object.keys(mark ?? {})[0] !== 'id') error(at, 'id должен быть первым полем');
+    for (const k of Object.keys(mark ?? {})) if (!READING_MARK_KEYS.includes(k)) error(at, `неизвестное поле «${k}»`);
+    if (!/^[a-z][A-Za-z]*$/.test(mark?.id ?? '')) error(at, 'id - слово латиницей (fatha, kasra…)');
+    else if (markIds.has(mark.id)) error(at, 'повтор id');
+    else markIds.add(mark.id);
+    if (!/^[ً-ْ]$/.test(mark?.sign ?? '')) error(at, `sign «${mark?.sign ?? ''}» - ожидается один знак огласовки`);
+    checkTexts(at, mark?.translations, READING_MARK_TEXT_KEYS, ['name', 'where', 'sound']);
+  }
+  const knownMark = (at, id) => { if (!markIds.has(id)) error(at, `неизвестный знак «${id}»`); };
+
+  const letters = Array.isArray(file.letters) ? file.letters : [];
+  if (letters.length !== READING_ALPHABET) error('reading letters', `букв ${letters.length}, ожидается ${READING_ALPHABET}`);
+  const byLetter = new Map();
+  for (const [i, letter] of letters.entries()) {
+    const at = `reading letter ${letter?.letter ?? `#${i + 1}`}`;
+    if (Object.keys(letter ?? {})[0] !== 'id') error(at, 'id должен быть первым полем');
+    checkId(at, letter ?? {}, i);
+    for (const k of Object.keys(letter ?? {})) if (!READING_LETTER_KEYS.includes(k)) error(at, `неизвестное поле «${k}»`);
+    if (!/^[ء-ي]$/.test(letter?.letter ?? '')) error(at, 'letter - одна арабская буква без огласовки');
+    else if (byLetter.has(letter.letter)) error(at, 'повтор буквы');
+    else byLetter.set(letter.letter, letter);
+    if (requireString(at, letter ?? {}, 'name')) checkArabic(at, letter.name);
+    if ('joinsNext' in (letter ?? {}) && letter.joinsNext !== false) error(at, 'joinsNext - только false (по умолчанию соединяется)');
+    if ('syllableBase' in (letter ?? {}) && !/^[ء-ي]$/.test(letter.syllableBase)) error(at, 'syllableBase - одна арабская буква');
+    const audio = letter?.audio;
+    if (!audio || typeof audio !== 'object' || Array.isArray(audio)) error(at, 'audio - объект { sound, name, <знак>: файл | null }');
+    else for (const [k, v] of Object.entries(audio)) {
+      if (k !== 'sound' && k !== 'name') knownMark(`${at} audio`, k);
+      checkAudio(`${at} audio.${k}`, v);
+    }
+    const ru = checkTexts(at, letter?.translations, READING_LETTER_TEXT_KEYS, ['name', 'nameTranslit', 'sound']);
+    const syllables = ru?.syllables;
+    if (syllables !== undefined && (typeof syllables !== 'object' || Array.isArray(syllables))) error(at, 'syllables - объект { <знак>: транскрипция }');
+    else for (const [k, v] of Object.entries(syllables ?? {})) {
+      knownMark(`${at} syllables`, k);
+      if (typeof v !== 'string' || !v.trim()) error(at, `syllables.${k} - пустая транскрипция`);
+    }
+  }
+  const knownLetter = (at, l) => { if (!byLetter.has(l)) error(at, `неизвестная буква «${l}»`); };
+
+  const steps = Array.isArray(file.steps) ? file.steps : [];
+  if (!steps.length) error('reading steps', 'нет непустого массива steps');
+  const passed = new Set();
+  for (const [i, step] of steps.entries()) {
+    const at = `reading step ${step?.id ?? `#${i + 1}`}`;
+    if (Object.keys(step ?? {})[0] !== 'id') error(at, 'id должен быть первым полем');
+    checkId(at, step ?? {}, i);
+    for (const k of Object.keys(step ?? {})) if (!READING_STEP_KEYS.includes(k)) error(at, `неизвестное поле «${k}»`);
+    checkTexts(at, step?.translations, READING_STEP_TEXT_KEYS, ['title', 'subtitle']);
+    for (const m of step?.marks ?? []) { knownMark(at, m); passed.add(m); }
+    // Знак пройден к этому шагу - у каждой буквы нужен его слог (для листа буквы и проверок).
+    for (const m of [...passed].filter(m => VOWEL_MARKS.includes(m))) {
+      const missing = letters.filter(l => !l?.translations?.[BASE_LANGUAGE]?.syllables?.[m]).map(l => l.letter);
+      if (missing.length && (step?.marks ?? []).includes(m)) {
+        warn('reading: нет транскрипции слогов', at, `знак ${m} - у ${missing.length} букв (${missing.slice(0, 5).join(' ')}…)`);
+      }
+    }
+    const blocks = Array.isArray(step?.blocks) ? step.blocks : (error(at, 'blocks - массив'), []);
+    if (!blocks.length) warn('reading: шаг без содержания', at, step?.translations?.[BASE_LANGUAGE]?.title ?? '');
+    for (const [j, block] of blocks.entries()) {
+      const where = `${at} block ${j + 1}`;
+      const keys = READING_BLOCKS[block?.type];
+      if (!keys) { error(where, `неизвестный тип «${block?.type}»`); continue; }
+      for (const k of Object.keys(block)) if (!keys.includes(k)) error(where, `неизвестное поле «${k}»`);
+      if (block.type === 'text') {
+        const ru = checkTexts(where, block.translations, ['text'], ['text']);
+        if (ru?.text) checkRussian(where, ru.text);
+      }
+      if (block.type === 'marks') for (const m of block.marks ?? []) knownMark(where, m);
+      if (block.type === 'letters' || block.type === 'syllables') {
+        if (block.type === 'syllables' && !block.letters?.length) error(where, 'нет букв для слогов');
+        for (const l of block.letters ?? []) knownLetter(where, l);
+      }
+      if (block.type === 'groups') for (const g of block.groups ?? []) for (const l of g ?? []) knownLetter(where, l);
+      if (block.type === 'compare') for (const pair of block.pairs ?? []) {
+        if (!Array.isArray(pair) || pair.length !== 2) { error(where, 'pairs - пары из двух вариантов'); continue; }
+        for (const v of pair) {
+          if (requireString(where, v ?? {}, 'arabic')) checkArabic(where, v.arabic);
+          checkAudio(`${where} audio`, v?.audio ?? null);
+          checkTexts(where, v?.translations, ['translit'], ['translit']);
+        }
+      }
+      if (block.type === 'join') {
+        // В «{…}» - буквы, которые при слитном чтении не звучат: скобки парные, без вложений.
+        const text = block.arabic ?? '';
+        if (!/^[^{}]*(\{[^{}]+\}[^{}]*)*$/.test(text)) error(where, 'arabic - непарные или вложенные «{ }»');
+        else checkArabic(where, text.replace(/[{}]/g, ''));
+        for (const [k, v] of Object.entries(block.audio ?? {})) {
+          if (k !== 'words' && k !== 'joined') error(where, `audio.${k} - только words / joined`);
+          checkAudio(`${where} audio.${k}`, v);
+        }
+        checkTexts(where, block.translations, ['words', 'joined', 'why'], ['joined']);
+      }
+      if (block.type === 'zikr' && !['morning', 'evening'].includes(block.section)) error(where, 'section - morning / evening');
+    }
+    for (const [j, q] of (step?.quiz ?? []).entries()) {
+      const where = `${at} quiz ${j + 1}`;
+      const keys = READING_QUIZ[q?.type];
+      if (!keys) { error(where, `неизвестный тип «${q?.type}»`); continue; }
+      for (const k of Object.keys(q)) if (!keys.includes(k)) error(where, `неизвестное поле «${k}»`);
+      knownLetter(where, q.letter);
+      if (q.type === 'syllable') {
+        if (!passed.has(q.mark)) error(where, `знак «${q.mark}» ещё не пройден к этому шагу`);
+        if (!byLetter.get(q.letter)?.translations?.[BASE_LANGUAGE]?.syllables?.[q.mark]) {
+          error(where, `нет транскрипции слога ${q.letter} + ${q.mark} - нечего показать в ответе`);
+        }
+      }
+    }
+  }
+}
+
 // Структура: известные ключи, id первым, translations с базовым языком и кодами ISO 639-1.
 function checkStructure(where, item, keys, translationKeys) {
   const actual = Object.keys(item);
@@ -447,6 +614,7 @@ checkNotes(data.hadith);
 checkCollections(readData('collections.json'), Object.keys(data.hadith));
 checkReminders(readData('reminders.json'));
 checkVersions(readData('versions.json'));
+checkReading(readData('reading.json'));
 
 const counts = Object.entries(EXPECTED)
   .map(([t]) => `${t}: ${(AZKAR[t] ?? HADITH_DATA[t])?.length ?? 0}`).join(', ');
