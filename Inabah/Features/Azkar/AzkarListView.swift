@@ -54,13 +54,20 @@ struct AzkarListView: View {
                     ShareButton(title: "reminder.action", iconSize: Self.reminderIconSize) {
                         section.reminderText
                     }
+                    .headerIconButtonStyle(tint: theme.palette.tabAzkar, header: section.headerColor(in: theme))
                     .fixedTextSize()
                 }
                 if #available(iOS 26, *) {
                     ToolbarSpacer(.fixed, placement: .topBarTrailing)
                 }
-                FontSizeControls(settings: settings, compact: true)
+                FontSizeControls(
+                    settings: settings,
+                    compact: true,
+                    tint: theme.palette.tabAzkar,
+                    header: section.headerColor(in: theme)
+                )
             }
+            .glassBackButton(tint: theme.palette.tabAzkar, header: section.headerColor(in: theme))
             .task { await store.load(section) }
     }
 

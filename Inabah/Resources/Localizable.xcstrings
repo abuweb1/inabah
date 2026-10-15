@@ -1734,6 +1734,17 @@
         }
       }
     },
+    "navigation.back" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Назад"
+          }
+        }
+      }
+    },
     "palette.amber" : {
       "comment" : "Палитра: всё приложение в цвет раздела «Махрадж»",
       "localizations" : {

@@ -33,8 +33,9 @@ struct HadithDetailView: View {
                 ToolbarItem(placement: .principal) {
                     HadithPager(number: $currentNumber, count: store.hadiths(in: id.collection).count)
                 }
-                FontSizeControls(settings: settings)
+                FontSizeControls(settings: settings, tint: theme.palette.tabHadith, header: theme.palette.hadithHeader)
             }
+            .glassBackButton(tint: theme.palette.tabHadith, header: theme.palette.hadithHeader)
             .task { await store.load(id.collection) }
     }
 

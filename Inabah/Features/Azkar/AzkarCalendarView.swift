@@ -19,6 +19,7 @@ struct AzkarCalendarView: View {
             .toolbarBackground(theme.palette.header, for: .navigationBar)
             .toolbarBackgroundVisibility(.visible, for: .navigationBar)
             .toolbarColorScheme(.dark, for: .navigationBar)
+            .glassBackButton(tint: theme.palette.tabAzkar, header: theme.palette.header)
     }
 
     /// Дата устройства в григорианском календаре пояса расписания.

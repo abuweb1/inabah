@@ -10,6 +10,10 @@ struct RootTabView: View {
     @Environment(WhatsNew.self) private var whatsNew
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.theme) private var theme
+    @Environment(\.chromeStyle) private var chromeStyle
+
+    /// Нижняя безопасная зона (полоска «домой») — от неё стоит своя панель вкладок.
+    @State private var safeAreaBottom: CGFloat = 0
 
     var body: some View {
         @Bindable var router = router
@@ -34,6 +38,7 @@ struct RootTabView: View {
                         }
                 }
                 .tint(theme.palette.accentLight)
+                .floatingTabBarSpace(chromeStyle, safeAreaBottom: safeAreaBottom)
             }
             Tab("tab.hadith", image: "tabIconHadith", value: AppTab.hadith) {
                 NavigationStack(path: $router.hadithPath) {
@@ -52,6 +57,7 @@ struct RootTabView: View {
                         }
                 }
                 .tint(theme.palette.accentLight)
+                .floatingTabBarSpace(chromeStyle, safeAreaBottom: safeAreaBottom)
             }
             // «ع» (айн) — гортанная буква, хрестоматийный пример махраджа.
             Tab("tab.makharij", image: "tabIconMakharij", value: AppTab.makharij) {
@@ -60,6 +66,7 @@ struct RootTabView: View {
                         .interfaceTextSize()
                 }
                 .tint(theme.palette.accentLight)
+                .floatingTabBarSpace(chromeStyle, safeAreaBottom: safeAreaBottom)
             }
             Tab("tab.settings", image: "tabIconSettings", value: AppTab.settings) {
                 NavigationStack(path: $router.settingsPath) {
@@ -84,11 +91,21 @@ struct RootTabView: View {
                         }
                 }
                 .tint(theme.palette.accentLight)
+                .floatingTabBarSpace(chromeStyle, safeAreaBottom: safeAreaBottom)
             }
         }
         // Подсветка выбранной вкладки — в тон раздела; содержимому вкладок выше возвращён
         // общий акцент, чтобы оттенок таб-бара не перекрашивал кнопки и переключатели.
         .tint(router.selectedTab.tint(in: theme))
+        .overlay(alignment: .bottom) {
+            if chromeStyle == .custom {
+                FloatingTabBar(selection: router.selectedTab) { router.select($0) }
+                    .padding(.horizontal, FloatingTabBar.horizontalMargin)
+                    .padding(.bottom, FloatingTabBar.bottomOffset(safeAreaBottom: safeAreaBottom))
+                    .ignoresSafeArea(.keyboard)
+            }
+        }
+        .onGeometryChange(for: CGFloat.self) { $0.safeAreaInsets.bottom } action: { safeAreaBottom = $0 }
         // Под окном «Что нового» вкладки скрыты от VoiceOver; окно — поверх всех вкладок.
         .accessibilityHidden(whatsNew.pending != nil)
         .overlay { WhatsNewLayer() }

@@ -8,7 +8,9 @@ private enum GlassMetrics {
     /// Высота капсулы и круг кнопки — как на Android (зона касания — `Size.minTapTarget`).
     static let height: CGFloat = 40
     static let capsulePressScale: CGFloat = 1.16
-    static let circlePressScale: CGFloat = 1.38
+    /// ×1.2: ×1.38 со снимков iOS 26 (как на Android) на телефоне выглядело слишком крупно
+    /// (решение пользователя 2026-10-15).
+    static let circlePressScale: CGFloat = 1.2
 }
 
 /// Стекло в покое и при нажатии: подложка, заливка нажатия, обводка и перекраска содержимого.
@@ -61,19 +63,31 @@ struct GlassCapsuleButtonStyle: ButtonStyle {
     }
 }
 
-/// Стеклянный круг 40 со значком (‹ › месяцев календаря). Неактивный — приглушён.
+/// Стеклянный круг со значком: 40 на экране (‹ › месяцев календаря, «Избранное»), 36 в навбаре
+/// (`navigationBarDiameter`). Над цветной шапкой (`header`) — непрозрачное стекло в тон шапки.
+/// Неактивный — приглушён.
 struct GlassIconButtonStyle: ButtonStyle {
     let tint: Color
+    var header: Color?
+    var diameter: CGFloat = Self.screenDiameter
+
+    /// Как на Android (`GlassButtonSize`).
+    static let screenDiameter: CGFloat = 40
+    /// Навбар iOS 18–25 — 44 pt и обрезает всё выше: нажатый круг (×1.2) должен в него поместиться
+    /// (решение пользователя 2026-10-15).
+    static let navigationBarDiameter: CGFloat = 36
 
     @Environment(\.isEnabled) private var isEnabled
     @Environment(\.theme) private var theme
 
     func makeBody(configuration: Configuration) -> some View {
+        let colors = header.map { GlassColors(tint: SRGBColor(tint), header: SRGBColor($0)) }
+            ?? GlassColors(tint: SRGBColor(tint))
         configuration.label
-            .foregroundStyle(theme.palette.onAccent)
-            .frame(width: GlassMetrics.height, height: GlassMetrics.height)
+            .foregroundStyle(colors.icon?.color ?? theme.palette.onAccent)
+            .frame(width: diameter, height: diameter)
             .modifier(GlassBody(
-                colors: GlassColors(tint: SRGBColor(tint)),
+                colors: colors,
                 shape: Circle(),
                 isPressed: configuration.isPressed,
                 pressedScale: GlassMetrics.circlePressScale

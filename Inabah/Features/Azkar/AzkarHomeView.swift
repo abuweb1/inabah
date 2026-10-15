@@ -128,6 +128,7 @@ private struct UpdateButton: View {
     @Environment(\.updateSource) private var updateSource
     @Environment(\.openURL) private var openURL
     @Environment(\.theme) private var theme
+    @Environment(\.chromeStyle) private var chromeStyle
 
     @State private var update: AvailableUpdate?
 
@@ -152,18 +153,14 @@ private struct UpdateButton: View {
 
     @ViewBuilder
     private var styledButton: some View {
-        if #available(iOS 26, *) {
+        if #available(iOS 26, *), chromeStyle == .system {
             button
                 .buttonStyle(.glass)
                 .buttonBorderShape(.circle)
                 .controlSize(.large)
         } else {
             button
-                .buttonStyle(IconButtonStyle(
-                    foreground: theme.palette.tabAzkar,
-                    background: theme.palette.subtleFill,
-                    border: theme.palette.hairline
-                ))
+                .buttonStyle(GlassIconButtonStyle(tint: theme.palette.tabAzkar))
         }
     }
 

@@ -73,6 +73,7 @@ struct HadithSettingsView: View {
             }
         }
         .settingsForm(background: theme.gradients.hadithBackground)
+        .glassBackButton(tint: theme.palette.tabHadith, header: nil)
         .navigationTitle(Text("settings.hadith.title"))
         .navigationBarTitleDisplayMode(.inline)
         .destructiveConfirmation(

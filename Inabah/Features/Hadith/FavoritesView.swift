@@ -53,6 +53,7 @@ struct FavoritesView: View {
             .toolbarBackground(theme.palette.hadithHeader, for: .navigationBar)
             .toolbarBackgroundVisibility(.visible, for: .navigationBar)
             .toolbarColorScheme(.dark, for: .navigationBar)
+            .glassBackButton(tint: theme.palette.tabHadith, header: theme.palette.hadithHeader)
             .task(id: favorites.numbers.keys.sorted { $0.rawValue < $1.rawValue }) { await load() }
     }
 
