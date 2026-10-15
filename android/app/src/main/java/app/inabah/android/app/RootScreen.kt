@@ -155,6 +155,15 @@ fun RootContent(
     }
 }
 
+/**
+ * Экраны, где горизонтальный свайп листает содержимое (страницы хадисов, группы слов, буквы группы,
+ * месяцы календаря): свайпа «назад» там нет - только кнопка «‹» и системный жест (решение пользователя).
+ */
+private fun swipesContent(route: Any): Boolean = when (route) {
+    is HadithRoute.Detail, is MakharijRoute.Words, is MakharijRoute.LetterForms, AzkarRoute.Calendar -> true
+    else -> false
+}
+
 /** Корень стека вкладки — её главный экран; дальше — маршруты из [AppRouter]. */
 private data object TabRoot
 
@@ -440,6 +449,9 @@ private fun TabNavDisplay(
 ) {
     NavDisplay(
         backStack = listOf<Any>(TabRoot) + stack,
+        // Свайп вправо - «назад», как на iPhone (решение пользователя 2026-10-15); на корне вкладки и на
+        // экранах, где горизонтальный свайп листает содержимое, - нет.
+        modifier = Modifier.swipeBack(enabled = stack.lastOrNull()?.let { !swipesContent(it) } ?: false),
         onBack = onBack,
         transitionSpec = { push() },
         popTransitionSpec = { pop() },

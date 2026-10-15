@@ -26,13 +26,15 @@ data class LetterChainItem(
 }
 
 /**
- * Цепочка буквы [letter] на шаге [stepNumber]: звук (с сукуном), название, затем слоги всех знаков,
+ * Цепочка буквы [letter] на шаге [stepNumber]: звук (с сукуном, если сукун уже пройден), название, затем слоги всех знаков,
  * для которых у буквы есть транскрипция (по порядку знаков курса); знак, не пройденный к шагу, -
  * [LetterChainItem.isLearned] `false`. Сукуна в данных нет - без звука.
  */
 fun letterChain(course: ReadingCourse, letter: ReadingLetter, stepNumber: Int): List<LetterChainItem> {
     val learned = course.learnedMarks(stepNumber).mapTo(mutableSetOf()) { it.id }
-    val sound = course.sukun?.let { sukun ->
+    // Звук (буква с сукуном) - только когда сукун пройден: раньше непонятный знак путает (решение
+    // пользователя 2026-10-15, вариант «а»).
+    val sound = course.sukun?.takeIf { it.id in learned }?.let { sukun ->
         LetterChainItem(LetterChainItem.Kind.Sound, letter.soundArabic(sukun), letter.sound, letter.audio[KEY_SOUND], true)
     }
     val name = LetterChainItem(

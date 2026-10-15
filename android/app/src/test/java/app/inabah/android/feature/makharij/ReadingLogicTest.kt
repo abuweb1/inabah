@@ -11,19 +11,18 @@ import org.junit.Test
 /** «Учимся читать»: цепочка листа буквы, варианты ответа, текущий шаг. */
 class ReadingLogicTest {
     @Test
-    fun `Цепочка — звук, название, слоги, до шага 2 огласовки не пройдены`() = runTest {
+    fun `Цепочка — название и слоги, звук только с шага «Сукун», до шага 2 огласовки не пройдены`() = runTest {
         val course = loadAssetCourse()
         val lam = course.letters.first { it.letter == "ل" }
+        val sukunStep = course.steps.first { "sukun" in it.markIds }.number
 
         val chain = letterChain(course, lam, stepNumber = 1)
 
-        assertEquals(
-            listOf(LetterChainItem.Kind.Sound, LetterChainItem.Kind.Name) + List(3) { LetterChainItem.Kind.Syllable },
-            chain.map { it.kind },
-        )
-        assertEquals(listOf("ль", "льаам", "льа", "ли", "льу"), chain.map { it.transliteration })
-        assertEquals(listOf(true, true, false, false, false), chain.map { it.isLearned })
-        assertEquals(List(5) { true }, letterChain(course, lam, stepNumber = 2).map { it.isLearned })
+        assertEquals(listOf(LetterChainItem.Kind.Name) + List(3) { LetterChainItem.Kind.Syllable }, chain.map { it.kind })
+        assertEquals(listOf("льаам", "льа", "ли", "льу"), chain.map { it.transliteration })
+        assertEquals(listOf(true, false, false, false), chain.map { it.isLearned })
+        assertEquals(List(4) { true }, letterChain(course, lam, stepNumber = 2).map { it.isLearned })
+        assertEquals(LetterChainItem.Kind.Sound, letterChain(course, lam, sukunStep).first().kind, "с шага «Сукун» - звук первым")
     }
 
     @Test

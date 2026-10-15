@@ -1,5 +1,6 @@
 package app.inabah.android.feature.makharij
 
+import androidx.compose.foundation.layout.wrapContentSize
 import app.inabah.android.core.designsystem.Motion
 import androidx.compose.ui.zIndex
 import androidx.compose.animation.core.animateFloatAsState
@@ -506,6 +507,9 @@ private fun LettersGrid(
                             contentAlignment = Alignment.Center,
                         ) {
                             ArabicText(letter.letter, LETTER_SIZE, palette.onAccent, maxLines = 1)
+                            // Звучащая буква - название над ней в своей рамке (просьба пользователя 2026-10-15):
+                            // сдвиг отрисовки вверх на свою высоту, раскладка ряда не меняется.
+                            if (isPlaying) PlayingNameBubble(letter.name, Modifier.align(Alignment.TopCenter))
                         }
                     }
                     // Неполный ряд - пустые места, чтобы плитки были одной ширины.
@@ -691,4 +695,31 @@ private fun LessonHero(example: String) {
 
 private const val HERO_START_SCALE = 0.6f
 private val HERO_RISE = 12.dp
+
+/** Подсказка над звучащей буквой «Послушать алфавит»: название в рамке цвета раздела, над плиткой. */
+@Composable
+private fun PlayingNameBubble(name: String, modifier: Modifier = Modifier) {
+    val colors = readingColors
+    val appear = remember(name) { Animatable(0f) }
+    LaunchedEffect(name) { appear.animateTo(1f, tween(BUBBLE_APPEAR_MILLIS)) }
+    val gap = with(LocalDensity.current) { Spacing.xs.toPx() }
+    Text(
+        name,
+        color = InabahTheme.palette.onAccent,
+        style = InabahType.title3.copy(fontWeight = FontWeight.Bold),
+        maxLines = 1,
+        softWrap = false,
+        modifier = modifier
+            .wrapContentSize(unbounded = true)
+            .graphicsLayer {
+                alpha = appear.value
+                translationY = -size.height - gap - (1 - appear.value) * gap
+            }
+            .surface(colors.sheet, Radius.box, border = colors.highlightBorder, lineWidth = ReadingTileBorder)
+            .padding(horizontal = Spacing.m, vertical = Spacing.xs)
+            .clearAndSetSemantics {},
+    )
+}
+
+private const val BUBBLE_APPEAR_MILLIS = 250
 
