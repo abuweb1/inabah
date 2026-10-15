@@ -39,6 +39,9 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.layout.onPlaced
+import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Brush
@@ -103,7 +106,8 @@ private val FlashHaloRadius = 14.dp
  * сверху раскрывается заголовок с ✓, а полное содержимое складывается под него; ⌄ раскладывает
  * обратно. Оба блока всегда в иерархии и меняют только высоту ([collapsible]) — соседи по ленте
  * сдвигаются в тех же кадрах; в начале сворачивания вызывается [onCollapse] — лента подтягивает к карточке
- * прокрутку, если её верх ушёл за экран. Перерисовывается только по состоянию своего [session] и [audio]
+ * прокрутку, если её верх ушёл за экран. Скрытие перевода «Аа» сообщает [onHideTranslation] верх перевода
+ * (от верха карточки) и его высоту — лента держит «Аа» на месте. Перерисовывается только по состоянию своего [session] и [audio]
  * (значение от ленты — карточка не читает плеер); звучащий в «Прослушать все» — в золотой рамке.
  */
 @Composable
@@ -114,9 +118,11 @@ fun ZikrCard(
     audio: ZikrAudioState = ZikrAudioState.Idle,
     onPlay: () -> Unit = {},
     onCollapse: () -> Unit = {},
+    onHideTranslation: (top: Float, height: Float) -> Unit = { _, _ -> },
 ) {
     val palette = InabahTheme.palette
     val currentOnCollapse by rememberUpdatedState(onCollapse)
+    val translationLayout = remember(session) { TranslationLayout() }
     val state by session.state.collectAsStateWithLifecycle()
     val borderColor by animateColorAsState(
         if (audio.isPlaylistCurrent) palette.gold else palette.hairline, Motion.highlight(), label = "cardBorder",
@@ -146,6 +152,7 @@ fun ZikrCard(
 
     Column(
         modifier
+            .onPlaced { translationLayout.card = it }
             .fillMaxWidth()
             .surface(palette.zikrCard, Radius.card, border = borderColor, lineWidth = borderWidth, shadow = ShadowToken.card(palette))
             .clip(RoundedCornerShape(Radius.card)),
@@ -164,8 +171,23 @@ fun ZikrCard(
             isUnderHeader = collapsed,
             isAudioActive = audio.isActive,
             onPlay = onPlay,
+            translationModifier = Modifier.onPlaced { translationLayout.block = it },
+            onHideTranslation = { translationLayout.measure()?.let { (top, height) -> onHideTranslation(top, height) } },
             modifier = Modifier.collapsible(showsFullContent),
         )
+    }
+}
+
+/** Где перевод в карточке — читается только при нажатии «Аа», поэтому не состояние Compose. */
+private class TranslationLayout {
+    var card: LayoutCoordinates? = null
+    var block: LayoutCoordinates? = null
+
+    /** Верх перевода от верха карточки и его высота; не размещены — `null`. */
+    fun measure(): Pair<Float, Float>? {
+        val card = card?.takeIf { it.isAttached } ?: return null
+        val block = block?.takeIf { it.isAttached } ?: return null
+        return card.localPositionOf(block, Offset.Zero).y to block.size.height.toFloat()
     }
 }
 
@@ -180,6 +202,8 @@ private fun ZikrFullContent(
     isUnderHeader: Boolean,
     isAudioActive: Boolean,
     onPlay: () -> Unit,
+    translationModifier: Modifier,
+    onHideTranslation: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val palette = InabahTheme.palette
@@ -195,7 +219,7 @@ private fun ZikrFullContent(
         zikr.translation?.let { translation ->
             ZikrTranslationBlock(
                 translation,
-                Modifier
+                translationModifier
                     .collapsible(state.isTranslationVisible)
                     .padding(horizontal = Spacing.xl)
                     .padding(top = Spacing.l),
@@ -214,7 +238,10 @@ private fun ZikrFullContent(
             isTranslationVisible = state.isTranslationVisible,
             hasTranslation = zikr.translation != null,
             canReset = state.count > 0,
-            onToggleTranslation = { session.setTranslationVisible(!state.isTranslationVisible) },
+            onToggleTranslation = {
+                if (state.isTranslationVisible) onHideTranslation()
+                session.setTranslationVisible(!state.isTranslationVisible)
+            },
             onReset = session::reset,
             onShare = { context.shareText(zikrShareText(zikr, sectionTitle, repetitions, narratorLine, storeLinks)) },
             modifier = Modifier.padding(vertical = Spacing.l),

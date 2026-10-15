@@ -10,6 +10,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.ScrollState
+import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.collectIsDraggedAsState
 import androidx.compose.foundation.layout.Arrangement
@@ -321,6 +322,14 @@ private fun AzkarFeed(
                     onCollapse = {
                         cardTops[trackId]?.takeIf { it < scrollState.value }?.let { top ->
                             scope.launch { scrollState.animateScrollTo(top.toInt(), Motion.collapse()) }
+                        }
+                    },
+                    // Скрыт перевод, начало которого уже над видимой частью: без прокрутки «Аа» уехал бы вверх на
+                    // высоту перевода, и под пальцем оказались бы следующие карточки. Лента в той же анимации
+                    // опускается на ту же высоту (iOS `keepActionsInPlace`); перевод виден целиком — не трогаем.
+                    onHideTranslation = { top, height ->
+                        cardTops[trackId]?.takeIf { it + top < scrollState.value }?.let {
+                            scope.launch { scrollState.animateScrollBy(-height, Motion.collapse()) }
                         }
                     },
                     modifier = Modifier.onPlaced { cardTops[trackId] = it.positionInParent().y },
