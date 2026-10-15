@@ -32,6 +32,19 @@ class AppRouterTest {
     }
 
     @Test
+    fun `openRoot — вкладка азкаров и её стек до корня, другие стеки целы`() {
+        val router = AppRouter()
+        router.open(AzkarRoute.SectionList(AzkarSection.Evening))
+        router.open(HadithRoute.Detail(HadithId(HadithCollection.Nawawi, 3)))
+
+        router.openRoot(AppTab.Azkar)
+
+        assertEquals(AppTab.Azkar, router.selectedTab)
+        assertTrue(router.azkarStack.isEmpty())
+        assertEquals(2, router.hadithStack.size)
+    }
+
+    @Test
     fun `open переключает на вкладку азкаров и открывает экран`() {
         val router = AppRouter()
         router.select(AppTab.Settings)
