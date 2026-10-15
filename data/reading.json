@@ -1457,15 +1457,376 @@
     {
       "id": 4,
       "marks": [],
-      "example": "ـجـ ـحـ",
+      "example": "سـ ـسـ ـس",
       "translations": {
         "ru": {
           "title": "Формы букв",
           "subtitle": "группа 2"
         }
       },
-      "blocks": [],
-      "quiz": []
+      "blocks": [
+        {
+          "type": "text",
+          "translations": {
+            "ru": {
+              "text": "Ещё 8 букв. Посмотрите, как они пишутся в начале, середине и конце слова.",
+              "info": "ط и ظ почти не меняются, у س ش ص ض в конце слова появляется «хвост», а ع и غ в середине и конце слова выглядят совсем иначе."
+            }
+          }
+        },
+        {
+          "type": "forms",
+          "groups": [
+            [
+              "س",
+              "ش",
+              "ص",
+              "ض"
+            ],
+            [
+              "ط",
+              "ظ",
+              "ع",
+              "غ"
+            ]
+          ],
+          "examples": {
+            "س": [
+              "سَطَعَ",
+              "بَسَطَ",
+              "يَبِسَ"
+            ],
+            "ش": [
+              "شَبِعَ",
+              "خَشُنَ",
+              "نُبِشَ"
+            ],
+            "ص": [
+              "صَعُبَ",
+              "بَصَلَ",
+              "وَبَصَ"
+            ],
+            "ض": [
+              "ضَبَطَ",
+              "عَضِلَ",
+              "دَحَضَ"
+            ],
+            "ط": [
+              "طُعِنَ",
+              "سَطَعَ",
+              "خَبَطَ"
+            ],
+            "ظ": [
+              "ظَعَنَ",
+              "نَظَرَ",
+              "جَحَظَ"
+            ],
+            "ع": [
+              "عَبَسَ",
+              "صَعُبَ",
+              "تَبِعَ"
+            ],
+            "غ": [
+              "غُبِنَ",
+              "صَغُرَ",
+              "نَبَغَ"
+            ]
+          },
+          "exampleCard": [
+            "س",
+            "ص",
+            "ع"
+          ]
+        }
+      ],
+      "quiz": [
+        {
+          "type": "letterForm",
+          "letter": "ش",
+          "form": "medial"
+        },
+        {
+          "type": "letterForm",
+          "letter": "ع",
+          "form": "final"
+        },
+        {
+          "type": "letterForm",
+          "letter": "ص",
+          "form": "initial"
+        },
+        {
+          "type": "letterForm",
+          "letter": "غ",
+          "form": "medial"
+        },
+        {
+          "type": "letterForm",
+          "letter": "س",
+          "form": "final"
+        },
+        {
+          "type": "letterForm",
+          "letter": "ظ",
+          "form": "initial"
+        },
+        {
+          "type": "letterForm",
+          "letter": "ض",
+          "form": "medial"
+        },
+        {
+          "type": "letterForm",
+          "letter": "ع",
+          "form": "initial"
+        }
+      ],
+      "words": {
+        "groupSize": 15,
+        "repeat": 6,
+        "items": [
+          {
+            "arabic": "نَعَسَ",
+            "translations": {
+              "ru": {
+                "translit": "наӏаса"
+              }
+            }
+          },
+          {
+            "arabic": "بُغِتَ",
+            "translations": {
+              "ru": {
+                "translit": "бугӏита"
+              }
+            }
+          },
+          {
+            "arabic": "رَسَنَ",
+            "translations": {
+              "ru": {
+                "translit": "росана"
+              }
+            }
+          },
+          {
+            "arabic": "حَصُنَ",
+            "translations": {
+              "ru": {
+                "translit": "хьасуна"
+              }
+            }
+          },
+          {
+            "arabic": "شَنُعَ",
+            "translations": {
+              "ru": {
+                "translit": "шануӏа"
+              }
+            }
+          },
+          {
+            "arabic": "عَبِثَ",
+            "translations": {
+              "ru": {
+                "translit": "ӏабиса"
+              }
+            }
+          },
+          {
+            "arabic": "دُبِغَ",
+            "translations": {
+              "ru": {
+                "translit": "дубигӏо"
+              }
+            }
+          },
+          {
+            "arabic": "شَخَصَ",
+            "translations": {
+              "ru": {
+                "translit": "шахосо"
+              }
+            }
+          },
+          {
+            "arabic": "دَعَبَ",
+            "translations": {
+              "ru": {
+                "translit": "даӏаба"
+              }
+            }
+          },
+          {
+            "arabic": "رَعَشَ",
+            "translations": {
+              "ru": {
+                "translit": "роӏаша"
+              }
+            }
+          },
+          {
+            "arabic": "بُعِثَ",
+            "translations": {
+              "ru": {
+                "translit": "буӏиса"
+              }
+            }
+          },
+          {
+            "arabic": "حَسُنَ",
+            "translations": {
+              "ru": {
+                "translit": "хьасуна"
+              }
+            }
+          },
+          {
+            "arabic": "غَطَسَ"
+          },
+          {
+            "arabic": "حُبِسَ"
+          },
+          {
+            "arabic": "عَطِشَ"
+          },
+          {
+            "arabic": "تَعَسَ"
+          },
+          {
+            "arabic": "وَسِخَ"
+          },
+          {
+            "arabic": "سَخَطَ"
+          },
+          {
+            "arabic": "ثَعَبَ"
+          },
+          {
+            "arabic": "نُسِجَ"
+          },
+          {
+            "arabic": "رَغِبَ"
+          },
+          {
+            "arabic": "وُضِعَ"
+          },
+          {
+            "arabic": "رَسَبَ"
+          },
+          {
+            "arabic": "شَجُعَ"
+          },
+          {
+            "arabic": "نَشَطَ"
+          },
+          {
+            "arabic": "سَطَعَ"
+          },
+          {
+            "arabic": "وَجِعَ"
+          },
+          {
+            "arabic": "شَعِثَ"
+          },
+          {
+            "arabic": "ضُغِطَ"
+          },
+          {
+            "arabic": "عَتَبَ"
+          },
+          {
+            "arabic": "خَطَبَ"
+          },
+          {
+            "arabic": "وَضِحَ"
+          },
+          {
+            "arabic": "بَعَثَ"
+          },
+          {
+            "arabic": "رَبَطَ"
+          },
+          {
+            "arabic": "سَبَعَ"
+          },
+          {
+            "arabic": "وَسِعَ"
+          },
+          {
+            "arabic": "طُبِعَ"
+          },
+          {
+            "arabic": "رَعَبَ"
+          },
+          {
+            "arabic": "خَشِيَ"
+          },
+          {
+            "arabic": "نَعَشَ"
+          },
+          {
+            "arabic": "رَجَعَ"
+          },
+          {
+            "arabic": "ضَحِكَ"
+          },
+          {
+            "arabic": "حَبَسَ"
+          },
+          {
+            "arabic": "بَشِعَ"
+          },
+          {
+            "arabic": "عَشُبَ"
+          },
+          {
+            "arabic": "رَضَعَ"
+          },
+          {
+            "arabic": "غَضِبَ"
+          },
+          {
+            "arabic": "دَخَسَ"
+          },
+          {
+            "arabic": "صُبِغَ"
+          },
+          {
+            "arabic": "دَسَعَ"
+          },
+          {
+            "arabic": "يَنَعَ"
+          },
+          {
+            "arabic": "رَشَحَ"
+          },
+          {
+            "arabic": "عَطَسَ"
+          },
+          {
+            "arabic": "غَصَبَ"
+          },
+          {
+            "arabic": "نَبَعَ"
+          },
+          {
+            "arabic": "صُنِعَ"
+          },
+          {
+            "arabic": "وَظَبَ"
+          },
+          {
+            "arabic": "صَحِبَ"
+          },
+          {
+            "arabic": "صَنَجَ"
+          },
+          {
+            "arabic": "رُبِطَ"
+          }
+        ]
+      }
     },
     {
       "id": 5,

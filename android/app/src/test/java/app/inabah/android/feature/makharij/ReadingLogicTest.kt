@@ -56,7 +56,8 @@ class ReadingLogicTest {
         assertEquals(1, currentStep(course, emptySet())?.number)
         assertEquals(2, currentStep(course, setOf(1))?.number)
         assertEquals(3, currentStep(course, setOf(1, 2))?.number)
-        assertNull(currentStep(course, setOf(1, 2, 3)), "шаги 4-10 без урока пропускаются")
+        assertEquals(4, currentStep(course, setOf(1, 2, 3))?.number)
+        assertNull(currentStep(course, setOf(1, 2, 3, 4)), "шаги 5-10 без урока пропускаются")
         assertNull(currentStep(course, withLessons.toSet()))
         assertEquals(0.2, completedFraction(course, setOf(1, 2, 99)))
     }
