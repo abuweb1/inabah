@@ -5,11 +5,11 @@ struct SettingsView: View {
     @Environment(\.theme) private var theme
 
     var body: some View {
-        List {
-            Section {
+        SettingsForm {
+            SettingsGroup {
                 rows(SettingsSection.content)
             }
-            Section {
+            SettingsGroup {
                 rows(SettingsSection.appearance)
             } header: {
                 Text("settings.appearance.header")
@@ -30,12 +30,13 @@ struct SettingsView: View {
     private func rows(_ sections: [SettingsSection]) -> some View {
         ForEach(sections, id: \.self) { section in
             NavigationLink(value: section.route) {
-                // Шаг интерфейса — у строк, а не у списка или экрана: крупный заголовок
-                // «Настройки» UIKit масштабирует по размеру списка, а заголовки не меняются.
-                SettingsSectionRow(section: section)
-                    .interfaceTextSize()
+                // Шаг интерфейса — у строк, а не у формы или экрана: крупный заголовок
+                // «Настройки» UIKit масштабирует по размеру содержимого, а заголовки не меняются.
+                SettingsLinkLabel {
+                    SettingsSectionRow(section: section)
+                }
+                .interfaceTextSize()
             }
-            .settingsRow()
         }
     }
 }

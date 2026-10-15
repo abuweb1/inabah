@@ -34,22 +34,26 @@ struct AzkarPlayAllCard: View {
             .accessibilityAddTraits(.isHeader)
 
             Toggle("audio.playAll.repeats", isOn: $settings.repeatsByCount)
-                .tint(theme.palette.success)
+                .choiceToggleStyle(tint: theme.palette.success)
                 .foregroundStyle(theme.palette.textPrimary)
 
             option("audio.playAll.pause") {
-                Picker("audio.playAll.pause", selection: $settings.pauseBetween) {
-                    ForEach(PlaylistSettings.pauseOptions, id: \.self) { seconds in
-                        Text("audio.playAll.pause.seconds \(Int(seconds))").tag(seconds)
-                    }
+                SegmentedChoice(
+                    title: "audio.playAll.pause",
+                    selection: $settings.pauseBetween,
+                    options: PlaylistSettings.pauseOptions
+                ) { seconds in
+                    Text("audio.playAll.pause.seconds \(Int(seconds))")
                 }
             }
 
             option("audio.playAll.rate") {
-                Picker("audio.playAll.rate", selection: $settings.rate) {
-                    ForEach(PlaylistSettings.rateOptions, id: \.self) { rate in
-                        Text("audio.playAll.rate.value \(Double(rate).formatted(.number))").tag(rate)
-                    }
+                SegmentedChoice(
+                    title: "audio.playAll.rate",
+                    selection: $settings.rate,
+                    options: PlaylistSettings.rateOptions
+                ) { rate in
+                    Text("audio.playAll.rate.value \(Double(rate).formatted(.number))")
                 }
             }
 
@@ -69,7 +73,6 @@ struct AzkarPlayAllCard: View {
                 .foregroundStyle(theme.palette.textSecondary)
             // Сегменты — кнопки: не меняются с размером интерфейса.
             picker()
-                .pickerStyle(.segmented)
                 .fixedTextSize()
         }
     }

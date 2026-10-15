@@ -14,7 +14,7 @@ nonisolated enum AssetColor: String, CaseIterable, Sendable {
     // Accent
     case accentPurple, accentPurpleLight, accentPurpleDim, shadowPurple
     // Status
-    case success, successLight, successDeep, successDim, statusRead, statusMemorized
+    case success, successLight, successDeep, successDim, statusRead, statusMemorized, destructive
     // Gold
     case gold, goldLight, goldDeep, sunRays
     // Parchment
