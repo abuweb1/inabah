@@ -19,6 +19,7 @@ struct CollectionAboutView: View {
             .toolbarBackground(theme.palette.hadithHeader, for: .navigationBar)
             .toolbarBackgroundVisibility(.visible, for: .navigationBar)
             .toolbarColorScheme(.dark, for: .navigationBar)
+            .glassBackButton(tint: theme.palette.tabHadith, header: theme.palette.hadithHeader)
             .task { await load() }
     }
 

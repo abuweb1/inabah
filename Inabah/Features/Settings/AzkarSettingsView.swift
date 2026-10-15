@@ -68,6 +68,7 @@ struct AzkarSettingsView: View {
             historySection
         }
         .settingsForm(background: theme.gradients.azkarBackground)
+        .glassBackButton(tint: theme.palette.tabAzkar, header: nil)
         .navigationTitle(Text("settings.azkar.title"))
         .navigationBarTitleDisplayMode(.inline)
         .destructiveConfirmation(

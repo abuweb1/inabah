@@ -28,6 +28,7 @@ struct AppIconSettingsView: View {
             }
         }
         .settingsForm(background: theme.gradients.settingsBackground)
+        .glassBackButton(tint: theme.palette.tabSettings, header: nil)
         .navigationTitle(Text("settings.appIcon.title"))
         .navigationBarTitleDisplayMode(.inline)
         .onAppear { settings.refresh() }

@@ -75,6 +75,7 @@ struct LicenseView: View {
         .navigationTitle(Text(document.title))
         .navigationBarTitleDisplayMode(.inline)
         .toolbarColorScheme(.dark, for: .navigationBar)
+        .glassBackButton(tint: theme.palette.tabSettings, header: nil)
         .task { text = document.text().map(LicenseDocument.reflowed) }
         .audioPlayerInset()
     }

@@ -9,6 +9,7 @@ struct HadithListView: View {
 
     @Environment(HadithStore.self) private var store
     @Environment(\.theme) private var theme
+    @Environment(\.chromeStyle) private var chromeStyle
 
     var body: some View {
         content
@@ -25,14 +26,17 @@ struct HadithListView: View {
                 // вид — как на Android). Видна и пока список грузится: сведения грузятся отдельно.
                 ToolbarItem(placement: .topBarTrailing) {
                     NavigationLink(value: HadithRoute.about(collection)) {
+                        // Своё стекло (`ChromeStyle.custom`) красит значок само, в тон шапки.
                         Image(systemName: "info.circle")
                             .fontWeight(.medium)
-                            .foregroundStyle(theme.palette.tabHadith)
+                            .foregroundStyle(chromeStyle == .custom ? AnyShapeStyle(.foreground) : AnyShapeStyle(theme.palette.tabHadith))
                     }
+                    .headerIconButtonStyle(tint: theme.palette.tabHadith, header: theme.palette.hadithHeader)
                     .accessibilityLabel(Text("hadith.about.title"))
                     .fixedTextSize()
                 }
             }
+            .glassBackButton(tint: theme.palette.tabHadith, header: theme.palette.hadithHeader)
             .task { await store.load(collection) }
     }
 

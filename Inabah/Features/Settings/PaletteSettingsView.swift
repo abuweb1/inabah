@@ -58,6 +58,7 @@ struct PaletteSettingsView: View {
             }
         }
         .settingsForm(background: theme.gradients.settingsBackground)
+        .glassBackButton(tint: theme.palette.tabSettings, header: nil)
         .navigationTitle(Text("settings.palette.title"))
         .navigationBarTitleDisplayMode(.inline)
         .audioPlayerInset()

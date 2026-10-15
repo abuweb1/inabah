@@ -35,6 +35,7 @@ struct VersionHistoryView: View {
         .navigationTitle(Text("versionHistory.title"))
         .navigationBarTitleDisplayMode(.inline)
         .toolbarColorScheme(.dark, for: .navigationBar)
+        .glassBackButton(tint: theme.palette.tabSettings, header: nil)
         .task { notes = await whatsNew.history() }
         .audioPlayerInset()
     }

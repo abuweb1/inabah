@@ -21,9 +21,21 @@ struct FloatingTabBar: View {
     /// Высота капсулы — ниже системной iOS (62), как на Android (решение пользователя 2026-10-04).
     static let height: CGFloat = 54
     static let horizontalMargin: CGFloat = 21
+    /// Над нижним краем экрана без полоски «домой» (iPhone SE).
     static let bottomMargin: CGFloat = 4
-    /// Место под панелью, которое получают экраны вкладок.
-    static let reservedHeight = height + bottomMargin
+    /// С полоской «домой» панель iOS 26 заходит в нижнюю безопасную зону на 11 pt (снимок iOS 27:
+    /// низ капсулы в 23 pt от края при зоне 34); над зоной, как на Android, она стояла заметно выше.
+    static let homeIndicatorOverlap: CGFloat = 11
+
+    /// Отступ капсулы от низа безопасной зоны: отрицательный — капсула заходит в зону.
+    static func bottomOffset(safeAreaBottom: CGFloat) -> CGFloat {
+        safeAreaBottom > 0 ? -homeIndicatorOverlap : bottomMargin
+    }
+
+    /// Место под панелью, которое получают экраны вкладок (над нижней безопасной зоной).
+    static func reservedHeight(safeAreaBottom: CGFloat) -> CGFloat {
+        height + bottomOffset(safeAreaBottom: safeAreaBottom)
+    }
 
     private static let pillInset: CGFloat = 4
     private static let barFillOpacity = 0.07
@@ -232,7 +244,7 @@ extension View {
     /// Стек вкладки под своей панелью: системная полоса скрыта, снизу — прозрачное место под капсулу.
     /// Прокрутка уходит под капсулу, мини-плеер (`audioPlayerInset` у экранов) встаёт над ней.
     @ViewBuilder
-    func floatingTabBarSpace(_ style: ChromeStyle) -> some View {
+    func floatingTabBarSpace(_ style: ChromeStyle, safeAreaBottom: CGFloat) -> some View {
         switch style {
         case .system:
             self
@@ -241,7 +253,7 @@ extension View {
                 .toolbarVisibility(.hidden, for: .tabBar)
                 .safeAreaInset(edge: .bottom, spacing: 0) {
                     Color.clear
-                        .frame(height: FloatingTabBar.reservedHeight)
+                        .frame(height: FloatingTabBar.reservedHeight(safeAreaBottom: safeAreaBottom))
                         .allowsHitTesting(false)
                 }
         }

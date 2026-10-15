@@ -55,6 +55,7 @@ struct TextSizeSettingsView: View {
             }
         }
         .settingsForm(background: theme.gradients.settingsBackground)
+        .glassBackButton(tint: theme.palette.tabSettings, header: nil)
         .navigationTitle(Text("settings.textSize.title"))
         .navigationBarTitleDisplayMode(.inline)
         .task { await azkarStore.load(.morning) }

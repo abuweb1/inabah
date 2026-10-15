@@ -67,6 +67,7 @@ struct AboutView: View {
             }
         }
         .settingsForm(background: theme.gradients.settingsBackground)
+        .glassBackButton(tint: theme.palette.tabSettings, header: nil)
         .navigationTitle(Text("about.title"))
         .navigationBarTitleDisplayMode(.inline)
         .audioPlayerInset()
