@@ -88,23 +88,21 @@ struct HadithHomeView: View {
 
 /// Вход в «Избранное» — круглая кнопка справа вверху главной (решение пользователя 2026-10-10,
 /// как на Android); есть всегда, и при пустом избранном. Вид — как у круглых кнопок навбара:
-/// на iOS 26 их рисует системное стекло, на iOS 18–25 — кружок дизайн-системы.
+/// системное стекло (`ChromeStyle.system`) или своё, как на Android, — белый значок на стекле раздела.
 private struct FavoritesEntryButton: View {
     @Environment(\.theme) private var theme
+    @Environment(\.chromeStyle) private var chromeStyle
 
     var body: some View {
-        if #available(iOS 26, *) {
+        if #available(iOS 26, *), chromeStyle == .system {
             link
+                .foregroundStyle(theme.palette.tabHadith)
                 .buttonStyle(.glass)
                 .buttonBorderShape(.circle)
                 .controlSize(.large)
         } else {
             link
-                .buttonStyle(IconButtonStyle(
-                    foreground: theme.palette.tabHadith,
-                    background: theme.palette.subtleFill,
-                    border: theme.palette.hairline
-                ))
+                .buttonStyle(GlassIconButtonStyle(tint: theme.palette.tabHadith))
         }
     }
 
@@ -112,7 +110,6 @@ private struct FavoritesEntryButton: View {
         NavigationLink(value: HadithRoute.favorites) {
             Image(systemName: "bookmark")
                 .fontWeight(.medium)
-                .foregroundStyle(theme.palette.tabHadith)
         }
         .accessibilityLabel(Text("hadith.favorites.title"))
         .fixedTextSize()

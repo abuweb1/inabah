@@ -10,6 +10,7 @@ struct RootTabView: View {
     @Environment(WhatsNew.self) private var whatsNew
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.theme) private var theme
+    @Environment(\.chromeStyle) private var chromeStyle
 
     var body: some View {
         @Bindable var router = router
@@ -34,6 +35,7 @@ struct RootTabView: View {
                         }
                 }
                 .tint(theme.palette.accentLight)
+                .floatingTabBarSpace(chromeStyle)
             }
             Tab("tab.hadith", image: "tabIconHadith", value: AppTab.hadith) {
                 NavigationStack(path: $router.hadithPath) {
@@ -52,6 +54,7 @@ struct RootTabView: View {
                         }
                 }
                 .tint(theme.palette.accentLight)
+                .floatingTabBarSpace(chromeStyle)
             }
             // «ع» (айн) — гортанная буква, хрестоматийный пример махраджа.
             Tab("tab.makharij", image: "tabIconMakharij", value: AppTab.makharij) {
@@ -60,6 +63,7 @@ struct RootTabView: View {
                         .interfaceTextSize()
                 }
                 .tint(theme.palette.accentLight)
+                .floatingTabBarSpace(chromeStyle)
             }
             Tab("tab.settings", image: "tabIconSettings", value: AppTab.settings) {
                 NavigationStack(path: $router.settingsPath) {
@@ -84,11 +88,20 @@ struct RootTabView: View {
                         }
                 }
                 .tint(theme.palette.accentLight)
+                .floatingTabBarSpace(chromeStyle)
             }
         }
         // Подсветка выбранной вкладки — в тон раздела; содержимому вкладок выше возвращён
         // общий акцент, чтобы оттенок таб-бара не перекрашивал кнопки и переключатели.
         .tint(router.selectedTab.tint(in: theme))
+        .overlay(alignment: .bottom) {
+            if chromeStyle == .custom {
+                FloatingTabBar(selection: router.selectedTab) { router.select($0) }
+                    .padding(.horizontal, FloatingTabBar.horizontalMargin)
+                    .padding(.bottom, FloatingTabBar.bottomMargin)
+                    .ignoresSafeArea(.keyboard)
+            }
+        }
         // Под окном «Что нового» вкладки скрыты от VoiceOver; окно — поверх всех вкладок.
         .accessibilityHidden(whatsNew.pending != nil)
         .overlay { WhatsNewLayer() }
