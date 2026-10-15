@@ -18,13 +18,14 @@ import org.junit.Test
 /** «Учимся читать»: `reading.json` из ассетов и ошибки данных. */
 class ReadingContentTest {
     @Test
-    fun `Курс из ассетов — 8 знаков, 28 букв и хамза по порядку, 11 шагов`() = runTest {
+    fun `Курс из ассетов — 8 знаков, 28 букв и хамза по порядку, 11 шагов и итог`() = runTest {
         val course = loadAssetCourse()
 
         assertEquals(listOf("fatha", "kasra", "damma", "sukun", "shadda", "fathatan", "kasratan", "dammatan"), course.marks.map { it.id })
         assertEquals((1..29).toList(), course.letters.map { it.number })
         assertEquals("ء", course.letters.last().letter)
-        assertEquals((1..11).toList(), course.steps.map { it.number })
+        assertEquals((1..12).toList(), course.steps.map { it.number })
+        assertEquals(listOf(12), course.steps.filter { it.isFinal }.map { it.number }, "итог - только последний")
         assertEquals(setOf("ا", "د", "ذ", "ر", "ز", "و", "ء"), course.letters.filterNot { it.joinsNext }.map { it.letter }.toSet())
         assertTrue(course.steps.all { it.title.isNotBlank() && '—' !in it.title + it.subtitle })
     }

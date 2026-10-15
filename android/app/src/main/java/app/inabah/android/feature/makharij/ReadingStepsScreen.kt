@@ -53,6 +53,7 @@ import app.inabah.android.core.designsystem.Radius
 import app.inabah.android.core.designsystem.Spacing
 import app.inabah.android.core.designsystem.components.ArabicText
 import app.inabah.android.core.designsystem.components.ScheherazadeNew
+import app.inabah.android.core.designsystem.components.Sparkle
 import app.inabah.android.core.designsystem.components.LinearProgressBar
 import app.inabah.android.core.designsystem.components.pressFeedback
 import app.inabah.android.core.designsystem.components.surface
@@ -109,7 +110,7 @@ fun ReadingStepsScreen(
             item(key = "progress") {
                 Column(Modifier.padding(bottom = Spacing.xs), verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
                     Text(
-                        stringResource(R.string.makharij_steps_progress, completedCount(course, completed), course.steps.size),
+                        stringResource(R.string.makharij_steps_progress, completedCount(course, completed), numberedStepCount(course)),
                         color = InabahTheme.palette.onAccentSecondary,
                         style = InabahType.footnote,
                     )
@@ -159,7 +160,7 @@ private fun StepRow(
     val density = LocalDensity.current
     fun scaled(points: Float) = with(density) { points.sp.toDp() }
     val interaction = remember { MutableInteractionSource() }
-    val description = listOf(stringResource(R.string.makharij_step_title, step.number, step.title), step.subtitle)
+    val description = listOf(stepTitle(step), step.subtitle)
         .filter { it.isNotBlank() }
         .joinToString(", ")
     val stateLabel = when (state) {
@@ -217,8 +218,10 @@ private fun StepRow(
                 badgeMotion.size(badge).surface(colors.sheet, badge / 2, border = colors.tint),
                 contentAlignment = Alignment.Center,
             ) {
+                // Итог - без номера, ✦ (решение пользователя 2026-10-15).
+                if (step.isFinal) Sparkle(colors.tint, scaled(FINAL_SPARKLE_SIZE))
                 // Как номер хадиса (HadithRow): строка = кегль, цифры Scheherazade подняты к центру.
-                Text(
+                else Text(
                     step.number.toArabicIndicDigits(),
                     color = colors.tint,
                     maxLines = 1,
@@ -258,6 +261,7 @@ private const val BADGE_SIZE = 40f
 private const val BADGE_NUMBER_SIZE = 20f
 private const val DIGIT_LIFT = 0.16f
 private const val CHECK_SIZE = 22f
+private const val FINAL_SPARKLE_SIZE = 18f
 private const val EXAMPLE_SIZE = 22f
 private const val SUBTITLE_LINES = 2
 private const val LOCK_SIZE = 20f

@@ -118,7 +118,7 @@ fun ReadingLessonScreen(
     }
     ReadingScaffold(
         store = store,
-        title = step?.let { stringResource(R.string.makharij_step_title, it.number, it.title) }
+        title = step?.let { stepTitle(it) }
             ?: stringResource(R.string.makharij_reading_title),
         subtitle = step?.subtitle,
         onBack = onBack,

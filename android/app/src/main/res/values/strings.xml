@@ -157,6 +157,8 @@
     <string name="makharij_chain_name">название</string>
     <string name="makharij_chain_sound">звук</string>
     <string name="makharij_done_step">Шаг %1$d «%2$s» пройден</string>
+    <string name="makharij_done_final">Итог «%1$s» пройден</string>
+    <string name="makharij_final_title">Итог · %1$s</string>
     <string name="makharij_done_verse_reference">Къуран · Тӏа Хӏа 20:114</string>
     <string name="makharij_done_verse_translation">«И скажи: „Господи, прибавь мне знания“»</string>
     <string name="makharij_done_words">Прочитано слов: %1$d, каждое - %2$d раз</string>

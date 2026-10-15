@@ -410,7 +410,7 @@ const READING_MARK_KEYS = ['id', 'sign', 'translations'];
 const READING_MARK_TEXT_KEYS = ['name', 'where', 'sound'];
 const READING_LETTER_KEYS = ['id', 'letter', 'name', 'joinsNext', 'joinsPrevious', 'syllableBases', 'audio', 'translations'];
 const READING_LETTER_TEXT_KEYS = ['name', 'nameTranslit', 'sound', 'syllables', 'note'];
-const READING_STEP_KEYS = ['id', 'marks', 'example', 'translations', 'blocks', 'quiz', 'words'];
+const READING_STEP_KEYS = ['id', 'marks', 'example', 'translations', 'blocks', 'quiz', 'words', 'final'];
 const READING_STEP_TEXT_KEYS = ['title', 'subtitle'];
 const READING_BLOCKS = {
   text: ['type', 'translations'], marks: ['type', 'marks'], letters: ['type', 'letters'], groups: ['type', 'groups'],
@@ -518,6 +518,8 @@ function checkReading(file) {
     checkId(at, step ?? {}, i);
     for (const k of Object.keys(step ?? {})) if (!READING_STEP_KEYS.includes(k)) error(at, `неизвестное поле «${k}»`);
     checkTexts(at, step?.translations, READING_STEP_TEXT_KEYS, ['title', 'subtitle']);
+    // Итог курса («Читаем зикр») - только `true` и только у последнего шага, без номера на экране.
+    if (step?.final !== undefined && (step.final !== true || i !== steps.length - 1)) error(at, 'final - только true и только у последнего шага');
     // Пример справа в списке шагов - необязательный, только арабский.
     if (step?.example !== undefined && requireString(at, step, 'example')) checkArabic(at, step.example);
     for (const m of step?.marks ?? []) { knownMark(at, m); passed.add(m); }

@@ -62,7 +62,7 @@ fun MakharijHomeScreen(
 }
 
 /**
- * «Учимся читать»: подпись - текущий шаг («Шаг 4 из 10 · Огласовки») или «Все шаги пройдены»,
+ * «Учимся читать»: подпись - текущий шаг («Шаг 4 из 11 · Огласовки», у итога - «Итог · Читаем зикр») или «Все шаги пройдены»,
  * кольцо - доля пройденных. Курс ещё не загружен - без подписи и кольца.
  */
 @Composable
@@ -76,12 +76,13 @@ private fun ReadingCourseCard(store: ReadingStore, progress: ReadingProgress, on
     val completed = course?.let { completedSteps(it, lessonsDone, wordCounts) }.orEmpty()
     val meta = course?.let {
         val current = currentStep(it, completed)
-        val done = completedCount(it, completed)
+        val total = numberedStepCount(it)
         when {
-            current != null -> stringResource(R.string.makharij_reading_card_step, current.number, it.steps.size, current.title)
-            done == it.steps.size -> stringResource(R.string.makharij_reading_all_done)
+            current?.isFinal == true -> stepTitle(current)
+            current != null -> stringResource(R.string.makharij_reading_card_step, current.number, total, current.title)
+            isCourseDone(it, completed) -> stringResource(R.string.makharij_reading_all_done)
             // Уроки с содержанием пройдены, остальные шаги ещё пишутся.
-            else -> stringResource(R.string.makharij_reading_card_progress, done, it.steps.size)
+            else -> stringResource(R.string.makharij_reading_card_progress, completedCount(it, completed), total)
         }
     }
     SectionNavCard(

@@ -91,7 +91,8 @@ fun StepCompletedOverlay(
                 )
             }
             Text(
-                stringResource(R.string.makharij_done_step, step.number, step.title),
+                if (step.isFinal) stringResource(R.string.makharij_done_final, step.title)
+                else stringResource(R.string.makharij_done_step, step.number, step.title),
                 color = palette.onAccent,
                 style = InabahType.title3.copy(fontWeight = FontWeight.Bold),
                 textAlign = TextAlign.Center,

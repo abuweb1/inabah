@@ -125,7 +125,7 @@ data class FormExamples(val initial: String, val medial: String, val final: Stri
 }
 
 data class ReadingStep(
-    /** 1…10. */
+    /** 1, 2, 3… по порядку; ключ прогресса. У итога тоже есть, но не показывается. */
     val number: Int,
     /** Знаки, которые шаг вводит. */
     val markIds: List<String>,
@@ -137,6 +137,11 @@ data class ReadingStep(
     val quiz: List<ReadingQuestion>,
     /** «Читаем слова»; `null` - у шага слов нет. */
     val words: ReadingWords? = null,
+    /**
+     * Итог курса («Читаем зикр», решение пользователя 2026-10-15): последний, вместо номера - ✦,
+     * в «пройдено N из M» не считается; открывается, как и шаги, после всех предыдущих.
+     */
+    val isFinal: Boolean = false,
 ) {
     /** Пустые шаги - «Урок готовится». */
     val hasLesson: Boolean get() = blocks.isNotEmpty()

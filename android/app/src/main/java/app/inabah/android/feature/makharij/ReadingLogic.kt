@@ -102,12 +102,22 @@ fun quizOptions(course: ReadingCourse, question: ReadingQuestion, stepNumber: In
 fun currentStep(course: ReadingCourse, completed: Set<Int>): ReadingStep? =
     course.steps.firstOrNull { it.hasLesson && it.number !in completed }
 
-/** Доля пройденных шагов курса, 0…1; отметки шагов, которых нет в курсе, не считаются. */
-fun completedFraction(course: ReadingCourse, completed: Set<Int>): Double =
-    if (course.steps.isEmpty()) 0.0 else course.steps.count { it.number in completed }.toDouble() / course.steps.size
+/** Число шагов с номером - «M» в «пройдено N из M»; итог не считается. */
+fun numberedStepCount(course: ReadingCourse): Int = course.steps.count { !it.isFinal }
 
-/** Число пройденных шагов курса. */
-fun completedCount(course: ReadingCourse, completed: Set<Int>): Int = course.steps.count { it.number in completed }
+/** Доля пройденных шагов с номером, 0…1; отметки шагов, которых нет в курсе, и итог не считаются. */
+fun completedFraction(course: ReadingCourse, completed: Set<Int>): Double {
+    val total = numberedStepCount(course)
+    return if (total == 0) 0.0 else completedCount(course, completed).toDouble() / total
+}
+
+/** Число пройденных шагов с номером (без итога). */
+fun completedCount(course: ReadingCourse, completed: Set<Int>): Int =
+    course.steps.count { !it.isFinal && it.number in completed }
+
+/** Курс пройден целиком - все шаги, включая итог. */
+fun isCourseDone(course: ReadingCourse, completed: Set<Int>): Boolean =
+    course.steps.isNotEmpty() && course.steps.all { it.number in completed }
 
 /** Все слова шага прочитаны нужное число раз (слов нет - да). */
 fun wordsDone(step: ReadingStep, counts: List<Int>?): Boolean {

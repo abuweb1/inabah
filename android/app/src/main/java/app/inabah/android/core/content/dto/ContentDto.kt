@@ -132,6 +132,8 @@ data class ReadingStepDto(
     val quiz: List<ReadingQuizDto> = emptyList(),
     /** «Читаем слова»; нет - у шага слов нет. */
     val words: ReadingWordsDto? = null,
+    /** Итог курса («Читаем зикр») - последний шаг, без номера. */
+    val final: Boolean = false,
 )
 
 @Serializable

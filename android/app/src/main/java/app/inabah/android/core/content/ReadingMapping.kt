@@ -83,6 +83,7 @@ internal fun ReadingFileDto.toReadingCourse(priority: ContentLanguagePriority): 
                     },
                 )
             },
+            isFinal = dto.final,
         )
     }
     return ReadingCourse(marks = marks, letters = letters, steps = steps)

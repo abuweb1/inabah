@@ -4,7 +4,9 @@ import app.inabah.android.core.content.loadAssetCourse
 import app.inabah.android.core.content.model.LetterForm
 import app.inabah.android.core.content.model.ReadingQuestion
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
 
@@ -60,7 +62,20 @@ class ReadingLogicTest {
         assertEquals(5, currentStep(course, setOf(1, 2, 3, 4))?.number)
         assertNull(currentStep(course, setOf(1, 2, 3, 4, 5)), "шаги 6-11 без урока пропускаются")
         assertNull(currentStep(course, withLessons.toSet()))
-        assertEquals(2.0 / course.steps.size, completedFraction(course, setOf(1, 2, 99)))
+        assertEquals(2.0 / 11, completedFraction(course, setOf(1, 2, 99)), "итог не считается")
+    }
+
+    @Test
+    fun `Итог не считается в «N из M», курс пройден - только вместе с итогом`() = runTest {
+        val course = loadAssetCourse()
+        val all = course.steps.map { it.number }.toSet()
+        val final = course.steps.single { it.isFinal }.number
+
+        assertEquals(11, numberedStepCount(course))
+        assertEquals(11, completedCount(course, all))
+        assertEquals(1.0, completedFraction(course, all - final))
+        assertFalse(isCourseDone(course, all - final))
+        assertTrue(isCourseDone(course, all))
     }
 
     @Test
