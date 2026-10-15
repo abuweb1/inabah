@@ -8,7 +8,8 @@ import kotlinx.coroutines.flow.asStateFlow
 
 /**
  * Кегль арабского текста (iOS `ReadingSettings`): 14…40, шаг 2, по умолчанию 21; «Сворачивать арабский
- * текст» на экране хадиса (решение пользователя 2026-10-11) — по умолчанию выключено.
+ * текст» на экране хадиса (решение пользователя 2026-10-11) — по умолчанию выключено. «Скрыть
+ * транскрипцию» в «Учимся читать» (кнопка-глаз, решение пользователя 2026-10-15) — по умолчанию видна.
  */
 class ReadingSettings(private val storage: PreferencesStorage) {
     private val _arabicFontSize = MutableStateFlow(
@@ -25,6 +26,20 @@ class ReadingSettings(private val storage: PreferencesStorage) {
         if (collapsed == _hadithArabicCollapsed.value) return
         _hadithArabicCollapsed.value = collapsed
         storage.edit { it[COLLAPSE_KEY] = collapsed }
+    }
+
+    private val _transliterationHidden = MutableStateFlow(storage.snapshot[TRANSLIT_KEY] ?: false)
+
+    /**
+     * Включено — транскрипция в уроках и листе буквы «Учимся читать» прозрачна (место остаётся). В проверке
+     * её нет: варианты ответа и есть транскрипция. TalkBack читает её и скрытой — иначе незрячему её не узнать.
+     */
+    val transliterationHidden: StateFlow<Boolean> = _transliterationHidden.asStateFlow()
+
+    fun setTransliterationHidden(hidden: Boolean) {
+        if (hidden == _transliterationHidden.value) return
+        _transliterationHidden.value = hidden
+        storage.edit { it[TRANSLIT_KEY] = hidden }
     }
 
     fun increaseArabicFontSize() = setArabicFontSize(_arabicFontSize.value + STEP)
@@ -52,5 +67,6 @@ class ReadingSettings(private val storage: PreferencesStorage) {
 
         private val KEY = doublePreferencesKey("reading.arabicFontSize")
         private val COLLAPSE_KEY = booleanPreferencesKey("reading.hadithArabicCollapsed")
+        private val TRANSLIT_KEY = booleanPreferencesKey("reading.transliterationHidden")
     }
 }

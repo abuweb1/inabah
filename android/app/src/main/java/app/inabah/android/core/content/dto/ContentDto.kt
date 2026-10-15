@@ -72,3 +72,116 @@ data class CollectionAuthorDto(
     val name: String = "",
     val years: String? = null,
 )
+
+// data/reading.json - «Учимся читать» (docs/06-data-structure.md). Неизвестные типы блоков
+// и вопросов не роняют разбор: блок - [ReadingBlockDto.type], поля по типу необязательные.
+
+@Serializable
+data class ReadingFileDto(
+    val marks: List<ReadingMarkDto>,
+    val letters: List<ReadingLetterDto>,
+    val steps: List<ReadingStepDto>,
+)
+
+@Serializable
+data class ReadingMarkDto(
+    val id: String,
+    val sign: String,
+    val translations: Map<String, ReadingMarkTranslationDto>,
+)
+
+@Serializable
+data class ReadingMarkTranslationDto(
+    val name: String,
+    val where: String = "",
+    val sound: String = "",
+)
+
+@Serializable
+data class ReadingLetterDto(
+    val id: Int,
+    val letter: String,
+    val name: String,
+    val joinsNext: Boolean = true,
+    /** `false` - не соединяется и с предыдущей (хамза). */
+    val joinsPrevious: Boolean = true,
+    /** Подставка слога по знакам: у алифа - хамза на алифе (`kasra` → `إ`); нет знака - сама буква. */
+    val syllableBases: Map<String, String> = emptyMap(),
+    /** `{ sound, name, <знак> }` → имя файла или `null`; пустой объект - записей нет. */
+    val audio: Map<String, String?> = emptyMap(),
+    val translations: Map<String, ReadingLetterTranslationDto>,
+)
+
+@Serializable
+data class ReadingLetterTranslationDto(
+    val name: String,
+    val nameTranslit: String = "",
+    val sound: String = "",
+    val syllables: Map<String, String> = emptyMap(),
+    /** Пояснение в листе буквы (у алифа); нет - `null`. */
+    val note: String? = null,
+)
+
+@Serializable
+data class ReadingStepDto(
+    val id: Int,
+    val marks: List<String> = emptyList(),
+    val example: String? = null,
+    val translations: Map<String, ReadingStepTranslationDto>,
+    val blocks: List<ReadingBlockDto> = emptyList(),
+    val quiz: List<ReadingQuizDto> = emptyList(),
+    /** «Читаем слова»; нет - у шага слов нет. */
+    val words: ReadingWordsDto? = null,
+)
+
+@Serializable
+data class ReadingWordsDto(
+    val groupSize: Int,
+    val repeat: Int,
+    val items: List<ReadingWordDto>,
+)
+
+@Serializable
+data class ReadingWordDto(
+    val arabic: String,
+    /** Транскрипция - только у первой группы. */
+    val translations: Map<String, ReadingWordTranslationDto> = emptyMap(),
+)
+
+@Serializable
+data class ReadingWordTranslationDto(
+    val translit: String = "",
+)
+
+@Serializable
+data class ReadingStepTranslationDto(
+    val title: String,
+    val subtitle: String = "",
+)
+
+@Serializable
+data class ReadingBlockDto(
+    val type: String,
+    val marks: List<String> = emptyList(),
+    /** `letters`, `syllables`: подмножество алфавита, `null` - все буквы; `rule`: буквы правила. */
+    val letters: List<String>? = null,
+    /** `rule`: арабское название правила. */
+    val arabic: String? = null,
+    /** `syllables`: на уроке - столько случайных слогов, весь алфавит - отдельным экраном. */
+    val sample: Int? = null,
+    val translations: Map<String, ReadingTextTranslationDto> = emptyMap(),
+)
+
+@Serializable
+data class ReadingTextTranslationDto(
+    val text: String = "",
+    /** `rule`: транскрипция названия правила. */
+    val translit: String = "",
+)
+
+@Serializable
+data class ReadingQuizDto(
+    val type: String,
+    val letter: String,
+    val mark: String? = null,
+)

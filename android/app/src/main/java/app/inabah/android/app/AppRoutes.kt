@@ -36,6 +36,27 @@ sealed interface HadithRoute {
     data object Favorites : HadithRoute
 }
 
+/** «Учимся читать» (раздел «Махрадж», 2026-10-15); номер шага - 1…10. */
+@Serializable
+sealed interface MakharijRoute {
+    @Serializable
+    data object Steps : MakharijRoute
+
+    @Serializable
+    data class Lesson(val step: Int) : MakharijRoute
+
+    @Serializable
+    data class Quiz(val step: Int) : MakharijRoute
+
+    /** «Весь алфавит» с огласовками - из урока. */
+    @Serializable
+    data class Alphabet(val step: Int) : MakharijRoute
+
+    /** «Читаем слова» шага. */
+    @Serializable
+    data class Words(val step: Int) : MakharijRoute
+}
+
 @Serializable
 sealed interface SettingsRoute {
     @Serializable
