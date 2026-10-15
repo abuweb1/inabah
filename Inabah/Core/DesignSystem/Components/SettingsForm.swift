@@ -17,6 +17,8 @@ struct SettingsForm<Content: View>: View {
             .padding(.top, topPadding)
             .padding(.bottom, Spacing.xl)
         }
+        // Барабаны `TimeField` открываются поверх формы.
+        .timePickerHost()
     }
 }
 

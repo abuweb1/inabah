@@ -3239,6 +3239,42 @@
         }
       }
     },
+    "time.picker.dayPeriod" : {
+      "comment" : "Барабан AM / PM в выборе времени (VoiceOver)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "До или после полудня"
+          }
+        }
+      }
+    },
+    "time.picker.hours" : {
+      "comment" : "Барабан часов в выборе времени (VoiceOver)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Часы"
+          }
+        }
+      }
+    },
+    "time.picker.minutes" : {
+      "comment" : "Барабан минут в выборе времени (VoiceOver)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Минуты"
+          }
+        }
+      }
+    },
     "update.available %@" : {
       "comment" : "VoiceOver: значок «Обновить» на главной азкаров",
       "localizations" : {
