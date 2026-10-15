@@ -213,7 +213,7 @@ private final class FeedVisibleTop {
 
 extension CoordinateSpaceProtocol where Self == NamedCoordinateSpace {
     /// Координаты содержимого ленты азкаров: не меняются при прокрутке.
-    static var azkarFeed: NamedCoordinateSpace { .named("azkarFeed") }
+    nonisolated static var azkarFeed: NamedCoordinateSpace { .named("azkarFeed") }
 }
 
 /// Видимость верха карточек ленты — обычный класс: запись при прокрутке не перерисовывает ленту.

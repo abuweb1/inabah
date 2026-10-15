@@ -61,19 +61,24 @@ struct HadithDetailView: View {
     }
 
     private func pages(_ hadiths: [Hadith]) -> some View {
-        ScrollView(.horizontal) {
-            LazyHStack(spacing: 0) {
-                ForEach(hadiths, id: \.number) { hadith in
-                    // `isCurrent` меняется только у двух страниц при перелистывании — остальные не перестраиваются.
-                    HadithPageContainer(hadith: hadith, isCurrent: hadith.number == currentNumber)
-                        .containerRelativeFrame(.horizontal)
+        ScrollViewReader { proxy in
+            ScrollView(.horizontal) {
+                LazyHStack(spacing: 0) {
+                    ForEach(hadiths, id: \.number) { hadith in
+                        // `isCurrent` меняется только у двух страниц при перелистывании — остальные не перестраиваются.
+                        HadithPageContainer(hadith: hadith, isCurrent: hadith.number == currentNumber)
+                            .containerRelativeFrame(.horizontal)
+                    }
                 }
+                .scrollTargetLayout()
             }
-            .scrollTargetLayout()
+            .scrollTargetBehavior(.paging)
+            .scrollPosition(id: $currentNumber)
+            .scrollIndicators(.hidden)
+            // iOS 18 не применяет начальную `scrollPosition` к ленивому стеку: лента открывалась
+            // на первой странице, а счётчик показывал выбранный хадис. Докручиваем явно.
+            .onAppear { proxy.scrollTo(id.number) }
         }
-        .scrollTargetBehavior(.paging)
-        .scrollPosition(id: $currentNumber)
-        .scrollIndicators(.hidden)
     }
 }
 
