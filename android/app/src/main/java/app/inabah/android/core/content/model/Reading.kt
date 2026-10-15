@@ -3,7 +3,7 @@ package app.inabah.android.core.content.model
 // «Учимся читать» (раздел «Махрадж», data/reading.json, docs/06-data-structure.md) - уже на
 // выбранном языке. Слоги и звук буквы не хранятся: строятся из буквы и знака.
 
-/** Курс целиком: знаки, 28 букв и хамза, 10 шагов. */
+/** Курс целиком: знаки, 28 букв и хамза, шаги. */
 data class ReadingCourse(
     val marks: List<ReadingMark>,
     val letters: List<ReadingLetter>,

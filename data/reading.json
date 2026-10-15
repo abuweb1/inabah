@@ -1830,6 +1830,368 @@
     },
     {
       "id": 5,
+      "marks": [],
+      "example": "هـ ـهـ ـه",
+      "translations": {
+        "ru": {
+          "title": "Формы букв",
+          "subtitle": "группа 3"
+        }
+      },
+      "blocks": [
+        {
+          "type": "text",
+          "translations": {
+            "ru": {
+              "text": "Ещё 6 букв. Посмотрите, как они пишутся в начале, середине и конце слова.",
+              "info": "ف и ق в начале и середине слова похожи - различаются точками; ك в начале и середине пишется без «хвоста», а у ه все формы разные."
+            }
+          }
+        },
+        {
+          "type": "forms",
+          "groups": [
+            [
+              "ف",
+              "ق",
+              "ك"
+            ],
+            [
+              "ل",
+              "م",
+              "ه"
+            ]
+          ],
+          "examples": {
+            "ف": [
+              "فَلَقَ",
+              "كَفَلَ",
+              "لُحِفَ"
+            ],
+            "ق": [
+              "قَفَلَ",
+              "بُقِرَ",
+              "صَعِقَ"
+            ],
+            "ك": [
+              "كَبُرَ",
+              "سُكِبَ",
+              "فَتَكَ"
+            ],
+            "ل": [
+              "لَمَعَ",
+              "بَلِيَ",
+              "نَبُلَ"
+            ],
+            "م": [
+              "مَكَرَ",
+              "سَمُلَ",
+              "دَجِمَ"
+            ],
+            "ه": [
+              "هَجَرَ",
+              "مَهُنَ",
+              "سَفِهَ"
+            ]
+          },
+          "exampleCard": [
+            "ف",
+            "ك",
+            "ه"
+          ]
+        }
+      ],
+      "quiz": [
+        {
+          "type": "letterForm",
+          "letter": "ف",
+          "form": "medial"
+        },
+        {
+          "type": "letterForm",
+          "letter": "ه",
+          "form": "medial"
+        },
+        {
+          "type": "letterForm",
+          "letter": "ك",
+          "form": "initial"
+        },
+        {
+          "type": "letterForm",
+          "letter": "ق",
+          "form": "final"
+        },
+        {
+          "type": "letterForm",
+          "letter": "م",
+          "form": "initial"
+        },
+        {
+          "type": "letterForm",
+          "letter": "ل",
+          "form": "medial"
+        },
+        {
+          "type": "letterForm",
+          "letter": "ه",
+          "form": "initial"
+        },
+        {
+          "type": "letterForm",
+          "letter": "ك",
+          "form": "final"
+        }
+      ],
+      "words": {
+        "groupSize": 15,
+        "repeat": 6,
+        "items": [
+          {
+            "arabic": "سَلِمَ",
+            "translations": {
+              "ru": {
+                "translit": "салима"
+              }
+            }
+          },
+          {
+            "arabic": "قَلَمَ",
+            "translations": {
+              "ru": {
+                "translit": "къольама"
+              }
+            }
+          },
+          {
+            "arabic": "تَلِفَ",
+            "translations": {
+              "ru": {
+                "translit": "талифа"
+              }
+            }
+          },
+          {
+            "arabic": "عَقَلَ",
+            "translations": {
+              "ru": {
+                "translit": "ӏакъольа"
+              }
+            }
+          },
+          {
+            "arabic": "حَمِقَ",
+            "translations": {
+              "ru": {
+                "translit": "хьамикъо"
+              }
+            }
+          },
+          {
+            "arabic": "قَلَقَ",
+            "translations": {
+              "ru": {
+                "translit": "къольакъо"
+              }
+            }
+          },
+          {
+            "arabic": "فَكِهَ",
+            "translations": {
+              "ru": {
+                "translit": "факихӏа"
+              }
+            }
+          },
+          {
+            "arabic": "فَقُهَ",
+            "translations": {
+              "ru": {
+                "translit": "факъухӏа"
+              }
+            }
+          },
+          {
+            "arabic": "قُلِعَ",
+            "translations": {
+              "ru": {
+                "translit": "къулиӏа"
+              }
+            }
+          },
+          {
+            "arabic": "فَهِمَ",
+            "translations": {
+              "ru": {
+                "translit": "фахӏима"
+              }
+            }
+          },
+          {
+            "arabic": "لَقِفَ",
+            "translations": {
+              "ru": {
+                "translit": "льакъифа"
+              }
+            }
+          },
+          {
+            "arabic": "تَفِلَ",
+            "translations": {
+              "ru": {
+                "translit": "тафильа"
+              }
+            }
+          },
+          {
+            "arabic": "ثَقَفَ"
+          },
+          {
+            "arabic": "قَمِلَ"
+          },
+          {
+            "arabic": "حَمَلَ"
+          },
+          {
+            "arabic": "ثَقَلَ"
+          },
+          {
+            "arabic": "شَمِلَ"
+          },
+          {
+            "arabic": "مَلَكَ"
+          },
+          {
+            "arabic": "لَكُعَ"
+          },
+          {
+            "arabic": "غَفَلَ"
+          },
+          {
+            "arabic": "خَمَلَ"
+          },
+          {
+            "arabic": "لَهِفَ"
+          },
+          {
+            "arabic": "كَمِهَ"
+          },
+          {
+            "arabic": "بَكُمَ"
+          },
+          {
+            "arabic": "خَلَقَ"
+          },
+          {
+            "arabic": "مَكَسَ"
+          },
+          {
+            "arabic": "فَعُمَ"
+          },
+          {
+            "arabic": "قَهَرَ"
+          },
+          {
+            "arabic": "جَمُلَ"
+          },
+          {
+            "arabic": "مَقَلَ"
+          },
+          {
+            "arabic": "ضَمِنَ"
+          },
+          {
+            "arabic": "قَفَلَ"
+          },
+          {
+            "arabic": "لَهِمَ"
+          },
+          {
+            "arabic": "فَقَعَ"
+          },
+          {
+            "arabic": "هَمَعَ"
+          },
+          {
+            "arabic": "مَهَلَ"
+          },
+          {
+            "arabic": "ذَهِلَ"
+          },
+          {
+            "arabic": "قَمَعَ"
+          },
+          {
+            "arabic": "تَهِمَ"
+          },
+          {
+            "arabic": "صَلَقَ"
+          },
+          {
+            "arabic": "لَكَمَ"
+          },
+          {
+            "arabic": "لَفِقَ"
+          },
+          {
+            "arabic": "قَلَفَ"
+          },
+          {
+            "arabic": "دُهِشَ"
+          },
+          {
+            "arabic": "عَمِلَ"
+          },
+          {
+            "arabic": "كَهُلَ"
+          },
+          {
+            "arabic": "فَلَقَ"
+          },
+          {
+            "arabic": "فَقُمَ"
+          },
+          {
+            "arabic": "هَلِمَ"
+          },
+          {
+            "arabic": "زَهَقَ"
+          },
+          {
+            "arabic": "هَمَكَ"
+          },
+          {
+            "arabic": "جَهِلَ"
+          },
+          {
+            "arabic": "رَكَمَ"
+          },
+          {
+            "arabic": "كَمُلَ"
+          },
+          {
+            "arabic": "فَلَكَ"
+          },
+          {
+            "arabic": "حَلَمَ"
+          },
+          {
+            "arabic": "قَفِعَ"
+          },
+          {
+            "arabic": "هَلَكَ"
+          },
+          {
+            "arabic": "فُعِلَ"
+          },
+          {
+            "arabic": "كَفَلَ"
+          }
+        ]
+      }
+    },
+    {
+      "id": 6,
       "marks": [
         "sukun"
       ],
@@ -1844,7 +2206,7 @@
       "quiz": []
     },
     {
-      "id": 6,
+      "id": 7,
       "marks": [],
       "example": "بَا بُو",
       "translations": {
@@ -1857,7 +2219,7 @@
       "quiz": []
     },
     {
-      "id": 7,
+      "id": 8,
       "marks": [
         "fathatan",
         "kasratan",
@@ -1874,7 +2236,7 @@
       "quiz": []
     },
     {
-      "id": 8,
+      "id": 9,
       "marks": [
         "shadda"
       ],
@@ -1889,7 +2251,7 @@
       "quiz": []
     },
     {
-      "id": 9,
+      "id": 10,
       "marks": [],
       "example": "الْ",
       "translations": {
@@ -1902,7 +2264,7 @@
       "quiz": []
     },
     {
-      "id": 10,
+      "id": 11,
       "marks": [],
       "example": "سُبْحَانَ",
       "translations": {

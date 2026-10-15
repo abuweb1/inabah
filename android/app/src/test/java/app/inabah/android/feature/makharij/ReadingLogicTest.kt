@@ -57,9 +57,10 @@ class ReadingLogicTest {
         assertEquals(2, currentStep(course, setOf(1))?.number)
         assertEquals(3, currentStep(course, setOf(1, 2))?.number)
         assertEquals(4, currentStep(course, setOf(1, 2, 3))?.number)
-        assertNull(currentStep(course, setOf(1, 2, 3, 4)), "шаги 5-10 без урока пропускаются")
+        assertEquals(5, currentStep(course, setOf(1, 2, 3, 4))?.number)
+        assertNull(currentStep(course, setOf(1, 2, 3, 4, 5)), "шаги 6-11 без урока пропускаются")
         assertNull(currentStep(course, withLessons.toSet()))
-        assertEquals(0.2, completedFraction(course, setOf(1, 2, 99)))
+        assertEquals(2.0 / course.steps.size, completedFraction(course, setOf(1, 2, 99)))
     }
 
     @Test
@@ -68,7 +69,9 @@ class ReadingLogicTest {
         val ba = course.letters.first { it.letter == "ب" }
         val question = ReadingQuestion.Syllable(ba, requireNotNull(course.sukun))
 
-        val options = quizOptions(course, question, stepNumber = 5)
+        val sukunStep = course.steps.first { "sukun" in it.markIds }.number
+
+        val options = quizOptions(course, question, sukunStep)
 
         assertEquals(listOf("б"), options.filter { it.isCorrect }.map { it.text })
         assertEquals(3, options.size)

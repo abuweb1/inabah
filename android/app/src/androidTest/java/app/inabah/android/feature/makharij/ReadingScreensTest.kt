@@ -64,7 +64,7 @@ class ReadingScreensTest {
                     contentPadding = PaddingValues())
             }
         }
-        waitForText("Шаг 1 из 10 · Буквы")
+        waitForText("Шаг 1 из 11 · Буквы")
         compose.onNodeWithText("Учимся читать").performClick()
         assertTrue(opened)
     }
