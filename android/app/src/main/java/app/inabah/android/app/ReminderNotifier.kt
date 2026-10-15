@@ -40,22 +40,13 @@ class ReminderNotifier(context: Context) {
         if (days > STREAK_DISPLAY_MAX) context.getString(R.string.azkar_streak_days_max)
         else context.resources.getQuantityString(R.plurals.azkar_streak_days, days, days)
 
-    /** Показано ли (`false` — уведомления или канал выключены). */
-    fun showAzkar(kind: ReminderKind, section: AzkarSection, text: ReminderText): Boolean {
-        val open = Intent(context, MainActivity::class.java)
-            .setAction(MainActivity.ACTION_OPEN_AZKAR)
-            .putExtra(MainActivity.EXTRA_SECTION, section.key)
-        return show(kind, text, open)
-    }
+    /** Показано ли (`false` — уведомления или канал выключены). Нажатие — [azkarReminderTarget]. */
+    fun showAzkar(kind: ReminderKind, section: AzkarSection, text: ReminderText): Boolean =
+        show(kind, text, azkarReminderTarget(kind, section).intent(context))
 
     /** Показано ли — хадис дня запоминается только показанным (аудит 2026-10-10, К1). */
-    fun showHadith(id: HadithId, text: ReminderText): Boolean {
-        val open = Intent(context, MainActivity::class.java)
-            .setAction(MainActivity.ACTION_OPEN_HADITH)
-            .putExtra(MainActivity.EXTRA_COLLECTION, id.collection.key)
-            .putExtra(MainActivity.EXTRA_NUMBER, id.number)
-        return show(ReminderKind.HadithOfDay, text, open)
-    }
+    fun showHadith(id: HadithId, text: ReminderText): Boolean =
+        show(ReminderKind.HadithOfDay, text, NotificationTarget.Hadith(id).intent(context))
 
     private fun show(kind: ReminderKind, text: ReminderText, open: Intent): Boolean {
         ensureChannels()

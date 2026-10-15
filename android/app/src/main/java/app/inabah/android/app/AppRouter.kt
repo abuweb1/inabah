@@ -40,6 +40,12 @@ class AppRouter {
         if (stack.isNotEmpty()) stack.clear()
     }
 
+    /** Открыть главную вкладки из любого места: вкладка [tab], её стек — до корня. */
+    fun openRoot(tab: AppTab) {
+        selectedTab = tab
+        popToRoot(tab)
+    }
+
     /** Открыть экран азкаров из любого места: вкладка «Азкары», стек — только этот экран. */
     fun open(route: AzkarRoute) {
         selectedTab = AppTab.Azkar
