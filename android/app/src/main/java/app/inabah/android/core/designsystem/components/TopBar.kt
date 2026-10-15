@@ -105,7 +105,8 @@ private val LocalBarBackground = staticCompositionLocalOf<Color?> { null }
 // (#1AEDA4); капсула «А− А+» растёт ×1,17 и светится с нажатой стороны — ярко (#01FEC5) у пальца,
 // к другому краю темнее (#018B62).
 
-private const val GLASS_PRESS_SCALE = 1.38f
+// Круг растёт ×1,2, а не ×1,4 как на снимках: крупнее выглядело слишком (решение пользователя 2026-10-15, как iOS).
+private const val GLASS_PRESS_SCALE = 1.2f
 private const val CAPSULE_PRESS_SCALE = 1.16f
 
 // Цвета — сдвигами в OKLCH (светлота / насыщенность / оттенок), снятыми со снимков iOS по пикселям.
