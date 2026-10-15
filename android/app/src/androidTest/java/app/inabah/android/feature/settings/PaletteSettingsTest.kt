@@ -30,7 +30,6 @@ import app.inabah.android.core.settings.AppearanceSettings
 import app.inabah.android.core.settings.PreferencesStorage
 import app.inabah.android.core.settings.TestDataStoreRule
 import app.inabah.android.core.settings.TranslationShadeSettings
-import app.inabah.android.feature.makharij.MakharijHomeScreen
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -180,16 +179,5 @@ class PaletteSettingsTest {
         compose.mainClock.autoAdvance = true
         compose.waitForIdle()
         check(shown?.azkarBackground == ThemeStyle.Amber.theme.gradients.azkarBackground)
-    }
-
-    @Test
-    fun makharijComingSoonIsOneAccessibilityElement() {
-        compose.setContent { InabahTheme { MakharijHomeScreen(contentPadding = PaddingValues()) } }
-        // Заголовок и текст — в одном узле (объединены).
-        compose.onNodeWithText("Скоро", substring = false, useUnmergedTree = false)
-            .assert(SemanticsMatcher("содержит и текст") { node ->
-                node.config.getOrElseNullable(SemanticsProperties.Text) { null }
-                    ?.any { text -> text.text.startsWith("Здесь появятся") } == true
-            })
     }
 }

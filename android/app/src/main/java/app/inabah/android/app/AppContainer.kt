@@ -35,6 +35,7 @@ import app.inabah.android.core.settings.PackageManagerAppIconSwitcher
 import app.inabah.android.core.settings.ParchmentSettings
 import app.inabah.android.core.settings.PlaylistSettings
 import app.inabah.android.core.settings.PreferencesStorage
+import app.inabah.android.core.settings.ReadingProgress
 import app.inabah.android.core.settings.ReadingSettings
 import app.inabah.android.core.settings.ReminderSettings
 import app.inabah.android.core.settings.TextSizeSettings
@@ -42,6 +43,7 @@ import app.inabah.android.core.settings.TranslationShadeSettings
 import app.inabah.android.core.settings.seedDebugAzkarHistory
 import app.inabah.android.feature.azkar.AzkarStore
 import app.inabah.android.feature.hadith.HadithStore
+import app.inabah.android.feature.makharij.ReadingStore
 import java.time.Instant
 import java.time.ZoneId
 import kotlinx.coroutines.CoroutineScope
@@ -64,6 +66,8 @@ class AppServices(
     val hadithProgress: HadithProgress,
     val hadithFavorites: HadithFavorites,
     val hadithCollectionOrder: HadithCollectionOrder,
+    val readingStore: ReadingStore,
+    val readingProgress: ReadingProgress,
     val appearanceSettings: AppearanceSettings,
     val parchmentSettings: ParchmentSettings,
     val translationShadeSettings: TranslationShadeSettings,
@@ -138,6 +142,7 @@ class AppContainer(context: Context) {
             }
             services.azkarStore.loadAll()
             services.hadithStore.loadAll()
+            services.readingStore.load()
             logContentFailures(services)
         }
     }
@@ -145,7 +150,8 @@ class AppContainer(context: Context) {
     /** Ошибка контента — дефект сборки (файлы ассетов): на экране «Повторить», в логе — причина. */
     private fun logContentFailures(services: AppServices) {
         val states = AzkarSection.entries.map { it.key to services.azkarStore.state(it).value } +
-            HadithCollection.entries.map { it.key to services.hadithStore.state(it) }
+            HadithCollection.entries.map { it.key to services.hadithStore.state(it) } +
+            listOf("reading" to services.readingStore.course.value)
         for ((name, state) in states) {
             if (state is Loadable.Failed) Log.e(TAG, "Не загружен контент «$name»", state.error)
         }
@@ -188,6 +194,8 @@ class AppContainer(context: Context) {
             hadithProgress = hadithProgress,
             hadithFavorites = HadithFavorites(storage),
             hadithCollectionOrder = hadithCollectionOrder,
+            readingStore = ReadingStore(repository),
+            readingProgress = ReadingProgress(storage),
             appearanceSettings = AppearanceSettings(storage),
             parchmentSettings = ParchmentSettings(storage),
             translationShadeSettings = TranslationShadeSettings(storage),

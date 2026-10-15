@@ -5,7 +5,7 @@
       "sign": "َ",
       "translations": {
         "ru": {
-          "name": "фатха",
+          "name": "фатхьа",
           "where": "над буквой",
           "sound": "а"
         }
@@ -16,7 +16,7 @@
       "sign": "ِ",
       "translations": {
         "ru": {
-          "name": "кясра",
+          "name": "касра",
           "where": "под буквой",
           "sound": "и"
         }
@@ -27,7 +27,7 @@
       "sign": "ُ",
       "translations": {
         "ru": {
-          "name": "дамма",
+          "name": "домма",
           "where": "над буквой",
           "sound": "у"
         }
@@ -60,7 +60,7 @@
       "sign": "ً",
       "translations": {
         "ru": {
-          "name": "фатхатан",
+          "name": "фатхьатан",
           "where": "над буквой",
           "sound": "ан"
         }
@@ -71,7 +71,7 @@
       "sign": "ٍ",
       "translations": {
         "ru": {
-          "name": "кясратан",
+          "name": "касратан",
           "where": "под буквой",
           "sound": "ин"
         }
@@ -82,7 +82,7 @@
       "sign": "ٌ",
       "translations": {
         "ru": {
-          "name": "дамматан",
+          "name": "домматан",
           "where": "над буквой",
           "sound": "ун"
         }
@@ -95,7 +95,12 @@
       "letter": "ا",
       "name": "أَلِف",
       "joinsNext": false,
-      "syllableBase": "ء",
+      "syllableBases": {
+        "fatha": "أ",
+        "kasra": "إ",
+        "damma": "أ",
+        "sukun": "أ"
+      },
       "audio": {},
       "translations": {
         "ru": {
@@ -106,7 +111,8 @@
             "fatha": "ъа",
             "kasra": "ъи",
             "damma": "ъу"
-          }
+          },
+          "note": "Алиф не бывает сам по себе: он стоит в связке с другой буквой (продлевает её звук) или служит подставкой для хӏамзы - как в слогах ниже."
         }
       }
     },
@@ -600,16 +606,37 @@
           }
         }
       }
+    },
+    {
+      "id": 29,
+      "letter": "ء",
+      "name": "هَمْزَة",
+      "joinsNext": false,
+      "joinsPrevious": false,
+      "audio": {},
+      "translations": {
+        "ru": {
+          "name": "Хӏамза",
+          "nameTranslit": "хӏамза",
+          "sound": "ъ",
+          "syllables": {
+            "fatha": "ъа",
+            "kasra": "ъи",
+            "damma": "ъу"
+          }
+        }
+      }
     }
   ],
   "steps": [
     {
       "id": 1,
       "marks": [],
+      "example": "ا ب ت",
       "translations": {
         "ru": {
           "title": "Буквы",
-          "subtitle": "28 букв, название и звук"
+          "subtitle": "28 букв и хӏамза, название и звук"
         }
       },
       "blocks": [
@@ -617,7 +644,7 @@
           "type": "text",
           "translations": {
             "ru": {
-              "text": "В арабском алфавите 28 букв. Пишут и читают справа налево. Нажмите на букву, чтобы услышать её звук и название."
+              "text": "В арабском алфавите 28 букв и хӏамза. Пишут и читают справа налево. Нажмите на букву, чтобы узнать её название и звук."
             }
           }
         },
@@ -650,39 +677,16 @@
     },
     {
       "id": 2,
-      "marks": [],
-      "translations": {
-        "ru": {
-          "title": "Похожие буквы",
-          "subtitle": "отличаются точками"
-        }
-      },
-      "blocks": [],
-      "quiz": []
-    },
-    {
-      "id": 3,
-      "marks": [],
-      "translations": {
-        "ru": {
-          "title": "Формы букв",
-          "subtitle": "в начале, середине и конце слова"
-        }
-      },
-      "blocks": [],
-      "quiz": []
-    },
-    {
-      "id": 4,
       "marks": [
         "fatha",
         "kasra",
         "damma"
       ],
+      "example": "بَ بِ بُ",
       "translations": {
         "ru": {
           "title": "Огласовки",
-          "subtitle": "фатха, кясра, дамма"
+          "subtitle": "фатхьа, касра, домма, твёрдые буквы"
         }
       },
       "blocks": [
@@ -690,7 +694,7 @@
           "type": "text",
           "translations": {
             "ru": {
-              "text": "Буква - это согласный звук. Гласный ей даёт маленький знак над буквой или под ней - огласовка."
+              "text": "Мы узнали имена букв, но читать мы их сможем выучив 3 огласовки"
             }
           }
         },
@@ -706,18 +710,75 @@
           "type": "text",
           "translations": {
             "ru": {
-              "text": "Читаем справа налево: буква и сразу её огласовка - это слог."
+              "text": "Ниже - несколько букв с огласовками. Прочитайте их, а затем попробуйте прочитать весь алфавит."
             }
           }
         },
         {
           "type": "syllables",
           "letters": [
+            "ا",
             "ب",
+            "ت",
+            "ث",
+            "ج",
+            "ح",
+            "خ",
+            "د",
+            "ذ",
+            "ر",
+            "ز",
+            "س",
+            "ش",
+            "ص",
+            "ض",
+            "ط",
+            "ظ",
+            "ع",
+            "غ",
+            "ف",
+            "ق",
+            "ك",
+            "ل",
             "م",
             "ن",
-            "ل"
-          ]
+            "ه",
+            "و",
+            "ي"
+          ],
+          "sample": 12
+        },
+        {
+          "type": "rule",
+          "arabic": "حُرُوفُ الاسْتِعْلَاءِ",
+          "letters": [
+            "ط",
+            "ظ",
+            "ض",
+            "ص",
+            "غ",
+            "خ",
+            "ق"
+          ],
+          "translations": {
+            "ru": {
+              "translit": "хуруфу-льистиӏльа",
+              "text": "Ниже 7 букв, которые читаются твёрдо: с фатхьой - с оттенком «о». А 4 (ط ظ ض ص) из них с касрой - с оттенком «ы»."
+            }
+          }
+        },
+        {
+          "type": "rule",
+          "arabic": "تَفْخِيمُ الرَّاءِ وَتَرْقِيقُهَا",
+          "letters": [
+            "ر"
+          ],
+          "translations": {
+            "ru": {
+              "translit": "тафхииму-ррооъи ва таркъиикъухаа",
+              "text": "Ро не твердая буква, но с фатхьой всегда твердо с оттенком на «о»."
+            }
+          }
         }
       ],
       "quiz": [
@@ -750,14 +811,307 @@
           "type": "syllable",
           "letter": "م",
           "mark": "damma"
+        },
+        {
+          "type": "syllable",
+          "letter": "ص",
+          "mark": "kasra"
+        },
+        {
+          "type": "syllable",
+          "letter": "ق",
+          "mark": "fatha"
+        },
+        {
+          "type": "syllable",
+          "letter": "ر",
+          "mark": "kasra"
+        },
+        {
+          "type": "syllable",
+          "letter": "ر",
+          "mark": "fatha"
         }
-      ]
+      ],
+      "words": {
+        "groupSize": 15,
+        "repeat": 6,
+        "items": [
+          {
+            "arabic": "زَرَدَ",
+            "translations": {
+              "ru": {
+                "translit": "зарода"
+              }
+            }
+          },
+          {
+            "arabic": "رَزَبَ",
+            "translations": {
+              "ru": {
+                "translit": "розаба"
+              }
+            }
+          },
+          {
+            "arabic": "دَأَمَ",
+            "translations": {
+              "ru": {
+                "translit": "даъама"
+              }
+            }
+          },
+          {
+            "arabic": "زَرِمَ",
+            "translations": {
+              "ru": {
+                "translit": "зарима"
+              }
+            }
+          },
+          {
+            "arabic": "ذَرَقَ",
+            "translations": {
+              "ru": {
+                "translit": "зарокъо"
+              }
+            }
+          },
+          {
+            "arabic": "أَدُبَ",
+            "translations": {
+              "ru": {
+                "translit": "ъадуба"
+              }
+            }
+          },
+          {
+            "arabic": "دَرَهَ",
+            "translations": {
+              "ru": {
+                "translit": "дарохӏа"
+              }
+            }
+          },
+          {
+            "arabic": "رَدَنَ",
+            "translations": {
+              "ru": {
+                "translit": "родана"
+              }
+            }
+          },
+          {
+            "arabic": "رَأَسَ",
+            "translations": {
+              "ru": {
+                "translit": "роъаса"
+              }
+            }
+          },
+          {
+            "arabic": "طَرَقَ",
+            "translations": {
+              "ru": {
+                "translit": "тӏорокъо"
+              }
+            }
+          },
+          {
+            "arabic": "وَدَقَ",
+            "translations": {
+              "ru": {
+                "translit": "вадакъо"
+              }
+            }
+          },
+          {
+            "arabic": "وَرِمَ",
+            "translations": {
+              "ru": {
+                "translit": "варима"
+              }
+            }
+          },
+          {
+            "arabic": "ذَرَحَ"
+          },
+          {
+            "arabic": "طَرَحَ"
+          },
+          {
+            "arabic": "رَدَعَ"
+          },
+          {
+            "arabic": "زَرَفَ"
+          },
+          {
+            "arabic": "دَرَعَ"
+          },
+          {
+            "arabic": "طَرِبَ"
+          },
+          {
+            "arabic": "وَزَغَ"
+          },
+          {
+            "arabic": "ذَرَعَ"
+          },
+          {
+            "arabic": "دَرَجَ"
+          },
+          {
+            "arabic": "وَرَكَ"
+          },
+          {
+            "arabic": "وَأَدَ"
+          },
+          {
+            "arabic": "أَرِقَ"
+          },
+          {
+            "arabic": "أَرَمَ"
+          },
+          {
+            "arabic": "زَرَعَ"
+          },
+          {
+            "arabic": "دَرَأَ"
+          },
+          {
+            "arabic": "رَدَمَ"
+          },
+          {
+            "arabic": "رَذُلَ"
+          },
+          {
+            "arabic": "وَدَجَ"
+          },
+          {
+            "arabic": "وَرِثَ"
+          },
+          {
+            "arabic": "طَرِشَ"
+          },
+          {
+            "arabic": "ذَأَبَ"
+          },
+          {
+            "arabic": "رَزَأَ"
+          },
+          {
+            "arabic": "طَرِزَ"
+          },
+          {
+            "arabic": "زَرَقَ"
+          },
+          {
+            "arabic": "أَزَلَ"
+          },
+          {
+            "arabic": "دَرِبَ"
+          },
+          {
+            "arabic": "وَدُكَ"
+          },
+          {
+            "arabic": "طُرِدَ"
+          },
+          {
+            "arabic": "رَدِغَ"
+          },
+          {
+            "arabic": "أَوِلَ"
+          },
+          {
+            "arabic": "أَدِبَ"
+          },
+          {
+            "arabic": "رَزَنَ"
+          },
+          {
+            "arabic": "وَرَسَ"
+          },
+          {
+            "arabic": "ذَأَمَ"
+          },
+          {
+            "arabic": "رَوِعَ"
+          },
+          {
+            "arabic": "دَرِنَ"
+          },
+          {
+            "arabic": "رَدِفَ"
+          },
+          {
+            "arabic": "زُرِعَ"
+          },
+          {
+            "arabic": "وَزَبَ"
+          },
+          {
+            "arabic": "دُرِعَ"
+          },
+          {
+            "arabic": "دَرَسَ"
+          },
+          {
+            "arabic": "وَأَرَ"
+          },
+          {
+            "arabic": "زَرِبَ"
+          },
+          {
+            "arabic": "رَطُبَ"
+          },
+          {
+            "arabic": "ذَأَجَ"
+          },
+          {
+            "arabic": "وَزَعَ"
+          },
+          {
+            "arabic": "أَطَرَ"
+          },
+          {
+            "arabic": "أَرَخَ"
+          }
+        ]
+      }
+    },
+    {
+      "id": 3,
+      "marks": [],
+      "example": "ب ت ث",
+      "translations": {
+        "ru": {
+          "title": "Похожие буквы",
+          "subtitle": "отличаются точками"
+        }
+      },
+      "blocks": [],
+      "quiz": []
+    },
+    {
+      "id": 4,
+      "marks": [],
+      "example": "بـ ـبـ ـب",
+      "translations": {
+        "ru": {
+          "title": "Формы букв",
+          "subtitle": "в начале, середине и конце слова"
+        }
+      },
+      "blocks": [],
+      "quiz": []
     },
     {
       "id": 5,
       "marks": [
         "sukun"
       ],
+      "example": "مِنْ",
       "translations": {
         "ru": {
           "title": "Сукун",
@@ -770,6 +1124,7 @@
     {
       "id": 6,
       "marks": [],
+      "example": "بَا بُو",
       "translations": {
         "ru": {
           "title": "Долгие гласные",
@@ -786,6 +1141,7 @@
         "kasratan",
         "dammatan"
       ],
+      "example": "بٌ",
       "translations": {
         "ru": {
           "title": "Танвин",
@@ -800,6 +1156,7 @@
       "marks": [
         "shadda"
       ],
+      "example": "رَبِّ",
       "translations": {
         "ru": {
           "title": "Шадда",
@@ -812,6 +1169,7 @@
     {
       "id": 9,
       "marks": [],
+      "example": "الْ",
       "translations": {
         "ru": {
           "title": "Особые случаи",
@@ -824,6 +1182,7 @@
     {
       "id": 10,
       "marks": [],
+      "example": "سُبْحَانَ",
       "translations": {
         "ru": {
           "title": "Читаем зикр",

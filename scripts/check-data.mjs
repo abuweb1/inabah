@@ -403,22 +403,23 @@ function checkVersions(file) {
 }
 
 // reading.json - «Учимся читать» в разделе «Махрадж» (docs/06-data-structure.md, «Учимся читать»):
-// знаки огласовок, 28 букв и 10 шагов. Слоги и формы букв не хранятся - их строят приложения из буквы и знака;
-// хранится транскрипция слогов (нерегулярна: «ли», а не «льи»). В текстах - «-», не «-» (решение пользователя).
+// знаки огласовок, 28 букв и хамза (29-я) и 10 шагов. Слоги и формы букв не хранятся - их строят приложения из буквы и знака;
+// хранится транскрипция слогов (нерегулярна: «ли», а не «льи»). В текстах - только «-», без длинного тире (решение пользователя).
 const READING_KEYS = ['marks', 'letters', 'steps'];
 const READING_MARK_KEYS = ['id', 'sign', 'translations'];
 const READING_MARK_TEXT_KEYS = ['name', 'where', 'sound'];
-const READING_LETTER_KEYS = ['id', 'letter', 'name', 'joinsNext', 'syllableBase', 'audio', 'translations'];
-const READING_LETTER_TEXT_KEYS = ['name', 'nameTranslit', 'sound', 'syllables'];
-const READING_STEP_KEYS = ['id', 'marks', 'translations', 'blocks', 'quiz'];
+const READING_LETTER_KEYS = ['id', 'letter', 'name', 'joinsNext', 'joinsPrevious', 'syllableBases', 'audio', 'translations'];
+const READING_LETTER_TEXT_KEYS = ['name', 'nameTranslit', 'sound', 'syllables', 'note'];
+const READING_STEP_KEYS = ['id', 'marks', 'example', 'translations', 'blocks', 'quiz', 'words'];
 const READING_STEP_TEXT_KEYS = ['title', 'subtitle'];
 const READING_BLOCKS = {
   text: ['type', 'translations'], marks: ['type', 'marks'], letters: ['type', 'letters'], groups: ['type', 'groups'],
-  syllables: ['type', 'letters'], compare: ['type', 'pairs'], join: ['type', 'arabic', 'audio', 'translations'],
+  syllables: ['type', 'letters', 'sample'], compare: ['type', 'pairs'], join: ['type', 'arabic', 'audio', 'translations'],
   zikr: ['type', 'section', 'id', 'syllables', 'translations'],
+  rule: ['type', 'arabic', 'letters', 'translations'],
 };
 const READING_QUIZ = { syllable: ['type', 'letter', 'mark'], letterName: ['type', 'letter'] };
-const READING_ALPHABET = 28;
+const READING_ALPHABET = 29;
 // Слоги с этими знаками читаются по-своему у каждой буквы - их транскрипция нужна в letters[].syllables.
 const VOWEL_MARKS = ['fatha', 'kasra', 'damma', 'fathatan', 'kasratan', 'dammatan'];
 const READING_AUDIO_DIR = join(AUDIO_DIR, 'reading');
@@ -481,7 +482,14 @@ function checkReading(file) {
     else byLetter.set(letter.letter, letter);
     if (requireString(at, letter ?? {}, 'name')) checkArabic(at, letter.name);
     if ('joinsNext' in (letter ?? {}) && letter.joinsNext !== false) error(at, 'joinsNext - только false (по умолчанию соединяется)');
-    if ('syllableBase' in (letter ?? {}) && !/^[ء-ي]$/.test(letter.syllableBase)) error(at, 'syllableBase - одна арабская буква');
+    if ('joinsPrevious' in (letter ?? {}) && letter.joinsPrevious !== false) error(at, 'joinsPrevious - только false (по умолчанию соединяется)');
+    // Подставка слога по знакам (у алифа - хамза на алифе: أ, إ); нет знака - сама буква.
+    const bases = letter?.syllableBases;
+    if (bases !== undefined && (typeof bases !== 'object' || Array.isArray(bases))) error(at, 'syllableBases - объект { <знак>: буква }');
+    else for (const [k, v] of Object.entries(bases ?? {})) {
+      knownMark(`${at} syllableBases`, k);
+      if (!/^[ء-ي]$/.test(v ?? '')) error(at, `syllableBases.${k} - одна арабская буква`);
+    }
     const audio = letter?.audio;
     if (!audio || typeof audio !== 'object' || Array.isArray(audio)) error(at, 'audio - объект { sound, name, <знак>: файл | null }');
     else for (const [k, v] of Object.entries(audio)) {
@@ -507,12 +515,41 @@ function checkReading(file) {
     checkId(at, step ?? {}, i);
     for (const k of Object.keys(step ?? {})) if (!READING_STEP_KEYS.includes(k)) error(at, `неизвестное поле «${k}»`);
     checkTexts(at, step?.translations, READING_STEP_TEXT_KEYS, ['title', 'subtitle']);
+    // Пример справа в списке шагов - необязательный, только арабский.
+    if (step?.example !== undefined && requireString(at, step, 'example')) checkArabic(at, step.example);
     for (const m of step?.marks ?? []) { knownMark(at, m); passed.add(m); }
     // Знак пройден к этому шагу - у каждой буквы нужен его слог (для листа буквы и проверок).
     for (const m of [...passed].filter(m => VOWEL_MARKS.includes(m))) {
       const missing = letters.filter(l => !l?.translations?.[BASE_LANGUAGE]?.syllables?.[m]).map(l => l.letter);
       if (missing.length && (step?.marks ?? []).includes(m)) {
         warn('reading: нет транскрипции слогов', at, `знак ${m} - у ${missing.length} букв (${missing.slice(0, 5).join(' ')}…)`);
+      }
+    }
+    // «Читаем слова»: группы по groupSize, каждое слово - repeat раз; слово - буквы (или подставка хамзы)
+    // и после каждой - пройденный к шагу знак; транскрипция - необязательная (у первой группы).
+    if (step?.words !== undefined) {
+      const w = step.words;
+      const where = `${at} words`;
+      for (const k of Object.keys(w ?? {})) if (!['groupSize', 'repeat', 'items'].includes(k)) error(where, `неизвестное поле «${k}»`);
+      for (const k of ['groupSize', 'repeat']) if (!Number.isInteger(w?.[k]) || w[k] < 1) error(where, `${k} - целое ≥ 1`);
+      const items = Array.isArray(w?.items) ? w.items : (error(where, 'items - массив'), []);
+      const signs = new Map(marks.map(m => [m.sign, m.id]));
+      const bases = new Set(letters.flatMap(l => Object.values(l?.syllableBases ?? {})));
+      const seen = new Set();
+      for (const [j, item] of items.entries()) {
+        const wat = `${where} ${j + 1}`;
+        for (const k of Object.keys(item ?? {})) if (!['arabic', 'translations'].includes(k)) error(wat, `неизвестное поле «${k}»`);
+        if (!requireString(wat, item ?? {}, 'arabic')) continue;
+        if (seen.has(item.arabic)) warn('reading: повтор слова', wat, item.arabic);
+        seen.add(item.arabic);
+        const chars = [...item.arabic];
+        for (let c = 0; c < chars.length; c += 2) {
+          if (!byLetter.has(chars[c]) && !bases.has(chars[c])) { error(wat, `«${item.arabic}»: неизвестная буква «${chars[c]}»`); break; }
+          const mark = signs.get(chars[c + 1]);
+          if (!mark) { error(wat, `«${item.arabic}»: после «${chars[c]}» нет знака`); break; }
+          if (!passed.has(mark)) { error(wat, `«${item.arabic}»: знак ${mark} ещё не пройден`); break; }
+        }
+        if (item.translations !== undefined) checkTexts(wat, item.translations, ['translit'], ['translit']);
       }
     }
     const blocks = Array.isArray(step?.blocks) ? step.blocks : (error(at, 'blocks - массив'), []);
@@ -527,9 +564,15 @@ function checkReading(file) {
         if (ru?.text) checkRussian(where, ru.text);
       }
       if (block.type === 'marks') for (const m of block.marks ?? []) knownMark(where, m);
-      if (block.type === 'letters' || block.type === 'syllables') {
-        if (block.type === 'syllables' && !block.letters?.length) error(where, 'нет букв для слогов');
+      // Без letters - весь алфавит.
+      if (block.type === 'letters' || block.type === 'syllables') for (const l of block.letters ?? []) knownLetter(where, l);
+      // sample - на уроке столько случайных слогов, весь алфавит - отдельным экраном.
+      if (block.type === 'syllables' && block.sample !== undefined && (!Number.isInteger(block.sample) || block.sample < 1)) error(where, 'sample - целое ≥ 1');
+      if (block.type === 'rule') {
+        if (requireString(where, block, 'arabic')) checkArabic(where, block.arabic);
         for (const l of block.letters ?? []) knownLetter(where, l);
+        const ru = checkTexts(where, block.translations, ['translit', 'text'], ['translit', 'text']);
+        if (ru?.text) checkRussian(where, ru.text);
       }
       if (block.type === 'groups') for (const g of block.groups ?? []) for (const l of g ?? []) knownLetter(where, l);
       if (block.type === 'compare') for (const pair of block.pairs ?? []) {
