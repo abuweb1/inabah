@@ -61,6 +61,8 @@ data class Palette(
     val parchmentText: Color = parchmentInk,
     /** Рамка, «✦» и значок «N раз» на пергаменте: у тёмного варианта фона — светлее, иначе не видны. */
     val parchmentAccent: Color = successDeep,
+    /** Выделение буквы в слове на пергаменте («Учимся читать»); цвет - у варианта фона, [ParchmentStyle]. */
+    val parchmentMark: Color = ParchmentStyle.Classic.colors.mark,
     val tabAzkar: Color,
     val tabHadith: Color,
     val tabMakharij: Color,

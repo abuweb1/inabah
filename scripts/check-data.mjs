@@ -417,8 +417,11 @@ const READING_BLOCKS = {
   syllables: ['type', 'letters', 'sample'], compare: ['type', 'pairs'], join: ['type', 'arabic', 'audio', 'translations'],
   zikr: ['type', 'section', 'id', 'syllables', 'translations'],
   rule: ['type', 'arabic', 'letters', 'translations'],
+  forms: ['type', 'groups', 'examples', 'exampleCard'],
 };
-const READING_QUIZ = { syllable: ['type', 'letter', 'mark'], letterName: ['type', 'letter'] };
+const READING_QUIZ = { syllable: ['type', 'letter', 'mark'], letterName: ['type', 'letter'], letterForm: ['type', 'letter', 'form'] };
+// Формы буквы: отдельная, в начале, в середине, в конце слова.
+const READING_FORMS = ['isolated', 'initial', 'medial', 'final'];
 const READING_ALPHABET = 29;
 // Слоги с этими знаками читаются по-своему у каждой буквы - их транскрипция нужна в letters[].syllables.
 const VOWEL_MARKS = ['fatha', 'kasra', 'damma', 'fathatan', 'kasratan', 'dammatan'];
@@ -560,8 +563,10 @@ function checkReading(file) {
       if (!keys) { error(where, `неизвестный тип «${block?.type}»`); continue; }
       for (const k of Object.keys(block)) if (!keys.includes(k)) error(where, `неизвестное поле «${k}»`);
       if (block.type === 'text') {
-        const ru = checkTexts(where, block.translations, ['text'], ['text']);
+        // info - полный текст во всплывающем окне по ⓘ.
+        const ru = checkTexts(where, block.translations, ['text', 'info'], ['text']);
         if (ru?.text) checkRussian(where, ru.text);
+        if (ru?.info) checkRussian(where, ru.info);
       }
       if (block.type === 'marks') for (const m of block.marks ?? []) knownMark(where, m);
       // Без letters - весь алфавит.
@@ -574,7 +579,19 @@ function checkReading(file) {
         const ru = checkTexts(where, block.translations, ['translit', 'text'], ['translit', 'text']);
         if (ru?.text) checkRussian(where, ru.text);
       }
-      if (block.type === 'groups') for (const g of block.groups ?? []) for (const l of g ?? []) knownLetter(where, l);
+      if (block.type === 'groups' || block.type === 'forms') for (const g of block.groups ?? []) for (const l of g ?? []) knownLetter(where, l);
+      // Примеры форм: буква → 3 слова (буква в начале, в середине, в конце); exampleCard - буквы третьей карточки.
+      if (block.type === 'forms') {
+        for (const [l, words] of Object.entries(block.examples ?? {})) {
+          knownLetter(where, l);
+          if (!Array.isArray(words) || words.length !== 3) { error(where, `examples.${l} - 3 слова: начало, середина, конец`); continue; }
+          for (const w of words) {
+            if (typeof w !== 'string' || !w.includes(l)) error(where, `examples.${l}: в слове «${w}» нет буквы ${l}`);
+            else checkArabic(where, w);
+          }
+        }
+        for (const l of block.exampleCard ?? []) if (!block.examples?.[l]) error(where, `exampleCard: у буквы ${l} нет примеров`);
+      }
       if (block.type === 'compare') for (const pair of block.pairs ?? []) {
         if (!Array.isArray(pair) || pair.length !== 2) { error(where, 'pairs - пары из двух вариантов'); continue; }
         for (const v of pair) {
@@ -602,6 +619,12 @@ function checkReading(file) {
       if (!keys) { error(where, `неизвестный тип «${q?.type}»`); continue; }
       for (const k of Object.keys(q)) if (!keys.includes(k)) error(where, `неизвестное поле «${k}»`);
       knownLetter(where, q.letter);
+      // Форма - из списка; буква - в одной из групп forms этого шага (варианты ответа - буквы её группы).
+      if (q.type === 'letterForm') {
+        if (!READING_FORMS.includes(q.form)) error(where, `form «${q.form}» - одно из ${READING_FORMS.join(', ')}`);
+        const groups = (step?.blocks ?? []).filter(b => b?.type === 'forms').flatMap(b => b.groups ?? []);
+        if (!groups.some(g => g.includes(q.letter))) error(where, `буквы «${q.letter}» нет в таблице форм шага`);
+      }
       if (q.type === 'syllable') {
         if (!passed.has(q.mark)) error(where, `знак «${q.mark}» ещё не пройден к этому шагу`);
         if (!byLetter.get(q.letter)?.translations?.[BASE_LANGUAGE]?.syllables?.[q.mark]) {

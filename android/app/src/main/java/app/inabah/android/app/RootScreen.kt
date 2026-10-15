@@ -48,6 +48,7 @@ import app.inabah.android.feature.hadith.HadithHomeScreen
 import app.inabah.android.feature.hadith.HadithListScreen
 import app.inabah.android.feature.makharij.MakharijHomeScreen
 import app.inabah.android.feature.makharij.ReadingAlphabetScreen
+import app.inabah.android.feature.makharij.ReadingLetterFormsScreen
 import app.inabah.android.feature.makharij.ReadingLessonScreen
 import app.inabah.android.feature.makharij.ReadingQuizScreen
 import app.inabah.android.feature.makharij.ReadingStepsScreen
@@ -261,70 +262,87 @@ private fun TabScreens(tab: AppTab, services: AppServices, contentPadding: Paddi
                 )
             }
         }
-        AppTab.Makharij -> TabNavDisplay(router.makharijStack, onBack = { router.pop(AppTab.Makharij) }) {
-            entry<TabRoot> {
-                MakharijHomeScreen(
-                    store = services.readingStore,
-                    progress = services.readingProgress,
-                    onOpenSteps = { router.push(MakharijRoute.Steps) },
-                    contentPadding = contentPadding,
-                )
-            }
-            entry<MakharijRoute.Steps> {
-                ReadingStepsScreen(
-                    store = services.readingStore,
-                    progress = services.readingProgress,
-                    onBack = { router.pop(AppTab.Makharij) },
-                    onOpenStep = { router.push(MakharijRoute.Lesson(it)) },
-                    contentPadding = contentPadding.bottomOnly(),
-                )
-            }
-            entry<MakharijRoute.Lesson> { route ->
-                ReadingLessonScreen(
-                    stepNumber = route.step,
-                    store = services.readingStore,
-                    progress = services.readingProgress,
-                    settings = services.readingSettings,
-                    onBack = { router.pop(AppTab.Makharij) },
-                    onOpenQuiz = { router.push(MakharijRoute.Quiz(route.step)) },
-                    onOpenWords = { router.push(MakharijRoute.Words(route.step)) },
-                    onOpenAlphabet = { router.push(MakharijRoute.Alphabet(route.step)) },
-                    contentPadding = contentPadding.bottomOnly(),
-                )
-            }
-            entry<MakharijRoute.Quiz> { route ->
-                ReadingQuizScreen(
-                    stepNumber = route.step,
-                    store = services.readingStore,
-                    progress = services.readingProgress,
-                    onBack = { router.pop(AppTab.Makharij) },
-                    onOpenStep = { router.open(MakharijRoute.Lesson(it)) },
-                    onOpenSteps = { router.open(MakharijRoute.Steps) },
-                    onOpenWords = { router.open(MakharijRoute.Words(route.step)) },
-                    contentPadding = contentPadding.bottomOnly(),
-                )
-            }
-            entry<MakharijRoute.Alphabet> { route ->
-                ReadingAlphabetScreen(
-                    stepNumber = route.step,
-                    store = services.readingStore,
-                    settings = services.readingSettings,
-                    onBack = { router.pop(AppTab.Makharij) },
-                    contentPadding = contentPadding.bottomOnly(),
-                )
-            }
-            entry<MakharijRoute.Words> { route ->
-                ReadingWordsScreen(
-                    stepNumber = route.step,
-                    store = services.readingStore,
-                    progress = services.readingProgress,
-                    settings = services.readingSettings,
-                    onBack = { router.pop(AppTab.Makharij) },
-                    onOpenStep = { router.open(MakharijRoute.Lesson(it)) },
-                    onOpenQuiz = { router.open(MakharijRoute.Quiz(route.step)) },
-                    onOpenSteps = { router.open(MakharijRoute.Steps) },
-                    contentPadding = contentPadding.bottomOnly(),
-                )
+        AppTab.Makharij -> {
+            val clips by services.clipPlayer.available.collectAsStateWithLifecycle()
+            TabNavDisplay(router.makharijStack, onBack = { router.pop(AppTab.Makharij) }) {
+                entry<TabRoot> {
+                    MakharijHomeScreen(
+                        store = services.readingStore,
+                        progress = services.readingProgress,
+                        onOpenSteps = { router.push(MakharijRoute.Steps) },
+                        contentPadding = contentPadding,
+                    )
+                }
+                entry<MakharijRoute.Steps> {
+                    ReadingStepsScreen(
+                        store = services.readingStore,
+                        progress = services.readingProgress,
+                        onBack = { router.pop(AppTab.Makharij) },
+                        onOpenStep = { router.push(MakharijRoute.Lesson(it)) },
+                        contentPadding = contentPadding.bottomOnly(),
+                    )
+                }
+                entry<MakharijRoute.Lesson> { route ->
+                    ReadingLessonScreen(
+                        stepNumber = route.step,
+                        store = services.readingStore,
+                        progress = services.readingProgress,
+                        settings = services.readingSettings,
+                        onBack = { router.pop(AppTab.Makharij) },
+                        onOpenQuiz = { router.push(MakharijRoute.Quiz(route.step)) },
+                        onOpenWords = { router.push(MakharijRoute.Words(route.step)) },
+                        onOpenAlphabet = { router.push(MakharijRoute.Alphabet(route.step)) },
+                        onOpenLetterForms = { router.push(MakharijRoute.LetterForms(route.step, it)) },
+                        clips = clips,
+                        onPlayClip = services.clipPlayer::play,
+                        contentPadding = contentPadding.bottomOnly(),
+                    )
+                }
+                entry<MakharijRoute.Quiz> { route ->
+                    ReadingQuizScreen(
+                        stepNumber = route.step,
+                        store = services.readingStore,
+                        progress = services.readingProgress,
+                        onBack = { router.pop(AppTab.Makharij) },
+                        onOpenStep = { router.open(MakharijRoute.Lesson(it)) },
+                        onOpenSteps = { router.open(MakharijRoute.Steps) },
+                        onOpenWords = { router.open(MakharijRoute.Words(route.step)) },
+                        contentPadding = contentPadding.bottomOnly(),
+                    )
+                }
+                entry<MakharijRoute.LetterForms> { route ->
+                    ReadingLetterFormsScreen(
+                        stepNumber = route.step,
+                        letter = route.letter,
+                        store = services.readingStore,
+                        onBack = { router.pop(AppTab.Makharij) },
+                        contentPadding = contentPadding.bottomOnly(),
+                        clips = clips,
+                        onPlayClip = services.clipPlayer::play,
+                    )
+                }
+                entry<MakharijRoute.Alphabet> { route ->
+                    ReadingAlphabetScreen(
+                        stepNumber = route.step,
+                        store = services.readingStore,
+                        settings = services.readingSettings,
+                        onBack = { router.pop(AppTab.Makharij) },
+                        contentPadding = contentPadding.bottomOnly(),
+                    )
+                }
+                entry<MakharijRoute.Words> { route ->
+                    ReadingWordsScreen(
+                        stepNumber = route.step,
+                        store = services.readingStore,
+                        progress = services.readingProgress,
+                        settings = services.readingSettings,
+                        onBack = { router.pop(AppTab.Makharij) },
+                        onOpenStep = { router.open(MakharijRoute.Lesson(it)) },
+                        onOpenQuiz = { router.open(MakharijRoute.Quiz(route.step)) },
+                        onOpenSteps = { router.open(MakharijRoute.Steps) },
+                        contentPadding = contentPadding.bottomOnly(),
+                    )
+                }
             }
         }
         AppTab.Settings -> TabNavDisplay(router.settingsStack, onBack = { router.pop(AppTab.Settings) }) {

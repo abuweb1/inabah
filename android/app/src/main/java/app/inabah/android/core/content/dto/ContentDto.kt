@@ -169,6 +169,12 @@ data class ReadingBlockDto(
     val arabic: String? = null,
     /** `syllables`: на уроке - столько случайных слогов, весь алфавит - отдельным экраном. */
     val sample: Int? = null,
+    /** `forms`: буквы карточками (группы похожего написания). */
+    val groups: List<List<String>>? = null,
+    /** `forms`: буква → 3 слова, где она в начале, в середине и в конце. */
+    val examples: Map<String, List<String>> = emptyMap(),
+    /** `forms`: буквы третьей карточки «в словах». */
+    val exampleCard: List<String> = emptyList(),
     val translations: Map<String, ReadingTextTranslationDto> = emptyMap(),
 )
 
@@ -177,6 +183,8 @@ data class ReadingTextTranslationDto(
     val text: String = "",
     /** `rule`: транскрипция названия правила. */
     val translit: String = "",
+    /** `text`: полный текст во всплывающем окне по ⓘ. */
+    val info: String = "",
 )
 
 @Serializable
@@ -184,4 +192,6 @@ data class ReadingQuizDto(
     val type: String,
     val letter: String,
     val mark: String? = null,
+    /** `letterForm`: isolated, initial, medial, final. */
+    val form: String? = null,
 )

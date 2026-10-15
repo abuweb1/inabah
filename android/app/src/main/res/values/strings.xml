@@ -160,9 +160,20 @@
     <string name="makharij_done_verse_reference">Къуран · Тӏа Хӏа 20:114</string>
     <string name="makharij_done_verse_translation">«И скажи: „Господи, прибавь мне знания“»</string>
     <string name="makharij_done_words">Прочитано слов: %1$d, каждое - %2$d раз</string>
+    <string name="makharij_form_final">в конце</string>
+    <string name="makharij_form_final_place">в конце слова</string>
+    <string name="makharij_form_initial">в начале</string>
+    <string name="makharij_form_initial_place">в начале слова</string>
+    <string name="makharij_form_isolated">отдельно</string>
+    <string name="makharij_form_isolated_place">отдельная форма</string>
+    <string name="makharij_form_medial">в середине</string>
+    <string name="makharij_form_medial_place">в середине слова</string>
+    <string name="makharij_forms_position">буква %1$d из %2$d</string>
+    <string name="makharij_forms_title">Формы буквы</string>
     <string name="makharij_home_brand_tagline">МЕСТА ПРОИЗНОШЕНИЯ БУКВ</string>
     <string name="makharij_home_verse_reference">Къуран · аль-Муззаммиль 73:4</string>
     <string name="makharij_home_verse_translation">«И читай Коран размеренным чтением»</string>
+    <string name="makharij_info_more">Подробнее</string>
     <string name="makharij_lesson_check">Проверить себя</string>
     <string name="makharij_lesson_done">Готово</string>
     <string name="makharij_lesson_soon_message">Содержание этого шага ещё пишется.</string>
@@ -175,6 +186,7 @@
     <string name="makharij_quiz_done_message">Ответы на все вопросы даны - шаг отмечен пройденным.</string>
     <string name="makharij_quiz_done_title">Шаг пройден</string>
     <string name="makharij_quiz_done_words">Ответы на все вопросы даны. Осталось прочитать слова - тогда шаг будет пройден и откроется следующий.</string>
+    <string name="makharij_quiz_explain_form">Это %1$s, %2$s.</string>
     <string name="makharij_quiz_explain_letter">Это %1$s, звук «%2$s».</string>
     <string name="makharij_quiz_explain_syllable">%1$s - %2$s, она даёт звук «%3$s».</string>
     <string name="makharij_quiz_finish">Завершить</string>
@@ -198,6 +210,7 @@
     <string name="makharij_steps_progress">пройдено %1$d из %2$d</string>
     <string name="makharij_translit_hide">Скрыть транскрипцию</string>
     <string name="makharij_translit_show">Показать транскрипцию</string>
+    <string name="makharij_word_listen">Послушать</string>
     <string name="makharij_words_count">%1$d/%2$d</string>
     <string name="makharij_words_done_message">Шаг пройден - следующий открыт.</string>
     <string name="makharij_words_done_quiz">Осталось ответить на вопросы урока - тогда шаг будет пройден.</string>

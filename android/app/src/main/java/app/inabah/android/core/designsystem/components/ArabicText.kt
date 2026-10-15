@@ -7,6 +7,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
@@ -47,6 +48,18 @@ private const val EXTRA_LINE_SPACING = 0.3f
 @Composable
 fun ArabicText(
     text: String,
+    size: Float,
+    color: Color,
+    modifier: Modifier = Modifier,
+    bold: Boolean = false,
+    textAlign: TextAlign = TextAlign.Start,
+    maxLines: Int = Int.MAX_VALUE,
+) = ArabicText(AnnotatedString(text), size, color, modifier, bold, textAlign, maxLines)
+
+/** То же с выделением частей текста (цвет буквы в слове-примере). */
+@Composable
+fun ArabicText(
+    text: AnnotatedString,
     size: Float,
     color: Color,
     modifier: Modifier = Modifier,

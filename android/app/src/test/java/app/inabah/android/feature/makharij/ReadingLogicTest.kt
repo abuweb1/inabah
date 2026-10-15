@@ -1,6 +1,7 @@
 package app.inabah.android.feature.makharij
 
 import app.inabah.android.core.content.loadAssetCourse
+import app.inabah.android.core.content.model.LetterForm
 import app.inabah.android.core.content.model.ReadingQuestion
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
@@ -55,7 +56,8 @@ class ReadingLogicTest {
 
         assertEquals(1, currentStep(course, emptySet())?.number)
         assertEquals(2, currentStep(course, setOf(1))?.number)
-        assertNull(currentStep(course, setOf(1, 2)), "шаги 3-10 без урока пропускаются")
+        assertEquals(3, currentStep(course, setOf(1, 2))?.number)
+        assertNull(currentStep(course, setOf(1, 2, 3)), "шаги 4-10 без урока пропускаются")
         assertNull(currentStep(course, withLessons.toSet()))
         assertEquals(0.2, completedFraction(course, setOf(1, 2, 99)))
     }
@@ -101,5 +103,33 @@ class ReadingLogicTest {
         assertEquals(12, sample.map { it.first }.distinct().size)
         assertEquals(true, sample.all { it.second in table.marks })
         assertEquals(sample, sampleSyllables(table.letters, table.marks, 12, seed = 7))
+    }
+
+    @Test
+    fun `Буква по форме — варианты из её карточки похожего написания`() = runTest {
+        val course = loadAssetCourse()
+        val questions = course.step(3)!!.quiz.filterIsInstance<ReadingQuestion.LetterInForm>()
+        val tha = questions.first { it.letter.letter == "ث" }
+        val khaa = questions.first { it.letter.letter == "خ" }
+
+        assertEquals(listOf("Та", "Са", "Нун"), quizOptions(course, tha, 3).map { it.text })
+        assertEquals(listOf("Джим", "Хьа", "Хо"), quizOptions(course, khaa, 3).map { it.text }, "карточка ج ح خ")
+        assertEquals(1, quizOptions(course, khaa, 3).count { it.isCorrect })
+    }
+
+    @Test
+    fun `Буква в слове-примере — диапазон буквы со знаком по её месту`() {
+        assertEquals(0..1, letterRange("بَحَثَ", "ب", LetterForm.Initial))
+        assertEquals(2..3, letterRange("جَبُنَ", "ب", LetterForm.Medial))
+        assertEquals(4..5, letterRange("ثَبَتَ", "ت", LetterForm.Final))
+        assertEquals(2..3, letterRange("لِيَرِثَ", "ي", LetterForm.Medial))
+        assertNull(letterRange("بَحَثَ", "ب", LetterForm.Final))
+    }
+
+    @Test
+    fun `Имя записи слова-примера — шаг, номер буквы и место`() = runTest {
+        val ba = loadAssetCourse().letters.first { it.letter == "ب" }
+
+        assertEquals("reading_s03_02_medial.m4a", formExampleAudio(3, ba, LetterForm.Medial))
     }
 }

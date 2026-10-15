@@ -16,6 +16,7 @@ enum class ParchmentStyle(val key: String, val colors: ParchmentColors) {
         ParchmentColors(
             light = Color(0xFFF5D07A), highlight = Color(0xFFECC87B), mid = Color(0xFFF3D080),
             deep = Color(0xFFE8C068), text = Color(0xFF1A1208),
+            mark = Color(0xFF961F14),
         ),
     ),
     /** Тёплая старая бумага — к «Янтарной» палитре. */
@@ -25,6 +26,7 @@ enum class ParchmentStyle(val key: String, val colors: ParchmentColors) {
             light = Color(0xFFE9D2AE), highlight = Color(0xFFDEC39A), mid = Color(0xFFD9BD94),
             // Акцент темнее обычного: на самом тёмном оттенке сепии successDeep даёт 4,35 < 4,5.
             deep = Color(0xFFC9A97C), text = Color(0xFF2B1D10), accent = Color(0xFF1F4A2A),
+            mark = Color(0xFF80190F),
         ),
     ),
 
@@ -38,6 +40,7 @@ enum class ParchmentStyle(val key: String, val colors: ParchmentColors) {
             light = Color(0xFF4A3A6E), highlight = Color(0xFF54427C), mid = Color(0xFF46376A),
             // Золото, а не зелёный: светло-зелёный на самом светлом оттенке давал 4,43 < 4,5.
             deep = Color(0xFF3B2E5C), text = Color(0xFFF3EEFA), accent = Color(0xFFECC87B),
+            mark = Color(0xFFFFB45C),
         ),
     ),
 
@@ -47,6 +50,7 @@ enum class ParchmentStyle(val key: String, val colors: ParchmentColors) {
         ParchmentColors(
             light = Color(0xFF1C4D40), highlight = Color(0xFF21584A), mid = Color(0xFF1B4A3D),
             deep = Color(0xFF153D32), text = Color(0xFFEDF7F2), accent = Color(0xFFECC87B),
+            mark = Color(0xFFFFB45C),
         ),
     ),
 
@@ -59,6 +63,7 @@ enum class ParchmentStyle(val key: String, val colors: ParchmentColors) {
         ParchmentColors(
             light = Color(0xFF5A3818), highlight = Color(0xFF664020), mid = Color(0xFF553415),
             deep = Color(0xFF472B10), text = Color(0xFFF8EEDF), accent = Color(0xFFECC87B),
+            mark = Color(0xFF8FD3FF),
         ),
     ),
 
@@ -69,6 +74,7 @@ enum class ParchmentStyle(val key: String, val colors: ParchmentColors) {
             light = Color(0xFF3A414F), highlight = Color(0xFF434B5B), mid = Color(0xFF39404D),
             // Светлее цвета вкладки «Настройки» (8FB4F0 давал 4,15 < 4,5).
             deep = Color(0xFF2F3541), text = Color(0xFFEEF1F6), accent = Color(0xFFB4CBF4),
+            mark = Color(0xFFFFB45C),
         ),
     ),
 
@@ -78,6 +84,7 @@ enum class ParchmentStyle(val key: String, val colors: ParchmentColors) {
         ParchmentColors(
             light = Color(0xFF2E2A40), highlight = Color(0xFF352F4C), mid = Color(0xFF2B2640),
             deep = Color(0xFF221E34), text = Color(0xFFF0EAF8), accent = Color(0xFF6DBF7E),
+            mark = Color(0xFFFFB45C),
         ),
     ),
     ;
@@ -86,6 +93,9 @@ enum class ParchmentStyle(val key: String, val colors: ParchmentColors) {
         fun fromKey(key: String): ParchmentStyle? = entries.firstOrNull { it.key == key }
     }
 }
+
+/** Выделение буквы по умолчанию - как у «Пергамента». */
+private val DEFAULT_MARK = Color(0xFF961F14)
 
 /** Тёмно-зелёный акцент пергамента — [Palette.successDeep]. */
 private val DEFAULT_ACCENT = Color(0xFF2A5C35)
@@ -99,6 +109,11 @@ data class ParchmentColors(
     val text: Color,
     /** Рамка, «✦» и значок «N раз»; по умолчанию — successDeep, как раньше. */
     val accent: Color = DEFAULT_ACCENT,
+    /**
+     * Выделение буквы в слове-примере («Учимся читать», 2026-10-15): другой оттенок, чем текст и рамка -
+     * на светлых тёмно-красный, на тёмных тёплый оранжевый, на янтарном голубой; контраст к фону ≥ 4,5:1.
+     */
+    val mark: Color = DEFAULT_MARK,
 ) {
     /** Все оттенки фона — для проверки контраста текста. */
     val backgrounds: List<Color> get() = listOf(light, highlight, mid, deep)
@@ -119,6 +134,7 @@ fun Theme.withParchment(style: ParchmentStyle): Theme {
         parchmentDeep = colors.deep,
         parchmentText = colors.text,
         parchmentAccent = colors.accent,
+        parchmentMark = colors.mark,
     )
     return Theme(parchmentPalette, gradients.copy(parchment = ThemeGradients.parchment(parchmentPalette)))
 }

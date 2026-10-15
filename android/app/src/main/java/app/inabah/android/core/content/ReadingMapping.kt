@@ -4,6 +4,8 @@ import app.inabah.android.core.content.dto.ReadingBlockDto
 import app.inabah.android.core.content.dto.ReadingFileDto
 import app.inabah.android.core.content.dto.ReadingQuizDto
 import app.inabah.android.core.content.dto.ReadingStepDto
+import app.inabah.android.core.content.model.FormExamples
+import app.inabah.android.core.content.model.LetterForm
 import app.inabah.android.core.content.model.ReadingBlock
 import app.inabah.android.core.content.model.ReadingCourse
 import app.inabah.android.core.content.model.ReadingLetter
@@ -19,6 +21,7 @@ import app.inabah.android.core.content.model.ReadingWords
 // их добавят будущие версии данных.
 
 private const val EXAMPLE_LETTER = "ب"
+private const val FORM_EXAMPLES = 3
 
 internal fun ReadingFileDto.toReadingCourse(priority: ContentLanguagePriority): ReadingCourse {
     val marks = marks.map { dto ->
@@ -62,7 +65,11 @@ internal fun ReadingFileDto.toReadingCourse(priority: ContentLanguagePriority): 
             blocks = dto.blocks.mapNotNull { block ->
                 block.toBlock(dto, learnedMarks, priority, ::mark, ::letter, letters)
             },
-            quiz = dto.quiz.mapNotNull { it.toQuestion(::mark, ::letter) },
+            quiz = dto.quiz.mapNotNull { quiz ->
+                // Варианты «буквы по форме» - буквы её карточки в таблице форм шага.
+                val formGroups = dto.blocks.filter { it.type == "forms" }.flatMap { it.groups.orEmpty() }
+                quiz.toQuestion(::mark, ::letter) { char -> formGroups.firstOrNull { char in it }.orEmpty().map(::letter) }
+            },
             words = dto.words?.let { words ->
                 ReadingWords(
                     groupSize = words.groupSize,
@@ -89,7 +96,17 @@ private fun ReadingBlockDto.toBlock(
     letter: (String) -> ReadingLetter,
     alphabet: List<ReadingLetter>,
 ): ReadingBlock? = when (type) {
-    "text" -> ReadingBlock.Text(priority.require(translations, "шаг ${step.id}, текст").text)
+    "text" -> priority.require(translations, "шаг ${step.id}, текст").let {
+        ReadingBlock.Text(it.text, it.info.trim().ifEmpty { null })
+    }
+    "forms" -> ReadingBlock.Forms(
+        groups = groups.orEmpty().map { group -> group.map(letter) },
+        examples = examples.mapNotNull { (char, words) ->
+            if (words.size != FORM_EXAMPLES) return@mapNotNull null
+            letter(char) to FormExamples(words[0], words[1], words[2])
+        }.toMap(),
+        exampleCard = exampleCard.map(letter),
+    )
     // Знаки - на первой букве таблицы слогов шага без подставки (у алифа знак - на хамзе), иначе на «ب».
     "marks" -> ReadingBlock.Marks(
         marks = marks.map(mark),
@@ -120,7 +137,13 @@ private fun ReadingBlockDto.toBlock(
 private fun ReadingQuizDto.toQuestion(
     findMark: (String) -> ReadingMark,
     findLetter: (String) -> ReadingLetter,
+    formGroup: (String) -> List<ReadingLetter>,
 ): ReadingQuestion? = when (type) {
+    "letterForm" -> ReadingQuestion.LetterInForm(
+        letter = findLetter(letter),
+        form = requireNotNull(form?.let(LetterForm::of)) { "reading.json: неизвестная форма $form" },
+        group = formGroup(letter).ifEmpty { listOf(findLetter(letter)) },
+    )
     "syllable" -> ReadingQuestion.Syllable(
         findLetter(letter),
         findMark(requireNotNull(mark) { "reading.json: вопрос «syllable» без знака" }),

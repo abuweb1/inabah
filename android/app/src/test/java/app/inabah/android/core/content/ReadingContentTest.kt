@@ -1,5 +1,6 @@
 package app.inabah.android.core.content
 
+import app.inabah.android.core.content.model.LetterForm
 import app.inabah.android.core.content.model.ReadingBlock
 import app.inabah.android.core.content.model.ReadingCourse
 import app.inabah.android.core.content.model.ReadingQuestion
@@ -100,6 +101,31 @@ class ReadingContentTest {
         assertTrue(words.items.take(12).all { it.transliteration != null })
         assertTrue(words.items.drop(12).all { it.transliteration == null })
         assertEquals("зарода", words.items.first().transliteration)
+    }
+
+    @Test
+    fun `Формы букв строятся из буквы — у несоединяемых и хамзы без лишних хвостов`() = runTest {
+        val letters = loadAssetCourse().letters.associateBy { it.letter }
+        val ba = letters.getValue("ب")
+        val ra = letters.getValue("ر")
+        val hamza = letters.getValue("ء")
+
+        assertEquals(listOf("ب", "بـ", "ـبـ", "ـب"), LetterForm.entries.map { ba.form(it) })
+        assertEquals(listOf("ر", "ر", "ـر", "ـر"), LetterForm.entries.map { ra.form(it) })
+        assertEquals(List(4) { "ء" }, LetterForm.entries.map { hamza.form(it) })
+    }
+
+    @Test
+    fun `Шаг 3 — формы группы 1 карточками, пояснение по ⓘ, 8 вопросов по форме, 60 слов`() = runTest {
+        val step = requireNotNull(loadAssetCourse().step(3))
+
+        val forms = step.blocks.filterIsInstance<ReadingBlock.Forms>().single()
+        assertEquals(listOf("ب ت ث ن ي", "ج ح خ"), forms.groups.map { group -> group.joinToString(" ") { it.letter } })
+        assertEquals(8, forms.examples.size, "слова-примеры у каждой буквы группы")
+        assertEquals(listOf("ب", "ن", "ج"), forms.exampleCard.map { it.letter })
+        assertTrue(step.blocks.filterIsInstance<ReadingBlock.Text>().single().info != null)
+        assertEquals(8, step.quiz.filterIsInstance<ReadingQuestion.LetterInForm>().size)
+        assertEquals(60, step.words?.items?.size)
     }
 
     private fun TestScope.repository(json: String) = AssetContentRepository(

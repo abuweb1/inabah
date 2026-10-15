@@ -1,5 +1,6 @@
 package app.inabah.android.feature.makharij
 
+import app.inabah.android.core.content.model.LetterForm
 import app.inabah.android.core.content.model.ReadingCourse
 import app.inabah.android.core.content.model.ReadingLetter
 import app.inabah.android.core.content.model.ReadingMark
@@ -77,6 +78,13 @@ fun quizOptions(course: ReadingCourse, question: ReadingQuestion, stepNumber: In
                 QuizOption(letter.transliteration(mark).orEmpty(), mark.id == question.mark.id)
             }
         }
+        // Буквы карточки похожего написания: она и соседние (в карточке из 3 - все).
+        is ReadingQuestion.LetterInForm -> {
+            val group = question.group
+            val index = group.indexOf(question.letter).coerceAtLeast(0)
+            val start = (index - 1).coerceIn(0, (group.size - OPTION_COUNT).coerceAtLeast(0))
+            group.drop(start).take(OPTION_COUNT).map { QuizOption(it.name, it == question.letter) }
+        }
         is ReadingQuestion.LetterName -> {
             val letters = course.letters
             val index = letters.indexOf(question.letter)
@@ -136,3 +144,36 @@ fun sampleSyllables(
     val random = kotlin.random.Random(seed)
     return letters.shuffled(random).take(count).map { it to marks.random(random) }
 }
+
+/**
+ * Где в слове подсветить букву [letter] формы [form]: диапазон символов буквы вместе с её знаками.
+ * Начало - первая буква, конец - последняя, середина - первая такая буква не с краю. Нет - `null`.
+ */
+fun letterRange(word: String, letter: String, form: LetterForm): IntRange? {
+    // Буквы слова: позиция и длина вместе со следующими за буквой знаками огласовки.
+    val units = mutableListOf<IntRange>()
+    var i = 0
+    while (i < word.length) {
+        var end = i + 1
+        while (end < word.length && word[end] in HARAKAT) end++
+        units += i until end
+        i = end
+    }
+    val matches = units.withIndex().filter { word.substring(it.value.first, it.value.first + 1) == letter }
+    return when (form) {
+        LetterForm.Initial -> matches.firstOrNull { it.index == 0 }
+        LetterForm.Final -> matches.lastOrNull { it.index == units.lastIndex }
+        LetterForm.Medial -> matches.firstOrNull { it.index != 0 && it.index != units.lastIndex }
+        LetterForm.Isolated -> null
+    }?.value
+}
+
+/** Знаки огласовки (U+064B…U+0652) и кинжальный алиф. */
+private val HARAKAT = ('\u064B'..'\u0652').toSet() + '\u0670'
+
+/**
+ * Запись слова-примера формы буквы (docs/process/audio.md, раздел 5): `reading_s03_02_medial.m4a` -
+ * шаг 3, буква 2 (ب), слово, где она в середине.
+ */
+fun formExampleAudio(step: Int, letter: ReadingLetter, form: LetterForm): String =
+    "reading_s%02d_%02d_%s.m4a".format(step, letter.number, form.id)

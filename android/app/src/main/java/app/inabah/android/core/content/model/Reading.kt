@@ -65,6 +65,21 @@ data class ReadingLetter(
 ) {
     private fun base(mark: ReadingMark): String = syllableBases[mark.id] ?: letter
 
+    /**
+     * Форма буквы в слове, с татвилем на месте соседних букв: начало `بـ`, середина `ـبـ`, конец `ـب`.
+     * Не соединяется со следующей (ا د ذ ر ز و) - без правого хвоста; хамза ни с чем - всегда одна буква.
+     */
+    fun form(form: LetterForm): String {
+        val before = if (joinsPrevious) TATWEEL else ""
+        val after = if (joinsNext) TATWEEL else ""
+        return when (form) {
+            LetterForm.Isolated -> letter
+            LetterForm.Initial -> letter + after
+            LetterForm.Medial -> before + letter + after
+            LetterForm.Final -> before + letter
+        }
+    }
+
     /** Слог: буква (или её подставка) и знак (`لَ`, у алифа `إِ`). */
     fun syllable(mark: ReadingMark): String = base(mark) + mark.sign
 
@@ -83,6 +98,29 @@ data class ReadingLetter(
 
     companion object {
         const val TATWEEL = "ـ"
+    }
+}
+
+/** Форма буквы по месту в слове; [id] - как в `reading.json`. */
+enum class LetterForm(val id: String) {
+    Isolated("isolated"),
+    Initial("initial"),
+    Medial("medial"),
+    Final("final"),
+    ;
+
+    companion object {
+        fun of(id: String): LetterForm? = entries.firstOrNull { it.id == id }
+    }
+}
+
+/** Слова-примеры буквы: она в начале, в середине и в конце слова. */
+data class FormExamples(val initial: String, val medial: String, val final: String) {
+    fun word(form: LetterForm): String? = when (form) {
+        LetterForm.Initial -> initial
+        LetterForm.Medial -> medial
+        LetterForm.Final -> final
+        LetterForm.Isolated -> null
     }
 }
 
@@ -116,7 +154,20 @@ data class ReadingWord(val arabic: String, val transliteration: String?)
 
 /** Блок урока; неизвестные типы данных сюда не попадают. */
 sealed interface ReadingBlock {
-    data class Text(val text: String) : ReadingBlock
+    /** Короткий текст; [info] - полный, во всплывающем окне по ⓘ. */
+    data class Text(val text: String, val info: String? = null) : ReadingBlock
+
+    /**
+     * Таблица форм: карточки по группам похожего написания, ряд - буква, столбцы - 4 формы; [examples] -
+     * слова, где буква в начале, в середине и в конце; [exampleCard] - буквы третьей карточки «в словах».
+     */
+    data class Forms(
+        val groups: List<List<ReadingLetter>>,
+        val examples: Map<ReadingLetter, FormExamples> = emptyMap(),
+        val exampleCard: List<ReadingLetter> = emptyList(),
+    ) : ReadingBlock {
+        val letters: List<ReadingLetter> get() = groups.flatten()
+    }
 
     /** Знаки с названием и звуком, на примере [example]. */
     data class Marks(val marks: List<ReadingMark>, val example: ReadingLetter) : ReadingBlock
@@ -150,4 +201,11 @@ sealed interface ReadingQuestion {
 
     /** «Какая это буква?». */
     data class LetterName(override val letter: ReadingLetter) : ReadingQuestion
+
+    /** «Какая это буква?» по одной форме; варианты - буквы её группы похожего написания ([group]). */
+    data class LetterInForm(
+        override val letter: ReadingLetter,
+        val form: LetterForm,
+        val group: List<ReadingLetter>,
+    ) : ReadingQuestion
 }

@@ -1,5 +1,16 @@
 package app.inabah.android.feature.makharij
 
+import app.inabah.android.core.designsystem.Motion
+import androidx.compose.ui.zIndex
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.ui.res.painterResource
+import app.inabah.android.core.designsystem.components.BareIconButton
+import app.inabah.android.core.designsystem.components.PopoverPlacement
+import app.inabah.android.core.designsystem.components.AnchoredPopover
+import app.inabah.android.core.content.model.LetterForm
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.width
 import androidx.compose.ui.graphics.graphicsLayer
@@ -80,8 +91,12 @@ fun ReadingLessonScreen(
     onOpenQuiz: () -> Unit,
     onOpenWords: () -> Unit,
     onOpenAlphabet: () -> Unit,
+    onOpenLetterForms: (String) -> Unit,
     contentPadding: PaddingValues,
     modifier: Modifier = Modifier,
+    /** Записи в сборке и их проигрывание (`ClipPlayer`): слова-примеры форм. */
+    clips: Set<String> = emptySet(),
+    onPlayClip: (String) -> Unit = {},
 ) {
     val hidden by settings.transliterationHidden.collectAsStateWithLifecycle()
     // Открытый лист - номер буквы: переживает поворот и смерть процесса.
@@ -135,6 +150,9 @@ fun ReadingLessonScreen(
                         onLetter = { sheetLetter = it.number },
                         onOpenWords = onOpenWords,
                         onOpenAlphabet = onOpenAlphabet,
+                        onOpenLetterForms = onOpenLetterForms,
+                        clips = clips,
+                        onPlayClip = onPlayClip,
                         onFinish = {
                             if (current.quiz.isEmpty()) {
                                 progress.markLessonDone(current.number)
@@ -171,6 +189,9 @@ private fun LessonContent(
     onLetter: (ReadingLetter) -> Unit,
     onOpenWords: () -> Unit,
     onOpenAlphabet: () -> Unit,
+    onOpenLetterForms: (String) -> Unit,
+    clips: Set<String>,
+    onPlayClip: (String) -> Unit,
     onFinish: () -> Unit,
     contentPadding: PaddingValues,
 ) {
@@ -187,7 +208,9 @@ private fun LessonContent(
             step.example?.let { LessonHero(it) }
             for (block in step.blocks) {
                 when (block) {
-                    is ReadingBlock.Text -> TextBlock(block.text)
+                    is ReadingBlock.Text -> TextBlock(block.text, block.info)
+                // Нажатие на букву таблицы - экран буквы (вариант B), не лист: новичку нужна вся картина.
+                is ReadingBlock.Forms -> FormsTable(block, step.number, clips, onPlayClip) { onOpenLetterForms(it.letter) }
                     is ReadingBlock.Marks -> MarksBlock(block.marks, block.example)
                     is ReadingBlock.Letters -> LettersGrid(block.letters, onLetter, playing = playing)
                     is ReadingBlock.Syllables -> if (block.sample != null) {
@@ -213,17 +236,152 @@ private fun LessonContent(
 
 /** Абзац объяснения - категория «перевод» (растёт с «Размером текста»). */
 @Composable
-private fun TextBlock(text: String) {
+private fun TextBlock(text: String, info: String?) {
     val colors = readingColors
-    Text(
-        withArabicRuns(text),
-        color = InabahTheme.palette.onAccent,
-        style = InabahType.contentTranslation,
-        modifier = Modifier
+    Row(
+        Modifier
             .fillMaxWidth()
             .surface(colors.tile, Radius.card, border = colors.tileBorder)
-            .padding(horizontal = Spacing.xl, vertical = Spacing.m),
-    )
+            .padding(start = Spacing.xl, end = if (info != null) Spacing.xs else Spacing.xl, top = Spacing.m, bottom = Spacing.m),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            withArabicRuns(text),
+            color = InabahTheme.palette.onAccent,
+            style = InabahType.contentTranslation,
+            modifier = Modifier.weight(1f),
+        )
+        // Полный текст - по ⓘ во всплывающем окне, чтобы не загружать экран (решение пользователя 2026-10-15).
+        info?.let { InfoButton(it) }
+    }
+}
+
+/** ⓘ и всплывающее окно с текстом - как подтверждение сброса в настройках. */
+@Composable
+private fun InfoButton(info: String) {
+    val colors = readingColors
+    var expanded by rememberSaveable { mutableStateOf(false) }
+    Box {
+        BareIconButton(
+            onClick = { expanded = true },
+            icon = painterResource(R.drawable.ic_info),
+            contentDescription = stringResource(R.string.makharij_info_more),
+            foreground = colors.tint,
+        )
+        AnchoredPopover(expanded, PopoverPlacement.BelowEnd, colors.tint, onDismiss = { expanded = false }) {
+            Text(
+                info,
+                color = InabahTheme.palette.onAccent,
+                style = InabahType.contentTranslation,
+                modifier = Modifier.widthIn(max = InfoMaxWidth).padding(Spacing.xl),
+            )
+        }
+    }
+}
+
+/**
+ * Таблица форм (вариант A, решение пользователя 2026-10-15): карточки пергамента по группам похожего
+ * написания (ب ت ث ن ي, ج ح خ), ряд - буква, столбцы справа налево - отдельно, в начале, в середине,
+ * в конце. Формы строит буква сама. Нажатие - лист буквы.
+ */
+@Composable
+private fun FormsTable(
+    block: ReadingBlock.Forms,
+    stepNumber: Int,
+    clips: Set<String>,
+    onPlayClip: (String) -> Unit,
+    onLetter: (ReadingLetter) -> Unit,
+) {
+    val groups = block.groups
+    val palette = InabahTheme.palette
+    val colors = readingColors
+    Column(verticalArrangement = Arrangement.spacedBy(Spacing.m)) {
+        groups.forEachIndexed { index, group ->
+            ParchmentPanel(topCornerRadius = Radius.card, bottomCornerRadius = Radius.card) {
+                CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+                    Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+                        // Подписи столбцов - только над первой карточкой.
+                        if (index == 0) {
+                            Row(horizontalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+                                for (form in LetterForm.entries) {
+                                    Text(
+                                        stringResource(form.column),
+                                        color = colors.parchmentCaption,
+                                        style = InabahType.caption2,
+                                        textAlign = TextAlign.Center,
+                                        maxLines = 1,
+                                        modifier = Modifier.weight(1f),
+                                    )
+                                }
+                            }
+                        }
+                        for (letter in group) {
+                            Row(horizontalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+                                for (form in LetterForm.entries) {
+                                    val interaction = remember { MutableInteractionSource() }
+                                    val place = stringResource(form.place)
+                                    Box(
+                                        Modifier
+                                            .weight(1f)
+                                            .clickable(interaction, indication = null, role = Role.Button) { onLetter(letter) }
+                                            .pressFeedback(interaction, scale = PressFeedback.ICON_SCALE)
+                                            .surface(colors.parchmentCell, Radius.box, border = colors.parchmentCellBorder)
+                                            .padding(top = Spacing.xs)
+                                            .clearAndSetSemantics { contentDescription = "${letter.name}, $place" },
+                                        contentAlignment = Alignment.Center,
+                                    ) {
+                                        ArabicText(letter.form(form), FORM_SIZE, palette.parchmentText, bold = true, maxLines = 1)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        // Третья карточка - «в словах» (просьба пользователя 2026-10-15): буква и слова, где она
+        // в начале, в середине и в конце, в тех же столбцах; буква в слове подсвечена.
+        if (block.exampleCard.isNotEmpty()) {
+            ParchmentPanel(topCornerRadius = Radius.card, bottomCornerRadius = Radius.card) {
+                CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+                    Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+                        for (letter in block.exampleCard) {
+                            val examples = block.examples[letter] ?: continue
+                            // Отдельная буква - узкая ячейка, слова - шире и крупнее; ряд одной высоты.
+                            Row(Modifier.height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+                                val interaction = remember { MutableInteractionSource() }
+                                Box(
+                                    Modifier
+                                        .weight(ISOLATED_WEIGHT)
+                                        .fillMaxHeight()
+                                        .clickable(interaction, indication = null, role = Role.Button) { onLetter(letter) }
+                                        .pressFeedback(interaction, scale = PressFeedback.ICON_SCALE)
+                                        .surface(colors.parchmentCell, Radius.box, border = colors.parchmentCellBorder)
+                                        .clearAndSetSemantics { contentDescription = letter.name },
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    ArabicText(letter.letter, FORM_SIZE, palette.parchmentText, bold = true, maxLines = 1)
+                                }
+                                for (form in PLACED_FORMS) {
+                                    ExampleWordCell(
+                                        word = examples.word(form).orEmpty(),
+                                        letter = letter,
+                                        form = form,
+                                        audioFile = formExampleAudio(stepNumber, letter, form),
+                                        clips = clips,
+                                        onPlay = onPlayClip,
+                                        size = FORM_WORD_SIZE,
+                                        modifier = Modifier.weight(WORD_WEIGHT).fillMaxHeight(),
+                                        onClickWithoutAudio = { onLetter(letter) },
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 /** Знаки на одной букве: слог, название, «над буквой · «а»». */
@@ -324,9 +482,17 @@ private fun LettersGrid(
                 Row(horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
                     for (letter in row) {
                         val interaction = remember { MutableInteractionSource() }
+                        // Звучащая буква «Послушать алфавит» - крупнее и поверх соседей (просьба пользователя).
+                        val isPlaying = letter == playing
+                        val scale by animateFloatAsState(if (isPlaying) PLAYING_SCALE else 1f, Motion.collapse(), label = "playingScale")
                         Box(
                             Modifier
                                 .weight(1f)
+                                .zIndex(if (isPlaying) 1f else 0f)
+                                .graphicsLayer {
+                                    scaleX = scale
+                                    scaleY = scale
+                                }
                                 .height(tileHeight)
                                 .clickable(interaction, indication = null, role = Role.Button) { onLetter(letter) }
                                 .pressFeedback(interaction, scale = PressFeedback.ICON_SCALE)
@@ -426,12 +592,19 @@ private fun SyllableRows(
 }
 
 private const val LETTER_COLUMNS = 5
+private const val FORM_SIZE = 28f
+private const val FORM_WORD_SIZE = 26f
+private const val ISOLATED_WEIGHT = 0.6f
+private const val WORD_WEIGHT = 1.15f
+private val PLACED_FORMS = listOf(LetterForm.Initial, LetterForm.Medial, LetterForm.Final)
+private val InfoMaxWidth = 300.dp
 private const val SINGLE_LETTER_TILE = 64f
 private const val HERO_SIZE = 46f
 private const val HERO_STAGGER_MILLIS = 350
 private const val HERO_APPEAR_MILLIS = 500
 /** «Послушать алфавит» без записей - сколько подсвечена буква. */
-private const val LETTER_MILLIS = 1_200L
+private const val LETTER_MILLIS = 2_000L
+private const val PLAYING_SCALE = 1.2f
 private const val SYLLABLE_ROWS_PER_CARD = 4
 private const val SAMPLE_COLUMNS = 3
 private const val RULE_LETTER_COLUMNS = 7

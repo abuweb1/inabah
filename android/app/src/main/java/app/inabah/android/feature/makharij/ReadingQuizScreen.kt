@@ -169,7 +169,7 @@ private fun QuizQuestion(
             stringResource(
                 when (question) {
                     is ReadingQuestion.Syllable -> R.string.makharij_quiz_syllable
-                    is ReadingQuestion.LetterName -> R.string.makharij_quiz_letter
+                    is ReadingQuestion.LetterName, is ReadingQuestion.LetterInForm -> R.string.makharij_quiz_letter
                 },
             ),
             color = palette.onAccentSecondary,
@@ -179,6 +179,7 @@ private fun QuizQuestion(
         val arabic = when (question) {
             is ReadingQuestion.Syllable -> question.letter.syllable(question.mark)
             is ReadingQuestion.LetterName -> question.letter.letter
+            is ReadingQuestion.LetterInForm -> question.letter.form(question.form)
         }
         ParchmentTile(arabic, QUESTION_SIZE, Modifier.padding(top = Spacing.m).size(QUESTION_BOX), cornerRadius = Radius.panel)
         Row(
@@ -235,6 +236,11 @@ private fun explanation(question: ReadingQuestion): String = when (question) {
         R.string.makharij_quiz_explain_letter,
         question.letter.name,
         question.letter.sound,
+    )
+    is ReadingQuestion.LetterInForm -> stringResource(
+        R.string.makharij_quiz_explain_form,
+        question.letter.name,
+        stringResource(question.form.place),
     )
 }
 
