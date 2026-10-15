@@ -17,6 +17,9 @@ struct AnchoredPopover<Content: View>: View {
     /// Ширина карточки (вместе с полями содержимого).
     let width: CGFloat
     let tint: Color
+    /// Сколько места нужно над элементом; меньше — карточка открывается под ним, уголком вверх
+    /// (Android: переворот, если не помещается). `nil` — всегда над элементом.
+    var minSpaceAbove: CGFloat?
     let onDismiss: () -> Void
     @ViewBuilder let content: Content
 
@@ -31,20 +34,29 @@ struct AnchoredPopover<Content: View>: View {
                     .onTapGesture(perform: onDismiss)
                     .accessibilityHidden(true)
                 let x = Self.leading(anchor: anchor, width: width, containerWidth: containerWidth)
+                let below = minSpaceAbove.map { anchor.minY < $0 } ?? false
                 // Переход — последним: SwiftUI берёт переход у самого внешнего вида ветки.
-                card(arrowX: anchor.midX - x)
-                    .frame(width: width)
-                    .padding(.leading, x)
-                    .frame(width: containerWidth, height: max(anchor.minY, 0), alignment: .bottomLeading)
-                    .transition(Self.transition(anchor: anchor, containerWidth: containerWidth))
+                if below {
+                    card(arrowX: anchor.midX - x, pointsUp: true)
+                        .frame(width: width)
+                        .padding(.leading, x)
+                        .padding(.top, anchor.maxY)
+                        .transition(Self.transition(anchor: anchor, containerWidth: containerWidth, below: true))
+                } else {
+                    card(arrowX: anchor.midX - x, pointsUp: false)
+                        .frame(width: width)
+                        .padding(.leading, x)
+                        .frame(width: containerWidth, height: max(anchor.minY, 0), alignment: .bottomLeading)
+                        .transition(Self.transition(anchor: anchor, containerWidth: containerWidth, below: false))
+                }
             }
         }
     }
 
-    private func card(arrowX: CGFloat) -> some View {
-        let shape = PopoverShape(radius: PopoverMetrics.radius, arrowX: arrowX, arrowSize: PopoverMetrics.arrow)
+    private func card(arrowX: CGFloat, pointsUp: Bool) -> some View {
+        let shape = PopoverShape(radius: PopoverMetrics.radius, arrowX: arrowX, arrowSize: PopoverMetrics.arrow, pointsUp: pointsUp)
         return content
-            .padding(.bottom, PopoverMetrics.arrow.height)
+            .padding(pointsUp ? .top : .bottom, PopoverMetrics.arrow.height)
             .fixedTextSize()
             .background {
                 shape
@@ -76,10 +88,10 @@ struct AnchoredPopover<Content: View>: View {
         return min(max(centered, PopoverMetrics.screenMargin), max(containerWidth - PopoverMetrics.screenMargin - width, PopoverMetrics.screenMargin))
     }
 
-    /// Вырастает из верха элемента (остриё уголка) и сжимается туда же. Слой карточки кончается
-    /// у верха элемента — точка роста: середина элемента по ширине, низ слоя.
-    static func transition(anchor: CGRect, containerWidth: CGFloat) -> AnyTransition {
-        let point = UnitPoint(x: containerWidth > 0 ? anchor.midX / containerWidth : 0.5, y: 1)
+    /// Вырастает из края элемента (остриё уголка) и сжимается туда же: над элементом слой карточки
+    /// кончается у его верха — точка роста внизу слоя; под элементом — вверху карточки.
+    static func transition(anchor: CGRect, containerWidth: CGFloat, below: Bool = false) -> AnyTransition {
+        let point = UnitPoint(x: containerWidth > 0 ? anchor.midX / containerWidth : 0.5, y: below ? 0 : 1)
         return .scale(scale: PopoverMetrics.startScale, anchor: point).combined(with: .opacity)
     }
 }
@@ -97,24 +109,32 @@ private enum PopoverMetrics {
     static let startScale: CGFloat = 0.2
 }
 
-/// Скруглённая карточка с уголком снизу; уголок напротив `arrowX`, но не заходит на скругления углов.
+/// Скруглённая карточка с уголком снизу (`pointsUp` — сверху); уголок напротив `arrowX`, но не заходит
+/// на скругления углов.
 nonisolated struct PopoverShape: Shape {
     let radius: CGFloat
     let arrowX: CGFloat
     let arrowSize: CGSize
+    var pointsUp = false
 
     func path(in rect: CGRect) -> Path {
-        let bodyRect = CGRect(x: rect.minX, y: rect.minY, width: rect.width, height: rect.height - arrowSize.height)
+        let bodyRect = CGRect(
+            x: rect.minX,
+            y: pointsUp ? rect.minY + arrowSize.height : rect.minY,
+            width: rect.width,
+            height: rect.height - arrowSize.height
+        )
         let body = Path(roundedRect: bodyRect, cornerRadius: min(radius, bodyRect.height / 2), style: .continuous)
         let half = arrowSize.width / 2
         let lower = rect.minX + radius + half
         let upper = rect.maxX - radius - half
         let center = lower <= upper ? min(max(rect.minX + arrowX, lower), upper) : rect.midX
         // Основание уголка заходит в карточку на 1 — без шва между ними.
-        let base = bodyRect.maxY - 1
+        let base = pointsUp ? bodyRect.minY + 1 : bodyRect.maxY - 1
+        let tip = pointsUp ? rect.minY : rect.maxY
         var arrow = Path()
         arrow.move(to: CGPoint(x: center - half, y: base))
-        arrow.addLine(to: CGPoint(x: center, y: rect.maxY))
+        arrow.addLine(to: CGPoint(x: center, y: tip))
         arrow.addLine(to: CGPoint(x: center + half, y: base))
         arrow.closeSubpath()
         return body.union(arrow)

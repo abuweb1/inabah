@@ -6,28 +6,25 @@ struct AboutView: View {
     @Environment(\.theme) private var theme
 
     var body: some View {
-        Form {
-            Section {
+        SettingsForm {
+            SettingsGroup {
                 AboutHeader()
-                    .settingsRow()
             }
 
             // Отдельной группой сразу под шапкой (как на Android, `10b`).
-            Section {
+            SettingsGroup {
                 NavigationLink(value: SettingsRoute.versionHistory) {
-                    Text("about.versionHistory")
+                    SettingsLinkLabel {
+                        Text("about.versionHistory")
+                    }
                 }
-                .settingsRow()
             }
 
-            Section {
+            SettingsGroup {
                 AboutTextRow(title: "about.sources.azkar.title", text: "about.sources.azkar.text")
-                    .settingsRow()
                 AboutTextRow(title: "about.sources.hadith.title", text: "about.sources.hadith.text")
-                    .settingsRow()
                 // Свои записи (2026-10-12, решение пользователя — без имени).
                 AboutTextRow(title: "about.sources.audio.title", text: "about.sources.audio.text")
-                    .settingsRow()
             } header: {
                 Text("about.sources.header")
             } footer: {
@@ -35,30 +32,28 @@ struct AboutView: View {
                     .foregroundStyle(theme.palette.onAccentSecondary)
             }
 
-            Section {
+            SettingsGroup {
                 ForEach(LicenseDocument.allCases) { document in
                     NavigationLink(value: SettingsRoute.license(document)) {
-                        AboutTextRow(title: document.title, text: document.subtitle)
+                        SettingsLinkLabel {
+                            AboutTextRow(title: document.title, text: document.subtitle)
+                        }
                     }
-                    .settingsRow()
                 }
             } header: {
                 Text("about.licenses.header")
             }
 
-            Section {
+            SettingsGroup {
                 Link(destination: AboutLinks.privacy) {
                     AboutLinkLabel(title: "about.link.privacy")
                 }
-                .settingsRow()
                 Link(destination: AboutLinks.repository) {
                     AboutLinkLabel(title: "about.link.repository")
                 }
-                .settingsRow()
                 Link(destination: AboutLinks.issues) {
                     AboutLinkLabel(title: "about.link.issues")
                 }
-                .settingsRow()
             } header: {
                 Text("about.app.header")
             } footer: {

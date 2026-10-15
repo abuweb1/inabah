@@ -25,14 +25,15 @@ struct HadithSettingsView: View {
     @State private var permissionDenied = false
 
     var body: some View {
-        Form {
+        SettingsForm {
             hadithPageSection
 
-            Section {
+            SettingsGroup {
                 NavigationLink(value: SettingsRoute.hadithOrder) {
-                    Text("settings.hadith.order.title")
+                    SettingsLinkLabel {
+                        Text("settings.hadith.order.title")
+                    }
                 }
-                .settingsRow()
             } header: {
                 Text("settings.hadith.home.header")
             }
@@ -40,18 +41,17 @@ struct HadithSettingsView: View {
             ForEach(order.collections, id: \.self) { collection in
                 let total = store.hadiths(in: collection).count
                 let collectionProgress = progress.progress(in: collection, total: total)
-                Section {
+                SettingsGroup {
                     Text("hadith.list.progress \(collectionProgress.read) \(total) \(collectionProgress.memorized)")
                         .font(.subheadline)
                         .foregroundStyle(theme.palette.onAccentSecondary)
-                        .settingsRow()
                     Button(role: .destructive) {
                         pendingReset = collection
                     } label: {
                         Text("settings.hadith.reset")
                     }
                     .disabled(collectionProgress.read == 0)
-                    .settingsRow()
+                    .confirmationAnchor(collection)
                 } header: {
                     Text(collection.title)
                 }
@@ -59,7 +59,7 @@ struct HadithSettingsView: View {
 
             hadithOfDaySection
 
-            Section {
+            SettingsGroup {
                 Button(role: .destructive) {
                     pendingFavoritesClear = true
                 } label: {
@@ -67,7 +67,7 @@ struct HadithSettingsView: View {
                 }
                 // Неактивна, если закладок нет (правило — как на Android: по сохранённым закладкам).
                 .disabled(favorites.isEmpty)
-                .settingsRow()
+                .confirmationAnchor(true)
             } header: {
                 Text("hadith.favorites.title")
             }
@@ -80,6 +80,7 @@ struct HadithSettingsView: View {
             "settings.hadith.reset.confirm.title",
             item: $pendingReset,
             actionLabel: "settings.hadith.reset.confirm.action",
+            tint: theme.palette.tabHadith,
             message: { Text("settings.hadith.reset.confirm.message \(String(localized: $0.title))") },
             perform: { progress.reset($0) }
         )
@@ -87,6 +88,7 @@ struct HadithSettingsView: View {
             "settings.hadith.favorites.clear.confirm.title",
             item: $pendingFavoritesClear,
             actionLabel: "settings.hadith.favorites.clear.confirm.action",
+            tint: theme.palette.tabHadith,
             message: { _ in Text("settings.hadith.favorites.clear.confirm.message") },
             perform: { _ in favorites.clear() }
         )
@@ -101,7 +103,7 @@ struct HadithSettingsView: View {
     /// «Экран хадиса» — первой группой (как на Android, `11a`): с чем открывается арабский текст.
     /// Подпись — под названием, не под группой.
     private var hadithPageSection: some View {
-        Section {
+        SettingsGroup {
             Toggle(isOn: Binding(get: { reading.hadithArabicCollapsed }, set: reading.setHadithArabicCollapsed)) {
                 VStack(alignment: .leading, spacing: Spacing.xxxs) {
                     Text("settings.hadith.collapseArabic")
@@ -111,8 +113,7 @@ struct HadithSettingsView: View {
                         .foregroundStyle(theme.palette.onAccentSecondary)
                 }
             }
-            .tint(theme.palette.tabHadith)
-            .settingsRow()
+            .choiceToggleStyle(tint: theme.palette.tabHadith)
         } header: {
             Text("settings.hadith.page.header")
         }
@@ -126,21 +127,18 @@ struct HadithSettingsView: View {
         let isOn = reminders.preferences.hadithOfDay
         let blocked = !allowed && (permissionDenied || reminders.preferences.hadithOfDay)
         let toggle = ReminderToggleAction(scheduler: scheduler) { permissionDenied = true }
-        Section {
+        SettingsGroup {
             ReminderToggleRow(title: "settings.hadithOfDay.toggle", subtitle: nil, isOn: isOn, tint: theme.palette.tabHadith) { newValue in
                 toggle(newValue) { reminders.setHadithOfDay($0) }
             }
-            .settingsRow()
             if isOn {
                 DatePicker(selection: hadithTime, displayedComponents: .hourAndMinute) {
                     Text("settings.hadithOfDay.time")
                 }
                 .accessibilityLabel(Text("settings.hadithOfDay.time.description"))
-                .settingsRow()
             }
             if blocked {
                 ReminderOpenSettingsRow()
-                    .settingsRow()
             }
         } header: {
             Text("settings.hadithOfDay.header")

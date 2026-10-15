@@ -14,8 +14,8 @@ struct PaletteSettingsView: View {
     private static let parchmentStyles: [ParchmentStyle] = [.amethyst, .jade, .amber, .smoky, .sepia, .night]
 
     var body: some View {
-        Form {
-            Section {
+        SettingsForm {
+            SettingsGroup {
                 VStack(spacing: Spacing.xlPlus) {
                     tile(.sections)
                     LazyVGrid(columns: SelectionGrid.columns(for: dynamicTypeSize), spacing: Spacing.xlPlus) {
@@ -23,13 +23,12 @@ struct PaletteSettingsView: View {
                     }
                 }
                 .padding(.vertical, Spacing.m)
-                .settingsRow()
             } footer: {
                 Text("settings.palette.footer")
                     .foregroundStyle(theme.palette.onAccentSecondary)
             }
 
-            Section {
+            SettingsGroup {
                 VStack(spacing: Spacing.xlPlus) {
                     parchmentTile(.classic)
                     LazyVGrid(columns: SelectionGrid.columns(for: dynamicTypeSize), spacing: Spacing.xlPlus) {
@@ -37,7 +36,6 @@ struct PaletteSettingsView: View {
                     }
                 }
                 .padding(.vertical, Spacing.m)
-                .settingsRow()
             } header: {
                 Text("settings.parchment.header")
             } footer: {
@@ -45,11 +43,10 @@ struct PaletteSettingsView: View {
                     .foregroundStyle(theme.palette.onAccentSecondary)
             }
 
-            Section {
+            SettingsGroup {
                 // Сдвиг всегда считается от темы без сдвига — палитры и пергамента.
                 TranslationShadeRow(base: settings.style.theme.withParchment(parchmentSettings.style))
                     .padding(.vertical, Spacing.m)
-                    .settingsRow()
             } header: {
                 Text("settings.translationShade.header")
             } footer: {

@@ -27,11 +27,10 @@ struct AzkarSettingsView: View {
     @State private var drafts: [AzkarSection: AzkarWindow] = [:]
 
     var body: some View {
-        Form {
-            Section {
+        SettingsForm {
+            SettingsGroup {
                 ForEach(AzkarSection.allCases, id: \.self) { section in
                     AzkarWindowRow(section: section, window: draft(for: section))
-                        .settingsRow()
                 }
             } header: {
                 Text("settings.window.header")
@@ -48,7 +47,7 @@ struct AzkarSettingsView: View {
 
             remindersSection
 
-            Section {
+            SettingsGroup {
                 ForEach(AzkarSection.allCases, id: \.self) { section in
                     Button(role: .destructive) {
                         pendingReset = section
@@ -56,7 +55,7 @@ struct AzkarSettingsView: View {
                         Text(section.title)
                     }
                     .disabled(!store.hasProgress(of: section))
-                    .settingsRow()
+                    .confirmationAnchor(section)
                 }
             } header: {
                 Text("settings.reset.now.header")
@@ -75,6 +74,7 @@ struct AzkarSettingsView: View {
             "settings.reset.now.confirm.title",
             item: $pendingReset,
             actionLabel: "settings.reset.now.confirm.action",
+            tint: theme.palette.tabAzkar,
             message: { Text($0.resetConfirmationMessage) },
             perform: { store.resetProgress(of: $0) }
         )
@@ -82,6 +82,7 @@ struct AzkarSettingsView: View {
             "settings.azkar.history.reset.confirm.title",
             item: $pendingHistoryReset,
             actionLabel: "settings.reset.now.confirm.action",
+            tint: theme.palette.tabAzkar,
             message: { _ in Text("settings.azkar.history.reset.confirm.message") },
             perform: { _ in
                 history.clear()
@@ -100,14 +101,14 @@ struct AzkarSettingsView: View {
     /// истории; счётчики разделов не трогает. После сброса — пересобрать напоминания: «ещё не прочитаны»
     /// ставятся по истории.
     private var historySection: some View {
-        Section {
+        SettingsGroup {
             Button(role: .destructive) {
                 pendingHistoryReset = .all
             } label: {
                 Text("settings.azkar.history.reset")
             }
             .disabled(history.isEmpty)
-            .settingsRow()
+            .confirmationAnchor(HistoryReset.all)
         } header: {
             Text("settings.azkar.history.header")
         } footer: {
@@ -127,7 +128,7 @@ struct AzkarSettingsView: View {
         let blocked = !allowed
             && (permissionDenied || !preferences.azkarStart.isEmpty || preferences.azkarUnfinished || preferences.azkarStreak)
         let toggle = ReminderToggleAction(scheduler: scheduler) { permissionDenied = true }
-        Section {
+        SettingsGroup {
             ForEach(AzkarSection.allCases, id: \.self) { section in
                 ReminderToggleRow(
                     title: section.title,
@@ -137,7 +138,6 @@ struct AzkarSettingsView: View {
                 ) { isOn in
                     toggle(isOn) { reminders.setStart($0, for: section) }
                 }
-                .settingsRow()
             }
             ReminderToggleRow(
                 title: "settings.reminders.unfinished",
@@ -148,7 +148,6 @@ struct AzkarSettingsView: View {
                 toggle(isOn) { reminders.setUnfinished($0) }
             }
             .disabled(preferences.azkarStart.isEmpty)
-            .settingsRow()
             // «Если серия под угрозой» (Android-first 2026-10-11, снимок `14a`) — доступна всегда.
             ReminderToggleRow(
                 title: "settings.reminders.streak",
@@ -158,10 +157,8 @@ struct AzkarSettingsView: View {
             ) { isOn in
                 toggle(isOn) { reminders.setStreak($0) }
             }
-            .settingsRow()
             if blocked {
                 ReminderOpenSettingsRow()
-                    .settingsRow()
             }
         } header: {
             Text("settings.reminders.header")

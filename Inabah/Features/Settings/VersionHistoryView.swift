@@ -17,12 +17,11 @@ struct VersionHistoryView: View {
                     .frame(maxHeight: .infinity, alignment: .top)
                     .background { theme.gradients.settingsBackground.linear.ignoresSafeArea() }
             } else {
-                Form {
+                SettingsForm {
                     ForEach(notes ?? [], id: \.version) { note in
-                        Section {
+                        SettingsGroup {
                             ForEach(Array(note.items.enumerated()), id: \.offset) { _, item in
                                 Text(verbatim: item)
-                                    .settingsRow()
                             }
                         } header: {
                             Text("versionHistory.header \(note.version.text) \(Self.dateText(note.date))")

@@ -62,6 +62,8 @@ nonisolated struct Palette: Hashable, Sendable {
     var successLight: Color
     var successDeep: Color
     var successDim: Color
+    /// Разрушительное действие (красная кнопка «Сбросить» в подтверждении) — как Android `destructive`.
+    var destructive: Color
     /// Подложка и рамка зелёных плашек на пергаменте (бейдж «✦ N раз»).
     var successTint: Color
     var successBorder: Color
@@ -190,6 +192,7 @@ nonisolated extension Palette {
             successLight: Color(asset: .successLight),
             successDeep: successDeep,
             successDim: Color(asset: .successDim),
+            destructive: Color(asset: .destructive),
             successTint: successDeep.opacity(0.1),
             successBorder: successDeep.opacity(0.25),
             statusRead: statusRead,
