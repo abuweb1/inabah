@@ -162,6 +162,13 @@ struct FloatingTabBar: View {
 
     /// Пилюля переезжает к вкладке; на подходе линза садится в неё.
     private func travel(to index: Int) {
+        // Пилюля уже на месте (нажата выбранная вкладка): анимации переезда нет — её завершение
+        // не пришло бы, и линза так и осталась бы поднятой. Садим сразу.
+        guard position != CGFloat(index) else {
+            isDragging = false
+            withAnimation(TabBarMotion.lensSettle) { lift = 0 }
+            return
+        }
         if lift < 1 { withAnimation(TabBarMotion.lensRise) { lift = 1 } }
         withAnimation(TabBarMotion.pill, completionCriteria: .logicallyComplete) {
             position = CGFloat(index)
