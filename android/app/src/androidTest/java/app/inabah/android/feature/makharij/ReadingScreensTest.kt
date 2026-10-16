@@ -99,7 +99,7 @@ class ReadingScreensTest {
             }
         }
         waitForText("Шаг 1 · Буквы")
-        compose.onNodeWithContentDescription("Лям").performClick()
+        compose.onNodeWithContentDescription("Льам").performClick()
         compose.onNodeWithText("23-я буква").assertExists()
         // До огласовок слоги цепочки — «ещё не пройдено».
         compose.onNodeWithContentDescription("фатхьа, льа, ещё не пройдено").assertExists()
