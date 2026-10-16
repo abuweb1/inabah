@@ -34,6 +34,10 @@ data class ReadingMark(
 ) {
     companion object {
         const val SUKUN = "sukun"
+        const val FATHATAN = "fathatan"
+
+        /** Танвин: фатхьатан, касратан, домматан. */
+        val TANWIN = setOf(FATHATAN, "kasratan", "dammatan")
     }
 }
 
@@ -80,8 +84,15 @@ data class ReadingLetter(
         }
     }
 
-    /** Слог: буква (или её подставка) и знак (`لَ`, у алифа `إِ`). */
-    fun syllable(mark: ReadingMark): String = base(mark) + mark.sign
+    /**
+     * Слог: буква (или её подставка) и знак (`لَ`, у алифа `إِ`). С танвином фатхьи - и алиф, который не
+     * читается (`بًا`, стр. 34 книги); у алифа - без него (`أً`): там алиф уже есть.
+     */
+    fun syllable(mark: ReadingMark): String {
+        val base = base(mark)
+        val silentAlif = if (mark.id == ReadingMark.FATHATAN && base != SEAT_ALIF) ALIF else ""
+        return base + mark.sign + silentAlif
+    }
 
     /** Транскрипция слога; с сукуном - звук буквы; нет в данных - `null`. */
     fun transliteration(mark: ReadingMark): String? =
@@ -98,6 +109,8 @@ data class ReadingLetter(
 
     companion object {
         const val TATWEEL = "ـ"
+        private const val ALIF = "ا"
+        private const val SEAT_ALIF = "أ"
     }
 }
 

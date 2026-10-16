@@ -748,7 +748,8 @@ private fun SyllableCell(
             transliteration,
             color = colors.parchmentCaption,
             style = InabahType.caption,
-            modifier = Modifier.alpha(transliterationAlpha(hidden)),
+            // Сверху - место под знак под буквой: касратан у ع уходил на подпись (2026-10-16).
+            modifier = Modifier.padding(top = Spacing.xs).alpha(transliterationAlpha(hidden)),
         )
     }
 }

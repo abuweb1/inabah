@@ -99,7 +99,10 @@
         "fatha": "أ",
         "kasra": "إ",
         "damma": "أ",
-        "sukun": "أ"
+        "sukun": "أ",
+        "fathatan": "أ",
+        "kasratan": "إ",
+        "dammatan": "أ"
       },
       "audio": {},
       "translations": {
@@ -110,7 +113,10 @@
           "syllables": {
             "fatha": "ъа",
             "kasra": "ъи",
-            "damma": "ъу"
+            "damma": "ъу",
+            "fathatan": "ъан",
+            "kasratan": "ъин",
+            "dammatan": "ъун"
           },
           "note": "Алиф не бывает сам по себе: он стоит в связке с другой буквой (продлевает её звук) или служит подставкой для хӏамзы - как в слогах ниже."
         }
@@ -129,7 +135,10 @@
           "syllables": {
             "fatha": "ба",
             "kasra": "би",
-            "damma": "бу"
+            "damma": "бу",
+            "fathatan": "бан",
+            "kasratan": "бин",
+            "dammatan": "бун"
           }
         }
       }
@@ -147,7 +156,10 @@
           "syllables": {
             "fatha": "та",
             "kasra": "ти",
-            "damma": "ту"
+            "damma": "ту",
+            "fathatan": "тан",
+            "kasratan": "тин",
+            "dammatan": "тун"
           }
         }
       }
@@ -165,7 +177,10 @@
           "syllables": {
             "fatha": "са",
             "kasra": "си",
-            "damma": "су"
+            "damma": "су",
+            "fathatan": "сан",
+            "kasratan": "син",
+            "dammatan": "сун"
           }
         }
       }
@@ -183,7 +198,10 @@
           "syllables": {
             "fatha": "джа",
             "kasra": "джи",
-            "damma": "джу"
+            "damma": "джу",
+            "fathatan": "джан",
+            "kasratan": "джин",
+            "dammatan": "джун"
           }
         }
       }
@@ -201,7 +219,10 @@
           "syllables": {
             "fatha": "хьа",
             "kasra": "хьи",
-            "damma": "хьу"
+            "damma": "хьу",
+            "fathatan": "хьан",
+            "kasratan": "хьин",
+            "dammatan": "хьун"
           }
         }
       }
@@ -219,7 +240,10 @@
           "syllables": {
             "fatha": "хо",
             "kasra": "хи",
-            "damma": "ху"
+            "damma": "ху",
+            "fathatan": "хон",
+            "kasratan": "хин",
+            "dammatan": "хун"
           }
         }
       }
@@ -238,7 +262,10 @@
           "syllables": {
             "fatha": "да",
             "kasra": "ди",
-            "damma": "ду"
+            "damma": "ду",
+            "fathatan": "дан",
+            "kasratan": "дин",
+            "dammatan": "дун"
           }
         }
       }
@@ -257,7 +284,10 @@
           "syllables": {
             "fatha": "за",
             "kasra": "зи",
-            "damma": "зу"
+            "damma": "зу",
+            "fathatan": "зан",
+            "kasratan": "зин",
+            "dammatan": "зун"
           }
         }
       }
@@ -276,7 +306,10 @@
           "syllables": {
             "fatha": "ро",
             "kasra": "ри",
-            "damma": "ру"
+            "damma": "ру",
+            "fathatan": "рон",
+            "kasratan": "рин",
+            "dammatan": "рун"
           }
         }
       }
@@ -295,7 +328,10 @@
           "syllables": {
             "fatha": "за",
             "kasra": "зи",
-            "damma": "зу"
+            "damma": "зу",
+            "fathatan": "зан",
+            "kasratan": "зин",
+            "dammatan": "зун"
           }
         }
       }
@@ -313,7 +349,10 @@
           "syllables": {
             "fatha": "са",
             "kasra": "си",
-            "damma": "су"
+            "damma": "су",
+            "fathatan": "сан",
+            "kasratan": "син",
+            "dammatan": "сун"
           }
         }
       }
@@ -331,7 +370,10 @@
           "syllables": {
             "fatha": "ша",
             "kasra": "ши",
-            "damma": "шу"
+            "damma": "шу",
+            "fathatan": "шан",
+            "kasratan": "шин",
+            "dammatan": "шун"
           }
         }
       }
@@ -349,7 +391,10 @@
           "syllables": {
             "fatha": "со",
             "kasra": "сы",
-            "damma": "су"
+            "damma": "су",
+            "fathatan": "сон",
+            "kasratan": "сын",
+            "dammatan": "сун"
           }
         }
       }
@@ -367,7 +412,10 @@
           "syllables": {
             "fatha": "до",
             "kasra": "ды",
-            "damma": "ду"
+            "damma": "ду",
+            "fathatan": "дон",
+            "kasratan": "дын",
+            "dammatan": "дун"
           }
         }
       }
@@ -385,7 +433,10 @@
           "syllables": {
             "fatha": "тӏо",
             "kasra": "тӏы",
-            "damma": "тӏу"
+            "damma": "тӏу",
+            "fathatan": "тӏон",
+            "kasratan": "тӏын",
+            "dammatan": "тӏун"
           }
         }
       }
@@ -403,7 +454,10 @@
           "syllables": {
             "fatha": "зо",
             "kasra": "зы",
-            "damma": "зу"
+            "damma": "зу",
+            "fathatan": "зон",
+            "kasratan": "зын",
+            "dammatan": "зун"
           }
         }
       }
@@ -421,7 +475,10 @@
           "syllables": {
             "fatha": "ӏа",
             "kasra": "ӏи",
-            "damma": "ӏу"
+            "damma": "ӏу",
+            "fathatan": "ӏан",
+            "kasratan": "ӏин",
+            "dammatan": "ӏун"
           }
         }
       }
@@ -439,7 +496,10 @@
           "syllables": {
             "fatha": "гӏо",
             "kasra": "гӏи",
-            "damma": "гӏу"
+            "damma": "гӏу",
+            "fathatan": "гӏон",
+            "kasratan": "гӏин",
+            "dammatan": "гӏун"
           }
         }
       }
@@ -457,7 +517,10 @@
           "syllables": {
             "fatha": "фа",
             "kasra": "фи",
-            "damma": "фу"
+            "damma": "фу",
+            "fathatan": "фан",
+            "kasratan": "фин",
+            "dammatan": "фун"
           }
         }
       }
@@ -475,7 +538,10 @@
           "syllables": {
             "fatha": "къо",
             "kasra": "къи",
-            "damma": "къу"
+            "damma": "къу",
+            "fathatan": "къон",
+            "kasratan": "къин",
+            "dammatan": "къун"
           }
         }
       }
@@ -493,7 +559,10 @@
           "syllables": {
             "fatha": "ка",
             "kasra": "ки",
-            "damma": "ку"
+            "damma": "ку",
+            "fathatan": "кан",
+            "kasratan": "кин",
+            "dammatan": "кун"
           }
         }
       }
@@ -511,7 +580,10 @@
           "syllables": {
             "fatha": "льа",
             "kasra": "ли",
-            "damma": "льу"
+            "damma": "льу",
+            "fathatan": "льан",
+            "kasratan": "лин",
+            "dammatan": "льун"
           }
         }
       }
@@ -529,7 +601,10 @@
           "syllables": {
             "fatha": "ма",
             "kasra": "ми",
-            "damma": "му"
+            "damma": "му",
+            "fathatan": "ман",
+            "kasratan": "мин",
+            "dammatan": "мун"
           }
         }
       }
@@ -547,7 +622,10 @@
           "syllables": {
             "fatha": "на",
             "kasra": "ни",
-            "damma": "ну"
+            "damma": "ну",
+            "fathatan": "нан",
+            "kasratan": "нин",
+            "dammatan": "нун"
           }
         }
       }
@@ -565,7 +643,10 @@
           "syllables": {
             "fatha": "хӏа",
             "kasra": "хӏи",
-            "damma": "хӏу"
+            "damma": "хӏу",
+            "fathatan": "хӏан",
+            "kasratan": "хӏин",
+            "dammatan": "хӏун"
           }
         }
       }
@@ -584,7 +665,10 @@
           "syllables": {
             "fatha": "ва",
             "kasra": "ви",
-            "damma": "ву"
+            "damma": "ву",
+            "fathatan": "ван",
+            "kasratan": "вин",
+            "dammatan": "вун"
           }
         }
       }
@@ -602,7 +686,10 @@
           "syllables": {
             "fatha": "йа",
             "kasra": "йи",
-            "damma": "йу"
+            "damma": "йу",
+            "fathatan": "йан",
+            "kasratan": "йин",
+            "dammatan": "йун"
           }
         }
       }
@@ -622,7 +709,10 @@
           "syllables": {
             "fatha": "ъа",
             "kasra": "ъи",
-            "damma": "ъу"
+            "damma": "ъу",
+            "fathatan": "ъан",
+            "kasratan": "ъин",
+            "dammatan": "ъун"
           }
         }
       }
@@ -2797,7 +2887,7 @@
           "translations": {
             "ru": {
               "text": "Сукун - маленький кружок над буквой: буква с ним читается без гласного и закрывает слог.",
-              "info": "Мы уже знаем открытый слог (за - زَ) и долгий открытый слог (заа - زَا). Закрытый слог (заз - زَزْ) пишется с сукуном: буква с сукуном звучит сразу после слога перед ней, без своего гласного. В Къуране сукун часто пишут как маленькую верхушку буквы ح, в книгах - кружком."
+              "info": "Мы уже знаем открытый слог («за») и долгий открытый слог («заа»). Закрытый слог («заз») пишется с сукуном: буква с сукуном звучит сразу после слога перед ней, без своего гласного. В Къуране сукун часто пишут как маленькую верхушку буквы ح, в книгах - кружком."
             }
           }
         },
@@ -3763,7 +3853,7 @@
           "translations": {
             "ru": {
               "text": "و и ي с сукуном после фатхьи читаются «в» и «й»: «ав», «ай».",
-              "info": "Так в словах لَيْتَ - «льайта», سَوْفَ - «савфа». А و после доммы и ي после касры без знака - это буквы мадда: они тянут звук, а не закрывают слог."
+              "info": "Так в словах «льайта», «савфа». А و после доммы и ي после касры без знака - это буквы мадда: они тянут звук, а не закрывают слог."
             }
           }
         },
@@ -4094,15 +4184,407 @@
         "kasratan",
         "dammatan"
       ],
-      "example": "بٌ",
+      "example": "بًا",
       "translations": {
         "ru": {
           "title": "Танвин",
           "subtitle": "двойная огласовка"
         }
       },
-      "blocks": [],
-      "quiz": []
+      "blocks": [
+        {
+          "type": "text",
+          "translations": {
+            "ru": {
+              "text": "Танвин - двойная огласовка в конце слова: читается как огласовка и звук «н».",
+              "info": "Танвин - это закрытый слог, который кончается нуном с сукуном, только этот нун пишется не буквой, а второй огласовкой. Поэтому «бин», написанное с нуном, и «бин» с танвином читаются одинаково."
+            }
+          }
+        },
+        {
+          "type": "marks",
+          "marks": [
+            "fathatan",
+            "kasratan",
+            "dammatan"
+          ]
+        },
+        {
+          "type": "formulas",
+          "columns": 3,
+          "items": [
+            {
+              "parts": [
+                "بَنْ"
+              ],
+              "result": "بًا",
+              "translations": {
+                "ru": {
+                  "translit": "бан"
+                }
+              }
+            },
+            {
+              "parts": [
+                "بِنْ"
+              ],
+              "result": "بٍ",
+              "translations": {
+                "ru": {
+                  "translit": "бин"
+                }
+              }
+            },
+            {
+              "parts": [
+                "بُنْ"
+              ],
+              "result": "بٌ",
+              "translations": {
+                "ru": {
+                  "translit": "бун"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "translations": {
+            "ru": {
+              "text": "После танвина фатхьи пишут алиф - он не читается: «бан», а не «баан».",
+              "info": "Алиф служит только для падежа и стоит после танвина фатхьи почти всегда. Исключения - слова на та марбута и некоторые случаи хӏамзы, о них - в шаге «Особые случаи»."
+            }
+          }
+        },
+        {
+          "type": "syllables",
+          "letters": [
+            "ا",
+            "ب",
+            "ت",
+            "ث",
+            "ج",
+            "ح",
+            "خ",
+            "د",
+            "ذ",
+            "ر",
+            "ز",
+            "س",
+            "ش",
+            "ص",
+            "ض",
+            "ط",
+            "ظ",
+            "ع",
+            "غ",
+            "ف",
+            "ق",
+            "ك",
+            "ل",
+            "م",
+            "ن",
+            "ه",
+            "و",
+            "ي"
+          ],
+          "marks": [
+            "fathatan",
+            "kasratan",
+            "dammatan"
+          ],
+          "sample": 12
+        }
+      ],
+      "quiz": [
+        {
+          "type": "syllable",
+          "letter": "ب",
+          "mark": "fathatan"
+        },
+        {
+          "type": "syllable",
+          "letter": "ل",
+          "mark": "kasratan"
+        },
+        {
+          "type": "syllable",
+          "letter": "م",
+          "mark": "dammatan"
+        },
+        {
+          "type": "syllable",
+          "letter": "ن",
+          "mark": "kasratan"
+        },
+        {
+          "type": "syllable",
+          "letter": "د",
+          "mark": "fathatan"
+        },
+        {
+          "type": "syllable",
+          "letter": "ر",
+          "mark": "dammatan"
+        },
+        {
+          "type": "syllable",
+          "letter": "ك",
+          "mark": "fathatan"
+        },
+        {
+          "type": "syllable",
+          "letter": "ع",
+          "mark": "dammatan"
+        }
+      ],
+      "words": {
+        "groupSize": 15,
+        "repeat": 6,
+        "items": [
+          {
+            "arabic": "غَفُورٌ",
+            "translations": {
+              "ru": {
+                "translit": "гӏофуурун"
+              }
+            }
+          },
+          {
+            "arabic": "صَمَدٌ",
+            "translations": {
+              "ru": {
+                "translit": "сомадун"
+              }
+            }
+          },
+          {
+            "arabic": "خَوْفٍ",
+            "translations": {
+              "ru": {
+                "translit": "ховфин"
+              }
+            }
+          },
+          {
+            "arabic": "رُسُلًا",
+            "translations": {
+              "ru": {
+                "translit": "русульан"
+              }
+            }
+          },
+          {
+            "arabic": "رَغَدًا",
+            "translations": {
+              "ru": {
+                "translit": "рогӏодан"
+              }
+            }
+          },
+          {
+            "arabic": "كَبِيرٍ",
+            "translations": {
+              "ru": {
+                "translit": "кабиирин"
+              }
+            }
+          },
+          {
+            "arabic": "شَهِيدًا",
+            "translations": {
+              "ru": {
+                "translit": "шахӏиидан"
+              }
+            }
+          },
+          {
+            "arabic": "غَاسِقٍ",
+            "translations": {
+              "ru": {
+                "translit": "гӏоосикъин"
+              }
+            }
+          },
+          {
+            "arabic": "حَكِيمٌ",
+            "translations": {
+              "ru": {
+                "translit": "хьакиимун"
+              }
+            }
+          },
+          {
+            "arabic": "نِدَاءٌ",
+            "translations": {
+              "ru": {
+                "translit": "нидааъун"
+              }
+            }
+          },
+          {
+            "arabic": "جِسْرٍ",
+            "translations": {
+              "ru": {
+                "translit": "джисрин"
+              }
+            }
+          },
+          {
+            "arabic": "مُبِينٍ",
+            "translations": {
+              "ru": {
+                "translit": "мубиинин"
+              }
+            }
+          },
+          {
+            "arabic": "نَارٌ"
+          },
+          {
+            "arabic": "عَذَابًا"
+          },
+          {
+            "arabic": "هُودًا"
+          },
+          {
+            "arabic": "نُورٌ"
+          },
+          {
+            "arabic": "كَثِيرًا"
+          },
+          {
+            "arabic": "رُجُومًا"
+          },
+          {
+            "arabic": "بَصِيرًا"
+          },
+          {
+            "arabic": "ظُلُمَاتٍ"
+          },
+          {
+            "arabic": "مَسَدٍ"
+          },
+          {
+            "arabic": "أَجْرٌ"
+          },
+          {
+            "arabic": "عَظِيمًا"
+          },
+          {
+            "arabic": "كُفُوًا"
+          },
+          {
+            "arabic": "عَمَدٍ"
+          },
+          {
+            "arabic": "رَحِيمٌ"
+          },
+          {
+            "arabic": "سَبِيلًا"
+          },
+          {
+            "arabic": "لُبَدًا"
+          },
+          {
+            "arabic": "أَبَدًا"
+          },
+          {
+            "arabic": "خَيْرًا"
+          },
+          {
+            "arabic": "قَدِيرٌ"
+          },
+          {
+            "arabic": "رَاكِبٌ"
+          },
+          {
+            "arabic": "عَلَقٍ"
+          },
+          {
+            "arabic": "يَوْمَئِذٍ"
+          },
+          {
+            "arabic": "طَبَقٍ"
+          },
+          {
+            "arabic": "سُرُرٌ"
+          },
+          {
+            "arabic": "سَمِيعًا"
+          },
+          {
+            "arabic": "مَجِيدٌ"
+          },
+          {
+            "arabic": "كَرِيمٍ"
+          },
+          {
+            "arabic": "عِنَبًا"
+          },
+          {
+            "arabic": "بَشَرٍ"
+          },
+          {
+            "arabic": "قَلِيلًا"
+          },
+          {
+            "arabic": "عَلِيمٌ"
+          },
+          {
+            "arabic": "قَسَمٌ"
+          },
+          {
+            "arabic": "أَحَدًا"
+          },
+          {
+            "arabic": "لَكَنُودٌ"
+          },
+          {
+            "arabic": "ضَرِيعٍ"
+          },
+          {
+            "arabic": "جُوعٍ"
+          },
+          {
+            "arabic": "طَبَقًا"
+          },
+          {
+            "arabic": "مَثَلًا"
+          },
+          {
+            "arabic": "سَلَامٌ"
+          },
+          {
+            "arabic": "خَبِيرٌ"
+          },
+          {
+            "arabic": "أَفْوَاجًا"
+          },
+          {
+            "arabic": "نَاصِرٍ"
+          },
+          {
+            "arabic": "عَذَابٌ"
+          },
+          {
+            "arabic": "كِرَامٌ"
+          },
+          {
+            "arabic": "كَبَدٍ"
+          },
+          {
+            "arabic": "لَهَبٍ"
+          },
+          {
+            "arabic": "جَزَاءٌ"
+          },
+          {
+            "arabic": "كُتُبٌ"
+          }
+        ]
+      }
     },
     {
       "id": 9,

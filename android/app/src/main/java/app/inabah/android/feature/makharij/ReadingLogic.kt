@@ -30,7 +30,7 @@ data class LetterChainItem(
 /**
  * Цепочка буквы [letter] на шаге [stepNumber]: звук (с сукуном, если сукун уже пройден), название, затем слоги всех знаков,
  * для которых у буквы есть транскрипция (по порядку знаков курса); знак, не пройденный к шагу, -
- * [LetterChainItem.isLearned] `false`. Сукуна в данных нет - без звука.
+ * [LetterChainItem.isLearned] `false`, а танвин до его шага не показывается. Сукуна в данных нет - без звука.
  */
 fun letterChain(course: ReadingCourse, letter: ReadingLetter, stepNumber: Int): List<LetterChainItem> {
     val learned = course.learnedMarks(stepNumber).mapTo(mutableSetOf()) { it.id }
@@ -45,6 +45,8 @@ fun letterChain(course: ReadingCourse, letter: ReadingLetter, stepNumber: Int): 
     val syllables = course.marks.mapNotNull { mark ->
         val transliteration = letter.syllables[mark.id] ?: return@mapNotNull null
         val isLearned = mark.id in learned
+        // Танвин - только с его шага: до него ещё 3 слога пунктиром загромождали лист (2026-10-16).
+        if (mark.id in ReadingMark.TANWIN && !isLearned) return@mapNotNull null
         LetterChainItem(
             kind = LetterChainItem.Kind.Syllable,
             arabic = letter.syllable(mark),
@@ -68,7 +70,7 @@ data class QuizOption(val text: String, val isCorrect: Boolean)
  * Варианты ответа по порядку (без случайности - одинаково при каждом открытии):
  * - слог - тот же слог с другими знаками, пройденными к шагу [stepNumber] (у которых у буквы есть
  *   транскрипция), по порядку знаков: «ба · би · бу»; верный - всегда среди них; с сукуном верный -
- *   на месте `номер буквы % 3`;
+ *   на месте `номер буквы % 3`; у танвина варианты - танвины: «бан · бин · бун»;
  * - буква - она и соседние по алфавиту (у первой и последней - две следующие или предыдущие),
  *   соседние часто и похожи по форме: ب ت ث.
  */
@@ -76,8 +78,12 @@ fun quizOptions(course: ReadingCourse, question: ReadingQuestion, stepNumber: In
     when (question) {
         is ReadingQuestion.Syllable -> {
             val letter = question.letter
-            // Знак вопроса - всегда (сукун: транскрипция - звук буквы), остальные - со слогами.
-            val marks = course.learnedMarks(stepNumber).filter { it.id in letter.syllables || it.id == question.mark.id }
+            // Знак вопроса - всегда (сукун: транскрипция - звук буквы), остальные - со слогами; у танвина -
+            // только другие танвины («бан · бин · бун»), иначе ответ угадывался по «н».
+            val isTanwin = question.mark.id in ReadingMark.TANWIN
+            val marks = course.learnedMarks(stepNumber)
+                .filter { it.id in letter.syllables || it.id == question.mark.id }
+                .filter { (it.id in ReadingMark.TANWIN) == isTanwin }
             val others = marks.filter { it.id != question.mark.id }.take(OPTION_COUNT - 1)
             val options = marks.filter { it.id == question.mark.id || it in others }.map { mark ->
                 QuizOption(letter.transliteration(mark).orEmpty(), mark.id == question.mark.id)

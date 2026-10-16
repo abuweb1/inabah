@@ -3,6 +3,7 @@ package app.inabah.android.core.content
 import app.inabah.android.core.content.model.LetterForm
 import app.inabah.android.core.content.model.ReadingBlock
 import app.inabah.android.core.content.model.ReadingCourse
+import app.inabah.android.core.content.model.ReadingMark
 import app.inabah.android.core.content.model.ReadingQuestion
 import java.io.ByteArrayInputStream
 import java.io.File
@@ -50,6 +51,10 @@ class ReadingContentTest {
         assertTrue(alif.note != null, "у алифа - пояснение")
         assertEquals("ءَ", hamza.syllable(fatha))
         assertEquals("ءْ", hamza.soundArabic(sukun), "хамза ни с чем не соединяется - без татвиля")
+        val fathatan = course.marks.first { it.id == "fathatan" }
+        assertEquals("لًا", lam.syllable(fathatan), "после танвина фатхьи - алиф, он не читается")
+        assertEquals("أً", alif.syllable(fathatan), "у алифа второго алифа нет")
+        assertEquals("льан", lam.transliteration(fathatan))
     }
 
     @Test
@@ -162,6 +167,26 @@ class ReadingContentTest {
         assertEquals(60, words.items.size)
         assertEquals(6, words.repeat)
         assertEquals(6, words.items.count { it.isPhrase })
+    }
+
+    @Test
+    fun `Шаг 8 - танвин, знаки, равенства, слоги только с танвином, 60 слов`() = runTest {
+        val step = requireNotNull(loadAssetCourse().step(8))
+
+        assertEquals(listOf("fathatan", "kasratan", "dammatan"), step.markIds)
+        val marks = step.blocks.filterIsInstance<ReadingBlock.Marks>().single()
+        assertEquals("ب", marks.example.letter)
+        val equal = step.blocks.filterIsInstance<ReadingBlock.Formulas>().single()
+        assertEquals(listOf("بًا", "بٍ", "بٌ"), equal.items.map { it.result })
+        assertEquals(listOf("бан", "бин", "бун"), equal.items.map { it.transliteration })
+        val table = step.blocks.filterIsInstance<ReadingBlock.Syllables>().single()
+        assertEquals(listOf("fathatan", "kasratan", "dammatan"), table.marks.map { it.id }, "столбцы - только танвин")
+        assertEquals(28, table.letters.size)
+        assertEquals(12, table.sample)
+        assertTrue(step.quiz.all { it is ReadingQuestion.Syllable && it.mark.id in ReadingMark.TANWIN })
+        val words = requireNotNull(step.words)
+        assertEquals(60, words.items.size)
+        assertEquals(6, words.repeat)
     }
 
     private fun TestScope.repository(json: String) = AssetContentRepository(

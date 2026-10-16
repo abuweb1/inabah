@@ -64,7 +64,8 @@ class ReadingLogicTest {
         assertEquals(5, currentStep(course, setOf(1, 2, 3, 4))?.number)
         assertEquals(6, currentStep(course, setOf(1, 2, 3, 4, 5))?.number)
         assertEquals(7, currentStep(course, setOf(1, 2, 3, 4, 5, 6))?.number)
-        assertNull(currentStep(course, setOf(1, 2, 3, 4, 5, 6, 7)), "шаги 8-11 без урока пропускаются")
+        assertEquals(8, currentStep(course, (1..7).toSet())?.number)
+        assertNull(currentStep(course, (1..8).toSet()), "шаги 9-11 без урока пропускаются")
         assertNull(currentStep(course, withLessons.toSet()))
         assertEquals(2.0 / 11, completedFraction(course, setOf(1, 2, 99)), "итог не считается")
     }
@@ -177,5 +178,22 @@ class ReadingLogicTest {
         assertEquals(sample, sample.sortedBy { items.indexOf(it) })
         assertEquals(sample, sampleFormulas(items, 6, seed = 7))
         assertEquals(items, sampleFormulas(items, 100, seed = 1), "больше, чем есть - все")
+    }
+
+    @Test
+    fun `Вопрос с танвином - варианты только танвины, верный один`() = runTest {
+        val course = loadAssetCourse()
+        val step = course.steps.first { "fathatan" in it.markIds }
+        val ba = course.letters.first { it.letter == "ب" }
+        val kasratan = course.marks.first { it.id == "kasratan" }
+
+        val options = quizOptions(course, ReadingQuestion.Syllable(ba, kasratan), step.number)
+
+        assertEquals(listOf("бан", "бин", "бун"), options.map { it.text })
+        assertEquals(listOf("бин"), options.filter { it.isCorrect }.map { it.text })
+        // Лист буквы: танвин - только с его шага, и сразу не пунктиром.
+        assertEquals(listOf("бан", "бин", "бун"), letterChain(course, ba, step.number).takeLast(3).map { it.transliteration })
+        assertTrue(letterChain(course, ba, step.number).takeLast(3).all { it.isLearned })
+        assertTrue(letterChain(course, ba, step.number - 1).none { it.transliteration == "бан" })
     }
 }

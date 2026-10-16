@@ -414,7 +414,7 @@ const READING_STEP_KEYS = ['id', 'marks', 'example', 'translations', 'blocks', '
 const READING_STEP_TEXT_KEYS = ['title', 'subtitle'];
 const READING_BLOCKS = {
   text: ['type', 'translations'], marks: ['type', 'marks'], letters: ['type', 'letters'], groups: ['type', 'groups'],
-  syllables: ['type', 'letters', 'sample'], compare: ['type', 'pairs'], join: ['type', 'arabic', 'audio', 'translations'],
+  syllables: ['type', 'letters', 'marks', 'sample'], compare: ['type', 'pairs'], join: ['type', 'arabic', 'audio', 'translations'],
   zikr: ['type', 'section', 'id', 'syllables', 'translations'],
   rule: ['type', 'arabic', 'letters', 'translations'],
   forms: ['type', 'groups', 'examples', 'exampleCard'],
@@ -446,6 +446,8 @@ function readingWordProblem(text, { byLetter, bases, signs, passed }) {
       const mark = signs.get(chars[c + 1]);
       if (!mark) {
         if (MADD_LETTERS[char] && previous === MADD_LETTERS[char]) { previous = null; c += 1; continue; }
+        // Алиф после танвина фатхьи не читается (أَبَدًا, решение по книге 2026-10-16).
+        if (char === 'ا' && previous === 'fathatan') { previous = null; c += 1; continue; }
         return `после «${char}» нет знака`;
       }
       if (!passed.has(mark)) return `знак ${mark} ещё не пройден`;
@@ -614,7 +616,8 @@ function checkReading(file) {
         if (ru?.text) checkRussian(where, ru.text);
         if (ru?.info) checkRussian(where, ru.info);
       }
-      if (block.type === 'marks') for (const m of block.marks ?? []) knownMark(where, m);
+      // syllables.marks - столбцы таблицы (танвин), без поля - пройденные огласовки.
+      if (block.type === 'marks' || block.type === 'syllables') for (const m of block.marks ?? []) knownMark(where, m);
       // Без letters - весь алфавит.
       if (block.type === 'letters' || block.type === 'syllables') for (const l of block.letters ?? []) knownLetter(where, l);
       // sample - на уроке столько случайных слогов, весь алфавит - отдельным экраном.

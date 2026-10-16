@@ -45,6 +45,16 @@ sections.push({
     return { file: `reading_${pad(l.id)}_${v}.m4a`, what: `${base}${marks[v].sign} - «${ru(l).syllables[v]}»` };
   })),
 });
+// Танвин (шаг «Танвин»): после танвина фатхьи - алиф, который не читается (у алифа - без второго алифа).
+const TANWIN = ['fathatan', 'kasratan', 'dammatan'];
+sections.push({
+  title: 'Слоги с танвином (лист буквы, таблица слогов шага «Танвин»)',
+  items: data.letters.flatMap(l => TANWIN.filter(v => ru(l).syllables?.[v]).map(v => {
+    const base = l.syllableBases?.[v] ?? l.letter;
+    const alif = v === 'fathatan' && base !== 'أ' ? 'ا' : '';
+    return { file: `reading_${pad(l.id)}_${v}.m4a`, what: `${base}${marks[v].sign}${alif} - «${ru(l).syllables[v]}»` };
+  })),
+});
 const byLetter = Object.fromEntries(data.letters.map(l => [l.letter, l]));
 for (const step of data.steps) {
   for (const block of step.blocks ?? []) {

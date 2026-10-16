@@ -122,8 +122,10 @@ private fun ReadingBlockDto.toBlock(
     "syllables" -> {
         // Без букв - весь алфавит.
         val rows = letters?.map(letter) ?: alphabet
-        // Столбцы - пройденные знаки, у которых у всех букв есть транскрипция слога (сукун и шадда - нет).
-        ReadingBlock.Syllables(rows, learnedMarks.filter { m -> rows.all { m.id in it.syllables } }, sample)
+        // Столбцы - знаки блока (танвин) или пройденные знаки; только те, у которых у всех букв есть
+        // транскрипция слога (сукун и шадда - нет).
+        val columns = if (marks.isNotEmpty()) marks.map(mark) else learnedMarks
+        ReadingBlock.Syllables(rows, columns.filter { m -> rows.all { m.id in it.syllables } }, sample)
     }
     "rule" -> {
         val text = priority.require(translations, "шаг ${step.id}, правило")
