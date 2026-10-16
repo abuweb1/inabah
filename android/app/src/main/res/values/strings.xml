@@ -233,6 +233,7 @@
     <string name="makharij_words_progress">прочитано %1$d из %2$d · каждое слово - %3$s</string>
     <string name="makharij_words_read_action">прочитал ещё раз</string>
     <string name="makharij_words_tile_state">прочитано %1$d из %2$d</string>
+    <string name="makharij_words_zoom_action">увеличить</string>
     <string name="makharij_words_title">Читаем слова</string>
     <string name="palette_amber">Янтарная</string>
     <string name="palette_amber_subtitle">как Махрадж</string>
