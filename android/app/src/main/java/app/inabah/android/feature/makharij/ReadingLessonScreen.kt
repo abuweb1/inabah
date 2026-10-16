@@ -64,6 +64,7 @@ import kotlinx.coroutines.delay
 import kotlin.random.Random
 import app.inabah.android.core.content.Loadable
 import app.inabah.android.core.content.model.ReadingBlock
+import app.inabah.android.core.content.model.ReadingFormula
 import app.inabah.android.core.content.model.ReadingLetter
 import app.inabah.android.core.content.model.ReadingMark
 import app.inabah.android.core.content.model.ReadingStep
@@ -224,7 +225,11 @@ private fun LessonContent(
                         SyllablesTable(block.letters, block.marks, hidden, onLetter)
                     }
                     is ReadingBlock.Rule -> RuleBlock(block, onLetter)
-                    is ReadingBlock.Formulas -> FormulasBlock(block, hidden)
+                    is ReadingBlock.Formulas -> if (block.sample != null) {
+                        SampleFormulas(block, block.sample, hidden, onOpenAlphabet)
+                    } else {
+                        FormulasBlock(block.items, block.columns, hidden)
+                    }
                 }
             }
             Spacer(Modifier.height(Spacing.s))
@@ -565,14 +570,14 @@ private fun SampleSyllables(
  * итога (прячется «глазом»). Одна часть - равенство «تَشَٰبَهَ = تَشَابَهَ», без выделения.
  */
 @Composable
-private fun FormulasBlock(block: ReadingBlock.Formulas, hidden: Boolean) {
+internal fun FormulasBlock(items: List<ReadingFormula>, columns: Int, hidden: Boolean) {
     val palette = InabahTheme.palette
     val colors = readingColors
 
     ParchmentPanel(topCornerRadius = Radius.card, bottomCornerRadius = Radius.card) {
         CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
             Column(verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
-                for (row in block.items.chunked(block.columns)) {
+                for (row in items.chunked(columns)) {
                     Row(Modifier.height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
                         for (formula in row) {
                             val parts = remember(formula, colors.letterHighlight) {
@@ -599,7 +604,7 @@ private fun FormulasBlock(block: ReadingBlock.Formulas, hidden: Boolean) {
                                 horizontalAlignment = Alignment.CenterHorizontally,
                                 verticalArrangement = Arrangement.Center,
                             ) {
-                                if (block.columns == 1) {
+                                if (columns == 1) {
                                     ArabicText(text, FORMULA_WIDE_SIZE, palette.parchmentText, bold = true, textAlign = TextAlign.Center, maxLines = 1)
                                 } else {
                                     // Узкая ячейка: части - строкой выше, итог - крупно под ними (в одну строку не влезало).
@@ -616,11 +621,34 @@ private fun FormulasBlock(block: ReadingBlock.Formulas, hidden: Boolean) {
                                 }
                             }
                         }
-                        repeat(block.columns - row.size) { Spacer(Modifier.weight(1f)) }
+                        repeat(columns - row.size) { Spacer(Modifier.weight(1f)) }
                     }
                 }
             }
         }
+    }
+}
+
+/**
+ * Карточка случайных формул (закрытые слоги сукуна) и под ней «Прочтите весь алфавит» - все формулы
+ * отдельным экраном (решение пользователя 2026-10-16, как слоги шага «Огласовки»). Набор - при каждом
+ * открытии урока свой, переживает поворот.
+ */
+@Composable
+private fun SampleFormulas(block: ReadingBlock.Formulas, count: Int, hidden: Boolean, onOpenAlphabet: () -> Unit) {
+    val seed = rememberSaveable { Random.nextInt() }
+    val sample = remember(block, count, seed) { sampleFormulas(block.items, count, seed) }
+    Column(verticalArrangement = Arrangement.spacedBy(Spacing.m)) {
+        FormulasBlock(sample, block.columns, hidden)
+        ReadingOutlineButton(stringResource(R.string.makharij_alphabet_formulas_open), onClick = onOpenAlphabet)
+    }
+}
+
+/** Все формулы («Весь алфавит» сукуна): по [SYLLABLE_ROWS_PER_CARD] ряда на карточку, как таблица слогов. */
+@Composable
+internal fun FormulasCards(items: List<ReadingFormula>, columns: Int, hidden: Boolean) {
+    Column(verticalArrangement = Arrangement.spacedBy(Spacing.m)) {
+        for (chunk in items.chunked(columns * SYLLABLE_ROWS_PER_CARD)) FormulasBlock(chunk, columns, hidden)
     }
 }
 

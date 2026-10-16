@@ -143,6 +143,8 @@
     <string name="home_brand_tagline">ВОЗВРАЩЕНИЕ К АЛЛАХУ</string>
     <string name="home_verse_reference">Къуран · Аз-Зумар 39:54</string>
     <string name="home_verse_translation">«И обращайтесь к Господу вашему и покоритесь Ему»</string>
+    <string name="makharij_alphabet_formulas_open">Прочтите весь алфавит</string>
+    <string name="makharij_alphabet_formulas_subtitle">закрытые слоги</string>
     <string name="makharij_alphabet_next">Следующая буква</string>
     <string name="makharij_alphabet_pause">Пауза</string>
     <string name="makharij_alphabet_play">Послушать алфавит</string>

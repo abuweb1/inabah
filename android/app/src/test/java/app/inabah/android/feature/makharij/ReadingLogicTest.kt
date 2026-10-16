@@ -2,6 +2,7 @@ package app.inabah.android.feature.makharij
 
 import app.inabah.android.core.content.loadAssetCourse
 import app.inabah.android.core.content.model.LetterForm
+import app.inabah.android.core.content.model.ReadingBlock
 import app.inabah.android.core.content.model.ReadingQuestion
 import app.inabah.android.core.content.model.ReadingWord
 import kotlin.test.assertEquals
@@ -62,7 +63,8 @@ class ReadingLogicTest {
         assertEquals(4, currentStep(course, setOf(1, 2, 3))?.number)
         assertEquals(5, currentStep(course, setOf(1, 2, 3, 4))?.number)
         assertEquals(6, currentStep(course, setOf(1, 2, 3, 4, 5))?.number)
-        assertNull(currentStep(course, setOf(1, 2, 3, 4, 5, 6)), "шаги 7-11 без урока пропускаются")
+        assertEquals(7, currentStep(course, setOf(1, 2, 3, 4, 5, 6))?.number)
+        assertNull(currentStep(course, setOf(1, 2, 3, 4, 5, 6, 7)), "шаги 8-11 без урока пропускаются")
         assertNull(currentStep(course, withLessons.toSet()))
         assertEquals(2.0 / 11, completedFraction(course, setOf(1, 2, 99)), "итог не считается")
     }
@@ -101,6 +103,9 @@ class ReadingLogicTest {
 
         assertEquals(listOf("б"), options.filter { it.isCorrect }.map { it.text })
         assertEquals(3, options.size)
+        // Место верного ответа - номер буквы % 3: не всегда последний.
+        val places = course.step(sukunStep)!!.quiz.map { q -> quizOptions(course, q, sukunStep).indexOfFirst { it.isCorrect } }
+        assertEquals(setOf(0, 1, 2), places.toSet())
     }
 
     @Test
@@ -160,5 +165,17 @@ class ReadingLogicTest {
         val ba = loadAssetCourse().letters.first { it.letter == "ب" }
 
         assertEquals("reading_s03_02_medial.m4a", formExampleAudio(3, ba, LetterForm.Medial))
+    }
+
+    @Test
+    fun `Случайные формулы - разные, в порядке таблицы, те же при том же зерне`() = runTest {
+        val items = requireNotNull(loadAssetCourse().step(7)).blocks
+            .filterIsInstance<ReadingBlock.Formulas>().first { it.sample != null }.items
+        val sample = sampleFormulas(items, 6, seed = 7)
+
+        assertEquals(6, sample.toSet().size)
+        assertEquals(sample, sample.sortedBy { items.indexOf(it) })
+        assertEquals(sample, sampleFormulas(items, 6, seed = 7))
+        assertEquals(items, sampleFormulas(items, 100, seed = 1), "больше, чем есть - все")
     }
 }

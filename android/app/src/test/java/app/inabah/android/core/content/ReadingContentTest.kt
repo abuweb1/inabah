@@ -146,6 +146,24 @@ class ReadingContentTest {
         assertEquals(3, step.words?.repeat)
     }
 
+    @Test
+    fun `Шаг 7 - сукун, закрытые слоги формулами, вопросы со звуком буквы, 60 слов`() = runTest {
+        val step = requireNotNull(loadAssetCourse().step(7))
+
+        assertEquals(listOf("sukun"), step.markIds)
+        val (pair, table, diphthongs) = step.blocks.filterIsInstance<ReadingBlock.Formulas>()
+        assertEquals(listOf("заз", "мин", "къуль"), pair.items.map { it.transliteration })
+        assertEquals(75, table.items.size, "25 букв (без ا ء و ي) × фатхьа, касра, домма")
+        assertEquals(6, table.sample, "на уроке - 6 случайных, весь алфавит - по кнопке")
+        assertEquals("ъаб", table.items.first().transliteration)
+        assertEquals(listOf("ъав", "ъай"), diphthongs.items.map { it.transliteration })
+        assertTrue(step.quiz.isNotEmpty() && step.quiz.all { it is ReadingQuestion.Syllable && it.mark.id == "sukun" })
+        val words = requireNotNull(step.words)
+        assertEquals(60, words.items.size)
+        assertEquals(6, words.repeat)
+        assertEquals(6, words.items.count { it.isPhrase })
+    }
+
     private fun TestScope.repository(json: String) = AssetContentRepository(
         { ByteArrayInputStream(json.toByteArray()) },
         ContentLanguagePriority(listOf(ContentLanguage.Base)),

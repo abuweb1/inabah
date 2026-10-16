@@ -144,6 +144,7 @@ private fun ReadingBlockDto.toBlock(
                     ?.translation?.translit?.trim()?.ifEmpty { null },
             )
         },
+        sample = sample,
     )
     else -> null
 }

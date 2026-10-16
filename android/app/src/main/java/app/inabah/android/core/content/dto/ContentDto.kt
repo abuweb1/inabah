@@ -177,7 +177,7 @@ data class ReadingBlockDto(
     val letters: List<String>? = null,
     /** `rule`: арабское название правила. */
     val arabic: String? = null,
-    /** `syllables`: на уроке - столько случайных слогов, весь алфавит - отдельным экраном. */
+    /** `syllables`, `formulas`: на уроке - столько случайных слогов (формул), все - отдельным экраном. */
     val sample: Int? = null,
     /** `forms`: буквы карточками (группы похожего написания). */
     val groups: List<List<String>>? = null,

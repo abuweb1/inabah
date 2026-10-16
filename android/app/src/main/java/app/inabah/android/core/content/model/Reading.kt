@@ -197,8 +197,10 @@ sealed interface ReadingBlock {
     /**
      * Формулы на пергаменте (мадд, 2026-10-15): части через «+» и итог после «=», справа налево -
      * «بَ + ا = بَا»; одна часть - равенство («تَشَٰبَهَ = تَشَابَهَ»). [columns] - формул в ряду.
+     * [sample] - на уроке столько случайных формул и «Прочтите весь алфавит», все - отдельным экраном
+     * (закрытые слоги сукуна, решение пользователя 2026-10-16); `null` - все на уроке.
      */
-    data class Formulas(val columns: Int, val items: List<ReadingFormula>) : ReadingBlock
+    data class Formulas(val columns: Int, val items: List<ReadingFormula>, val sample: Int? = null) : ReadingBlock
 
     /** Правило: арабское название и его транскрипция, пояснение, буквы правила. */
     data class Rule(

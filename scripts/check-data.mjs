@@ -418,7 +418,7 @@ const READING_BLOCKS = {
   zikr: ['type', 'section', 'id', 'syllables', 'translations'],
   rule: ['type', 'arabic', 'letters', 'translations'],
   forms: ['type', 'groups', 'examples', 'exampleCard'],
-  formulas: ['type', 'columns', 'items'],
+  formulas: ['type', 'columns', 'items', 'sample'],
 };
 // Мадд (2026-10-15): буква мадда без знака тянет огласовку перед ней - ا после фатхьи, ي после касры,
 // و после доммы; маленькие буквы мадда (ٰ ۥ ۦ) - сразу после той же огласовки (алиф - на черте ـٰ).
@@ -618,7 +618,7 @@ function checkReading(file) {
       // Без letters - весь алфавит.
       if (block.type === 'letters' || block.type === 'syllables') for (const l of block.letters ?? []) knownLetter(where, l);
       // sample - на уроке столько случайных слогов, весь алфавит - отдельным экраном.
-      if (block.type === 'syllables' && block.sample !== undefined && (!Number.isInteger(block.sample) || block.sample < 1)) error(where, 'sample - целое ≥ 1');
+      if ((block.type === 'syllables' || block.type === 'formulas') && block.sample !== undefined && (!Number.isInteger(block.sample) || block.sample < 1)) error(where, 'sample - целое ≥ 1');
       if (block.type === 'rule') {
         if (requireString(where, block, 'arabic')) checkArabic(where, block.arabic);
         for (const l of block.letters ?? []) knownLetter(where, l);
@@ -686,7 +686,9 @@ function checkReading(file) {
       }
       if (q.type === 'syllable') {
         if (!passed.has(q.mark)) error(where, `знак «${q.mark}» ещё не пройден к этому шагу`);
-        if (!byLetter.get(q.letter)?.translations?.[BASE_LANGUAGE]?.syllables?.[q.mark]) {
+        // С сукуном ответ - звук буквы (sound), как в приложении.
+        const ru = byLetter.get(q.letter)?.translations?.[BASE_LANGUAGE];
+        if (!(q.mark === 'sukun' ? ru?.sound : ru?.syllables?.[q.mark])) {
           error(where, `нет транскрипции слога ${q.letter} + ${q.mark} - нечего показать в ответе`);
         }
       }

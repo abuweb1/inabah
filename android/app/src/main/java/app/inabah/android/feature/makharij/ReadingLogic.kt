@@ -2,6 +2,7 @@ package app.inabah.android.feature.makharij
 
 import app.inabah.android.core.content.model.LetterForm
 import app.inabah.android.core.content.model.ReadingCourse
+import app.inabah.android.core.content.model.ReadingFormula
 import app.inabah.android.core.content.model.ReadingLetter
 import app.inabah.android.core.content.model.ReadingMark
 import app.inabah.android.core.content.model.ReadingQuestion
@@ -66,7 +67,8 @@ data class QuizOption(val text: String, val isCorrect: Boolean)
 /**
  * Варианты ответа по порядку (без случайности - одинаково при каждом открытии):
  * - слог - тот же слог с другими знаками, пройденными к шагу [stepNumber] (у которых у буквы есть
- *   транскрипция), по порядку знаков: «ба · би · бу»; верный - всегда среди них;
+ *   транскрипция), по порядку знаков: «ба · би · бу»; верный - всегда среди них; с сукуном верный -
+ *   на месте `номер буквы % 3`;
  * - буква - она и соседние по алфавиту (у первой и последней - две следующие или предыдущие),
  *   соседние часто и похожи по форме: ب ت ث.
  */
@@ -77,8 +79,14 @@ fun quizOptions(course: ReadingCourse, question: ReadingQuestion, stepNumber: In
             // Знак вопроса - всегда (сукун: транскрипция - звук буквы), остальные - со слогами.
             val marks = course.learnedMarks(stepNumber).filter { it.id in letter.syllables || it.id == question.mark.id }
             val others = marks.filter { it.id != question.mark.id }.take(OPTION_COUNT - 1)
-            marks.filter { it.id == question.mark.id || it in others }.map { mark ->
+            val options = marks.filter { it.id == question.mark.id || it in others }.map { mark ->
                 QuizOption(letter.transliteration(mark).orEmpty(), mark.id == question.mark.id)
+            }
+            // Сукун - последний знак курса: верный ответ стоял бы всегда последним. Его место - по номеру
+            // буквы (у разных букв разное, у одной и той же - всегда одно).
+            if (question.mark.id != ReadingMark.SUKUN) options
+            else options.filterNot { it.isCorrect }.toMutableList().apply {
+                add(letter.number % options.size, options.first { it.isCorrect })
             }
         }
         // Буквы карточки похожего написания: она и соседние (в карточке из 3 - все).
@@ -180,6 +188,15 @@ fun sampleSyllables(
     if (marks.isEmpty()) return emptyList()
     val random = kotlin.random.Random(seed)
     return letters.shuffled(random).take(count).map { it to marks.random(random) }
+}
+
+/**
+ * Случайные формулы для карточки урока (закрытые слоги сукуна, решение пользователя 2026-10-16): [count]
+ * разных формул в порядке таблицы. Одинаковые при том же [seed] (экран хранит его).
+ */
+fun sampleFormulas(items: List<ReadingFormula>, count: Int, seed: Int): List<ReadingFormula> {
+    val picked = items.indices.shuffled(kotlin.random.Random(seed)).take(count).toSet()
+    return items.filterIndexed { index, _ -> index in picked }
 }
 
 /**
