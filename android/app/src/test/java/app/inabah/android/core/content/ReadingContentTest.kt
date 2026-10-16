@@ -142,7 +142,7 @@ class ReadingContentTest {
         assertEquals(listOf("баа", "бии", "буу"), madd.items.map { it.transliteration })
         assertEquals(listOf(listOf("بَ", "ا")), madd.items.take(1).map { it.parts })
         assertEquals(1, small.columns)
-        assertEquals("تَشَٰبَهَ", small.items.first().parts.single())
+        assertEquals("تَشَـٰبَهَ", small.items.first().parts.single(), "маленький алиф - после фатхьи на соединительной черте")
         assertEquals(3, step.words?.repeat)
     }
 

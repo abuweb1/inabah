@@ -421,11 +421,12 @@ const READING_BLOCKS = {
   formulas: ['type', 'columns', 'items'],
 };
 // Мадд (2026-10-15): буква мадда без знака тянет огласовку перед ней - ا после фатхьи, ي после касры,
-// و после доммы; маленькие буквы мадда (ٰ ۥ ۦ) - сразу после той же огласовки.
+// و после доммы; маленькие буквы мадда (ٰ ۥ ۦ) - сразу после той же огласовки (алиф - на черте ـٰ).
 const MADD_LETTERS = { 'ا': 'fatha', 'ي': 'kasra', 'و': 'damma' };
 const SMALL_MADD = { 'ٰ': 'fatha', 'ۦ': 'kasra', 'ۥ': 'damma' };
 // Хамза на подставке вав / йа - как буква хамза.
 const HAMZA_SEATS = ['ؤ', 'ئ'];
+const TATWEEL = 'ـ';
 
 /**
  * Слово «Читаем слова»: слова через один пробел; в слове - буква (подставка хамзы) и пройденный знак,
@@ -441,6 +442,7 @@ function readingWordProblem(text, { byLetter, bases, signs, passed }) {
       const char = chars[c];
       const known = byLetter.has(char) || bases.has(char) || HAMZA_SEATS.includes(char);
       if (!known) return `неизвестная буква «${char}»`;
+      if (chars[c + 1] === 'ٰ') return 'маленький алиф - после фатхьи, не вместо неё';
       const mark = signs.get(chars[c + 1]);
       if (!mark) {
         if (MADD_LETTERS[char] && previous === MADD_LETTERS[char]) { previous = null; c += 1; continue; }
@@ -448,6 +450,15 @@ function readingWordProblem(text, { byLetter, bases, signs, passed }) {
       }
       if (!passed.has(mark)) return `знак ${mark} ещё не пройден`;
       c += 2;
+      // Маленький алиф - после фатхьи на соединительной черте (هَـٰذَا, как в Къуране, решение
+      // пользователя 2026-10-16); после несоединяемой буквы черты нет (صِرَٰطُ).
+      if (chars[c] === TATWEEL) {
+        if (chars[c + 1] !== 'ٰ') return 'соединительная черта - только перед маленьким алифом';
+        if (!(byLetter.get(char)?.joinsNext ?? true)) return `после «${char}» черты нет: буква не соединяется дальше`;
+        c += 1;
+      } else if (chars[c] === 'ٰ' && (byLetter.get(char)?.joinsNext ?? true)) {
+        return 'маленький алиф после соединяемой буквы - на соединительной черте (ـٰ)';
+      }
       if (SMALL_MADD[chars[c]]) {
         if (SMALL_MADD[chars[c]] !== mark) return 'маленькая буква мадда не к своей огласовке';
         c += 1;
