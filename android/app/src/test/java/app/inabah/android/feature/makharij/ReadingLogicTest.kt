@@ -5,8 +5,10 @@ import app.inabah.android.core.content.model.LetterForm
 import app.inabah.android.core.content.model.ReadingBlock
 import app.inabah.android.core.content.model.ReadingQuestion
 import app.inabah.android.core.content.model.ReadingWord
+import kotlin.random.Random
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNotEquals
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlinx.coroutines.test.runTest
@@ -244,5 +246,33 @@ class ReadingLogicTest {
             pages.map { page -> page.map { row -> row.words.map { it.index } } },
         )
         assertEquals(listOf(true, true, false), pages.flatten().map { it.isPair })
+    }
+
+    @Test
+    fun `Перемешанные слова - не по порядку данных, все на месте, короткие впереди, порядок постоянен при том же зерне`() {
+        val words = (1..30).map { ReadingWord(if (it <= 20) "к$it" else "д$it", null) }
+        val columnsOf = { word: ReadingWord -> if (word.arabic.startsWith("д")) 2 else 3 }
+
+        val pages = wordPages(words, columnsOf, rowsPerPage = 4, random = Random(7))
+        val order = pages.flatten().flatMap { row -> row.words.map { it.index } }
+
+        assertEquals(words.indices.toSet(), order.toSet())
+        assertEquals(words.size, order.size)
+        assertNotEquals(order.sorted(), order, "не в порядке данных")
+        assertTrue(order.take(18).all { it < 20 }, "короткие - на первых страницах")
+        assertEquals(order, wordPages(words, columnsOf, 4, Random(7)).flatten().flatMap { row -> row.words.map { it.index } })
+    }
+
+    @Test
+    fun `Перемешанные пары - пары меняются местами, одиночные ряды остаются на своих местах`() {
+        val pairsOf = (1..10).flatMap { listOf("ك$it", "ك$it ٱل") }
+        val words = (pairsOf + listOf("آية ١", "آية ٢", "آية ٣")).map { ReadingWord(it, null) }
+
+        val rows = pairPages(words, rowsPerPage = 50, random = Random(7)).flatten()
+
+        assertEquals(words.indices.toList(), rows.flatMap { row -> row.words.map { it.index } }.sorted())
+        assertTrue(rows.take(10).all { it.isPair })
+        assertNotEquals((0 until 20 step 2).toList(), rows.take(10).map { it.words.first().index }, "пары перемешаны")
+        assertEquals(listOf(20, 21, 22), rows.drop(10).map { it.words.single().index }, "аяты - по порядку")
     }
 }

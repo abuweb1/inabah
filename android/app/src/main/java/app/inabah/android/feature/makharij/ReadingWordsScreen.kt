@@ -73,6 +73,7 @@ import app.inabah.android.core.designsystem.components.surface
 import app.inabah.android.core.settings.ReadingProgress
 import app.inabah.android.core.settings.ReadingSettings
 import kotlinx.coroutines.launch
+import kotlin.random.Random
 import androidx.compose.ui.util.lerp
 import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.CustomAccessibilityAction
@@ -102,6 +103,7 @@ import androidx.compose.runtime.mutableIntStateOf
  * «Читаем слова» (вариант A, решение пользователя 2026-10-15): страницы плиток на пергаменте,
  * нажатие на плитку - «прочитал ещё раз» (в углу «3/10», после 10 - зелёная). Плитки - по 3, по 2 или во
  * всю ширину по измеренной ширине слова, короткие - на первых страницах (`wordPages`, 2026-10-16).
+ * Слова перемешаны, не в порядке книги (2026-10-17): порядок постоянный для шага - зерно - номер шага.
  * Транскрипция и глаз - на первой странице, дальше - лампочка «подсказка» показывает её на миг.
  * Шаг пройден, когда прочитаны все слова (и урок).
  */
@@ -122,7 +124,7 @@ fun ReadingWordsScreen(
     val wordCounts by progress.wordCounts.collectAsStateWithLifecycle()
     val lessonsDone by progress.lessonsDone.collectAsStateWithLifecycle()
     val course = (store.course.collectAsStateWithLifecycle().value as? Loadable.Loaded)?.value
-    val pages = rememberWordPages(course?.step(stepNumber)?.words)
+    val pages = rememberWordPages(course?.step(stepNumber)?.words, stepNumber)
     val groupCount = pages.size
     // Страницы листаются свайпом в обе стороны и кнопками (просьба пользователя 2026-10-15); страница переживает поворот.
     val pager = rememberPagerState { groupCount }
@@ -287,12 +289,12 @@ private fun WordsProgress(read: Int, total: Int, repeat: Int, modifier: Modifier
  * ширины (поворот, другой экран).
  */
 @Composable
-private fun rememberWordPages(words: ReadingWords?): List<List<WordRow>> {
+private fun rememberWordPages(words: ReadingWords?, seed: Int): List<List<WordRow>> {
     val measurer = rememberTextMeasurer()
     val style = arabicTextStyle(WORD_SIZE, bold = true)
     val density = LocalDensity.current
     val screenWidth = LocalWindowInfo.current.containerSize.width
-    return remember(words, screenWidth, style, density) {
+    return remember(words, seed, screenWidth, style, density) {
         if (words == null) return@remember emptyList()
         val rowWidth = screenWidth - with(density) { (Spacing.xl * 2 + ParchmentHorizontalPadding * 2).roundToPx() }
         val gap = with(density) { Spacing.s.roundToPx() }
@@ -303,7 +305,8 @@ private fun rememberWordPages(words: ReadingWords?): List<List<WordRow>> {
                 width <= ((rowWidth - gap * (columns - 1)) / columns - padding) * WORD_FIT
             } ?: 1
         }
-        if (words.pairs) pairPages(words.items, words.rowsPerPage) else wordPages(words.items, columnsOf, words.rowsPerPage)
+        val random = Random(seed)
+        if (words.pairs) pairPages(words.items, words.rowsPerPage, random) else wordPages(words.items, columnsOf, words.rowsPerPage, random)
     }
 }
 

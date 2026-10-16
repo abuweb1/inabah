@@ -9,6 +9,7 @@ import app.inabah.android.core.content.model.ReadingQuestion
 import app.inabah.android.core.content.model.ReadingStep
 import app.inabah.android.core.content.model.ReadingWord
 import app.inabah.android.core.content.model.ReadingWords
+import kotlin.random.Random
 
 // Правила «Учимся читать» без Compose (docs/08-screen-makharij.md): цепочка листа буквы,
 // варианты ответа, текущий шаг.
@@ -149,10 +150,18 @@ data class WordRow(val columns: Int, val words: List<IndexedValue<ReadingWord>>,
  * (по 3), потом длинные (по 2), потом во всю ширину, внутри - порядок данных; страница - [rowsPerPage]
  * рядов. Неполных рядов нет: лишние слова очереди переходят в начало следующей, более широкой (в широкой
  * плитке слово тоже помещается). Индекс слова - его номер в данных: по нему хранится счёт прочтений.
+ * [random] - перемешать слова внутри очередей (не в порядке книги, просьба пользователя 2026-10-17);
+ * нет - порядок данных.
  */
-fun wordPages(words: List<ReadingWord>, columnsOf: (ReadingWord) -> Int, rowsPerPage: Int): List<List<WordRow>> {
+fun wordPages(
+    words: List<ReadingWord>,
+    columnsOf: (ReadingWord) -> Int,
+    rowsPerPage: Int,
+    random: Random? = null,
+): List<List<WordRow>> {
     val queues = (ReadingWords.MAX_COLUMNS downTo 1).associateWith { mutableListOf<IndexedValue<ReadingWord>>() }
-    for (word in words.withIndex()) {
+    val ordered = words.withIndex().toList().let { if (random == null) it else it.shuffled(random) }
+    for (word in ordered) {
         val columns = if (word.value.isPhrase) 1 else columnsOf(word.value).coerceIn(1, ReadingWords.MAX_COLUMNS)
         queues.getValue(columns) += word
     }
@@ -168,9 +177,10 @@ fun wordPages(words: List<ReadingWord>, columnsOf: (ReadingWord) -> Int, rowsPer
 
 /**
  * Страницы пар (шаг «Мадд перед артиклем»): порядок данных; слово, за которым словосочетание, - с ним в
- * одном ряду, остальное - во всю ширину. Страница - [rowsPerPage] рядов.
+ * одном ряду, остальное - во всю ширину. Страница - [rowsPerPage] рядов. [random] - перемешать пары между
+ * собой; одиночные ряды остаются на своих местах: среди них аяты подряд (ат-Таквир 1-3).
  */
-fun pairPages(words: List<ReadingWord>, rowsPerPage: Int): List<List<WordRow>> {
+fun pairPages(words: List<ReadingWord>, rowsPerPage: Int, random: Random? = null): List<List<WordRow>> {
     val rows = mutableListOf<WordRow>()
     var i = 0
     while (i < words.size) {
@@ -182,6 +192,10 @@ fun pairPages(words: List<ReadingWord>, rowsPerPage: Int): List<List<WordRow>> {
             rows += WordRow(1, listOf(IndexedValue(i, words[i])))
             i += 1
         }
+    }
+    if (random != null) {
+        val pairSlots = rows.indices.filter { rows[it].isPair }
+        pairSlots.map { rows[it] }.shuffled(random).forEachIndexed { n, row -> rows[pairSlots[n]] = row }
     }
     return rows.chunked(rowsPerPage.coerceAtLeast(1))
 }
