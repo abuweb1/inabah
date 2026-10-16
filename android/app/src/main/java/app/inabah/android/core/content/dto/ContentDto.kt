@@ -199,6 +199,8 @@ data class ReadingBlockDto(
     val columns: Int = 1,
     /** `formulas`: «بَ + ا = بَا», «تَشَٰبَهَ = تَشَابَهَ». */
     val items: List<ReadingFormulaDto> = emptyList(),
+    /** `topic`: содержимое своего экрана - блоки, как в справке. */
+    val blocks: List<ReadingBlockDto> = emptyList(),
     val translations: Map<String, ReadingTextTranslationDto> = emptyMap(),
 )
 
@@ -209,6 +211,8 @@ data class ReadingTextTranslationDto(
     val translit: String = "",
     /** `text`: полный текст во всплывающем окне по ⓘ. */
     val info: String = "",
+    /** `topic`: название (на карточке и в навбаре экрана темы); `text` - краткое описание. */
+    val title: String = "",
 )
 
 @Serializable
@@ -231,4 +235,6 @@ data class ReadingQuizDto(
 data class ReadingQuizTranslationDto(
     val options: List<String> = emptyList(),
     val explain: String = "",
+    /** Свой вопрос («Как читается на паузе?»); нет - «Как читается это слово?». */
+    val question: String = "",
 )

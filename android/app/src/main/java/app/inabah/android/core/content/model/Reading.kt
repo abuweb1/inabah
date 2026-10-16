@@ -160,6 +160,12 @@ data class ReadingStep(
 ) {
     /** Пустые шаги - «Урок готовится». */
     val hasLesson: Boolean get() = blocks.isNotEmpty()
+
+    /** Темы урока по порядку ([ReadingBlock.Topic]); номер темы - индекс здесь. */
+    val topics: List<ReadingBlock.Topic> get() = blocks.filterIsInstance<ReadingBlock.Topic>()
+
+    /** Справка: [topic] - тема урока по номеру, `null` - справка шага ([extra]). */
+    fun extra(topic: Int?): ReadingExtra? = if (topic == null) extra else topics.getOrNull(topic)?.extra
 }
 
 /**
@@ -239,6 +245,12 @@ sealed interface ReadingBlock {
      */
     data class Formulas(val columns: Int, val items: List<ReadingFormula>, val sample: Int? = null) : ReadingBlock
 
+    /**
+     * Тема урока (шаг «Особые случаи», решение пользователя 2026-10-17): карточка с названием, кратким
+     * описанием [summary] и примером [example], подробности - своим экраном ([extra], как справка).
+     */
+    data class Topic(val summary: String, val example: String?, val extra: ReadingExtra) : ReadingBlock
+
     /** Правило: арабское название и его транскрипция, пояснение, буквы правила. */
     data class Rule(
         val arabic: String,
@@ -285,6 +297,8 @@ sealed interface ReadingQuestion {
         val options: List<String>,
         val answer: Int,
         val explanation: String?,
+        /** Свой вопрос («Как читается на паузе?»); нет - «Как читается это слово?». */
+        val prompt: String? = null,
     ) : ReadingQuestion
 
     /** «Какая это буква?». */

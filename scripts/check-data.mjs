@@ -419,6 +419,8 @@ const READING_BLOCKS = {
   rule: ['type', 'arabic', 'letters', 'translations'],
   forms: ['type', 'groups', 'examples', 'exampleCard'],
   formulas: ['type', 'columns', 'items', 'sample'],
+  // Тема урока (шаг «Особые случаи», 2026-10-17): карточка - название, описание, пример; блоки - её экран.
+  topic: ['type', 'arabic', 'blocks', 'translations'],
 };
 // Мадд (2026-10-15): буква мадда без знака тянет огласовку перед ней - ا после фатхьи, ي после касры,
 // و после доммы; маленькие буквы мадда (ٰ ۥ ۦ) - сразу после той же огласовки (алиф - на черте ـٰ).
@@ -642,8 +644,26 @@ function checkReading(file) {
       if (ru?.title) checkRussian(`${at} extra`, ru.title);
       extraBlocks = Array.isArray(step.extra?.blocks) && step.extra.blocks.length ? step.extra.blocks : (error(`${at} extra`, 'blocks - непустой массив'), []);
     }
-    for (const [j, block] of [...blocks, ...extraBlocks].entries()) {
-      const where = j < blocks.length ? `${at} block ${j + 1}` : `${at} extra block ${j - blocks.length + 1}`;
+    const entries = [
+      ...blocks.map((block, j) => ({ block, where: `${at} block ${j + 1}` })),
+      ...extraBlocks.map((block, j) => ({ block, where: `${at} extra block ${j + 1}` })),
+    ];
+    // Блоки темы проверяются как блоки урока; тема в теме - нет.
+    for (const [j, block] of blocks.entries()) {
+      if (block?.type !== 'topic') continue;
+      const tat = `${at} block ${j + 1}`;
+      const ru = checkTexts(tat, block.translations, ['title', 'text'], ['title', 'text']);
+      if (ru?.title) checkRussian(tat, ru.title);
+      if (ru?.text) checkRussian(tat, ru.text);
+      if (block.arabic !== undefined && requireString(tat, block, 'arabic')) checkArabic(tat, block.arabic);
+      const inner = Array.isArray(block.blocks) && block.blocks.length ? block.blocks : (error(tat, 'blocks - непустой массив'), []);
+      for (const [k, b] of inner.entries()) {
+        if (b?.type === 'topic') error(`${tat} topic block ${k + 1}`, 'тема внутри темы');
+        else entries.push({ block: b, where: `${tat} topic block ${k + 1}` });
+      }
+    }
+    for (const { block, where } of entries) {
+      if (block?.type === 'topic') continue;
       const keys = READING_BLOCKS[block?.type];
       if (!keys) { error(where, `неизвестный тип «${block?.type}»`); continue; }
       for (const k of Object.keys(block)) if (!keys.includes(k)) error(where, `неизвестное поле «${k}»`);
@@ -685,7 +705,8 @@ function checkReading(file) {
         for (const [n, item] of items.entries()) {
           const iat = `${where} item ${n + 1}`;
           for (const k of Object.keys(item ?? {})) if (!['parts', 'result', 'translations'].includes(k)) error(iat, `неизвестное поле «${k}»`);
-          if (!Array.isArray(item?.parts) || !item.parts.length) error(iat, 'parts - непустой массив');
+          // Пустые части - просто слово с транскрипцией (льам твёрдый / мягкий).
+          if (!Array.isArray(item?.parts)) error(iat, 'parts - массив');
           for (const p of item?.parts ?? []) if (typeof p !== 'string' || !p) error(iat, 'parts - строки'); else checkArabic(iat, p);
           if (requireString(iat, item ?? {}, 'result')) checkArabic(iat, item.result);
           if (item?.translations !== undefined) checkTexts(iat, item.translations, ['translit'], ['translit']);
@@ -725,7 +746,9 @@ function checkReading(file) {
           const problem = readingWordProblem(q.arabic, { byLetter, bases, signs, passed });
           if (problem) error(where, `«${q.arabic}»: ${problem}`);
         }
-        const ru = checkTexts(where, q.translations, ['options', 'explain'], []);
+        // question - свой вопрос («Как читается на паузе?»).
+        const ru = checkTexts(where, q.translations, ['options', 'explain', 'question'], []);
+        if (typeof ru?.question === 'string') checkRussian(where, ru.question);
         const options = ru?.options;
         if (!Array.isArray(options) || options.length !== 3 || options.some(o => typeof o !== 'string' || !o.trim())) error(where, 'options - 3 непустые строки');
         else if (new Set(options).size !== 3) error(where, 'options - без повторов');

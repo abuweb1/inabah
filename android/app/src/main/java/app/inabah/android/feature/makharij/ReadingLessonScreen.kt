@@ -1,5 +1,7 @@
 package app.inabah.android.feature.makharij
 
+import app.inabah.android.core.designsystem.components.pressFeedback
+import androidx.compose.material3.Icon
 import androidx.compose.foundation.layout.wrapContentSize
 import app.inabah.android.core.designsystem.Motion
 import androidx.compose.ui.zIndex
@@ -100,8 +102,8 @@ fun ReadingLessonScreen(
     onOpenLetterForms: (String) -> Unit,
     contentPadding: PaddingValues,
     modifier: Modifier = Modifier,
-    /** Справка к уроку отдельным экраном (у шага есть [ReadingStep.extra]). */
-    onOpenExtra: () -> Unit = {},
+    /** Справка к уроку отдельным экраном: `null` - [ReadingStep.extra], номер - тема урока. */
+    onOpenExtra: (Int?) -> Unit = {},
     /** Записи в сборке и их проигрывание (`ClipPlayer`): слова-примеры форм. */
     clips: Set<String> = emptySet(),
     onPlayClip: (String) -> Unit = {},
@@ -199,7 +201,7 @@ private fun LessonContent(
     onOpenWords: () -> Unit,
     onOpenAlphabet: () -> Unit,
     onOpenLetterForms: (String) -> Unit,
-    onOpenExtra: () -> Unit,
+    onOpenExtra: (Int?) -> Unit,
     clips: Set<String>,
     onPlayClip: (String) -> Unit,
     onFinish: () -> Unit,
@@ -229,6 +231,7 @@ private fun LessonContent(
                         SyllablesTable(block.letters, block.marks, hidden, onLetter)
                     }
                     is ReadingBlock.Rule -> RuleBlock(block, onLetter)
+                    is ReadingBlock.Topic -> TopicCard(block) { onOpenExtra(step.topics.indexOf(block)) }
                     is ReadingBlock.Formulas -> if (block.sample != null) {
                         SampleFormulas(block, block.sample, hidden, onOpenAlphabet)
                     } else {
@@ -237,7 +240,7 @@ private fun LessonContent(
                 }
             }
             // Справка (солнечные и лунные буквы) - для желающих, отдельным экраном (решение пользователя 2026-10-16).
-            step.extra?.let { ReadingOutlineButton(it.title, onClick = onOpenExtra) }
+            step.extra?.let { ReadingOutlineButton(it.title, onClick = { onOpenExtra(null) }) }
             Spacer(Modifier.height(Spacing.s))
             ReadingButton(
                 text = stringResource(if (step.quiz.isEmpty()) R.string.makharij_lesson_done else R.string.makharij_lesson_check),
@@ -248,6 +251,42 @@ private fun LessonContent(
                 ReadingOutlineButton(stringResource(R.string.makharij_words_open), onClick = onOpenWords)
             }
         }
+    }
+}
+
+/**
+ * Тема урока (шаг «Особые случаи», 2026-10-17): название, краткое описание, пример справа и ›;
+ * нажатие - экран темы.
+ */
+@Composable
+private fun TopicCard(topic: ReadingBlock.Topic, onClick: () -> Unit) {
+    val palette = InabahTheme.palette
+    val colors = readingColors
+    val interaction = remember { MutableInteractionSource() }
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .clickable(interaction, indication = null, role = Role.Button, onClick = onClick)
+            .pressFeedback(interaction, scale = PressFeedback.WIDE_SCALE, opacity = PressFeedback.WIDE_OPACITY)
+            .surface(colors.tile, Radius.card, border = colors.tileBorder)
+            .padding(start = Spacing.xl, end = Spacing.m, top = Spacing.m, bottom = Spacing.m),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(Spacing.m),
+    ) {
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Spacing.xxs)) {
+            Text(
+                withArabicRuns(topic.extra.title),
+                color = palette.onAccent,
+                style = InabahType.body.copy(fontWeight = FontWeight.SemiBold),
+            )
+            Text(
+                withArabicRuns(topic.summary),
+                color = palette.onAccentSecondary,
+                style = InabahType.contentTranslation,
+            )
+        }
+        topic.example?.let { ArabicText(it, TOPIC_EXAMPLE_SIZE, colors.tint, bold = true, maxLines = 1) }
+        Icon(painterResource(R.drawable.ic_chevron_right), contentDescription = null, tint = colors.tint)
     }
 }
 
@@ -610,7 +649,8 @@ internal fun FormulasBlock(items: List<ReadingFormula>, columns: Int, hidden: Bo
                                     }
                                 }
                             }
-                            val result = "= ${formula.result}"
+                            // Без частей - просто слово с транскрипцией (примеры «льам твёрдый / мягкий»).
+                            val result = if (formula.parts.isEmpty()) formula.result else "= ${formula.result}"
                             val text = parts + AnnotatedString(" $result")
                             Column(
                                 Modifier
@@ -734,6 +774,8 @@ private const val SAMPLE_COLUMNS = 3
 private const val FORMULA_SIZE = 32f
 private const val FORMULA_PARTS_SIZE = 22f
 private const val FORMULA_WIDE_SIZE = 32f
+/** Пример на карточке темы урока. */
+private const val TOPIC_EXAMPLE_SIZE = 28f
 private const val RULE_LETTER_COLUMNS = 7
 private const val RULE_TITLE_SIZE = 26f
 /** Плитка буквы 64, в sp - растёт с шагом интерфейса. */

@@ -70,7 +70,8 @@ class ReadingLogicTest {
         assertEquals(9, currentStep(course, (1..8).toSet())?.number)
         assertEquals(10, currentStep(course, (1..9).toSet())?.number)
         assertEquals(11, currentStep(course, (1..10).toSet())?.number)
-        assertNull(currentStep(course, (1..11).toSet()), "шаг 12 без урока пропускается")
+        assertEquals(12, currentStep(course, (1..11).toSet())?.number)
+        assertNull(currentStep(course, (1..12).toSet()), "итог без урока пропускается")
         assertNull(currentStep(course, withLessons.toSet()))
         assertEquals(2.0 / 12, completedFraction(course, setOf(1, 2, 99)), "итог не считается")
     }
@@ -274,5 +275,21 @@ class ReadingLogicTest {
         assertTrue(rows.take(10).all { it.isPair })
         assertNotEquals((0 until 20 step 2).toList(), rows.take(10).map { it.words.first().index }, "пары перемешаны")
         assertEquals(listOf(20, 21, 22), rows.drop(10).map { it.words.single().index }, "аяты - по порядку")
+    }
+
+    @Test
+    fun `Особые случаи - три темы своими экранами, номер темы - по порядку, без номера - справка шага`() = runTest {
+        val course = loadAssetCourse()
+        val step = requireNotNull(course.step(12))
+
+        assertEquals(3, step.topics.size)
+        assertTrue(step.topics.all { it.extra.title.isNotBlank() && it.summary.isNotBlank() && it.extra.blocks.isNotEmpty() })
+        assertEquals(step.topics[1].extra, step.extra(1))
+        assertNull(step.extra(3))
+        assertNull(step.extra(null), "у шага 12 своей справки нет")
+        assertEquals(requireNotNull(course.step(10)).extra, requireNotNull(course.step(10)).extra(null))
+        // Слово - строкой без «=»: формула без частей.
+        assertTrue(step.topics[1].extra.blocks.filterIsInstance<ReadingBlock.Formulas>().first().items.all { it.parts.isEmpty() })
+        assertEquals("Как читается на паузе?", step.quiz.filterIsInstance<ReadingQuestion.Word>().last().prompt)
     }
 }

@@ -144,6 +144,17 @@ private fun ReadingBlockDto.toBlock(
             letters = letters.orEmpty().map(letter),
         )
     }
+    "topic" -> {
+        val text = priority.require(translations, "шаг ${step.id}, тема")
+        ReadingBlock.Topic(
+            summary = text.text,
+            example = arabic,
+            extra = ReadingExtra(
+                title = text.title,
+                blocks = blocks.mapNotNull { it.toBlock(step, learnedMarks, priority, mark, letter, alphabet) },
+            ),
+        )
+    }
     "formulas" -> ReadingBlock.Formulas(
         columns = columns.coerceIn(1, MAX_FORMULA_COLUMNS),
         items = items.map { item ->
@@ -183,6 +194,7 @@ private fun ReadingQuizDto.toQuestion(
             options = text.options,
             answer = answer,
             explanation = text.explain.trim().ifEmpty { null },
+            prompt = text.question.trim().ifEmpty { null },
         )
     }
     // Закрытый слог: алиф-хамза с огласовкой [mark] и буква с сукуном (`أِبْ`).

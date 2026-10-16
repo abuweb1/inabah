@@ -166,7 +166,7 @@ private fun QuizQuestion(
     ) {
         ProgressDots(count = step.quiz.size, current = index)
         Text(
-            stringResource(
+            (question as? ReadingQuestion.Word)?.prompt ?: stringResource(
                 when (question) {
                     is ReadingQuestion.Syllable, is ReadingQuestion.ClosedSyllable -> R.string.makharij_quiz_syllable
                     is ReadingQuestion.LetterName, is ReadingQuestion.LetterInForm -> R.string.makharij_quiz_letter

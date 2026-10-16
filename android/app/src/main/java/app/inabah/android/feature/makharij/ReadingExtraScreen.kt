@@ -24,11 +24,13 @@ import app.inabah.android.core.settings.ReadingSettings
 /**
  * Справка к уроку (решение пользователя 2026-10-16): солнечные и лунные буквы и подобная общая
  * информация - отдельным экраном по кнопке под уроком. Навбар - название справки и шаг; блоки - как на
- * уроке (текст, правило, формулы); нажатие на букву - лист буквы.
+ * уроке (текст, правило, формулы); нажатие на букву - лист буквы. Тема урока ([topic], шаг «Особые
+ * случаи», 2026-10-17) - тот же экран со своими блоками.
  */
 @Composable
 fun ReadingExtraScreen(
     stepNumber: Int,
+    topic: Int?,
     store: ReadingStore,
     settings: ReadingSettings,
     onBack: () -> Unit,
@@ -40,12 +42,12 @@ fun ReadingExtraScreen(
     val step = (store.course.collectAsStateWithLifecycle().value as? Loadable.Loaded)?.value?.step(stepNumber)
     ReadingScaffold(
         store = store,
-        title = step?.extra?.title.orEmpty(),
+        title = step?.extra(topic)?.title.orEmpty(),
         subtitle = step?.let { stepTitle(it) },
         onBack = onBack,
         modifier = modifier,
     ) { course ->
-        val blocks = course.step(stepNumber)?.extra?.blocks.orEmpty()
+        val blocks = course.step(stepNumber)?.extra(topic)?.blocks.orEmpty()
         val behindSheet = if (sheetLetter != null) Modifier.clearAndSetSemantics {} else Modifier
         Box(Modifier.fillMaxSize()) {
             Column(
