@@ -410,7 +410,7 @@ const READING_MARK_KEYS = ['id', 'sign', 'translations'];
 const READING_MARK_TEXT_KEYS = ['name', 'where', 'sound'];
 const READING_LETTER_KEYS = ['id', 'letter', 'name', 'joinsNext', 'joinsPrevious', 'syllableBases', 'audio', 'translations'];
 const READING_LETTER_TEXT_KEYS = ['name', 'nameTranslit', 'sound', 'syllables', 'note'];
-const READING_STEP_KEYS = ['id', 'marks', 'example', 'translations', 'blocks', 'quiz', 'words', 'final'];
+const READING_STEP_KEYS = ['id', 'marks', 'example', 'translations', 'blocks', 'quiz', 'words', 'final', 'extra'];
 const READING_STEP_TEXT_KEYS = ['title', 'subtitle'];
 const READING_BLOCKS = {
   text: ['type', 'translations'], marks: ['type', 'marks'], letters: ['type', 'letters'], groups: ['type', 'groups'],
@@ -427,6 +427,8 @@ const SMALL_MADD = { 'ٰ': 'fatha', 'ۦ': 'kasra', 'ۥ': 'damma' };
 // Хамза на подставке вав / йа - как буква хамза.
 const HAMZA_SEATS = ['ؤ', 'ئ'];
 const TATWEEL = 'ـ';
+// Хӏамзату-львасли (алиф васла) артикля.
+const WASL = 'ٱ';
 
 /**
  * Слово «Читаем слова»: слова через один пробел; в слове - буква (подставка хамзы) и пройденный знак,
@@ -440,6 +442,17 @@ function readingWordProblem(text, { byLetter, bases, signs, passed }) {
     let previous = null;
     for (let c = 0; c < chars.length;) {
       const char = chars[c];
+      // Артикль (шаг «Артикль», 2026-10-16): хӏамзату-львасли ٱ - без знака; лям после неё - с сукуном
+      // (лунная буква) или без знака, и тогда следующая буква - с шаддой (солнечная).
+      if (char === WASL) {
+        if (signs.has(chars[c + 1])) return 'у хӏамзату-львасли ٱ знака нет';
+        previous = 'wasl'; c += 1; continue;
+      }
+      if (char === 'ل' && previous === 'wasl' && !signs.has(chars[c + 1])) {
+        const next = chars.slice(c + 2, c + 4);
+        if (!next.includes('ّ')) return 'лям артикля без знака - только перед буквой с шаддой (солнечной)';
+        previous = null; c += 1; continue;
+      }
       const known = byLetter.has(char) || bases.has(char) || HAMZA_SEATS.includes(char);
       if (!known) return `неизвестная буква «${char}»`;
       if (chars[c + 1] === 'ٰ') return 'маленький алиф - после фатхьи, не вместо неё';
@@ -615,8 +628,16 @@ function checkReading(file) {
     }
     const blocks = Array.isArray(step?.blocks) ? step.blocks : (error(at, 'blocks - массив'), []);
     if (!blocks.length) warn('reading: шаг без содержания', at, step?.translations?.[BASE_LANGUAGE]?.title ?? '');
-    for (const [j, block] of blocks.entries()) {
-      const where = `${at} block ${j + 1}`;
+    // Справка (extra, 2026-10-16): заголовок и блоки - те же правила, что у блоков урока.
+    let extraBlocks = [];
+    if (step?.extra !== undefined) {
+      for (const k of Object.keys(step.extra ?? {})) if (!['translations', 'blocks'].includes(k)) error(`${at} extra`, `неизвестное поле «${k}»`);
+      const ru = checkTexts(`${at} extra`, step.extra?.translations, ['title'], ['title']);
+      if (ru?.title) checkRussian(`${at} extra`, ru.title);
+      extraBlocks = Array.isArray(step.extra?.blocks) && step.extra.blocks.length ? step.extra.blocks : (error(`${at} extra`, 'blocks - непустой массив'), []);
+    }
+    for (const [j, block] of [...blocks, ...extraBlocks].entries()) {
+      const where = j < blocks.length ? `${at} block ${j + 1}` : `${at} extra block ${j - blocks.length + 1}`;
       const keys = READING_BLOCKS[block?.type];
       if (!keys) { error(where, `неизвестный тип «${block?.type}»`); continue; }
       for (const k of Object.keys(block)) if (!keys.includes(k)) error(where, `неизвестное поле «${k}»`);

@@ -100,6 +100,8 @@ fun ReadingLessonScreen(
     onOpenLetterForms: (String) -> Unit,
     contentPadding: PaddingValues,
     modifier: Modifier = Modifier,
+    /** Справка к уроку отдельным экраном (у шага есть [ReadingStep.extra]). */
+    onOpenExtra: () -> Unit = {},
     /** Записи в сборке и их проигрывание (`ClipPlayer`): слова-примеры форм. */
     clips: Set<String> = emptySet(),
     onPlayClip: (String) -> Unit = {},
@@ -157,6 +159,7 @@ fun ReadingLessonScreen(
                         onOpenWords = onOpenWords,
                         onOpenAlphabet = onOpenAlphabet,
                         onOpenLetterForms = onOpenLetterForms,
+                        onOpenExtra = onOpenExtra,
                         clips = clips,
                         onPlayClip = onPlayClip,
                         onFinish = {
@@ -196,6 +199,7 @@ private fun LessonContent(
     onOpenWords: () -> Unit,
     onOpenAlphabet: () -> Unit,
     onOpenLetterForms: (String) -> Unit,
+    onOpenExtra: () -> Unit,
     clips: Set<String>,
     onPlayClip: (String) -> Unit,
     onFinish: () -> Unit,
@@ -232,6 +236,8 @@ private fun LessonContent(
                     }
                 }
             }
+            // Справка (солнечные и лунные буквы) - для желающих, отдельным экраном (решение пользователя 2026-10-16).
+            step.extra?.let { ReadingOutlineButton(it.title, onClick = onOpenExtra) }
             Spacer(Modifier.height(Spacing.s))
             ReadingButton(
                 text = stringResource(if (step.quiz.isEmpty()) R.string.makharij_lesson_done else R.string.makharij_lesson_check),
@@ -247,7 +253,7 @@ private fun LessonContent(
 
 /** Абзац объяснения - категория «перевод» (растёт с «Размером текста»). */
 @Composable
-private fun TextBlock(text: String, info: String?) = InfoTextCard(
+internal fun TextBlock(text: String, info: String?) = InfoTextCard(
     text = text,
     info = info?.let { full ->
         @Composable {
@@ -446,7 +452,7 @@ private fun MarksBlock(marks: List<ReadingMark>, example: ReadingLetter) {
  * пояснение и буквы правила в ряд справа налево (нажатие - лист буквы).
  */
 @Composable
-private fun RuleBlock(rule: ReadingBlock.Rule, onLetter: (ReadingLetter) -> Unit) {
+internal fun RuleBlock(rule: ReadingBlock.Rule, onLetter: (ReadingLetter) -> Unit) {
     val palette = InabahTheme.palette
     val colors = readingColors
     Column(
@@ -619,7 +625,8 @@ internal fun FormulasBlock(items: List<ReadingFormula>, columns: Int, hidden: Bo
                                 verticalArrangement = Arrangement.Center,
                             ) {
                                 if (columns == 1) {
-                                    ArabicText(text, FORMULA_WIDE_SIZE, palette.parchmentText, bold = true, textAlign = TextAlign.Center, maxLines = 1)
+                                    // Длинная формула (артикль: «как пишется = как читается») переносится по пробелу.
+                                    ArabicText(text, FORMULA_WIDE_SIZE, palette.parchmentText, bold = true, textAlign = TextAlign.Center, maxLines = WIDE_FORMULA_LINES)
                                 } else {
                                     // Узкая ячейка: части - строкой выше, итог - крупно под ними (в одну строку не влезало).
                                     ArabicText(parts, FORMULA_PARTS_SIZE, palette.parchmentText, bold = true, textAlign = TextAlign.Center, maxLines = 1)
@@ -708,6 +715,7 @@ private fun SyllableRows(
 }
 
 private const val LETTER_COLUMNS = 5
+private const val WIDE_FORMULA_LINES = 2
 private const val FORM_SIZE = 28f
 private const val FORM_WORD_SIZE = 26f
 private const val ISOLATED_WEIGHT = 0.6f

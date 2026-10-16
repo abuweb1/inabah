@@ -52,6 +52,10 @@ sealed interface MakharijRoute {
     @Serializable
     data class Alphabet(val step: Int) : MakharijRoute
 
+    /** Справка к уроку (солнечные и лунные буквы) - из урока. */
+    @Serializable
+    data class Extra(val step: Int) : MakharijRoute
+
     /** Карточка буквы - формы и слова-примеры (из таблицы форм урока). */
     @Serializable
     data class LetterForms(val step: Int, val letter: String) : MakharijRoute

@@ -66,9 +66,10 @@ class ReadingLogicTest {
         assertEquals(7, currentStep(course, setOf(1, 2, 3, 4, 5, 6))?.number)
         assertEquals(8, currentStep(course, (1..7).toSet())?.number)
         assertEquals(9, currentStep(course, (1..8).toSet())?.number)
-        assertNull(currentStep(course, (1..9).toSet()), "шаги 10-11 без урока пропускаются")
+        assertEquals(10, currentStep(course, (1..9).toSet())?.number)
+        assertNull(currentStep(course, (1..10).toSet()), "шаги 11-12 без урока пропускаются")
         assertNull(currentStep(course, withLessons.toSet()))
-        assertEquals(2.0 / 11, completedFraction(course, setOf(1, 2, 99)), "итог не считается")
+        assertEquals(2.0 / 12, completedFraction(course, setOf(1, 2, 99)), "итог не считается")
     }
 
     @Test
@@ -97,8 +98,8 @@ class ReadingLogicTest {
         val all = course.steps.map { it.number }.toSet()
         val final = course.steps.single { it.isFinal }.number
 
-        assertEquals(11, numberedStepCount(course))
-        assertEquals(11, completedCount(course, all))
+        assertEquals(12, numberedStepCount(course))
+        assertEquals(12, completedCount(course, all))
         assertEquals(1.0, completedFraction(course, all - final))
         assertFalse(isCourseDone(course, all - final))
         assertTrue(isCourseDone(course, all))

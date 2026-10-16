@@ -8,6 +8,7 @@ import app.inabah.android.core.content.model.FormExamples
 import app.inabah.android.core.content.model.LetterForm
 import app.inabah.android.core.content.model.ReadingBlock
 import app.inabah.android.core.content.model.ReadingCourse
+import app.inabah.android.core.content.model.ReadingExtra
 import app.inabah.android.core.content.model.ReadingFormula
 import app.inabah.android.core.content.model.ReadingLetter
 import app.inabah.android.core.content.model.ReadingMark
@@ -66,6 +67,12 @@ internal fun ReadingFileDto.toReadingCourse(priority: ContentLanguagePriority): 
             subtitle = text.subtitle,
             blocks = dto.blocks.mapNotNull { block ->
                 block.toBlock(dto, learnedMarks, priority, ::mark, ::letter, letters)
+            },
+            extra = dto.extra?.let { extra ->
+                ReadingExtra(
+                    title = priority.require(extra.translations, "шаг ${dto.id}, справка").title,
+                    blocks = extra.blocks.mapNotNull { block -> block.toBlock(dto, learnedMarks, priority, ::mark, ::letter, letters) },
+                )
             },
             quiz = dto.quiz.mapNotNull { quiz ->
                 // Варианты «буквы по форме» - буквы её карточки в таблице форм шага.

@@ -48,6 +48,7 @@ import app.inabah.android.feature.hadith.HadithHomeScreen
 import app.inabah.android.feature.hadith.HadithListScreen
 import app.inabah.android.feature.makharij.MakharijHomeScreen
 import app.inabah.android.feature.makharij.ReadingAlphabetScreen
+import app.inabah.android.feature.makharij.ReadingExtraScreen
 import app.inabah.android.feature.makharij.ReadingLetterFormsScreen
 import app.inabah.android.feature.makharij.ReadingLessonScreen
 import app.inabah.android.feature.makharij.ReadingQuizScreen
@@ -301,6 +302,7 @@ private fun TabScreens(tab: AppTab, services: AppServices, contentPadding: Paddi
                         onOpenQuiz = { router.push(MakharijRoute.Quiz(route.step)) },
                         onOpenWords = { router.push(MakharijRoute.Words(route.step)) },
                         onOpenAlphabet = { router.push(MakharijRoute.Alphabet(route.step)) },
+                        onOpenExtra = { router.push(MakharijRoute.Extra(route.step)) },
                         onOpenLetterForms = { router.push(MakharijRoute.LetterForms(route.step, it)) },
                         clips = clips,
                         onPlayClip = services.clipPlayer::play,
@@ -332,6 +334,15 @@ private fun TabScreens(tab: AppTab, services: AppServices, contentPadding: Paddi
                 }
                 entry<MakharijRoute.Alphabet> { route ->
                     ReadingAlphabetScreen(
+                        stepNumber = route.step,
+                        store = services.readingStore,
+                        settings = services.readingSettings,
+                        onBack = { router.pop(AppTab.Makharij) },
+                        contentPadding = contentPadding.bottomOnly(),
+                    )
+                }
+                entry<MakharijRoute.Extra> { route ->
+                    ReadingExtraScreen(
                         stepNumber = route.step,
                         store = services.readingStore,
                         settings = services.readingSettings,

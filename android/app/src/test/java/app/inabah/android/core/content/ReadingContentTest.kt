@@ -19,14 +19,14 @@ import org.junit.Test
 /** «Учимся читать»: `reading.json` из ассетов и ошибки данных. */
 class ReadingContentTest {
     @Test
-    fun `Курс из ассетов — 8 знаков, 28 букв и хамза по порядку, 11 шагов и итог`() = runTest {
+    fun `Курс из ассетов — 8 знаков, 28 букв и хамза по порядку, 12 шагов и итог`() = runTest {
         val course = loadAssetCourse()
 
         assertEquals(listOf("fatha", "kasra", "damma", "sukun", "shadda", "fathatan", "kasratan", "dammatan"), course.marks.map { it.id })
         assertEquals((1..29).toList(), course.letters.map { it.number })
         assertEquals("ء", course.letters.last().letter)
-        assertEquals((1..12).toList(), course.steps.map { it.number })
-        assertEquals(listOf(12), course.steps.filter { it.isFinal }.map { it.number }, "итог - только последний")
+        assertEquals((1..13).toList(), course.steps.map { it.number })
+        assertEquals(listOf(13), course.steps.filter { it.isFinal }.map { it.number }, "итог - только последний")
         assertEquals(setOf("ا", "د", "ذ", "ر", "ز", "و", "ء"), course.letters.filterNot { it.joinsNext }.map { it.letter }.toSet())
         assertTrue(course.steps.all { it.title.isNotBlank() && '—' !in it.title + it.subtitle })
     }
@@ -207,6 +207,24 @@ class ReadingContentTest {
         assertTrue(words.all { it.explanation != null && it.options.size == 3 })
         assertEquals(60, step.words?.items?.size)
         assertEquals("мухьаммадун", step.words?.items?.first { it.arabic == "مُحَمَّدٌ" }?.transliteration)
+    }
+
+    @Test
+    fun `Шаг 10 - артикль, как пишется и как читается, лунные и солнечные буквы справкой, вопросы со словом`() = runTest {
+        val course = loadAssetCourse()
+        val step = requireNotNull(course.step(10))
+
+        assertEquals("Определённый артикль", step.title)
+        assertEquals("Мадд перед артиклем", course.step(11)?.title, "страницы 40-41 - отдельным шагом (решение пользователя)")
+        val read = step.blocks.filterIsInstance<ReadingBlock.Formulas>().flatMap { it.items }
+        assertEquals("йавми ддиини", read.first { it.result == "يَوْمِدِّينِ" }.transliteration, "в середине не читаются ни ٱ, ни лям перед солнечной")
+        assertEquals("ъальхьамду", read.first { it.result == "أَلْحَمْدُ" }.transliteration)
+        assertTrue(step.blocks.none { it is ReadingBlock.Rule }, "солнечные и лунные буквы - не на уроке (решение пользователя)")
+        val extra = requireNotNull(step.extra)
+        assertEquals("Солнечные и лунные буквы", extra.title)
+        assertEquals(listOf(14, 14), extra.blocks.filterIsInstance<ReadingBlock.Rule>().map { it.letters.size })
+        assertTrue(step.quiz.isNotEmpty() && step.quiz.all { it is ReadingQuestion.Word })
+        assertEquals(60, step.words?.items?.size)
     }
 
     private fun TestScope.repository(json: String) = AssetContentRepository(

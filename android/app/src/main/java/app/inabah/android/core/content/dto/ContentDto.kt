@@ -134,6 +134,14 @@ data class ReadingStepDto(
     val words: ReadingWordsDto? = null,
     /** Итог курса («Читаем зикр») - последний шаг, без номера. */
     val final: Boolean = false,
+    /** Справка не для чтения (солнечные и лунные буквы) - отдельным экраном по кнопке; нет - без неё. */
+    val extra: ReadingExtraDto? = null,
+)
+
+@Serializable
+data class ReadingExtraDto(
+    val translations: Map<String, ReadingStepTranslationDto>,
+    val blocks: List<ReadingBlockDto> = emptyList(),
 )
 
 @Serializable
