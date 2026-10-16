@@ -149,6 +149,8 @@ data class ReadingWordsDto(
     val groupSize: Int,
     val repeat: Int,
     val items: List<ReadingWordDto>,
+    /** Пары «слово → словосочетание с ним» - в порядке данных, рядом (шаг «Мадд перед артиклем»). */
+    val pairs: Boolean = false,
 )
 
 @Serializable

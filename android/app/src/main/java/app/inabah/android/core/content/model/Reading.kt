@@ -173,7 +173,16 @@ data class ReadingExtra(val title: String, val blocks: List<ReadingBlock>)
  * экран (`wordPages`, 2026-10-16): [groupSize] - слов на странице из коротких слов (15 = 5 рядов по 3).
  * Транскрипция - у всех слов, на экране - только на первой странице (дальше - подсказкой).
  */
-data class ReadingWords(val groupSize: Int, val repeat: Int, val items: List<ReadingWord>) {
+data class ReadingWords(
+    val groupSize: Int,
+    val repeat: Int,
+    val items: List<ReadingWord>,
+    /**
+     * Пары (шаг «Мадд перед артиклем», решение пользователя 2026-10-16): слово и за ним словосочетание с
+     * ним - в одном ряду, в порядке данных (по ширине не сортируются): «маа» и «ма лькъоориӏату».
+     */
+    val pairs: Boolean = false,
+) {
     /** Рядов на странице: [groupSize] коротких слов по [MAX_COLUMNS] в ряд. */
     val rowsPerPage: Int get() = ((groupSize + MAX_COLUMNS - 1) / MAX_COLUMNS).coerceAtLeast(1)
 

@@ -453,7 +453,8 @@ function readingWordProblem(text, { byLetter, bases, signs, passed }) {
         if (!next.includes('ّ')) return 'лям артикля без знака - только перед буквой с шаддой (солнечной)';
         previous = null; c += 1; continue;
       }
-      const known = byLetter.has(char) || bases.has(char) || HAMZA_SEATS.includes(char);
+      // Та марбута (шаг «Мадд перед артиклем», 2026-10-16) - пока как буква та, с огласовкой.
+      const known = byLetter.has(char) || bases.has(char) || HAMZA_SEATS.includes(char) || char === 'ة';
       if (!known) return `неизвестная буква «${char}»`;
       if (chars[c + 1] === 'ٰ') return 'маленький алиф - после фатхьи, не вместо неё';
       // Шадда (шаг «Шадда», 2026-10-16) - вместе с огласовкой в любом порядке: بَّ или بَّ (Unicode
@@ -609,7 +610,7 @@ function checkReading(file) {
     if (step?.words !== undefined) {
       const w = step.words;
       const where = `${at} words`;
-      for (const k of Object.keys(w ?? {})) if (!['groupSize', 'repeat', 'items'].includes(k)) error(where, `неизвестное поле «${k}»`);
+      for (const k of Object.keys(w ?? {})) if (!['groupSize', 'repeat', 'items', 'pairs'].includes(k)) error(where, `неизвестное поле «${k}»`);
       for (const k of ['groupSize', 'repeat']) if (!Number.isInteger(w?.[k]) || w[k] < 1) error(where, `${k} - целое ≥ 1`);
       const items = Array.isArray(w?.items) ? w.items : (error(where, 'items - массив'), []);
       const signs = new Map(marks.map(m => [m.sign, m.id]));

@@ -83,6 +83,7 @@ internal fun ReadingFileDto.toReadingCourse(priority: ContentLanguagePriority): 
                 ReadingWords(
                     groupSize = words.groupSize,
                     repeat = words.repeat,
+                    pairs = words.pairs,
                     items = words.items.map { item ->
                         ReadingWord(
                             arabic = item.arabic,

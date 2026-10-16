@@ -217,7 +217,7 @@ class ReadingContentTest {
         assertEquals("Определённый артикль", step.title)
         assertEquals("Мадд перед артиклем", course.step(11)?.title, "страницы 40-41 - отдельным шагом (решение пользователя)")
         val read = step.blocks.filterIsInstance<ReadingBlock.Formulas>().flatMap { it.items }
-        assertEquals("йавми ддиини", read.first { it.result == "يَوْمِدِّينِ" }.transliteration, "в середине не читаются ни ٱ, ни лям перед солнечной")
+        assertEquals("йавми-ддиини", read.first { it.result == "يَوْمِدِّينِ" }.transliteration, "в середине не читаются ни ٱ, ни лям перед солнечной")
         assertEquals("ъальхьамду", read.first { it.result == "أَلْحَمْدُ" }.transliteration)
         assertTrue(step.blocks.none { it is ReadingBlock.Rule }, "солнечные и лунные буквы - не на уроке (решение пользователя)")
         val extra = requireNotNull(step.extra)
@@ -225,6 +225,19 @@ class ReadingContentTest {
         assertEquals(listOf(14, 14), extra.blocks.filterIsInstance<ReadingBlock.Rule>().map { it.letters.size })
         assertTrue(step.quiz.isNotEmpty() && step.quiz.all { it is ReadingQuestion.Word })
         assertEquals(60, step.words?.items?.size)
+    }
+
+    @Test
+    fun `Шаг 11 - мадд перед артиклем, буква мадда не тянется, пары слов`() = runTest {
+        val step = requireNotNull(loadAssetCourse().step(11))
+
+        val read = step.blocks.filterIsInstance<ReadingBlock.Formulas>().single().items
+        assertEquals("фи-лькъубуури", read.first().transliteration)
+        val words = requireNotNull(step.words)
+        assertTrue(words.pairs, "пары страницы 41 - рядом (решение пользователя)")
+        assertEquals("маа", words.items.first { it.arabic == "مَا" }.transliteration, "отдельно - долго")
+        assertEquals("ма-лькъоориӏату", words.items.first { it.arabic == "مَا ٱلْقَارِعَةُ" }.transliteration, "перед артиклем - коротко, та марбута - как та")
+        assertTrue(step.quiz.all { it is ReadingQuestion.Word })
     }
 
     private fun TestScope.repository(json: String) = AssetContentRepository(

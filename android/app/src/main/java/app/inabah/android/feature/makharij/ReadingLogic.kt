@@ -137,8 +137,11 @@ fun completedCount(course: ReadingCourse, completed: Set<Int>): Int =
 fun isCourseDone(course: ReadingCourse, completed: Set<Int>): Boolean =
     course.steps.isNotEmpty() && course.steps.all { it.number in completed }
 
-/** Ряд «Читаем слова»: [columns] плиток в ряд (3, 2 или 1 - во всю ширину); индекс слова - номер в шаге. */
-data class WordRow(val columns: Int, val words: List<IndexedValue<ReadingWord>>)
+/**
+ * Ряд «Читаем слова»: [columns] плиток в ряд (3, 2 или 1 - во всю ширину); индекс слова - номер в шаге.
+ * [isPair] - слово и словосочетание с ним (словосочетание шире).
+ */
+data class WordRow(val columns: Int, val words: List<IndexedValue<ReadingWord>>, val isPair: Boolean = false)
 
 /**
  * Страницы «Читаем слова» (просьба пользователя 2026-10-16): [columnsOf] - сколько плиток с этим словом
@@ -159,6 +162,26 @@ fun wordPages(words: List<ReadingWord>, columnsOf: (ReadingWord) -> Int, rowsPer
         val rest = queue.size % columns
         if (rest > 0) queues.getValue(columns - 1).addAll(0, queue.takeLast(rest))
         queue.dropLast(rest).chunked(columns).mapTo(rows) { WordRow(columns, it) }
+    }
+    return rows.chunked(rowsPerPage.coerceAtLeast(1))
+}
+
+/**
+ * Страницы пар (шаг «Мадд перед артиклем»): порядок данных; слово, за которым словосочетание, - с ним в
+ * одном ряду, остальное - во всю ширину. Страница - [rowsPerPage] рядов.
+ */
+fun pairPages(words: List<ReadingWord>, rowsPerPage: Int): List<List<WordRow>> {
+    val rows = mutableListOf<WordRow>()
+    var i = 0
+    while (i < words.size) {
+        val next = words.getOrNull(i + 1)
+        if (!words[i].isPhrase && next != null && next.isPhrase) {
+            rows += WordRow(2, listOf(IndexedValue(i, words[i]), IndexedValue(i + 1, next)), isPair = true)
+            i += 2
+        } else {
+            rows += WordRow(1, listOf(IndexedValue(i, words[i])))
+            i += 1
+        }
     }
     return rows.chunked(rowsPerPage.coerceAtLeast(1))
 }

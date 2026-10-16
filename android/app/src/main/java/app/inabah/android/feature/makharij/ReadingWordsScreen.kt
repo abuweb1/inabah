@@ -273,7 +273,7 @@ private fun rememberWordPages(words: ReadingWords?): List<List<WordRow>> {
                 width <= ((rowWidth - gap * (columns - 1)) / columns - padding) * WORD_FIT
             } ?: 1
         }
-        wordPages(words.items, columnsOf, words.rowsPerPage)
+        if (words.pairs) pairPages(words.items, words.rowsPerPage) else wordPages(words.items, columnsOf, words.rowsPerPage)
     }
 }
 
@@ -299,7 +299,8 @@ private fun WordGrid(
                                 transliteration = word.transliteration,
                                 showTransliteration = showTransliteration,
                                 onRead = { onRead(index) },
-                                modifier = Modifier.weight(1f).fillMaxHeight(),
+                                // В паре словосочетание шире слова.
+                                modifier = Modifier.weight(if (row.isPair && word.isPhrase) PAIR_PHRASE_WEIGHT else 1f).fillMaxHeight(),
                             )
                         }
                     }
@@ -388,7 +389,8 @@ private fun WordTile(
                 Modifier.fillMaxWidth().padding(start = TileTextPadding, end = TileTextPadding, top = Spacing.m, bottom = Spacing.xs),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                ArabicText(word.arabic, WORD_SIZE, palette.parchmentText, bold = true, maxLines = 1, textAlign = TextAlign.Center)
+                // Длинное словосочетание (предложение) - до 2 строк, не обрезается.
+                ArabicText(word.arabic, WORD_SIZE, palette.parchmentText, bold = true, maxLines = if (word.isPhrase) PHRASE_LINES else 1, textAlign = TextAlign.Center)
                 if (transliteration != null) {
                     Text(
                         transliteration,
@@ -479,6 +481,8 @@ private fun WordsFinished(
 }
 
 private const val WORD_SIZE = 28f
+private const val PAIR_PHRASE_WEIGHT = 2f
+private const val PHRASE_LINES = 2
 // Арабский контент - не переводится (Муслим, 798).
 private const val HADITH_ARABIC = "الْمَاهِرُ بِالْقُرْآنِ مَعَ السَّفَرَةِ الْكِرَامِ الْبَرَرَةِ، وَالَّذِي يَقْرَأُ الْقُرْآنَ وَيَتَتَعْتَعُ فِيهِ وَهُوَ عَلَيْهِ شَاقٌّ لَهُ أَجْرَانِ"
 /** Поле слова в плитке слева и справа - и в расчёте ширины ([rememberWordPages]). */

@@ -67,7 +67,8 @@ class ReadingLogicTest {
         assertEquals(8, currentStep(course, (1..7).toSet())?.number)
         assertEquals(9, currentStep(course, (1..8).toSet())?.number)
         assertEquals(10, currentStep(course, (1..9).toSet())?.number)
-        assertNull(currentStep(course, (1..10).toSet()), "шаги 11-12 без урока пропускаются")
+        assertEquals(11, currentStep(course, (1..10).toSet())?.number)
+        assertNull(currentStep(course, (1..11).toSet()), "шаг 12 без урока пропускается")
         assertNull(currentStep(course, withLessons.toSet()))
         assertEquals(2.0 / 12, completedFraction(course, setOf(1, 2, 99)), "итог не считается")
     }
@@ -230,5 +231,18 @@ class ReadingLogicTest {
         assertEquals(first.options, quizOptions(course, first, step.number).map { it.text })
         assertEquals(listOf(first.options[first.answer]), quizOptions(course, first, step.number).filter { it.isCorrect }.map { it.text })
         assertEquals(setOf(0, 1, 2), words.map { it.answer }.toSet())
+    }
+
+    @Test
+    fun `Пары - слово и словосочетание за ним в одном ряду, остальное во всю ширину, порядок данных`() {
+        val words = listOf("مَا", "مَا ٱلْقَارِعَةُ", "ذُو", "ذُو ٱلْفَضْلِ", "وَإِذَا ٱلصُّحُفُ نُشِرَتْ").map { ReadingWord(it, null) }
+
+        val pages = pairPages(words, rowsPerPage = 2)
+
+        assertEquals(
+            listOf(listOf(listOf(0, 1), listOf(2, 3)), listOf(listOf(4))),
+            pages.map { page -> page.map { row -> row.words.map { it.index } } },
+        )
+        assertEquals(listOf(true, true, false), pages.flatten().map { it.isPair })
     }
 }
