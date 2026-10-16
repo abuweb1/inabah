@@ -65,7 +65,8 @@ class ReadingLogicTest {
         assertEquals(6, currentStep(course, setOf(1, 2, 3, 4, 5))?.number)
         assertEquals(7, currentStep(course, setOf(1, 2, 3, 4, 5, 6))?.number)
         assertEquals(8, currentStep(course, (1..7).toSet())?.number)
-        assertNull(currentStep(course, (1..8).toSet()), "шаги 9-11 без урока пропускаются")
+        assertEquals(9, currentStep(course, (1..8).toSet())?.number)
+        assertNull(currentStep(course, (1..9).toSet()), "шаги 10-11 без урока пропускаются")
         assertNull(currentStep(course, withLessons.toSet()))
         assertEquals(2.0 / 11, completedFraction(course, setOf(1, 2, 99)), "итог не считается")
     }
@@ -216,5 +217,17 @@ class ReadingLogicTest {
         assertEquals(listOf("бан", "бин", "бун"), letterChain(course, ba, step.number).takeLast(3).map { it.transliteration })
         assertTrue(letterChain(course, ba, step.number).takeLast(3).all { it.isLearned })
         assertTrue(letterChain(course, ba, step.number - 1).none { it.transliteration == "бан" })
+    }
+
+    @Test
+    fun `Вопрос со словом - варианты из данных в их порядке, верный - по answer, место верного меняется`() = runTest {
+        val course = loadAssetCourse()
+        val step = requireNotNull(course.step(9))
+        val words = step.quiz.filterIsInstance<ReadingQuestion.Word>()
+        val first = words.first()
+
+        assertEquals(first.options, quizOptions(course, first, step.number).map { it.text })
+        assertEquals(listOf(first.options[first.answer]), quizOptions(course, first, step.number).filter { it.isCorrect }.map { it.text })
+        assertEquals(setOf(0, 1, 2), words.map { it.answer }.toSet())
     }
 }

@@ -73,6 +73,7 @@ data class QuizOption(val text: String, val isCorrect: Boolean)
  *   транскрипция), по порядку знаков: «ба · би · бу»; верный - всегда среди них; у танвина варианты -
  *   танвины: «бан · бин · бун»;
  * - закрытый слог - с фатхьой, касрой и доммой алифа: «ъаб · ъиб · ъуб»;
+ * - слово - варианты из данных (в их порядке);
  * - буква - она и соседние по алфавиту (у первой и последней - две следующие или предыдущие),
  *   соседние часто и похожи по форме: ب ت ث.
  */
@@ -91,6 +92,8 @@ fun quizOptions(course: ReadingCourse, question: ReadingQuestion, stepNumber: In
                 QuizOption(letter.transliteration(mark).orEmpty(), mark.id == question.mark.id)
             }
         }
+        // Слово: варианты - из данных, в их порядке.
+        is ReadingQuestion.Word -> question.options.mapIndexed { index, text -> QuizOption(text, index == question.answer) }
         // Закрытый слог: тот же с другими огласовками алифа - «ъаб · ъиб · ъуб».
         is ReadingQuestion.ClosedSyllable -> ReadingQuestion.ClosedSyllable.VOWELS.map { id ->
             QuizOption(question.transliteration(id), id == question.vowel.id)

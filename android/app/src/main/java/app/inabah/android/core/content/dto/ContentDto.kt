@@ -204,8 +204,21 @@ data class ReadingTextTranslationDto(
 @Serializable
 data class ReadingQuizDto(
     val type: String,
-    val letter: String,
+    /** У `word` буквы нет. */
+    val letter: String = "",
     val mark: String? = null,
     /** `letterForm`: isolated, initial, medial, final. */
     val form: String? = null,
+    /** `word`: слово вопроса. */
+    val arabic: String? = null,
+    /** `word`: номер верного варианта в `translations.<язык>.options`. */
+    val answer: Int = 0,
+    val translations: Map<String, ReadingQuizTranslationDto> = emptyMap(),
+)
+
+/** `word`: варианты транскрипции (в показанном порядке) и пояснение к ответу. */
+@Serializable
+data class ReadingQuizTranslationDto(
+    val options: List<String> = emptyList(),
+    val explain: String = "",
 )

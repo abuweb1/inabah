@@ -233,10 +233,9 @@ sealed interface ReadingBlock {
 
 /** Вопрос проверки; варианты ответа строит экран проверки. */
 sealed interface ReadingQuestion {
-    val letter: ReadingLetter
 
     /** «Как читается этот слог?». */
-    data class Syllable(override val letter: ReadingLetter, val mark: ReadingMark) : ReadingQuestion
+    data class Syllable(val letter: ReadingLetter, val mark: ReadingMark) : ReadingQuestion
 
     /**
      * «Как читается этот слог?» - закрытый слог шага «Сукун» (просьба пользователя 2026-10-16, как в
@@ -244,7 +243,7 @@ sealed interface ReadingQuestion {
      * (её подставки и слоги), [sukun] - знак.
      */
     data class ClosedSyllable(
-        override val letter: ReadingLetter,
+        val letter: ReadingLetter,
         val vowel: ReadingMark,
         val alif: ReadingLetter,
         val sukun: ReadingMark,
@@ -260,12 +259,23 @@ sealed interface ReadingQuestion {
         }
     }
 
+    /**
+     * «Как читается это слово?» (шаг «Шадда», 2026-10-16): слово и варианты транскрипции из данных
+     * (в показанном порядке), [answer] - номер верного, [explanation] - почему так (нет - «Читается «…».»).
+     */
+    data class Word(
+        val arabic: String,
+        val options: List<String>,
+        val answer: Int,
+        val explanation: String?,
+    ) : ReadingQuestion
+
     /** «Какая это буква?». */
-    data class LetterName(override val letter: ReadingLetter) : ReadingQuestion
+    data class LetterName(val letter: ReadingLetter) : ReadingQuestion
 
     /** «Какая это буква?» по одной форме; варианты - буквы её группы похожего написания ([group]). */
     data class LetterInForm(
-        override val letter: ReadingLetter,
+        val letter: ReadingLetter,
         val form: LetterForm,
         val group: List<ReadingLetter>,
     ) : ReadingQuestion

@@ -70,7 +70,7 @@ internal fun ReadingFileDto.toReadingCourse(priority: ContentLanguagePriority): 
             quiz = dto.quiz.mapNotNull { quiz ->
                 // Варианты «буквы по форме» - буквы её карточки в таблице форм шага.
                 val formGroups = dto.blocks.filter { it.type == "forms" }.flatMap { it.groups.orEmpty() }
-                quiz.toQuestion(::mark, ::letter) { char -> formGroups.firstOrNull { char in it }.orEmpty().map(::letter) }
+                quiz.toQuestion(priority, ::mark, ::letter) { char -> formGroups.firstOrNull { char in it }.orEmpty().map(::letter) }
             },
             words = dto.words?.let { words ->
                 ReadingWords(
@@ -152,6 +152,7 @@ private fun ReadingBlockDto.toBlock(
 }
 
 private fun ReadingQuizDto.toQuestion(
+    priority: ContentLanguagePriority,
     findMark: (String) -> ReadingMark,
     findLetter: (String) -> ReadingLetter,
     formGroup: (String) -> List<ReadingLetter>,
@@ -166,6 +167,16 @@ private fun ReadingQuizDto.toQuestion(
         findMark(requireNotNull(mark) { "reading.json: вопрос «syllable» без знака" }),
     )
     "letterName" -> ReadingQuestion.LetterName(findLetter(letter))
+    "word" -> {
+        val text = priority.require(translations, "вопрос «word» ${arabic.orEmpty()}")
+        require(answer in text.options.indices) { "reading.json: вопрос «word» - answer вне вариантов" }
+        ReadingQuestion.Word(
+            arabic = requireNotNull(arabic) { "reading.json: вопрос «word» без arabic" },
+            options = text.options,
+            answer = answer,
+            explanation = text.explain.trim().ifEmpty { null },
+        )
+    }
     // Закрытый слог: алиф-хамза с огласовкой [mark] и буква с сукуном (`أِبْ`).
     "closedSyllable" -> ReadingQuestion.ClosedSyllable(
         letter = findLetter(letter),

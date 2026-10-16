@@ -191,6 +191,7 @@
     <string name="makharij_quiz_done_title">Шаг пройден</string>
     <string name="makharij_quiz_done_words">Ответы на все вопросы даны. Осталось прочитать слова - тогда шаг будет пройден и откроется следующий.</string>
     <string name="makharij_quiz_explain_closed">Над буквой %1$s - сукун: слог закрыт, «%2$s».</string>
+    <string name="makharij_quiz_explain_word">Читается «%1$s».</string>
     <string name="makharij_quiz_explain_form">Это %1$s, %2$s.</string>
     <string name="makharij_quiz_explain_letter">Это %1$s, звук «%2$s».</string>
     <string name="makharij_quiz_explain_syllable">%1$s - %2$s, она даёт звук «%3$s».</string>
@@ -201,6 +202,7 @@
     <string name="makharij_quiz_option_correct">верный ответ</string>
     <string name="makharij_quiz_option_wrong">неверный ответ</string>
     <string name="makharij_quiz_syllable">Как читается этот слог?</string>
+    <string name="makharij_quiz_word">Как читается это слово?</string>
     <string name="makharij_quiz_title">Проверка</string>
     <string name="makharij_quiz_to_steps">К списку шагов</string>
     <string name="makharij_quiz_wrong">Неверно, попробуйте ещё раз</string>

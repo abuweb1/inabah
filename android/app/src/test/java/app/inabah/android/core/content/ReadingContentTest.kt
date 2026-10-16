@@ -192,6 +192,23 @@ class ReadingContentTest {
         assertEquals(6, words.repeat)
     }
 
+    @Test
+    fun `Шаг 9 - шадда, равенства книги, вопросы со словом, 60 слов`() = runTest {
+        val step = requireNotNull(loadAssetCourse().step(9))
+
+        assertEquals(listOf("shadda"), step.markIds)
+        val equal = step.blocks.filterIsInstance<ReadingBlock.Formulas>().single()
+        assertEquals(9, equal.items.size)
+        assertEquals(listOf("ъабба", "джиддан", "роббун"), listOf(0, 6, 8).map { equal.items[it].transliteration })
+        val words = step.quiz.filterIsInstance<ReadingQuestion.Word>()
+        assertEquals(step.quiz.size, words.size)
+        assertEquals("شَكُّ", words.first().arabic)
+        assertEquals("шакку", words.first().options[words.first().answer])
+        assertTrue(words.all { it.explanation != null && it.options.size == 3 })
+        assertEquals(60, step.words?.items?.size)
+        assertEquals("мухьаммадун", step.words?.items?.first { it.arabic == "مُحَمَّدٌ" }?.transliteration)
+    }
+
     private fun TestScope.repository(json: String) = AssetContentRepository(
         { ByteArrayInputStream(json.toByteArray()) },
         ContentLanguagePriority(listOf(ContentLanguage.Base)),

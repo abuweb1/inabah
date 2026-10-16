@@ -443,7 +443,17 @@ function readingWordProblem(text, { byLetter, bases, signs, passed }) {
       const known = byLetter.has(char) || bases.has(char) || HAMZA_SEATS.includes(char);
       if (!known) return `неизвестная буква «${char}»`;
       if (chars[c + 1] === 'ٰ') return 'маленький алиф - после фатхьи, не вместо неё';
-      const mark = signs.get(chars[c + 1]);
+      // Шадда (шаг «Шадда», 2026-10-16) - вместе с огласовкой в любом порядке: بَّ или بَّ (Unicode
+      // ставит огласовку перед шаддой); после шадды обязательна огласовка или танвин.
+      let mark = signs.get(chars[c + 1]);
+      let width = 2;
+      const doubled = mark === 'shadda' || signs.get(chars[c + 2]) === 'shadda';
+      if (doubled) {
+        if (mark === 'shadda') mark = signs.get(chars[c + 2]);
+        width = 3;
+        if (!passed.has('shadda')) return 'знак shadda ещё не пройден';
+        if (!mark || mark === 'sukun' || mark === 'shadda') return `после шадды у «${char}» нужна огласовка`;
+      }
       if (!mark) {
         if (MADD_LETTERS[char] && previous === MADD_LETTERS[char]) { previous = null; c += 1; continue; }
         // Алиф после танвина фатхьи не читается (أَبَدًا, решение по книге 2026-10-16).
@@ -451,7 +461,7 @@ function readingWordProblem(text, { byLetter, bases, signs, passed }) {
         return `после «${char}» нет знака`;
       }
       if (!passed.has(mark)) return `знак ${mark} ещё не пройден`;
-      c += 2;
+      c += width;
       // Маленький алиф - после фатхьи на соединительной черте (هَـٰذَا, как в Къуране, решение
       // пользователя 2026-10-16); после несоединяемой буквы черты нет (صِرَٰطُ).
       if (chars[c] === TATWEEL) {
@@ -470,7 +480,7 @@ function readingWordProblem(text, { byLetter, bases, signs, passed }) {
   }
   return null;
 }
-const READING_QUIZ = { syllable: ['type', 'letter', 'mark'], closedSyllable: ['type', 'letter', 'mark'], letterName: ['type', 'letter'], letterForm: ['type', 'letter', 'form'] };
+const READING_QUIZ = { syllable: ['type', 'letter', 'mark'], closedSyllable: ['type', 'letter', 'mark'], letterName: ['type', 'letter'], letterForm: ['type', 'letter', 'form'], word: ['type', 'arabic', 'answer', 'translations'] };
 // Формы буквы: отдельная, в начале, в середине, в конце слова.
 const READING_FORMS = ['isolated', 'initial', 'medial', 'final'];
 const READING_ALPHABET = 29;
@@ -680,6 +690,22 @@ function checkReading(file) {
       const keys = READING_QUIZ[q?.type];
       if (!keys) { error(where, `неизвестный тип «${q?.type}»`); continue; }
       for (const k of Object.keys(q)) if (!keys.includes(k)) error(where, `неизвестное поле «${k}»`);
+      // Слово (шаг «Шадда»): слово - как в «Читаем слова», 3 варианта транскрипции, answer - номер верного.
+      if (q.type === 'word') {
+        const signs = new Map(marks.map(m => [m.sign, m.id]));
+        const bases = new Set(letters.flatMap(l => Object.values(l?.syllableBases ?? {})));
+        if (requireString(where, q, 'arabic')) {
+          const problem = readingWordProblem(q.arabic, { byLetter, bases, signs, passed });
+          if (problem) error(where, `«${q.arabic}»: ${problem}`);
+        }
+        const ru = checkTexts(where, q.translations, ['options', 'explain'], []);
+        const options = ru?.options;
+        if (!Array.isArray(options) || options.length !== 3 || options.some(o => typeof o !== 'string' || !o.trim())) error(where, 'options - 3 непустые строки');
+        else if (new Set(options).size !== 3) error(where, 'options - без повторов');
+        if (!Number.isInteger(q.answer) || q.answer < 0 || q.answer > 2) error(where, 'answer - номер варианта 0…2');
+        if (typeof ru?.explain === 'string') checkRussian(where, ru.explain);
+        continue;
+      }
       knownLetter(where, q.letter);
       // Форма - из списка; буква - в одной из групп forms этого шага (варианты ответа - буквы её группы).
       if (q.type === 'letterForm') {

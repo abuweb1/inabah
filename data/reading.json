@@ -6568,8 +6568,738 @@
           "subtitle": "удвоение буквы"
         }
       },
-      "blocks": [],
-      "quiz": []
+      "blocks": [
+        {
+          "type": "text",
+          "translations": {
+            "ru": {
+              "text": "Шадда - знак удвоения над буквой: буква с шаддой - это две одинаковые буквы, первая с сукуном, вторая с огласовкой.",
+              "info": "Шадда (ташдид), как и танвин, не даёт нового звука - она сокращает запись. Букву с шаддой произносят дважды: сначала она закрывает слог, потом читается со своей огласовкой - «ъаб-ба»."
+            }
+          }
+        },
+        {
+          "type": "formulas",
+          "columns": 3,
+          "items": [
+            {
+              "parts": [
+                "أَبْبَ"
+              ],
+              "result": "أَبَّ",
+              "translations": {
+                "ru": {
+                  "translit": "ъабба"
+                }
+              }
+            },
+            {
+              "parts": [
+                "أَبْبِ"
+              ],
+              "result": "أَبِّ",
+              "translations": {
+                "ru": {
+                  "translit": "ъабби"
+                }
+              }
+            },
+            {
+              "parts": [
+                "أَكْكُ"
+              ],
+              "result": "أَكُّ",
+              "translations": {
+                "ru": {
+                  "translit": "ъакку"
+                }
+              }
+            },
+            {
+              "parts": [
+                "أُمْمَا"
+              ],
+              "result": "أُمَّا",
+              "translations": {
+                "ru": {
+                  "translit": "ъуммаа"
+                }
+              }
+            },
+            {
+              "parts": [
+                "إِتْتِي"
+              ],
+              "result": "إِتِّي",
+              "translations": {
+                "ru": {
+                  "translit": "ъиттии"
+                }
+              }
+            },
+            {
+              "parts": [
+                "بَسْسُو"
+              ],
+              "result": "بَسُّو",
+              "translations": {
+                "ru": {
+                  "translit": "бассуу"
+                }
+              }
+            },
+            {
+              "parts": [
+                "جِدْدَنْ"
+              ],
+              "result": "جِدًّا",
+              "translations": {
+                "ru": {
+                  "translit": "джиддан"
+                }
+              }
+            },
+            {
+              "parts": [
+                "أَشْشِنْ"
+              ],
+              "result": "أَشٍّ",
+              "translations": {
+                "ru": {
+                  "translit": "ъашшин"
+                }
+              }
+            },
+            {
+              "parts": [
+                "رَبْبُنْ"
+              ],
+              "result": "رَبٌّ",
+              "translations": {
+                "ru": {
+                  "translit": "роббун"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "translations": {
+            "ru": {
+              "text": "Фатхьа и домма пишутся над шаддой, касра - под ней или под буквой. Шадда бывает и с танвином: «роббун», «джиддан»."
+            }
+          }
+        }
+      ],
+      "quiz": [
+        {
+          "type": "word",
+          "arabic": "شَكُّ",
+          "answer": 0,
+          "translations": {
+            "ru": {
+              "options": [
+                "шакку",
+                "шаку",
+                "шакка"
+              ],
+              "explain": "Буква с шаддой звучит дважды: «к» с сукуном, потом «ку»."
+            }
+          }
+        },
+        {
+          "type": "word",
+          "arabic": "دُبِّ",
+          "answer": 1,
+          "translations": {
+            "ru": {
+              "options": [
+                "дуби",
+                "дубби",
+                "дуббу"
+              ],
+              "explain": "Буква с шаддой звучит дважды: «б» с сукуном, потом «би»."
+            }
+          }
+        },
+        {
+          "type": "word",
+          "arabic": "كُفِّنَ",
+          "answer": 2,
+          "translations": {
+            "ru": {
+              "options": [
+                "куфина",
+                "куффуна",
+                "куффина"
+              ],
+              "explain": "Буква с шаддой звучит дважды: «ф» с сукуном, потом «фи»."
+            }
+          }
+        },
+        {
+          "type": "word",
+          "arabic": "تَعَجَّلَ",
+          "answer": 0,
+          "translations": {
+            "ru": {
+              "options": [
+                "таӏаджджальа",
+                "таӏаджальа",
+                "таӏаджджильа"
+              ],
+              "explain": "Буква с шаддой звучит дважды: «дж» с сукуном, потом «джа»."
+            }
+          }
+        },
+        {
+          "type": "word",
+          "arabic": "سِتٍّ",
+          "answer": 1,
+          "translations": {
+            "ru": {
+              "options": [
+                "ситин",
+                "ситтин",
+                "ситтун"
+              ],
+              "explain": "Буква с шаддой звучит дважды: «т» с сукуном, потом «тин»."
+            }
+          }
+        },
+        {
+          "type": "word",
+          "arabic": "مُخْتَصٌّ",
+          "answer": 2,
+          "translations": {
+            "ru": {
+              "options": [
+                "мухтасун",
+                "мухтассон",
+                "мухтассун"
+              ],
+              "explain": "Буква с шаддой звучит дважды: «с» с сукуном, потом «сун»."
+            }
+          }
+        },
+        {
+          "type": "word",
+          "arabic": "عَلَّمَ",
+          "answer": 0,
+          "translations": {
+            "ru": {
+              "options": [
+                "ӏальльама",
+                "ӏальама",
+                "ӏальлима"
+              ],
+              "explain": "Буква с шаддой звучит дважды: «ль» с сукуном, потом «льа»."
+            }
+          }
+        },
+        {
+          "type": "word",
+          "arabic": "يَظُنُّ",
+          "answer": 1,
+          "translations": {
+            "ru": {
+              "options": [
+                "йазуну",
+                "йазунну",
+                "йазунна"
+              ],
+              "explain": "Буква с шаддой звучит дважды: «н» с сукуном, потом «ну»."
+            }
+          }
+        }
+      ],
+      "words": {
+        "groupSize": 15,
+        "repeat": 6,
+        "items": [
+          {
+            "arabic": "يَمُرُّونَ",
+            "translations": {
+              "ru": {
+                "translit": "йамуррууна"
+              }
+            }
+          },
+          {
+            "arabic": "بَتَّ",
+            "translations": {
+              "ru": {
+                "translit": "батта"
+              }
+            }
+          },
+          {
+            "arabic": "عَلَّمَ",
+            "translations": {
+              "ru": {
+                "translit": "ӏальльама"
+              }
+            }
+          },
+          {
+            "arabic": "سُعِّرَتْ",
+            "translations": {
+              "ru": {
+                "translit": "суӏӏирот"
+              }
+            }
+          },
+          {
+            "arabic": "صُنِّفَ",
+            "translations": {
+              "ru": {
+                "translit": "суннифа"
+              }
+            }
+          },
+          {
+            "arabic": "حَصَّلَ",
+            "translations": {
+              "ru": {
+                "translit": "хьассольа"
+              }
+            }
+          },
+          {
+            "arabic": "يُكَذِّبُ",
+            "translations": {
+              "ru": {
+                "translit": "йуказзибу"
+              }
+            }
+          },
+          {
+            "arabic": "سُيِّرَتْ",
+            "translations": {
+              "ru": {
+                "translit": "суййирот"
+              }
+            }
+          },
+          {
+            "arabic": "عُطِّلَتْ",
+            "translations": {
+              "ru": {
+                "translit": "ӏутӏтӏыльат"
+              }
+            }
+          },
+          {
+            "arabic": "زُوِّجَتْ",
+            "translations": {
+              "ru": {
+                "translit": "зуввиджат"
+              }
+            }
+          },
+          {
+            "arabic": "صَدَّقَ",
+            "translations": {
+              "ru": {
+                "translit": "соддакъо"
+              }
+            }
+          },
+          {
+            "arabic": "ذَكِّرْ",
+            "translations": {
+              "ru": {
+                "translit": "заккир"
+              }
+            }
+          },
+          {
+            "arabic": "مَسِّ",
+            "translations": {
+              "ru": {
+                "translit": "масси"
+              }
+            }
+          },
+          {
+            "arabic": "أَنَّ",
+            "translations": {
+              "ru": {
+                "translit": "ъанна"
+              }
+            }
+          },
+          {
+            "arabic": "تَبَّتْ",
+            "translations": {
+              "ru": {
+                "translit": "таббат"
+              }
+            }
+          },
+          {
+            "arabic": "يُعَلِّمُ",
+            "translations": {
+              "ru": {
+                "translit": "йуӏальлиму"
+              }
+            }
+          },
+          {
+            "arabic": "رَبَّنَا",
+            "translations": {
+              "ru": {
+                "translit": "роббанаа"
+              }
+            }
+          },
+          {
+            "arabic": "كَذَّبَ",
+            "translations": {
+              "ru": {
+                "translit": "каззаба"
+              }
+            }
+          },
+          {
+            "arabic": "حُصِّلَ",
+            "translations": {
+              "ru": {
+                "translit": "хьуссыльа"
+              }
+            }
+          },
+          {
+            "arabic": "وَيُزَكِّيهِمْ",
+            "translations": {
+              "ru": {
+                "translit": "вайузаккиихӏим"
+              }
+            }
+          },
+          {
+            "arabic": "بُرِّزَ",
+            "translations": {
+              "ru": {
+                "translit": "бурриза"
+              }
+            }
+          },
+          {
+            "arabic": "مُحَمَّدٌ",
+            "translations": {
+              "ru": {
+                "translit": "мухьаммадун"
+              }
+            }
+          },
+          {
+            "arabic": "حُقَّتْ",
+            "translations": {
+              "ru": {
+                "translit": "хьукъкъот"
+              }
+            }
+          },
+          {
+            "arabic": "سِرُّ",
+            "translations": {
+              "ru": {
+                "translit": "сирру"
+              }
+            }
+          },
+          {
+            "arabic": "شَكُّ",
+            "translations": {
+              "ru": {
+                "translit": "шакку"
+              }
+            }
+          },
+          {
+            "arabic": "يَضِلُّونَ",
+            "translations": {
+              "ru": {
+                "translit": "йадыльльууна"
+              }
+            }
+          },
+          {
+            "arabic": "مُدَّتْ",
+            "translations": {
+              "ru": {
+                "translit": "муддат"
+              }
+            }
+          },
+          {
+            "arabic": "ظَنَّ",
+            "translations": {
+              "ru": {
+                "translit": "зонна"
+              }
+            }
+          },
+          {
+            "arabic": "رُبَّ",
+            "translations": {
+              "ru": {
+                "translit": "рубба"
+              }
+            }
+          },
+          {
+            "arabic": "يَظُنُّ",
+            "translations": {
+              "ru": {
+                "translit": "йазунну"
+              }
+            }
+          },
+          {
+            "arabic": "سَبِّحْ",
+            "translations": {
+              "ru": {
+                "translit": "саббихь"
+              }
+            }
+          },
+          {
+            "arabic": "أُمُّ",
+            "translations": {
+              "ru": {
+                "translit": "ъумму"
+              }
+            }
+          },
+          {
+            "arabic": "عِزُّ",
+            "translations": {
+              "ru": {
+                "translit": "ӏиззу"
+              }
+            }
+          },
+          {
+            "arabic": "نَزَّلَ",
+            "translations": {
+              "ru": {
+                "translit": "наззальа"
+              }
+            }
+          },
+          {
+            "arabic": "أَلَظَّ",
+            "translations": {
+              "ru": {
+                "translit": "ъальаззо"
+              }
+            }
+          },
+          {
+            "arabic": "صَحَّ",
+            "translations": {
+              "ru": {
+                "translit": "сохьхьа"
+              }
+            }
+          },
+          {
+            "arabic": "فُجِّرَتْ",
+            "translations": {
+              "ru": {
+                "translit": "фуджджирот"
+              }
+            }
+          },
+          {
+            "arabic": "رَصَّعَتْ",
+            "translations": {
+              "ru": {
+                "translit": "россоӏат"
+              }
+            }
+          },
+          {
+            "arabic": "إِنَّ",
+            "translations": {
+              "ru": {
+                "translit": "ъинна"
+              }
+            }
+          },
+          {
+            "arabic": "أَصِّ",
+            "translations": {
+              "ru": {
+                "translit": "ъассы"
+              }
+            }
+          },
+          {
+            "arabic": "خَصَّصَتْ",
+            "translations": {
+              "ru": {
+                "translit": "хоссосот"
+              }
+            }
+          },
+          {
+            "arabic": "رَبِّكَ",
+            "translations": {
+              "ru": {
+                "translit": "роббика"
+              }
+            }
+          },
+          {
+            "arabic": "يَمُنُّونَ",
+            "translations": {
+              "ru": {
+                "translit": "йамуннууна"
+              }
+            }
+          },
+          {
+            "arabic": "كُلِّ",
+            "translations": {
+              "ru": {
+                "translit": "кульли"
+              }
+            }
+          },
+          {
+            "arabic": "عَدَّدَ",
+            "translations": {
+              "ru": {
+                "translit": "ӏаддада"
+              }
+            }
+          },
+          {
+            "arabic": "لَتَرَوُنَّ",
+            "translations": {
+              "ru": {
+                "translit": "льатаровунна"
+              }
+            }
+          },
+          {
+            "arabic": "نَعَّمَ",
+            "translations": {
+              "ru": {
+                "translit": "наӏӏама"
+              }
+            }
+          },
+          {
+            "arabic": "مَمَرُّ",
+            "translations": {
+              "ru": {
+                "translit": "мамарру"
+              }
+            }
+          },
+          {
+            "arabic": "حَجَّ",
+            "translations": {
+              "ru": {
+                "translit": "хьаджджа"
+              }
+            }
+          },
+          {
+            "arabic": "يَمَسُّهُمْ",
+            "translations": {
+              "ru": {
+                "translit": "йамассухӏум"
+              }
+            }
+          },
+          {
+            "arabic": "يُسَبِّحُ",
+            "translations": {
+              "ru": {
+                "translit": "йусаббихьу"
+              }
+            }
+          },
+          {
+            "arabic": "فَضَّلَ",
+            "translations": {
+              "ru": {
+                "translit": "фаддольа"
+              }
+            }
+          },
+          {
+            "arabic": "مُكَذِّبِينَ",
+            "translations": {
+              "ru": {
+                "translit": "муказзибиина"
+              }
+            }
+          },
+          {
+            "arabic": "مَفَرُّ",
+            "translations": {
+              "ru": {
+                "translit": "мафарру"
+              }
+            }
+          },
+          {
+            "arabic": "قَدَّرَ",
+            "translations": {
+              "ru": {
+                "translit": "къоддаро"
+              }
+            }
+          },
+          {
+            "arabic": "ثُمَّ",
+            "translations": {
+              "ru": {
+                "translit": "сумма"
+              }
+            }
+          },
+          {
+            "arabic": "حَقُّ",
+            "translations": {
+              "ru": {
+                "translit": "хьакъкъу"
+              }
+            }
+          },
+          {
+            "arabic": "حَثَّ",
+            "translations": {
+              "ru": {
+                "translit": "хьасса"
+              }
+            }
+          },
+          {
+            "arabic": "كُذِّبَ",
+            "translations": {
+              "ru": {
+                "translit": "куззиба"
+              }
+            }
+          },
+          {
+            "arabic": "كَرَّ",
+            "translations": {
+              "ru": {
+                "translit": "карро"
+              }
+            }
+          }
+        ]
+      }
     },
     {
       "id": 10,
