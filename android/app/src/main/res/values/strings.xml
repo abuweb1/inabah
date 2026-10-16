@@ -221,7 +221,10 @@
     <string name="makharij_words_done_quiz">Осталось ответить на вопросы урока - тогда шаг будет пройден.</string>
     <string name="makharij_words_done_title">Все слова прочитаны</string>
     <string name="makharij_words_group">группа %1$d из %2$d</string>
+    <string name="makharij_words_hadith_reference">Хадис · Муслим, 798</string>
+    <string name="makharij_words_hadith_translation">«Искусный в чтении Къурана - вместе с благородными и праведными писцами, а тому, кто читает Къуран, запинаясь, и ему это трудно, - двойная награда»</string>
     <string name="makharij_words_hint">Подсказка: показать транскрипцию</string>
+    <string name="makharij_words_read_aloud">Читайте каждое слово вслух: глазами читать не научиться - навык даёт только чтение вслух.</string>
     <string name="makharij_words_next">Дальше ›</string>
     <string name="makharij_words_open">Читаем слова</string>
     <string name="makharij_words_previous">‹ Назад</string>

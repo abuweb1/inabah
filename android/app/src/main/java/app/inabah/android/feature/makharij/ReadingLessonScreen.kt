@@ -247,7 +247,26 @@ private fun LessonContent(
 
 /** Абзац объяснения - категория «перевод» (растёт с «Размером текста»). */
 @Composable
-private fun TextBlock(text: String, info: String?) {
+private fun TextBlock(text: String, info: String?) = InfoTextCard(
+    text = text,
+    info = info?.let { full ->
+        @Composable {
+            Text(
+                full,
+                color = InabahTheme.palette.onAccent,
+                style = InabahType.contentTranslation,
+                modifier = Modifier.padding(Spacing.xl),
+            )
+        }
+    },
+)
+
+/**
+ * Короткий текст на карточке раздела и ⓘ (если есть [info]) - всплывающее окно с [info]: полный текст
+ * урока или хадис в «Читаем слова» (2026-10-16).
+ */
+@Composable
+internal fun InfoTextCard(text: String, info: (@Composable () -> Unit)?) {
     val colors = readingColors
     Row(
         Modifier
@@ -267,9 +286,9 @@ private fun TextBlock(text: String, info: String?) {
     }
 }
 
-/** ⓘ и всплывающее окно с текстом - как подтверждение сброса в настройках. */
+/** ⓘ и всплывающее окно с [content] - как подтверждение сброса в настройках. */
 @Composable
-private fun InfoButton(info: String) {
+private fun InfoButton(content: @Composable () -> Unit) {
     val colors = readingColors
     var expanded by rememberSaveable { mutableStateOf(false) }
     Box {
@@ -280,12 +299,7 @@ private fun InfoButton(info: String) {
             foreground = colors.tint,
         )
         AnchoredPopover(expanded, PopoverPlacement.BelowEnd, colors.tint, onDismiss = { expanded = false }) {
-            Text(
-                info,
-                color = InabahTheme.palette.onAccent,
-                style = InabahType.contentTranslation,
-                modifier = Modifier.widthIn(max = InfoMaxWidth).padding(Spacing.xl),
-            )
+            Box(Modifier.widthIn(max = InfoMaxWidth)) { content() }
         }
     }
 }

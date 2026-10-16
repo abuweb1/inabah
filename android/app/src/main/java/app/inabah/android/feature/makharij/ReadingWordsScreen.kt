@@ -73,6 +73,8 @@ import app.inabah.android.core.designsystem.components.surface
 import app.inabah.android.core.settings.ReadingProgress
 import app.inabah.android.core.settings.ReadingSettings
 import kotlinx.coroutines.launch
+import app.inabah.android.core.designsystem.components.FeaturedVerseBox
+import app.inabah.android.core.designsystem.components.FeaturedVerse
 import kotlinx.coroutines.delay
 import app.inabah.android.core.designsystem.components.arabicTextStyle
 import app.inabah.android.core.designsystem.components.ParchmentHorizontalPadding
@@ -181,6 +183,7 @@ fun ReadingWordsScreen(
                         repeat = words.repeat,
                         modifier = Modifier.padding(horizontal = Spacing.xl),
                     )
+                    ReadAloudNote(Modifier.padding(horizontal = Spacing.xl))
                     // Страница - во всю ширину, отступ - внутри: соседние группы не выглядывают по краям.
                     HorizontalPager(state = pager, verticalAlignment = Alignment.Top) { page ->
                         ParchmentPanel(
@@ -401,6 +404,28 @@ private fun WordTile(
     }
 }
 
+/**
+ * Мотивация над словами (просьба пользователя 2026-10-16: читать нужно много, и только вслух): «Читайте
+ * каждое слово вслух…» сразу под прогрессом, по ⓘ - хадис о двойной награде тому, кому чтение даётся
+ * с трудом (как пояснения урока). На каждой странице.
+ */
+@Composable
+private fun ReadAloudNote(modifier: Modifier = Modifier) {
+    Box(modifier) {
+        InfoTextCard(stringResource(R.string.makharij_words_read_aloud)) {
+            FeaturedVerseBox(
+                FeaturedVerse(
+                    arabic = HADITH_ARABIC,
+                    translation = stringResource(R.string.makharij_words_hadith_translation),
+                    reference = stringResource(R.string.makharij_words_hadith_reference),
+                    isFramed = false,
+                ),
+                modifier = Modifier.padding(vertical = Spacing.xl),
+            )
+        }
+    }
+}
+
 /** ‹ группа › под пергаментом. */
 @Composable
 private fun GroupNavigation(
@@ -454,6 +479,8 @@ private fun WordsFinished(
 }
 
 private const val WORD_SIZE = 28f
+// Арабский контент - не переводится (Муслим, 798).
+private const val HADITH_ARABIC = "الْمَاهِرُ بِالْقُرْآنِ مَعَ السَّفَرَةِ الْكِرَامِ الْبَرَرَةِ، وَالَّذِي يَقْرَأُ الْقُرْآنَ وَيَتَتَعْتَعُ فِيهِ وَهُوَ عَلَيْهِ شَاقٌّ لَهُ أَجْرَانِ"
 /** Поле слова в плитке слева и справа - и в расчёте ширины ([rememberWordPages]). */
 private val TileTextPadding = Spacing.xs
 /** Слово «влезает» в плитку, если занимает не больше этой доли её ширины: впритык читать тесно. */
