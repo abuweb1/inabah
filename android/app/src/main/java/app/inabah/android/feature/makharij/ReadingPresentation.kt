@@ -144,6 +144,17 @@ fun TransliterationToggle(hidden: Boolean, onToggle: () -> Unit) {
     )
 }
 
+/** Лампочка в навбаре «Читаем слова» (страницы без транскрипции): показать её на миг. */
+@Composable
+fun TransliterationHint(onClick: () -> Unit) {
+    GlassIconButton(
+        onClick = onClick,
+        iconRes = R.drawable.ic_lightbulb,
+        contentDescription = stringResource(R.string.makharij_words_hint),
+        tint = readingColors.tint,
+    )
+}
+
 /** Главная кнопка раздела: заливка цветом раздела, тёмный текст (набросок, `.btn`). */
 @Composable
 fun ReadingButton(

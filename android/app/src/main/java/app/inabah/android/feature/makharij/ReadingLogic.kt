@@ -8,6 +8,7 @@ import app.inabah.android.core.content.model.ReadingMark
 import app.inabah.android.core.content.model.ReadingQuestion
 import app.inabah.android.core.content.model.ReadingStep
 import app.inabah.android.core.content.model.ReadingWord
+import app.inabah.android.core.content.model.ReadingWords
 
 // Правила «Учимся читать» без Compose (docs/08-screen-makharij.md): цепочка листа буквы,
 // варианты ответа, текущий шаг.
@@ -69,8 +70,9 @@ data class QuizOption(val text: String, val isCorrect: Boolean)
 /**
  * Варианты ответа по порядку (без случайности - одинаково при каждом открытии):
  * - слог - тот же слог с другими знаками, пройденными к шагу [stepNumber] (у которых у буквы есть
- *   транскрипция), по порядку знаков: «ба · би · бу»; верный - всегда среди них; с сукуном верный -
- *   на месте `номер буквы % 3`; у танвина варианты - танвины: «бан · бин · бун»;
+ *   транскрипция), по порядку знаков: «ба · би · бу»; верный - всегда среди них; у танвина варианты -
+ *   танвины: «бан · бин · бун»;
+ * - закрытый слог - с фатхьой, касрой и доммой алифа: «ъаб · ъиб · ъуб»;
  * - буква - она и соседние по алфавиту (у первой и последней - две следующие или предыдущие),
  *   соседние часто и похожи по форме: ب ت ث.
  */
@@ -85,15 +87,13 @@ fun quizOptions(course: ReadingCourse, question: ReadingQuestion, stepNumber: In
                 .filter { it.id in letter.syllables || it.id == question.mark.id }
                 .filter { (it.id in ReadingMark.TANWIN) == isTanwin }
             val others = marks.filter { it.id != question.mark.id }.take(OPTION_COUNT - 1)
-            val options = marks.filter { it.id == question.mark.id || it in others }.map { mark ->
+            marks.filter { it.id == question.mark.id || it in others }.map { mark ->
                 QuizOption(letter.transliteration(mark).orEmpty(), mark.id == question.mark.id)
             }
-            // Сукун - последний знак курса: верный ответ стоял бы всегда последним. Его место - по номеру
-            // буквы (у разных букв разное, у одной и той же - всегда одно).
-            if (question.mark.id != ReadingMark.SUKUN) options
-            else options.filterNot { it.isCorrect }.toMutableList().apply {
-                add(letter.number % options.size, options.first { it.isCorrect })
-            }
+        }
+        // Закрытый слог: тот же с другими огласовками алифа - «ъаб · ъиб · ъуб».
+        is ReadingQuestion.ClosedSyllable -> ReadingQuestion.ClosedSyllable.VOWELS.map { id ->
+            QuizOption(question.transliteration(id), id == question.vowel.id)
         }
         // Буквы карточки похожего написания: она и соседние (в карточке из 3 - все).
         is ReadingQuestion.LetterInForm -> {
@@ -134,28 +134,30 @@ fun completedCount(course: ReadingCourse, completed: Set<Int>): Int =
 fun isCourseDone(course: ReadingCourse, completed: Set<Int>): Boolean =
     course.steps.isNotEmpty() && course.steps.all { it.number in completed }
 
+/** Ряд «Читаем слова»: [columns] плиток в ряд (3, 2 или 1 - во всю ширину); индекс слова - номер в шаге. */
+data class WordRow(val columns: Int, val words: List<IndexedValue<ReadingWord>>)
+
 /**
- * Ряды сетки «Читаем слова»: слова - по [columns] в ряд, словосочетание - отдельным рядом (во всю ширину);
- * порядок и индексы слов в группе сохраняются.
+ * Страницы «Читаем слова» (просьба пользователя 2026-10-16): [columnsOf] - сколько плиток с этим словом
+ * влезает в ряд (экран меряет слово; 3, 2 или 1), словосочетание - всегда во всю ширину. Сначала короткие
+ * (по 3), потом длинные (по 2), потом во всю ширину, внутри - порядок данных; страница - [rowsPerPage]
+ * рядов. Неполных рядов нет: лишние слова очереди переходят в начало следующей, более широкой (в широкой
+ * плитке слово тоже помещается). Индекс слова - его номер в данных: по нему хранится счёт прочтений.
  */
-fun wordRows(words: List<ReadingWord>, columns: Int): List<List<IndexedValue<ReadingWord>>> {
-    val rows = mutableListOf<List<IndexedValue<ReadingWord>>>()
-    var current = mutableListOf<IndexedValue<ReadingWord>>()
+fun wordPages(words: List<ReadingWord>, columnsOf: (ReadingWord) -> Int, rowsPerPage: Int): List<List<WordRow>> {
+    val queues = (ReadingWords.MAX_COLUMNS downTo 1).associateWith { mutableListOf<IndexedValue<ReadingWord>>() }
     for (word in words.withIndex()) {
-        if (word.value.isPhrase) {
-            if (current.isNotEmpty()) rows += current
-            rows += listOf(word)
-            current = mutableListOf()
-        } else {
-            current += word
-            if (current.size == columns) {
-                rows += current
-                current = mutableListOf()
-            }
-        }
+        val columns = if (word.value.isPhrase) 1 else columnsOf(word.value).coerceIn(1, ReadingWords.MAX_COLUMNS)
+        queues.getValue(columns) += word
     }
-    if (current.isNotEmpty()) rows += current
-    return rows
+    val rows = mutableListOf<WordRow>()
+    for (columns in ReadingWords.MAX_COLUMNS downTo 1) {
+        val queue = queues.getValue(columns)
+        val rest = queue.size % columns
+        if (rest > 0) queues.getValue(columns - 1).addAll(0, queue.takeLast(rest))
+        queue.dropLast(rest).chunked(columns).mapTo(rows) { WordRow(columns, it) }
+    }
+    return rows.chunked(rowsPerPage.coerceAtLeast(1))
 }
 
 /** Все слова шага прочитаны нужное число раз (слов нет - да). */

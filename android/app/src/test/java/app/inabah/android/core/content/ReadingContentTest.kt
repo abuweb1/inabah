@@ -98,14 +98,14 @@ class ReadingContentTest {
     }
 
     @Test
-    fun `Шаг 2 — 60 слов группами по 15, каждое 6 раз, транскрипция только у первых 12`() = runTest {
+    fun `Шаг 2 - 60 слов, каждое 6 раз, страница - 5 рядов, транскрипция у всех слов`() = runTest {
         val words = requireNotNull(loadAssetCourse().step(2)?.words)
 
         assertEquals(60, words.items.size)
         assertEquals(6, words.repeat)
-        assertEquals(listOf(15, 15, 15, 15), words.groups.map { it.size })
-        assertTrue(words.items.take(12).all { it.transliteration != null })
-        assertTrue(words.items.drop(12).all { it.transliteration == null })
+        assertEquals(5, words.rowsPerPage, "15 коротких слов по 3 в ряд")
+        assertTrue(loadAssetCourse().steps.mapNotNull { it.words }.all { w -> w.items.all { it.transliteration != null } },
+            "транскрипция у всех слов, на экране - только на первой странице (2026-10-16)")
         assertEquals("заъама", words.items.first().transliteration, "порядок слов перемешан - решение пользователя 2026-10-16")
     }
 
@@ -162,7 +162,10 @@ class ReadingContentTest {
         assertEquals(6, table.sample, "на уроке - 6 случайных, весь алфавит - по кнопке")
         assertEquals("ъаб", table.items.first().transliteration)
         assertEquals(listOf("ъав", "ъай"), diphthongs.items.map { it.transliteration })
-        assertTrue(step.quiz.isNotEmpty() && step.quiz.all { it is ReadingQuestion.Syllable && it.mark.id == "sukun" })
+        val closed = step.quiz.filterIsInstance<ReadingQuestion.ClosedSyllable>()
+        assertEquals(step.quiz.size, closed.size, "проверка - закрытые слоги, как в «Весь алфавит»")
+        assertEquals("إِبْ", closed.first().arabic)
+        assertEquals("ъиб", closed.first().transliteration("kasra"))
         val words = requireNotNull(step.words)
         assertEquals(60, words.items.size)
         assertEquals(6, words.repeat)

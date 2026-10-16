@@ -166,8 +166,18 @@ private fun ReadingQuizDto.toQuestion(
         findMark(requireNotNull(mark) { "reading.json: вопрос «syllable» без знака" }),
     )
     "letterName" -> ReadingQuestion.LetterName(findLetter(letter))
+    // Закрытый слог: алиф-хамза с огласовкой [mark] и буква с сукуном (`أِبْ`).
+    "closedSyllable" -> ReadingQuestion.ClosedSyllable(
+        letter = findLetter(letter),
+        vowel = findMark(requireNotNull(mark) { "reading.json: вопрос «closedSyllable» без огласовки" }),
+        alif = findLetter(ALIF),
+        sukun = findMark(ReadingMark.SUKUN),
+    )
     else -> null
 }
 
 private fun <T> ContentLanguagePriority.require(translations: Map<String, T>, what: String): T =
     requireNotNull(select(translations.keyedByLanguage())) { "reading.json: нет перевода - $what" }.translation
+
+/** Подставка слога закрытых слогов в проверке. */
+private const val ALIF = "ا"

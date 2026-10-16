@@ -470,7 +470,7 @@ function readingWordProblem(text, { byLetter, bases, signs, passed }) {
   }
   return null;
 }
-const READING_QUIZ = { syllable: ['type', 'letter', 'mark'], letterName: ['type', 'letter'], letterForm: ['type', 'letter', 'form'] };
+const READING_QUIZ = { syllable: ['type', 'letter', 'mark'], closedSyllable: ['type', 'letter', 'mark'], letterName: ['type', 'letter'], letterForm: ['type', 'letter', 'form'] };
 // Формы буквы: отдельная, в начале, в середине, в конце слова.
 const READING_FORMS = ['isolated', 'initial', 'medial', 'final'];
 const READING_ALPHABET = 29;
@@ -694,6 +694,12 @@ function checkReading(file) {
         if (!(q.mark === 'sukun' ? ru?.sound : ru?.syllables?.[q.mark])) {
           error(where, `нет транскрипции слога ${q.letter} + ${q.mark} - нечего показать в ответе`);
         }
+      }
+      // Закрытый слог (أِبْ): огласовка алифа - фатхьа, касра или домма; сукун пройден; у буквы есть звук.
+      if (q.type === 'closedSyllable') {
+        if (!['fatha', 'kasra', 'damma'].includes(q.mark)) error(where, 'closedSyllable: mark - fatha, kasra или damma');
+        if (!passed.has('sukun')) error(where, 'closedSyllable: сукун ещё не пройден к этому шагу');
+        if (!byLetter.get(q.letter)?.translations?.[BASE_LANGUAGE]?.sound) error(where, `нет звука буквы ${q.letter}`);
       }
     }
   }

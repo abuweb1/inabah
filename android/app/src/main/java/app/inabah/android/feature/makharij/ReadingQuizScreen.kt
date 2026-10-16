@@ -168,7 +168,7 @@ private fun QuizQuestion(
         Text(
             stringResource(
                 when (question) {
-                    is ReadingQuestion.Syllable -> R.string.makharij_quiz_syllable
+                    is ReadingQuestion.Syllable, is ReadingQuestion.ClosedSyllable -> R.string.makharij_quiz_syllable
                     is ReadingQuestion.LetterName, is ReadingQuestion.LetterInForm -> R.string.makharij_quiz_letter
                 },
             ),
@@ -178,6 +178,7 @@ private fun QuizQuestion(
         )
         val arabic = when (question) {
             is ReadingQuestion.Syllable -> question.letter.syllable(question.mark)
+            is ReadingQuestion.ClosedSyllable -> question.arabic
             is ReadingQuestion.LetterName -> question.letter.letter
             is ReadingQuestion.LetterInForm -> question.letter.form(question.form)
         }
@@ -231,6 +232,11 @@ private fun explanation(question: ReadingQuestion): String = when (question) {
         question.mark.where.replaceFirstChar { it.uppercase() },
         question.mark.name,
         question.mark.sound,
+    )
+    is ReadingQuestion.ClosedSyllable -> stringResource(
+        R.string.makharij_quiz_explain_closed,
+        question.letter.name,
+        question.transliteration(question.vowel.id),
     )
     is ReadingQuestion.LetterName -> stringResource(
         R.string.makharij_quiz_explain_letter,

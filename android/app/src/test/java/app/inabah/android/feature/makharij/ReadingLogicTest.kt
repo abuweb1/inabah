@@ -71,12 +71,23 @@ class ReadingLogicTest {
     }
 
     @Test
-    fun `Словосочетание - отдельным рядом, слова - по 3, индексы сохраняются`() {
-        val words = listOf("ا", "ب", "ت ث", "ج", "ح", "خ", "د", "ذ ر").map { ReadingWord(it, null) }
+    fun `Страницы слов - короткие по 3 впереди, длинные по 2, словосочетания во всю ширину, без неполных рядов`() {
+        // «д» - длинное (по 2), «к» - короткое (по 3), с пробелом - словосочетание.
+        val words = listOf("д1", "к1", "т т", "к2", "д2", "к3", "к4", "д3").map { ReadingWord(it, null) }
+        val columnsOf = { word: ReadingWord -> if (word.arabic.startsWith("д")) 2 else 3 }
 
-        val rows = wordRows(words, columns = 3).map { row -> row.map { it.index } }
+        val pages = wordPages(words, columnsOf, rowsPerPage = 2)
 
-        assertEquals(listOf(listOf(0, 1), listOf(2), listOf(3, 4, 5), listOf(6), listOf(7)), rows)
+        // к4 - лишнее в очереди по 3 - уходит в начало очереди по 2.
+        assertEquals(
+            listOf(listOf(3 to listOf(1, 3, 5), 2 to listOf(6, 0)), listOf(2 to listOf(4, 7), 1 to listOf(2))),
+            pages.map { page -> page.map { row -> row.columns to row.words.map { it.index } } },
+        )
+        // Нечётно длинных - последнее во всю ширину.
+        val odd = listOf("д1", "д2", "д3").map { ReadingWord(it, null) }
+        assertEquals(listOf(2, 1), wordPages(odd, columnsOf, 5).single().map { it.columns })
+        assertEquals(1, wordPages(listOf(ReadingWord("т т", null)), { 3 }, 5).single().single().columns, "словосочетание - всегда 1")
+        assertEquals(3, wordPages(words, { 7 }, 5).first().first().columns, "больше 3 в ряд не бывает")
     }
 
     @Test
@@ -104,9 +115,19 @@ class ReadingLogicTest {
 
         assertEquals(listOf("б"), options.filter { it.isCorrect }.map { it.text })
         assertEquals(3, options.size)
-        // Место верного ответа - номер буквы % 3: не всегда последний.
-        val places = course.step(sukunStep)!!.quiz.map { q -> quizOptions(course, q, sukunStep).indexOfFirst { it.isCorrect } }
-        assertEquals(setOf(0, 1, 2), places.toSet())
+    }
+
+    @Test
+    fun `Закрытый слог - варианты с фатхьой, касрой и доммой алифа, верный - своя огласовка`() = runTest {
+        val course = loadAssetCourse()
+        val step = requireNotNull(course.step(7))
+        val questions = step.quiz.filterIsInstance<ReadingQuestion.ClosedSyllable>()
+        val ba = questions.first { it.letter.letter == "ب" }
+
+        assertEquals(listOf("ъаб", "ъиб", "ъуб"), quizOptions(course, ba, step.number).map { it.text })
+        assertEquals(listOf("ъиб"), quizOptions(course, ba, step.number).filter { it.isCorrect }.map { it.text })
+        assertEquals(setOf(0, 1, 2), questions.map { q -> quizOptions(course, q, step.number).indexOfFirst { it.isCorrect } }.toSet(),
+            "верный - не всегда на одном месте")
     }
 
     @Test

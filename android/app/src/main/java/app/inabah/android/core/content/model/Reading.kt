@@ -54,7 +54,7 @@ data class ReadingLetter(
     val joinsPrevious: Boolean,
     /** Подставка слога по знакам: у алифа - хамза на алифе (`أ`, с касрой `إ`); нет знака - сама буква. */
     val syllableBases: Map<String, String>,
-    /** «Лям». */
+    /** «Льам». */
     val name: String,
     /** Транскрипция названия: «льаам». */
     val nameTransliteration: String,
@@ -161,11 +161,18 @@ data class ReadingStep(
 }
 
 /**
- * «Читаем слова» (решение пользователя 2026-10-15): слова только из букв, которые в слове не меняют
- * форму, группами по [groupSize]; каждое прочитать [repeat] раз. Транскрипция - только у первой группы.
+ * «Читаем слова» (решение пользователя 2026-10-15): каждое слово прочитать [repeat] раз. Страницы строит
+ * экран (`wordPages`, 2026-10-16): [groupSize] - слов на странице из коротких слов (15 = 5 рядов по 3).
+ * Транскрипция - у всех слов, на экране - только на первой странице (дальше - подсказкой).
  */
 data class ReadingWords(val groupSize: Int, val repeat: Int, val items: List<ReadingWord>) {
-    val groups: List<List<ReadingWord>> get() = items.chunked(groupSize.coerceAtLeast(1))
+    /** Рядов на странице: [groupSize] коротких слов по [MAX_COLUMNS] в ряд. */
+    val rowsPerPage: Int get() = ((groupSize + MAX_COLUMNS - 1) / MAX_COLUMNS).coerceAtLeast(1)
+
+    companion object {
+        /** Больше всего плиток в ряду - у коротких слов. */
+        const val MAX_COLUMNS = 3
+    }
 }
 
 data class ReadingWord(val arabic: String, val transliteration: String?) {
@@ -230,6 +237,28 @@ sealed interface ReadingQuestion {
 
     /** «Как читается этот слог?». */
     data class Syllable(override val letter: ReadingLetter, val mark: ReadingMark) : ReadingQuestion
+
+    /**
+     * «Как читается этот слог?» - закрытый слог шага «Сукун» (просьба пользователя 2026-10-16, как в
+     * «Весь алфавит»): алиф-хамза с [vowel] и [letter] с сукуном - `أِبْ`. [alif] - буква алиф курса
+     * (её подставки и слоги), [sukun] - знак.
+     */
+    data class ClosedSyllable(
+        override val letter: ReadingLetter,
+        val vowel: ReadingMark,
+        val alif: ReadingLetter,
+        val sukun: ReadingMark,
+    ) : ReadingQuestion {
+        val arabic: String get() = alif.syllable(vowel) + letter.letter + sukun.sign
+
+        /** Транскрипция слога с огласовкой [vowelId]: «ъиб». */
+        fun transliteration(vowelId: String): String = alif.syllables[vowelId].orEmpty() + letter.sound
+
+        companion object {
+            /** Огласовки алифа в вариантах ответа, по порядку. */
+            val VOWELS = listOf("fatha", "kasra", "damma")
+        }
+    }
 
     /** «Какая это буква?». */
     data class LetterName(override val letter: ReadingLetter) : ReadingQuestion

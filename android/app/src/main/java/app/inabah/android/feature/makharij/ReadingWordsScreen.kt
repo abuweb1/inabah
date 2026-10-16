@@ -73,11 +73,21 @@ import app.inabah.android.core.designsystem.components.surface
 import app.inabah.android.core.settings.ReadingProgress
 import app.inabah.android.core.settings.ReadingSettings
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
+import app.inabah.android.core.designsystem.components.arabicTextStyle
+import app.inabah.android.core.designsystem.components.ParchmentHorizontalPadding
+import app.inabah.android.core.content.model.ReadingWords
+import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.platform.LocalWindowInfo
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.runtime.mutableIntStateOf
 
 /**
- * «Читаем слова» (вариант A, решение пользователя 2026-10-15): группы по 12 слов плитками на пергаменте,
- * нажатие на плитку - «прочитал ещё раз» (в углу «3/10», после 10 - зелёная). Транскрипция и глаз -
- * только в первой группе, дальше - без подсказок. Шаг пройден, когда прочитаны все слова (и урок).
+ * «Читаем слова» (вариант A, решение пользователя 2026-10-15): страницы плиток на пергаменте,
+ * нажатие на плитку - «прочитал ещё раз» (в углу «3/10», после 10 - зелёная). Плитки - по 3, по 2 или во
+ * всю ширину по измеренной ширине слова, короткие - на первых страницах (`wordPages`, 2026-10-16).
+ * Транскрипция и глаз - на первой странице, дальше - лампочка «подсказка» показывает её на миг.
+ * Шаг пройден, когда прочитаны все слова (и урок).
  */
 @Composable
 fun ReadingWordsScreen(
@@ -96,11 +106,20 @@ fun ReadingWordsScreen(
     val wordCounts by progress.wordCounts.collectAsStateWithLifecycle()
     val lessonsDone by progress.lessonsDone.collectAsStateWithLifecycle()
     val course = (store.course.collectAsStateWithLifecycle().value as? Loadable.Loaded)?.value
-    val groupCount = course?.step(stepNumber)?.words?.groups?.size ?: 0
-    // Группы листаются свайпом в обе стороны и кнопками (просьба пользователя 2026-10-15); страница переживает поворот.
+    val pages = rememberWordPages(course?.step(stepNumber)?.words)
+    val groupCount = pages.size
+    // Страницы листаются свайпом в обе стороны и кнопками (просьба пользователя 2026-10-15); страница переживает поворот.
     val pager = rememberPagerState { groupCount }
     val scope = rememberCoroutineScope()
     val group = pager.currentPage
+    // Подсказка: транскрипция страницы на миг (просьба пользователя 2026-10-16); другая страница - гаснет.
+    var hintPage by remember { mutableStateOf<Int?>(null) }
+    var hintRequest by remember { mutableIntStateOf(0) }
+    LaunchedEffect(hintRequest) {
+        if (hintRequest == 0) return@LaunchedEffect
+        delay(HINT_MILLIS)
+        hintPage = null
+    }
     ReadingScaffold(
         store = store,
         title = stringResource(R.string.makharij_words_title),
@@ -108,8 +127,15 @@ fun ReadingWordsScreen(
         onBack = onBack,
         modifier = modifier,
         actions = {
-            // Глаз - только там, где есть транскрипция (первая группа: первые 12 слов).
-            if (group == 0) TransliterationToggle(hidden) { settings.setTransliterationHidden(!hidden) }
+            // Глаз - на первой странице (там транскрипция видна), дальше - подсказка.
+            if (group == 0) {
+                TransliterationToggle(hidden) { settings.setTransliterationHidden(!hidden) }
+            } else if (groupCount > 0) {
+                TransliterationHint {
+                    hintPage = group
+                    hintRequest++
+                }
+            }
         },
     ) { loaded ->
         val step = loaded.step(stepNumber)
@@ -126,7 +152,6 @@ fun ReadingWordsScreen(
             return@ReadingScaffold
         }
         val counts = wordCounts[step.number].orEmpty()
-        val groups = words.groups
         val allRead = wordsDone(step, counts)
         val completed = completedSteps(loaded, lessonsDone, wordCounts)
         // Праздник - когда шаг стал пройденным на этом экране (дочитано последнее слово), не при повторном входе.
@@ -158,18 +183,17 @@ fun ReadingWordsScreen(
                     )
                     // Страница - во всю ширину, отступ - внутри: соседние группы не выглядывают по краям.
                     HorizontalPager(state = pager, verticalAlignment = Alignment.Top) { page ->
-                        val offset = page * words.groupSize
                         ParchmentPanel(
                             modifier = Modifier.padding(horizontal = Spacing.xl),
                             topCornerRadius = Radius.card,
                             bottomCornerRadius = Radius.card,
                         ) {
                             WordGrid(
-                                words = groups[page],
-                                counts = { counts.getOrNull(offset + it) ?: 0 },
+                                rows = pages.getOrElse(page) { emptyList() },
+                                counts = { counts.getOrNull(it) ?: 0 },
                                 repeat = words.repeat,
-                                hidden = hidden,
-                                onRead = { progress.readWord(step.number, offset + it, words.items.size, words.repeat) },
+                                showTransliteration = (page == 0 && !hidden) || hintPage == page,
+                                onRead = { progress.readWord(step.number, it, words.items.size, words.repeat) },
                             )
                         }
                     }
@@ -186,7 +210,7 @@ fun ReadingWordsScreen(
                 }
                 GroupNavigation(
                     current = pager.currentPage,
-                    count = groups.size,
+                    count = groupCount,
                     onPrevious = { scope.launch { pager.animateScrollToPage(pager.currentPage - 1) } },
                     onNext = { scope.launch { pager.animateScrollToPage(pager.currentPage + 1) } },
                     modifier = Modifier
@@ -224,50 +248,76 @@ private fun WordsProgress(read: Int, total: Int, repeat: Int, modifier: Modifier
     }
 }
 
-/** Слова группы по 3 в ряд справа налево. */
+/**
+ * Страницы «Читаем слова» по ширине слов: слово меряется стилем плитки, ряд - по ширине экрана внутри
+ * пергамента; плиток в ряду - сколько влезает (3, 2, иначе во всю ширину). Пересчёт - при смене слов или
+ * ширины (поворот, другой экран).
+ */
+@Composable
+private fun rememberWordPages(words: ReadingWords?): List<List<WordRow>> {
+    val measurer = rememberTextMeasurer()
+    val style = arabicTextStyle(WORD_SIZE, bold = true)
+    val density = LocalDensity.current
+    val screenWidth = LocalWindowInfo.current.containerSize.width
+    return remember(words, screenWidth, style, density) {
+        if (words == null) return@remember emptyList()
+        val rowWidth = screenWidth - with(density) { (Spacing.xl * 2 + ParchmentHorizontalPadding * 2).roundToPx() }
+        val gap = with(density) { Spacing.s.roundToPx() }
+        val padding = with(density) { (TileTextPadding * 2).roundToPx() }
+        val columnsOf = { word: ReadingWord ->
+            val width = measurer.measure(word.arabic, style, maxLines = 1, softWrap = false).size.width
+            (ReadingWords.MAX_COLUMNS downTo 2).firstOrNull { columns ->
+                width <= ((rowWidth - gap * (columns - 1)) / columns - padding) * WORD_FIT
+            } ?: 1
+        }
+        wordPages(words.items, columnsOf, words.rowsPerPage)
+    }
+}
+
+/** Ряды страницы справа налево; в неполном ряду - пустые места, чтобы плитки были одной ширины. */
 @Composable
 private fun WordGrid(
-    words: List<ReadingWord>,
+    rows: List<WordRow>,
     counts: (Int) -> Int,
     repeat: Int,
-    hidden: Boolean,
+    showTransliteration: Boolean,
     onRead: (Int) -> Unit,
 ) {
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
         Column(verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
-            // Словосочетание - строкой во всю ширину (просьба пользователя 2026-10-16), слова - по 3 в ряд.
-            for (row in wordRows(words, WORD_COLUMNS)) {
-                val isPhrase = row.size == 1 && row.single().value.isPhrase
+            for (row in rows) {
                 Row(Modifier.height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
-                    for ((index, word) in row) {
+                    for ((index, word) in row.words) {
                         CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
                             WordTile(
                                 word = word,
                                 count = counts(index),
                                 repeat = repeat,
-                                // Транскрипция - у первых 12 слов, дальше без подсказок (решение пользователя).
                                 transliteration = word.transliteration,
-                                hidden = hidden,
+                                showTransliteration = showTransliteration,
                                 onRead = { onRead(index) },
                                 modifier = Modifier.weight(1f).fillMaxHeight(),
                             )
                         }
                     }
-                    if (!isPhrase) repeat(WORD_COLUMNS - row.size) { Spacer(Modifier.weight(1f)) }
+                    repeat(row.columns - row.words.size) { Spacer(Modifier.weight(1f)) }
                 }
             }
         }
     }
 }
 
-/** Плитка слова: «3/10» в углу, слово, транскрипция (первая группа); прочитано 10 раз - зелёная. */
+/**
+ * Плитка слова: «3/10» в углу, слово, транскрипция (место под ней есть всегда - плитки одной высоты на
+ * всех страницах, видна - [showTransliteration]); прочитано 10 раз - зелёная.
+ */
 @Composable
 private fun WordTile(
     word: ReadingWord,
     count: Int,
     repeat: Int,
     transliteration: String?,
-    hidden: Boolean,
+    showTransliteration: Boolean,
     onRead: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -279,7 +329,8 @@ private fun WordTile(
     val haptics = LocalHapticFeedback.current
     val readLabel = stringResource(R.string.makharij_words_read_action)
     val state = stringResource(R.string.makharij_words_tile_state, count, repeat)
-    val description = listOfNotNull(word.arabic, transliteration?.takeIf { !hidden }).joinToString(", ")
+    val description = listOfNotNull(word.arabic, transliteration?.takeIf { showTransliteration }).joinToString(", ")
+    val transliterationAlpha by animateFloatAsState(if (showTransliteration) 1f else 0f, label = "wordTransliteration")
     // Живость (просьба пользователя 2026-10-15): плитка наливается золотом снизу вверх с каждым
     // прочтением, толчок и отклик, как у счётчика зикра; на последнем - вспышка ✦ и галочка.
     val fill by animateFloatAsState((count.toFloat() / repeat).coerceIn(0f, 1f), Motion.progress(), label = "wordFill")
@@ -331,7 +382,7 @@ private fun WordTile(
                 )
             }
             Column(
-                Modifier.fillMaxWidth().padding(top = Spacing.m, bottom = Spacing.xs),
+                Modifier.fillMaxWidth().padding(start = TileTextPadding, end = TileTextPadding, top = Spacing.m, bottom = Spacing.xs),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 ArabicText(word.arabic, WORD_SIZE, palette.parchmentText, bold = true, maxLines = 1, textAlign = TextAlign.Center)
@@ -340,7 +391,7 @@ private fun WordTile(
                         transliteration,
                         color = colors.parchmentCaption,
                         style = InabahType.caption,
-                        modifier = Modifier.alpha(transliterationAlpha(hidden)),
+                        modifier = Modifier.alpha(transliterationAlpha),
                     )
                 }
             }
@@ -402,8 +453,13 @@ private fun WordsFinished(
     }
 }
 
-private const val WORD_COLUMNS = 3
 private const val WORD_SIZE = 28f
+/** Поле слова в плитке слева и справа - и в расчёте ширины ([rememberWordPages]). */
+private val TileTextPadding = Spacing.xs
+/** Слово «влезает» в плитку, если занимает не больше этой доли её ширины: впритык читать тесно. */
+private const val WORD_FIT = 0.8f
+/** Сколько видна транскрипция по подсказке. */
+private const val HINT_MILLIS = 700L
 private const val DONE_FILL_ALPHA = 0.22f
 private const val WORD_FILL_ALPHA = 0.5f
 private val DoneIconSize = 14.dp

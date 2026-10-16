@@ -1024,148 +1024,388 @@
             }
           },
           {
-            "arabic": "رَدَعَ"
+            "arabic": "رَدَعَ",
+            "translations": {
+              "ru": {
+                "translit": "родаӏа"
+              }
+            }
           },
           {
-            "arabic": "رَدِفَ"
+            "arabic": "رَدِفَ",
+            "translations": {
+              "ru": {
+                "translit": "родифа"
+              }
+            }
           },
           {
-            "arabic": "رَذُلَ"
+            "arabic": "رَذُلَ",
+            "translations": {
+              "ru": {
+                "translit": "розульа"
+              }
+            }
           },
           {
-            "arabic": "دَرَسَ"
+            "arabic": "دَرَسَ",
+            "translations": {
+              "ru": {
+                "translit": "дароса"
+              }
+            }
           },
           {
-            "arabic": "وَزَبَ"
+            "arabic": "وَزَبَ",
+            "translations": {
+              "ru": {
+                "translit": "вазаба"
+              }
+            }
           },
           {
-            "arabic": "وَرَكَ"
+            "arabic": "وَرَكَ",
+            "translations": {
+              "ru": {
+                "translit": "варока"
+              }
+            }
           },
           {
-            "arabic": "زَرَعَ"
+            "arabic": "زَرَعَ",
+            "translations": {
+              "ru": {
+                "translit": "зароӏа"
+              }
+            }
           },
           {
-            "arabic": "أَرَخَ"
+            "arabic": "أَرَخَ",
+            "translations": {
+              "ru": {
+                "translit": "ъарохо"
+              }
+            }
           },
           {
-            "arabic": "طَرِبَ"
+            "arabic": "طَرِبَ",
+            "translations": {
+              "ru": {
+                "translit": "тӏориба"
+              }
+            }
           },
           {
-            "arabic": "دُرِعَ"
+            "arabic": "دُرِعَ",
+            "translations": {
+              "ru": {
+                "translit": "дуриӏа"
+              }
+            }
           },
           {
-            "arabic": "وَرِثَ"
+            "arabic": "وَرِثَ",
+            "translations": {
+              "ru": {
+                "translit": "вариса"
+              }
+            }
           },
           {
-            "arabic": "ذَرَحَ"
+            "arabic": "ذَرَحَ",
+            "translations": {
+              "ru": {
+                "translit": "зарохьа"
+              }
+            }
           },
           {
-            "arabic": "دَرَهَ"
+            "arabic": "دَرَهَ",
+            "translations": {
+              "ru": {
+                "translit": "дарохӏа"
+              }
+            }
           },
           {
-            "arabic": "رَوِعَ"
+            "arabic": "رَوِعَ",
+            "translations": {
+              "ru": {
+                "translit": "ровиӏа"
+              }
+            }
           },
           {
-            "arabic": "طَرِزَ"
+            "arabic": "طَرِزَ",
+            "translations": {
+              "ru": {
+                "translit": "тӏориза"
+              }
+            }
           },
           {
-            "arabic": "طَرَحَ"
+            "arabic": "طَرَحَ",
+            "translations": {
+              "ru": {
+                "translit": "тӏорохьа"
+              }
+            }
           },
           {
-            "arabic": "زَرَدَ"
+            "arabic": "زَرَدَ",
+            "translations": {
+              "ru": {
+                "translit": "зарода"
+              }
+            }
           },
           {
-            "arabic": "أَرِقَ"
+            "arabic": "أَرِقَ",
+            "translations": {
+              "ru": {
+                "translit": "ъарикъо"
+              }
+            }
           },
           {
-            "arabic": "ذَأَجَ"
+            "arabic": "ذَأَجَ",
+            "translations": {
+              "ru": {
+                "translit": "заъаджа"
+              }
+            }
           },
           {
-            "arabic": "أَدُبَ"
+            "arabic": "أَدُبَ",
+            "translations": {
+              "ru": {
+                "translit": "ъадуба"
+              }
+            }
           },
           {
-            "arabic": "رَأَسَ"
+            "arabic": "رَأَسَ",
+            "translations": {
+              "ru": {
+                "translit": "роъаса"
+              }
+            }
           },
           {
-            "arabic": "وَأَرَ"
+            "arabic": "وَأَرَ",
+            "translations": {
+              "ru": {
+                "translit": "ваъаро"
+              }
+            }
           },
           {
-            "arabic": "دَرَعَ"
+            "arabic": "دَرَعَ",
+            "translations": {
+              "ru": {
+                "translit": "дароӏа"
+              }
+            }
           },
           {
-            "arabic": "ذَرَقَ"
+            "arabic": "ذَرَقَ",
+            "translations": {
+              "ru": {
+                "translit": "зарокъо"
+              }
+            }
           },
           {
-            "arabic": "دَرِبَ"
+            "arabic": "دَرِبَ",
+            "translations": {
+              "ru": {
+                "translit": "дариба"
+              }
+            }
           },
           {
-            "arabic": "أَدِبَ"
+            "arabic": "أَدِبَ",
+            "translations": {
+              "ru": {
+                "translit": "ъадиба"
+              }
+            }
           },
           {
-            "arabic": "دَرِنَ"
+            "arabic": "دَرِنَ",
+            "translations": {
+              "ru": {
+                "translit": "дарина"
+              }
+            }
           },
           {
-            "arabic": "رَدَنَ"
+            "arabic": "رَدَنَ",
+            "translations": {
+              "ru": {
+                "translit": "родана"
+              }
+            }
           },
           {
-            "arabic": "ذَأَبَ"
+            "arabic": "ذَأَبَ",
+            "translations": {
+              "ru": {
+                "translit": "заъаба"
+              }
+            }
           },
           {
-            "arabic": "زُرِعَ"
+            "arabic": "زُرِعَ",
+            "translations": {
+              "ru": {
+                "translit": "зуриӏа"
+              }
+            }
           },
           {
-            "arabic": "رَزَنَ"
+            "arabic": "رَزَنَ",
+            "translations": {
+              "ru": {
+                "translit": "розана"
+              }
+            }
           },
           {
-            "arabic": "طَرَقَ"
+            "arabic": "طَرَقَ",
+            "translations": {
+              "ru": {
+                "translit": "тӏорокъо"
+              }
+            }
           },
           {
-            "arabic": "ذَرَعَ"
+            "arabic": "ذَرَعَ",
+            "translations": {
+              "ru": {
+                "translit": "зароӏа"
+              }
+            }
           },
           {
-            "arabic": "وَدُكَ"
+            "arabic": "وَدُكَ",
+            "translations": {
+              "ru": {
+                "translit": "вадука"
+              }
+            }
           },
           {
-            "arabic": "وَأَدَ"
+            "arabic": "وَأَدَ",
+            "translations": {
+              "ru": {
+                "translit": "ваъада"
+              }
+            }
           },
           {
-            "arabic": "وَدَجَ"
+            "arabic": "وَدَجَ",
+            "translations": {
+              "ru": {
+                "translit": "вададжа"
+              }
+            }
           },
           {
-            "arabic": "زَرِمَ"
+            "arabic": "زَرِمَ",
+            "translations": {
+              "ru": {
+                "translit": "зарима"
+              }
+            }
           },
           {
-            "arabic": "طُرِدَ"
+            "arabic": "طُرِدَ",
+            "translations": {
+              "ru": {
+                "translit": "тӏурида"
+              }
+            }
           },
           {
-            "arabic": "أَطَرَ"
+            "arabic": "أَطَرَ",
+            "translations": {
+              "ru": {
+                "translit": "ъатӏоро"
+              }
+            }
           },
           {
-            "arabic": "زَرِبَ"
+            "arabic": "زَرِبَ",
+            "translations": {
+              "ru": {
+                "translit": "зариба"
+              }
+            }
           },
           {
-            "arabic": "أَوِلَ"
+            "arabic": "أَوِلَ",
+            "translations": {
+              "ru": {
+                "translit": "ъавильа"
+              }
+            }
           },
           {
-            "arabic": "رَدَمَ"
+            "arabic": "رَدَمَ",
+            "translations": {
+              "ru": {
+                "translit": "родама"
+              }
+            }
           },
           {
-            "arabic": "دَرَجَ"
+            "arabic": "دَرَجَ",
+            "translations": {
+              "ru": {
+                "translit": "дароджа"
+              }
+            }
           },
           {
-            "arabic": "زَرَفَ"
+            "arabic": "زَرَفَ",
+            "translations": {
+              "ru": {
+                "translit": "зарофа"
+              }
+            }
           },
           {
-            "arabic": "وَدَقَ"
+            "arabic": "وَدَقَ",
+            "translations": {
+              "ru": {
+                "translit": "вадакъо"
+              }
+            }
           },
           {
-            "arabic": "دَأَمَ"
+            "arabic": "دَأَمَ",
+            "translations": {
+              "ru": {
+                "translit": "даъама"
+              }
+            }
           },
           {
-            "arabic": "طَرِشَ"
+            "arabic": "طَرِشَ",
+            "translations": {
+              "ru": {
+                "translit": "тӏориша"
+              }
+            }
           },
           {
-            "arabic": "وَرِمَ"
+            "arabic": "وَرِمَ",
+            "translations": {
+              "ru": {
+                "translit": "варима"
+              }
+            }
           }
         ]
       }
@@ -1398,148 +1638,388 @@
             }
           },
           {
-            "arabic": "طَحَنَ"
+            "arabic": "طَحَنَ",
+            "translations": {
+              "ru": {
+                "translit": "тӏохьана"
+              }
+            }
           },
           {
-            "arabic": "طَبَخَ"
+            "arabic": "طَبَخَ",
+            "translations": {
+              "ru": {
+                "translit": "тӏобахо"
+              }
+            }
           },
           {
-            "arabic": "نُبِشَ"
+            "arabic": "نُبِشَ",
+            "translations": {
+              "ru": {
+                "translit": "нубиша"
+              }
+            }
           },
           {
-            "arabic": "نَخَبَ"
+            "arabic": "نَخَبَ",
+            "translations": {
+              "ru": {
+                "translit": "нахоба"
+              }
+            }
           },
           {
-            "arabic": "رَحِبَ"
+            "arabic": "رَحِبَ",
+            "translations": {
+              "ru": {
+                "translit": "рохьиба"
+              }
+            }
           },
           {
-            "arabic": "زَنِخَ"
+            "arabic": "زَنِخَ",
+            "translations": {
+              "ru": {
+                "translit": "занихо"
+              }
+            }
           },
           {
-            "arabic": "نَجُسَ"
+            "arabic": "نَجُسَ",
+            "translations": {
+              "ru": {
+                "translit": "наджуса"
+              }
+            }
           },
           {
-            "arabic": "نَجَحَ"
+            "arabic": "نَجَحَ",
+            "translations": {
+              "ru": {
+                "translit": "наджахьа"
+              }
+            }
           },
           {
-            "arabic": "وَحِشَ"
+            "arabic": "وَحِشَ",
+            "translations": {
+              "ru": {
+                "translit": "вахьиша"
+              }
+            }
           },
           {
-            "arabic": "بَطَحَ"
+            "arabic": "بَطَحَ",
+            "translations": {
+              "ru": {
+                "translit": "батӏохьа"
+              }
+            }
           },
           {
-            "arabic": "بَطَشَ"
+            "arabic": "بَطَشَ",
+            "translations": {
+              "ru": {
+                "translit": "батӏоша"
+              }
+            }
           },
           {
-            "arabic": "وَطَنَ"
+            "arabic": "وَطَنَ",
+            "translations": {
+              "ru": {
+                "translit": "ватӏона"
+              }
+            }
           },
           {
-            "arabic": "بَطَرَ"
+            "arabic": "بَطَرَ",
+            "translations": {
+              "ru": {
+                "translit": "батӏоро"
+              }
+            }
           },
           {
-            "arabic": "خَتَنَ"
+            "arabic": "خَتَنَ",
+            "translations": {
+              "ru": {
+                "translit": "хотана"
+              }
+            }
           },
           {
-            "arabic": "ذَبَحَ"
+            "arabic": "ذَبَحَ",
+            "translations": {
+              "ru": {
+                "translit": "забахьа"
+              }
+            }
           },
           {
-            "arabic": "ثَبِجَ"
+            "arabic": "ثَبِجَ",
+            "translations": {
+              "ru": {
+                "translit": "сабиджа"
+              }
+            }
           },
           {
-            "arabic": "ذَنَبَ"
+            "arabic": "ذَنَبَ",
+            "translations": {
+              "ru": {
+                "translit": "занаба"
+              }
+            }
           },
           {
-            "arabic": "رَجِبَ"
+            "arabic": "رَجِبَ",
+            "translations": {
+              "ru": {
+                "translit": "роджиба"
+              }
+            }
           },
           {
-            "arabic": "نَبَطَ"
+            "arabic": "نَبَطَ",
+            "translations": {
+              "ru": {
+                "translit": "набатӏо"
+              }
+            }
           },
           {
-            "arabic": "وَجَبَ"
+            "arabic": "وَجَبَ",
+            "translations": {
+              "ru": {
+                "translit": "ваджаба"
+              }
+            }
           },
           {
-            "arabic": "نَجَبَ"
+            "arabic": "نَجَبَ",
+            "translations": {
+              "ru": {
+                "translit": "наджаба"
+              }
+            }
           },
           {
-            "arabic": "طَنِبَ"
+            "arabic": "طَنِبَ",
+            "translations": {
+              "ru": {
+                "translit": "тӏониба"
+              }
+            }
           },
           {
-            "arabic": "بَجِحَ"
+            "arabic": "بَجِحَ",
+            "translations": {
+              "ru": {
+                "translit": "баджихьа"
+              }
+            }
           },
           {
-            "arabic": "حَبَكَ"
+            "arabic": "حَبَكَ",
+            "translations": {
+              "ru": {
+                "translit": "хьабака"
+              }
+            }
           },
           {
-            "arabic": "ثُبِطَ"
+            "arabic": "ثُبِطَ",
+            "translations": {
+              "ru": {
+                "translit": "субитӏо"
+              }
+            }
           },
           {
-            "arabic": "رَطُبَ"
+            "arabic": "رَطُبَ",
+            "translations": {
+              "ru": {
+                "translit": "ротӏуба"
+              }
+            }
           },
           {
-            "arabic": "حُنِشَ"
+            "arabic": "حُنِشَ",
+            "translations": {
+              "ru": {
+                "translit": "хьуниша"
+              }
+            }
           },
           {
-            "arabic": "أَحِنَ"
+            "arabic": "أَحِنَ",
+            "translations": {
+              "ru": {
+                "translit": "ъахьина"
+              }
+            }
           },
           {
-            "arabic": "رَتَبَ"
+            "arabic": "رَتَبَ",
+            "translations": {
+              "ru": {
+                "translit": "ротаба"
+              }
+            }
           },
           {
-            "arabic": "تَبِنَ"
+            "arabic": "تَبِنَ",
+            "translations": {
+              "ru": {
+                "translit": "табина"
+              }
+            }
           },
           {
-            "arabic": "خَبَنَ"
+            "arabic": "خَبَنَ",
+            "translations": {
+              "ru": {
+                "translit": "хобана"
+              }
+            }
           },
           {
-            "arabic": "رَتَجَ"
+            "arabic": "رَتَجَ",
+            "translations": {
+              "ru": {
+                "translit": "ротаджа"
+              }
+            }
           },
           {
-            "arabic": "خُتِنَ"
+            "arabic": "خُتِنَ",
+            "translations": {
+              "ru": {
+                "translit": "хутина"
+              }
+            }
           },
           {
-            "arabic": "رَجَحَ"
+            "arabic": "رَجَحَ",
+            "translations": {
+              "ru": {
+                "translit": "роджахьа"
+              }
+            }
           },
           {
-            "arabic": "نَبَجَ"
+            "arabic": "نَبَجَ",
+            "translations": {
+              "ru": {
+                "translit": "набаджа"
+              }
+            }
           },
           {
-            "arabic": "نَتَجَ"
+            "arabic": "نَتَجَ",
+            "translations": {
+              "ru": {
+                "translit": "натаджа"
+              }
+            }
           },
           {
-            "arabic": "خَبَطَ"
+            "arabic": "خَبَطَ",
+            "translations": {
+              "ru": {
+                "translit": "хобатӏо"
+              }
+            }
           },
           {
-            "arabic": "وَجَسَ"
+            "arabic": "وَجَسَ",
+            "translations": {
+              "ru": {
+                "translit": "ваджаса"
+              }
+            }
           },
           {
-            "arabic": "جَنَسَ"
+            "arabic": "جَنَسَ",
+            "translations": {
+              "ru": {
+                "translit": "джанаса"
+              }
+            }
           },
           {
-            "arabic": "جَحَنَ"
+            "arabic": "جَحَنَ",
+            "translations": {
+              "ru": {
+                "translit": "джахьана"
+              }
+            }
           },
           {
-            "arabic": "حَنَطَ"
+            "arabic": "حَنَطَ",
+            "translations": {
+              "ru": {
+                "translit": "хьанатӏо"
+              }
+            }
           },
           {
-            "arabic": "حُنِكَ"
+            "arabic": "حُنِكَ",
+            "translations": {
+              "ru": {
+                "translit": "хьуника"
+              }
+            }
           },
           {
-            "arabic": "نَجُبَ"
+            "arabic": "نَجُبَ",
+            "translations": {
+              "ru": {
+                "translit": "наджуба"
+              }
+            }
           },
           {
-            "arabic": "وَثَنَ"
+            "arabic": "وَثَنَ",
+            "translations": {
+              "ru": {
+                "translit": "васана"
+              }
+            }
           },
           {
-            "arabic": "جَحَظَ"
+            "arabic": "جَحَظَ",
+            "translations": {
+              "ru": {
+                "translit": "джахьазо"
+              }
+            }
           },
           {
-            "arabic": "ذُبِحَ"
+            "arabic": "ذُبِحَ",
+            "translations": {
+              "ru": {
+                "translit": "зубихьа"
+              }
+            }
           },
           {
-            "arabic": "زُبِنَ"
+            "arabic": "زُبِنَ",
+            "translations": {
+              "ru": {
+                "translit": "зубина"
+              }
+            }
           },
           {
-            "arabic": "زَبَنَ"
+            "arabic": "زَبَنَ",
+            "translations": {
+              "ru": {
+                "translit": "забана"
+              }
+            }
           }
         ]
       }
@@ -1772,148 +2252,388 @@
             }
           },
           {
-            "arabic": "تَعَسَ"
+            "arabic": "تَعَسَ",
+            "translations": {
+              "ru": {
+                "translit": "таӏаса"
+              }
+            }
           },
           {
-            "arabic": "طُبِعَ"
+            "arabic": "طُبِعَ",
+            "translations": {
+              "ru": {
+                "translit": "тӏубиӏа"
+              }
+            }
           },
           {
-            "arabic": "رَضَعَ"
+            "arabic": "رَضَعَ",
+            "translations": {
+              "ru": {
+                "translit": "родоӏа"
+              }
+            }
           },
           {
-            "arabic": "نَشَطَ"
+            "arabic": "نَشَطَ",
+            "translations": {
+              "ru": {
+                "translit": "нашатӏо"
+              }
+            }
           },
           {
-            "arabic": "صُبِغَ"
+            "arabic": "صُبِغَ",
+            "translations": {
+              "ru": {
+                "translit": "субигӏо"
+              }
+            }
           },
           {
-            "arabic": "رَسَنَ"
+            "arabic": "رَسَنَ",
+            "translations": {
+              "ru": {
+                "translit": "росана"
+              }
+            }
           },
           {
-            "arabic": "يَنَعَ"
+            "arabic": "يَنَعَ",
+            "translations": {
+              "ru": {
+                "translit": "йанаӏа"
+              }
+            }
           },
           {
-            "arabic": "عَشُبَ"
+            "arabic": "عَشُبَ",
+            "translations": {
+              "ru": {
+                "translit": "ӏашуба"
+              }
+            }
           },
           {
-            "arabic": "رَشَحَ"
+            "arabic": "رَشَحَ",
+            "translations": {
+              "ru": {
+                "translit": "рошахьа"
+              }
+            }
           },
           {
-            "arabic": "شَنُعَ"
+            "arabic": "شَنُعَ",
+            "translations": {
+              "ru": {
+                "translit": "шануӏа"
+              }
+            }
           },
           {
-            "arabic": "سَخَطَ"
+            "arabic": "سَخَطَ",
+            "translations": {
+              "ru": {
+                "translit": "сахотӏо"
+              }
+            }
           },
           {
-            "arabic": "نَعَسَ"
+            "arabic": "نَعَسَ",
+            "translations": {
+              "ru": {
+                "translit": "наӏаса"
+              }
+            }
           },
           {
-            "arabic": "بَشِعَ"
+            "arabic": "بَشِعَ",
+            "translations": {
+              "ru": {
+                "translit": "башиӏа"
+              }
+            }
           },
           {
-            "arabic": "بُغِتَ"
+            "arabic": "بُغِتَ",
+            "translations": {
+              "ru": {
+                "translit": "бугӏита"
+              }
+            }
           },
           {
-            "arabic": "وَظَبَ"
+            "arabic": "وَظَبَ",
+            "translations": {
+              "ru": {
+                "translit": "вазоба"
+              }
+            }
           },
           {
-            "arabic": "وُضِعَ"
+            "arabic": "وُضِعَ",
+            "translations": {
+              "ru": {
+                "translit": "вудыӏа"
+              }
+            }
           },
           {
-            "arabic": "دُبِغَ"
+            "arabic": "دُبِغَ",
+            "translations": {
+              "ru": {
+                "translit": "дубигӏо"
+              }
+            }
           },
           {
-            "arabic": "عَبِثَ"
+            "arabic": "عَبِثَ",
+            "translations": {
+              "ru": {
+                "translit": "ӏабиса"
+              }
+            }
           },
           {
-            "arabic": "صَنَجَ"
+            "arabic": "صَنَجَ",
+            "translations": {
+              "ru": {
+                "translit": "сонаджа"
+              }
+            }
           },
           {
-            "arabic": "ضُغِطَ"
+            "arabic": "ضُغِطَ",
+            "translations": {
+              "ru": {
+                "translit": "дугӏитӏо"
+              }
+            }
           },
           {
-            "arabic": "خَشِيَ"
+            "arabic": "خَشِيَ",
+            "translations": {
+              "ru": {
+                "translit": "хошийа"
+              }
+            }
           },
           {
-            "arabic": "وَضِحَ"
+            "arabic": "وَضِحَ",
+            "translations": {
+              "ru": {
+                "translit": "вадыхьа"
+              }
+            }
           },
           {
-            "arabic": "رَسَبَ"
+            "arabic": "رَسَبَ",
+            "translations": {
+              "ru": {
+                "translit": "росаба"
+              }
+            }
           },
           {
-            "arabic": "غَطَسَ"
+            "arabic": "غَطَسَ",
+            "translations": {
+              "ru": {
+                "translit": "гӏотӏоса"
+              }
+            }
           },
           {
-            "arabic": "سَبَعَ"
+            "arabic": "سَبَعَ",
+            "translations": {
+              "ru": {
+                "translit": "сабаӏа"
+              }
+            }
           },
           {
-            "arabic": "غَضِبَ"
+            "arabic": "غَضِبَ",
+            "translations": {
+              "ru": {
+                "translit": "гӏодыба"
+              }
+            }
           },
           {
-            "arabic": "وَسِخَ"
+            "arabic": "وَسِخَ",
+            "translations": {
+              "ru": {
+                "translit": "васихо"
+              }
+            }
           },
           {
-            "arabic": "خَطَبَ"
+            "arabic": "خَطَبَ",
+            "translations": {
+              "ru": {
+                "translit": "хотӏоба"
+              }
+            }
           },
           {
-            "arabic": "عَتَبَ"
+            "arabic": "عَتَبَ",
+            "translations": {
+              "ru": {
+                "translit": "ӏатаба"
+              }
+            }
           },
           {
-            "arabic": "حَصُنَ"
+            "arabic": "حَصُنَ",
+            "translations": {
+              "ru": {
+                "translit": "хьасуна"
+              }
+            }
           },
           {
-            "arabic": "ثَعَبَ"
+            "arabic": "ثَعَبَ",
+            "translations": {
+              "ru": {
+                "translit": "саӏаба"
+              }
+            }
           },
           {
-            "arabic": "ضَحِكَ"
+            "arabic": "ضَحِكَ",
+            "translations": {
+              "ru": {
+                "translit": "дохьика"
+              }
+            }
           },
           {
-            "arabic": "دَخَسَ"
+            "arabic": "دَخَسَ",
+            "translations": {
+              "ru": {
+                "translit": "дахоса"
+              }
+            }
           },
           {
-            "arabic": "عَطَسَ"
+            "arabic": "عَطَسَ",
+            "translations": {
+              "ru": {
+                "translit": "ӏатӏоса"
+              }
+            }
           },
           {
-            "arabic": "صَحِبَ"
+            "arabic": "صَحِبَ",
+            "translations": {
+              "ru": {
+                "translit": "сохьиба"
+              }
+            }
           },
           {
-            "arabic": "نَعَشَ"
+            "arabic": "نَعَشَ",
+            "translations": {
+              "ru": {
+                "translit": "наӏаша"
+              }
+            }
           },
           {
-            "arabic": "نُسِجَ"
+            "arabic": "نُسِجَ",
+            "translations": {
+              "ru": {
+                "translit": "нусиджа"
+              }
+            }
           },
           {
-            "arabic": "شَعِثَ"
+            "arabic": "شَعِثَ",
+            "translations": {
+              "ru": {
+                "translit": "шаӏиса"
+              }
+            }
           },
           {
-            "arabic": "دَسَعَ"
+            "arabic": "دَسَعَ",
+            "translations": {
+              "ru": {
+                "translit": "дасаӏа"
+              }
+            }
           },
           {
-            "arabic": "رَجَعَ"
+            "arabic": "رَجَعَ",
+            "translations": {
+              "ru": {
+                "translit": "роджаӏа"
+              }
+            }
           },
           {
-            "arabic": "رَعَبَ"
+            "arabic": "رَعَبَ",
+            "translations": {
+              "ru": {
+                "translit": "роӏаба"
+              }
+            }
           },
           {
-            "arabic": "رُبِطَ"
+            "arabic": "رُبِطَ",
+            "translations": {
+              "ru": {
+                "translit": "рубитӏо"
+              }
+            }
           },
           {
-            "arabic": "دَعَبَ"
+            "arabic": "دَعَبَ",
+            "translations": {
+              "ru": {
+                "translit": "даӏаба"
+              }
+            }
           },
           {
-            "arabic": "بُعِثَ"
+            "arabic": "بُعِثَ",
+            "translations": {
+              "ru": {
+                "translit": "буӏиса"
+              }
+            }
           },
           {
-            "arabic": "شَخَصَ"
+            "arabic": "شَخَصَ",
+            "translations": {
+              "ru": {
+                "translit": "шахосо"
+              }
+            }
           },
           {
-            "arabic": "غَصَبَ"
+            "arabic": "غَصَبَ",
+            "translations": {
+              "ru": {
+                "translit": "гӏособа"
+              }
+            }
           },
           {
-            "arabic": "وَسِعَ"
+            "arabic": "وَسِعَ",
+            "translations": {
+              "ru": {
+                "translit": "васиӏа"
+              }
+            }
           },
           {
-            "arabic": "شَجُعَ"
+            "arabic": "شَجُعَ",
+            "translations": {
+              "ru": {
+                "translit": "шаджуӏа"
+              }
+            }
           }
         ]
       }
@@ -2134,148 +2854,388 @@
             }
           },
           {
-            "arabic": "كَفَلَ"
+            "arabic": "كَفَلَ",
+            "translations": {
+              "ru": {
+                "translit": "кафальа"
+              }
+            }
           },
           {
-            "arabic": "قَمَعَ"
+            "arabic": "قَمَعَ",
+            "translations": {
+              "ru": {
+                "translit": "къомаӏа"
+              }
+            }
           },
           {
-            "arabic": "زَهَقَ"
+            "arabic": "زَهَقَ",
+            "translations": {
+              "ru": {
+                "translit": "захӏакъо"
+              }
+            }
           },
           {
-            "arabic": "فَعُمَ"
+            "arabic": "فَعُمَ",
+            "translations": {
+              "ru": {
+                "translit": "фаӏума"
+              }
+            }
           },
           {
-            "arabic": "فَقُمَ"
+            "arabic": "فَقُمَ",
+            "translations": {
+              "ru": {
+                "translit": "факъума"
+              }
+            }
           },
           {
-            "arabic": "شَمِلَ"
+            "arabic": "شَمِلَ",
+            "translations": {
+              "ru": {
+                "translit": "шамильа"
+              }
+            }
           },
           {
-            "arabic": "لَكَمَ"
+            "arabic": "لَكَمَ",
+            "translations": {
+              "ru": {
+                "translit": "льакама"
+              }
+            }
           },
           {
-            "arabic": "مَلَكَ"
+            "arabic": "مَلَكَ",
+            "translations": {
+              "ru": {
+                "translit": "мальака"
+              }
+            }
           },
           {
-            "arabic": "ذَهِلَ"
+            "arabic": "ذَهِلَ",
+            "translations": {
+              "ru": {
+                "translit": "захӏильа"
+              }
+            }
           },
           {
-            "arabic": "فَقُهَ"
+            "arabic": "فَقُهَ",
+            "translations": {
+              "ru": {
+                "translit": "факъухӏа"
+              }
+            }
           },
           {
-            "arabic": "فَكِهَ"
+            "arabic": "فَكِهَ",
+            "translations": {
+              "ru": {
+                "translit": "факихӏа"
+              }
+            }
           },
           {
-            "arabic": "فُعِلَ"
+            "arabic": "فُعِلَ",
+            "translations": {
+              "ru": {
+                "translit": "фуӏильа"
+              }
+            }
           },
           {
-            "arabic": "سَلِمَ"
+            "arabic": "سَلِمَ",
+            "translations": {
+              "ru": {
+                "translit": "салима"
+              }
+            }
           },
           {
-            "arabic": "حَمَلَ"
+            "arabic": "حَمَلَ",
+            "translations": {
+              "ru": {
+                "translit": "хьамальа"
+              }
+            }
           },
           {
-            "arabic": "قَهَرَ"
+            "arabic": "قَهَرَ",
+            "translations": {
+              "ru": {
+                "translit": "къохӏаро"
+              }
+            }
           },
           {
-            "arabic": "خَلَقَ"
+            "arabic": "خَلَقَ",
+            "translations": {
+              "ru": {
+                "translit": "хольакъо"
+              }
+            }
           },
           {
-            "arabic": "ثَقَلَ"
+            "arabic": "ثَقَلَ",
+            "translations": {
+              "ru": {
+                "translit": "сакъольа"
+              }
+            }
           },
           {
-            "arabic": "عَمِلَ"
+            "arabic": "عَمِلَ",
+            "translations": {
+              "ru": {
+                "translit": "ӏамильа"
+              }
+            }
           },
           {
-            "arabic": "غَفَلَ"
+            "arabic": "غَفَلَ",
+            "translations": {
+              "ru": {
+                "translit": "гӏофальа"
+              }
+            }
           },
           {
-            "arabic": "صَلَقَ"
+            "arabic": "صَلَقَ",
+            "translations": {
+              "ru": {
+                "translit": "сольакъо"
+              }
+            }
           },
           {
-            "arabic": "جَهِلَ"
+            "arabic": "جَهِلَ",
+            "translations": {
+              "ru": {
+                "translit": "джахӏильа"
+              }
+            }
           },
           {
-            "arabic": "مَقَلَ"
+            "arabic": "مَقَلَ",
+            "translations": {
+              "ru": {
+                "translit": "макъольа"
+              }
+            }
           },
           {
-            "arabic": "مَهَلَ"
+            "arabic": "مَهَلَ",
+            "translations": {
+              "ru": {
+                "translit": "махӏальа"
+              }
+            }
           },
           {
-            "arabic": "كَهُلَ"
+            "arabic": "كَهُلَ",
+            "translations": {
+              "ru": {
+                "translit": "кахӏульа"
+              }
+            }
           },
           {
-            "arabic": "قَلَمَ"
+            "arabic": "قَلَمَ",
+            "translations": {
+              "ru": {
+                "translit": "къольама"
+              }
+            }
           },
           {
-            "arabic": "قَفِعَ"
+            "arabic": "قَفِعَ",
+            "translations": {
+              "ru": {
+                "translit": "къофиӏа"
+              }
+            }
           },
           {
-            "arabic": "هَلَكَ"
+            "arabic": "هَلَكَ",
+            "translations": {
+              "ru": {
+                "translit": "хӏальака"
+              }
+            }
           },
           {
-            "arabic": "جَمُلَ"
+            "arabic": "جَمُلَ",
+            "translations": {
+              "ru": {
+                "translit": "джамульа"
+              }
+            }
           },
           {
-            "arabic": "قَفَلَ"
+            "arabic": "قَفَلَ",
+            "translations": {
+              "ru": {
+                "translit": "къофальа"
+              }
+            }
           },
           {
-            "arabic": "تَهِمَ"
+            "arabic": "تَهِمَ",
+            "translations": {
+              "ru": {
+                "translit": "тахӏима"
+              }
+            }
           },
           {
-            "arabic": "خَمَلَ"
+            "arabic": "خَمَلَ",
+            "translations": {
+              "ru": {
+                "translit": "хомальа"
+              }
+            }
           },
           {
-            "arabic": "لَفِقَ"
+            "arabic": "لَفِقَ",
+            "translations": {
+              "ru": {
+                "translit": "льафикъо"
+              }
+            }
           },
           {
-            "arabic": "قَمِلَ"
+            "arabic": "قَمِلَ",
+            "translations": {
+              "ru": {
+                "translit": "къомильа"
+              }
+            }
           },
           {
-            "arabic": "ضَمِنَ"
+            "arabic": "ضَمِنَ",
+            "translations": {
+              "ru": {
+                "translit": "домина"
+              }
+            }
           },
           {
-            "arabic": "حَلَمَ"
+            "arabic": "حَلَمَ",
+            "translations": {
+              "ru": {
+                "translit": "хьальама"
+              }
+            }
           },
           {
-            "arabic": "فَقَعَ"
+            "arabic": "فَقَعَ",
+            "translations": {
+              "ru": {
+                "translit": "факъоӏа"
+              }
+            }
           },
           {
-            "arabic": "لَقِفَ"
+            "arabic": "لَقِفَ",
+            "translations": {
+              "ru": {
+                "translit": "льакъифа"
+              }
+            }
           },
           {
-            "arabic": "كَمُلَ"
+            "arabic": "كَمُلَ",
+            "translations": {
+              "ru": {
+                "translit": "камульа"
+              }
+            }
           },
           {
-            "arabic": "فَلَقَ"
+            "arabic": "فَلَقَ",
+            "translations": {
+              "ru": {
+                "translit": "фальакъо"
+              }
+            }
           },
           {
-            "arabic": "فَلَكَ"
+            "arabic": "فَلَكَ",
+            "translations": {
+              "ru": {
+                "translit": "фальака"
+              }
+            }
           },
           {
-            "arabic": "رَكَمَ"
+            "arabic": "رَكَمَ",
+            "translations": {
+              "ru": {
+                "translit": "рокама"
+              }
+            }
           },
           {
-            "arabic": "بَكُمَ"
+            "arabic": "بَكُمَ",
+            "translations": {
+              "ru": {
+                "translit": "бакума"
+              }
+            }
           },
           {
-            "arabic": "دُهِشَ"
+            "arabic": "دُهِشَ",
+            "translations": {
+              "ru": {
+                "translit": "духӏиша"
+              }
+            }
           },
           {
-            "arabic": "هَلِمَ"
+            "arabic": "هَلِمَ",
+            "translations": {
+              "ru": {
+                "translit": "хӏалима"
+              }
+            }
           },
           {
-            "arabic": "مَكَسَ"
+            "arabic": "مَكَسَ",
+            "translations": {
+              "ru": {
+                "translit": "макаса"
+              }
+            }
           },
           {
-            "arabic": "تَلِفَ"
+            "arabic": "تَلِفَ",
+            "translations": {
+              "ru": {
+                "translit": "талифа"
+              }
+            }
           },
           {
-            "arabic": "قَلَفَ"
+            "arabic": "قَلَفَ",
+            "translations": {
+              "ru": {
+                "translit": "къольафа"
+              }
+            }
           },
           {
-            "arabic": "قُلِعَ"
+            "arabic": "قُلِعَ",
+            "translations": {
+              "ru": {
+                "translit": "къулиӏа"
+              }
+            }
           }
         ]
       }
@@ -2549,322 +3509,852 @@
             }
           },
           {
-            "arabic": "وَلَهُۥ مَا سَكَنَ"
+            "arabic": "وَلَهُۥ مَا سَكَنَ",
+            "translations": {
+              "ru": {
+                "translit": "вальахӏуу маа сакана"
+              }
+            }
+          },
+          {
+            "arabic": "هَـٰذِهِۦ سَبِيلِي",
+            "translations": {
+              "ru": {
+                "translit": "хӏаазихӏии сабиилии"
+              }
+            }
+          },
+          {
+            "arabic": "بَاطِنُهُۥ فِيهِ",
+            "translations": {
+              "ru": {
+                "translit": "баатӏынухӏуу фиихӏи"
+              }
+            }
+          },
+          {
+            "arabic": "فُورِقَ",
+            "translations": {
+              "ru": {
+                "translit": "фуурикъо"
+              }
+            }
+          },
+          {
+            "arabic": "يُحَاسَبُ",
+            "translations": {
+              "ru": {
+                "translit": "йухьаасабу"
+              }
+            }
+          },
+          {
+            "arabic": "ءَايَـٰتِكَ",
+            "translations": {
+              "ru": {
+                "translit": "ъаайаатика"
+              }
+            }
+          },
+          {
+            "arabic": "يَاسِرُ",
+            "translations": {
+              "ru": {
+                "translit": "йаасиру"
+              }
+            }
+          },
+          {
+            "arabic": "نُودِيَ",
+            "translations": {
+              "ru": {
+                "translit": "нуудийа"
+              }
+            }
+          },
+          {
+            "arabic": "ثِيرَانُ",
+            "translations": {
+              "ru": {
+                "translit": "сиироону"
+              }
+            }
+          },
+          {
+            "arabic": "حُوسِبَ",
+            "translations": {
+              "ru": {
+                "translit": "хьуусиба"
+              }
+            }
+          },
+          {
+            "arabic": "هُودُ",
+            "translations": {
+              "ru": {
+                "translit": "хӏууду"
+              }
+            }
+          },
+          {
+            "arabic": "دَافَعَ",
+            "translations": {
+              "ru": {
+                "translit": "даафаӏа"
+              }
+            }
+          },
+          {
+            "arabic": "قَـٰنِتُونَ",
+            "translations": {
+              "ru": {
+                "translit": "къоонитууна"
+              }
+            }
           },
           {
-            "arabic": "هَـٰذِهِۦ سَبِيلِي"
+            "arabic": "بَادَرَ",
+            "translations": {
+              "ru": {
+                "translit": "баадаро"
+              }
+            }
           },
           {
-            "arabic": "بَاطِنُهُۥ فِيهِ"
+            "arabic": "تِيجَانُ",
+            "translations": {
+              "ru": {
+                "translit": "тииджаану"
+              }
+            }
           },
           {
-            "arabic": "فُورِقَ"
+            "arabic": "مَالُهُۥ وَوَلَدُهُۥ",
+            "translations": {
+              "ru": {
+                "translit": "маальухӏуу вавальадухӏуу"
+              }
+            }
           },
           {
-            "arabic": "يُحَاسَبُ"
+            "arabic": "لَهُۥ بَنِينَ",
+            "translations": {
+              "ru": {
+                "translit": "льахӏуу баниина"
+              }
+            }
           },
           {
-            "arabic": "ءَايَـٰتِكَ"
+            "arabic": "مَا وُۥرِيَ",
+            "translations": {
+              "ru": {
+                "translit": "маа вуурийа"
+              }
+            }
           },
           {
-            "arabic": "يَاسِرُ"
+            "arabic": "قِيلَ",
+            "translations": {
+              "ru": {
+                "translit": "къиильа"
+              }
+            }
           },
           {
-            "arabic": "نُودِيَ"
+            "arabic": "ضِيفَ",
+            "translations": {
+              "ru": {
+                "translit": "дыыфа"
+              }
+            }
           },
           {
-            "arabic": "ثِيرَانُ"
+            "arabic": "يَمُوتُونَ",
+            "translations": {
+              "ru": {
+                "translit": "йамуутууна"
+              }
+            }
           },
           {
-            "arabic": "حُوسِبَ"
+            "arabic": "هَاجَرَ",
+            "translations": {
+              "ru": {
+                "translit": "хӏааджаро"
+              }
+            }
           },
           {
-            "arabic": "هُودُ"
+            "arabic": "فَاتَحَ",
+            "translations": {
+              "ru": {
+                "translit": "фаатахьа"
+              }
+            }
           },
           {
-            "arabic": "دَافَعَ"
+            "arabic": "سَائِلَ",
+            "translations": {
+              "ru": {
+                "translit": "сааъильа"
+              }
+            }
           },
           {
-            "arabic": "قَـٰنِتُونَ"
+            "arabic": "يَقُولُونَ",
+            "translations": {
+              "ru": {
+                "translit": "йакъуульууна"
+              }
+            }
           },
           {
-            "arabic": "بَادَرَ"
+            "arabic": "جَاوَزَ",
+            "translations": {
+              "ru": {
+                "translit": "джааваза"
+              }
+            }
           },
           {
-            "arabic": "تِيجَانُ"
+            "arabic": "ظَاهَرَ",
+            "translations": {
+              "ru": {
+                "translit": "зоохӏаро"
+              }
+            }
           },
           {
-            "arabic": "مَالُهُۥ وَوَلَدُهُۥ"
+            "arabic": "حِينَ",
+            "translations": {
+              "ru": {
+                "translit": "хьиина"
+              }
+            }
           },
           {
-            "arabic": "لَهُۥ بَنِينَ"
+            "arabic": "رُوحِنَا",
+            "translations": {
+              "ru": {
+                "translit": "руухьинаа"
+              }
+            }
           },
           {
-            "arabic": "مَا وُۥرِيَ"
+            "arabic": "نَاوَلَ",
+            "translations": {
+              "ru": {
+                "translit": "наавальа"
+              }
+            }
           },
           {
-            "arabic": "قِيلَ"
+            "arabic": "هَـٰذِهِۦ بِضَـٰعَتُنَا",
+            "translations": {
+              "ru": {
+                "translit": "хӏаазихӏии бидооӏатунаа"
+              }
+            }
           },
           {
-            "arabic": "ضِيفَ"
+            "arabic": "وَصَـٰحِبَتِهِۦ وَبَنِيهِ",
+            "translations": {
+              "ru": {
+                "translit": "васоохьибатихӏии вабаниихӏи"
+              }
+            }
           },
           {
-            "arabic": "يَمُوتُونَ"
+            "arabic": "فَيُضَـٰعِفَهُۥ لَهُۥ",
+            "translations": {
+              "ru": {
+                "translit": "файудооӏифахӏуу льахӏуу"
+              }
+            }
           },
           {
-            "arabic": "هَاجَرَ"
+            "arabic": "طُولِبَ",
+            "translations": {
+              "ru": {
+                "translit": "тӏуулиба"
+              }
+            }
           },
           {
-            "arabic": "فَاتَحَ"
+            "arabic": "فِيهَا",
+            "translations": {
+              "ru": {
+                "translit": "фиихӏаа"
+              }
+            }
           },
           {
-            "arabic": "سَائِلَ"
+            "arabic": "شَاهَدَ",
+            "translations": {
+              "ru": {
+                "translit": "шаахӏада"
+              }
+            }
           },
           {
-            "arabic": "يَقُولُونَ"
+            "arabic": "ءَانَسَ",
+            "translations": {
+              "ru": {
+                "translit": "ъаанаса"
+              }
+            }
           },
           {
-            "arabic": "جَاوَزَ"
+            "arabic": "وَاظَبَ",
+            "translations": {
+              "ru": {
+                "translit": "ваазоба"
+              }
+            }
           },
           {
-            "arabic": "ظَاهَرَ"
+            "arabic": "طَالَبَ",
+            "translations": {
+              "ru": {
+                "translit": "тӏоольаба"
+              }
+            }
           },
           {
-            "arabic": "حِينَ"
+            "arabic": "جِيدِهَا",
+            "translations": {
+              "ru": {
+                "translit": "джиидихӏаа"
+              }
+            }
           },
           {
-            "arabic": "رُوحِنَا"
+            "arabic": "عُوقِبَ",
+            "translations": {
+              "ru": {
+                "translit": "ӏуукъиба"
+              }
+            }
           },
           {
-            "arabic": "نَاوَلَ"
+            "arabic": "غُودِرَ",
+            "translations": {
+              "ru": {
+                "translit": "гӏуудиро"
+              }
+            }
           },
           {
-            "arabic": "هَـٰذِهِۦ بِضَـٰعَتُنَا"
+            "arabic": "زِينَتُهُ",
+            "translations": {
+              "ru": {
+                "translit": "зиинатухӏу"
+              }
+            }
           },
           {
-            "arabic": "وَصَـٰحِبَتِهِۦ وَبَنِيهِ"
+            "arabic": "مَعَايِرُ",
+            "translations": {
+              "ru": {
+                "translit": "маӏаайиру"
+              }
+            }
           },
           {
-            "arabic": "فَيُضَـٰعِفَهُۥ لَهُۥ"
+            "arabic": "دِينَهُ",
+            "translations": {
+              "ru": {
+                "translit": "диинахӏу"
+              }
+            }
           },
           {
-            "arabic": "طُولِبَ"
+            "arabic": "لَهُۥ فِيهَا",
+            "translations": {
+              "ru": {
+                "translit": "льахӏуу фиихӏаа"
+              }
+            }
           },
           {
-            "arabic": "فِيهَا"
+            "arabic": "وَفِصَـٰلُهُۥ ثَلَـٰثُونَ",
+            "translations": {
+              "ru": {
+                "translit": "вафисоольухӏуу сальаасууна"
+              }
+            }
           },
           {
-            "arabic": "شَاهَدَ"
+            "arabic": "وَكُتُبِهِۦ وَرُسُلِهِۦ",
+            "translations": {
+              "ru": {
+                "translit": "вакутубихӏии варусулихӏии"
+              }
+            }
           },
           {
-            "arabic": "ءَانَسَ"
+            "arabic": "نِيرَانُ",
+            "translations": {
+              "ru": {
+                "translit": "ниироону"
+              }
+            }
           },
           {
-            "arabic": "وَاظَبَ"
+            "arabic": "كُونِي",
+            "translations": {
+              "ru": {
+                "translit": "куунии"
+              }
+            }
           },
           {
-            "arabic": "طَالَبَ"
+            "arabic": "جُوزِيَ",
+            "translations": {
+              "ru": {
+                "translit": "джуузийа"
+              }
+            }
           },
           {
-            "arabic": "جِيدِهَا"
+            "arabic": "عَامَلَ",
+            "translations": {
+              "ru": {
+                "translit": "ӏаамальа"
+              }
+            }
           },
           {
-            "arabic": "عُوقِبَ"
+            "arabic": "رَاقَبَ",
+            "translations": {
+              "ru": {
+                "translit": "роокъоба"
+              }
+            }
           },
           {
-            "arabic": "غُودِرَ"
+            "arabic": "يَزُورُ",
+            "translations": {
+              "ru": {
+                "translit": "йазууру"
+              }
+            }
           },
           {
-            "arabic": "زِينَتُهُ"
+            "arabic": "شِيعَتِهِ",
+            "translations": {
+              "ru": {
+                "translit": "шииӏатихӏи"
+              }
+            }
           },
           {
-            "arabic": "مَعَايِرُ"
+            "arabic": "زَاوَلَ",
+            "translations": {
+              "ru": {
+                "translit": "заавальа"
+              }
+            }
           },
           {
-            "arabic": "دِينَهُ"
+            "arabic": "خَاصَمَ",
+            "translations": {
+              "ru": {
+                "translit": "хоосома"
+              }
+            }
           },
           {
-            "arabic": "لَهُۥ فِيهَا"
+            "arabic": "حَاوَلَ",
+            "translations": {
+              "ru": {
+                "translit": "хьаавальа"
+              }
+            }
           },
           {
-            "arabic": "وَفِصَـٰلُهُۥ ثَلَـٰثُونَ"
+            "arabic": "صِيدَ",
+            "translations": {
+              "ru": {
+                "translit": "сыыда"
+              }
+            }
           },
           {
-            "arabic": "وَكُتُبِهِۦ وَرُسُلِهِۦ"
+            "arabic": "صُوحِبَ",
+            "translations": {
+              "ru": {
+                "translit": "суухьиба"
+              }
+            }
           },
           {
-            "arabic": "نِيرَانُ"
+            "arabic": "فَسَلَكَهُۥ يَنَـٰبِيعَ",
+            "translations": {
+              "ru": {
+                "translit": "фасальакахӏуу йанаабииӏа"
+              }
+            }
           },
           {
-            "arabic": "كُونِي"
+            "arabic": "بِهِۦ كَـٰفِرُونَ",
+            "translations": {
+              "ru": {
+                "translit": "бихӏии каафирууна"
+              }
+            }
           },
           {
-            "arabic": "جُوزِيَ"
+            "arabic": "لَهُۥ عَـٰبِدُونَ",
+            "translations": {
+              "ru": {
+                "translit": "льахӏуу ӏаабидууна"
+              }
+            }
           },
           {
-            "arabic": "عَامَلَ"
+            "arabic": "مَسَـٰجِدَ",
+            "translations": {
+              "ru": {
+                "translit": "масааджида"
+              }
+            }
           },
           {
-            "arabic": "رَاقَبَ"
+            "arabic": "يُخَاطِرُ",
+            "translations": {
+              "ru": {
+                "translit": "йухоотӏыру"
+              }
+            }
           },
           {
-            "arabic": "يَزُورُ"
+            "arabic": "ذَاكَرَ",
+            "translations": {
+              "ru": {
+                "translit": "заакаро"
+              }
+            }
           },
           {
-            "arabic": "شِيعَتِهِ"
+            "arabic": "عَظِيمُ",
+            "translations": {
+              "ru": {
+                "translit": "ӏазыыму"
+              }
+            }
           },
           {
-            "arabic": "زَاوَلَ"
+            "arabic": "جَاذَبَهُ",
+            "translations": {
+              "ru": {
+                "translit": "джаазабахӏу"
+              }
+            }
           },
           {
-            "arabic": "خَاصَمَ"
+            "arabic": "مِيعَادُ",
+            "translations": {
+              "ru": {
+                "translit": "мииӏааду"
+              }
+            }
           },
           {
-            "arabic": "حَاوَلَ"
+            "arabic": "مَانَعَ",
+            "translations": {
+              "ru": {
+                "translit": "маанаӏа"
+              }
+            }
           },
           {
-            "arabic": "صِيدَ"
+            "arabic": "غَافَلَ",
+            "translations": {
+              "ru": {
+                "translit": "гӏоофальа"
+              }
+            }
           },
           {
-            "arabic": "صُوحِبَ"
+            "arabic": "يُوسُفُ",
+            "translations": {
+              "ru": {
+                "translit": "йуусуфу"
+              }
+            }
           },
           {
-            "arabic": "فَسَلَكَهُۥ يَنَـٰبِيعَ"
+            "arabic": "بَالَغَ",
+            "translations": {
+              "ru": {
+                "translit": "баальагӏо"
+              }
+            }
           },
           {
-            "arabic": "بِهِۦ كَـٰفِرُونَ"
+            "arabic": "وَهَامَانَ",
+            "translations": {
+              "ru": {
+                "translit": "вахӏаамаана"
+              }
+            }
           },
           {
-            "arabic": "لَهُۥ عَـٰبِدُونَ"
+            "arabic": "ثَابَرَ",
+            "translations": {
+              "ru": {
+                "translit": "саабаро"
+              }
+            }
           },
           {
-            "arabic": "مَسَـٰجِدَ"
+            "arabic": "بِيعَ",
+            "translations": {
+              "ru": {
+                "translit": "бииӏа"
+              }
+            }
           },
           {
-            "arabic": "يُخَاطِرُ"
+            "arabic": "يَـٰهَـٰمَـٰنُ",
+            "translations": {
+              "ru": {
+                "translit": "йаахӏаамаану"
+              }
+            }
           },
           {
-            "arabic": "ذَاكَرَ"
+            "arabic": "صَافَحَ",
+            "translations": {
+              "ru": {
+                "translit": "соофахьа"
+              }
+            }
           },
           {
-            "arabic": "عَظِيمُ"
+            "arabic": "يَذِيعُ",
+            "translations": {
+              "ru": {
+                "translit": "йазииӏу"
+              }
+            }
           },
           {
-            "arabic": "جَاذَبَهُ"
+            "arabic": "تُوصُونَ",
+            "translations": {
+              "ru": {
+                "translit": "туусууна"
+              }
+            }
           },
           {
-            "arabic": "مِيعَادُ"
+            "arabic": "وَافَقَ",
+            "translations": {
+              "ru": {
+                "translit": "ваафакъо"
+              }
+            }
           },
           {
-            "arabic": "مَانَعَ"
+            "arabic": "يَذُوقُ",
+            "translations": {
+              "ru": {
+                "translit": "йазуукъу"
+              }
+            }
           },
           {
-            "arabic": "غَافَلَ"
+            "arabic": "خُوطِبَ",
+            "translations": {
+              "ru": {
+                "translit": "хуутӏыба"
+              }
+            }
           },
           {
-            "arabic": "يُوسُفُ"
+            "arabic": "سَاهُونَ",
+            "translations": {
+              "ru": {
+                "translit": "саахӏууна"
+              }
+            }
           },
           {
-            "arabic": "بَالَغَ"
+            "arabic": "كِيلَ",
+            "translations": {
+              "ru": {
+                "translit": "киильа"
+              }
+            }
           },
           {
-            "arabic": "وَهَامَانَ"
+            "arabic": "بُورِكَ",
+            "translations": {
+              "ru": {
+                "translit": "буурика"
+              }
+            }
           },
           {
-            "arabic": "ثَابَرَ"
+            "arabic": "يَلِينُ",
+            "translations": {
+              "ru": {
+                "translit": "йалиину"
+              }
+            }
           },
           {
-            "arabic": "بِيعَ"
+            "arabic": "فَقَالَ",
+            "translations": {
+              "ru": {
+                "translit": "факъоольа"
+              }
+            }
           },
           {
-            "arabic": "يَـٰهَـٰمَـٰنُ"
+            "arabic": "تَابَعَ",
+            "translations": {
+              "ru": {
+                "translit": "таабаӏа"
+              }
+            }
           },
           {
-            "arabic": "صَافَحَ"
+            "arabic": "صِرَٰطُ",
+            "translations": {
+              "ru": {
+                "translit": "сыроотӏу"
+              }
+            }
           },
           {
-            "arabic": "يَذِيعُ"
+            "arabic": "شُوهِدَ",
+            "translations": {
+              "ru": {
+                "translit": "шуухӏида"
+              }
+            }
           },
           {
-            "arabic": "تُوصُونَ"
+            "arabic": "مَـٰلِكِ",
+            "translations": {
+              "ru": {
+                "translit": "маалики"
+              }
+            }
           },
           {
-            "arabic": "وَافَقَ"
+            "arabic": "مُونِعَ",
+            "translations": {
+              "ru": {
+                "translit": "мууниӏа"
+              }
+            }
           },
           {
-            "arabic": "يَذُوقُ"
-          },
-          {
-            "arabic": "خُوطِبَ"
-          },
-          {
-            "arabic": "سَاهُونَ"
-          },
-          {
-            "arabic": "كِيلَ"
-          },
-          {
-            "arabic": "بُورِكَ"
-          },
-          {
-            "arabic": "يَلِينُ"
-          },
-          {
-            "arabic": "فَقَالَ"
-          },
-          {
-            "arabic": "تَابَعَ"
-          },
-          {
-            "arabic": "صِرَٰطُ"
-          },
-          {
-            "arabic": "شُوهِدَ"
-          },
-          {
-            "arabic": "مَـٰلِكِ"
-          },
-          {
-            "arabic": "مُونِعَ"
-          },
-          {
-            "arabic": "كَاتَبَ"
-          },
-          {
-            "arabic": "ضَاعَفَ"
-          },
-          {
-            "arabic": "وُورِيَ"
-          },
-          {
-            "arabic": "لُوحِظَ"
-          },
-          {
-            "arabic": "أُوذِينَا"
-          },
-          {
-            "arabic": "يُؤَاكِلُ"
-          },
-          {
-            "arabic": "سِيمَاهُ"
-          },
-          {
-            "arabic": "قَاسَمَ"
-          },
-          {
-            "arabic": "عَايَنَ"
-          },
-          {
-            "arabic": "إِيتَاءِ"
-          },
-          {
-            "arabic": "أَقَاوِيلُ"
-          },
-          {
-            "arabic": "دَاوُۥدُ"
-          },
-          {
-            "arabic": "هَـٰرُوتَ وَمَـٰرُوتَ"
+            "arabic": "كَاتَبَ",
+            "translations": {
+              "ru": {
+                "translit": "каатаба"
+              }
+            }
+          },
+          {
+            "arabic": "ضَاعَفَ",
+            "translations": {
+              "ru": {
+                "translit": "дооӏафа"
+              }
+            }
+          },
+          {
+            "arabic": "وُورِيَ",
+            "translations": {
+              "ru": {
+                "translit": "вуурийа"
+              }
+            }
+          },
+          {
+            "arabic": "لُوحِظَ",
+            "translations": {
+              "ru": {
+                "translit": "льуухьизо"
+              }
+            }
+          },
+          {
+            "arabic": "أُوذِينَا",
+            "translations": {
+              "ru": {
+                "translit": "ъуузиинаа"
+              }
+            }
+          },
+          {
+            "arabic": "يُؤَاكِلُ",
+            "translations": {
+              "ru": {
+                "translit": "йуъаакильу"
+              }
+            }
+          },
+          {
+            "arabic": "سِيمَاهُ",
+            "translations": {
+              "ru": {
+                "translit": "сиимаахӏу"
+              }
+            }
+          },
+          {
+            "arabic": "قَاسَمَ",
+            "translations": {
+              "ru": {
+                "translit": "къоосама"
+              }
+            }
+          },
+          {
+            "arabic": "عَايَنَ",
+            "translations": {
+              "ru": {
+                "translit": "ӏаайана"
+              }
+            }
+          },
+          {
+            "arabic": "إِيتَاءِ",
+            "translations": {
+              "ru": {
+                "translit": "ъиитааъи"
+              }
+            }
+          },
+          {
+            "arabic": "أَقَاوِيلُ",
+            "translations": {
+              "ru": {
+                "translit": "ъакъоовиильу"
+              }
+            }
+          },
+          {
+            "arabic": "دَاوُۥدُ",
+            "translations": {
+              "ru": {
+                "translit": "даавууду"
+              }
+            }
+          },
+          {
+            "arabic": "هَـٰرُوتَ وَمَـٰرُوتَ",
+            "translations": {
+              "ru": {
+                "translit": "хӏааруута вамааруута"
+              }
+            }
           }
         ]
       }
@@ -3890,44 +5380,44 @@
       ],
       "quiz": [
         {
-          "type": "syllable",
+          "type": "closedSyllable",
           "letter": "ب",
-          "mark": "sukun"
+          "mark": "kasra"
         },
         {
-          "type": "syllable",
+          "type": "closedSyllable",
           "letter": "د",
-          "mark": "sukun"
+          "mark": "fatha"
         },
         {
-          "type": "syllable",
+          "type": "closedSyllable",
           "letter": "ق",
-          "mark": "sukun"
+          "mark": "damma"
         },
         {
-          "type": "syllable",
+          "type": "closedSyllable",
           "letter": "ل",
-          "mark": "sukun"
+          "mark": "fatha"
         },
         {
-          "type": "syllable",
+          "type": "closedSyllable",
           "letter": "م",
-          "mark": "sukun"
+          "mark": "kasra"
         },
         {
-          "type": "syllable",
+          "type": "closedSyllable",
           "letter": "ن",
-          "mark": "sukun"
+          "mark": "damma"
         },
         {
-          "type": "syllable",
+          "type": "closedSyllable",
           "letter": "ع",
-          "mark": "sukun"
+          "mark": "fatha"
         },
         {
-          "type": "syllable",
+          "type": "closedSyllable",
           "letter": "ف",
-          "mark": "sukun"
+          "mark": "kasra"
         }
       ],
       "words": {
@@ -4031,148 +5521,388 @@
             }
           },
           {
-            "arabic": "وَإِذْ لَمْ"
+            "arabic": "وَإِذْ لَمْ",
+            "translations": {
+              "ru": {
+                "translit": "ваъиз льам"
+              }
+            }
           },
           {
-            "arabic": "وَإِنْ كُنْتُمْ"
+            "arabic": "وَإِنْ كُنْتُمْ",
+            "translations": {
+              "ru": {
+                "translit": "ваъин кунтум"
+              }
+            }
           },
           {
-            "arabic": "مِنْ قَبْلِكَ"
+            "arabic": "مِنْ قَبْلِكَ",
+            "translations": {
+              "ru": {
+                "translit": "мин къоблика"
+              }
+            }
           },
           {
-            "arabic": "تَعْقِلُونَ"
+            "arabic": "تَعْقِلُونَ",
+            "translations": {
+              "ru": {
+                "translit": "таӏкъильууна"
+              }
+            }
           },
           {
-            "arabic": "خَلَقْنَا"
+            "arabic": "خَلَقْنَا",
+            "translations": {
+              "ru": {
+                "translit": "хольакънаа"
+              }
+            }
           },
           {
-            "arabic": "أَوْبَارِهَا"
+            "arabic": "أَوْبَارِهَا",
+            "translations": {
+              "ru": {
+                "translit": "ъавбаарихӏаа"
+              }
+            }
           },
           {
-            "arabic": "أَرْسَلْنَا"
+            "arabic": "أَرْسَلْنَا",
+            "translations": {
+              "ru": {
+                "translit": "ъарсальнаа"
+              }
+            }
           },
           {
-            "arabic": "عَنْ"
+            "arabic": "عَنْ",
+            "translations": {
+              "ru": {
+                "translit": "ӏан"
+              }
+            }
           },
           {
-            "arabic": "حَيْثُ"
+            "arabic": "حَيْثُ",
+            "translations": {
+              "ru": {
+                "translit": "хьайсу"
+              }
+            }
           },
           {
-            "arabic": "أَيْنَ"
+            "arabic": "أَيْنَ",
+            "translations": {
+              "ru": {
+                "translit": "ъайна"
+              }
+            }
           },
           {
-            "arabic": "أَفْلَحَ"
+            "arabic": "أَفْلَحَ",
+            "translations": {
+              "ru": {
+                "translit": "ъафльахьа"
+              }
+            }
           },
           {
-            "arabic": "أُكْرِمَ"
+            "arabic": "أُكْرِمَ",
+            "translations": {
+              "ru": {
+                "translit": "ъукрима"
+              }
+            }
           },
           {
-            "arabic": "يُنْفِقُونَ"
+            "arabic": "يُنْفِقُونَ",
+            "translations": {
+              "ru": {
+                "translit": "йунфикъууна"
+              }
+            }
           },
           {
-            "arabic": "فَهَلْ"
+            "arabic": "فَهَلْ",
+            "translations": {
+              "ru": {
+                "translit": "фахӏаль"
+              }
+            }
           },
           {
-            "arabic": "جَعَلْنَا"
+            "arabic": "جَعَلْنَا",
+            "translations": {
+              "ru": {
+                "translit": "джаӏальнаа"
+              }
+            }
           },
           {
-            "arabic": "أَنْعَمْتَ عَلَيْهِمْ"
+            "arabic": "أَنْعَمْتَ عَلَيْهِمْ",
+            "translations": {
+              "ru": {
+                "translit": "ъанӏамта ӏальайхӏим"
+              }
+            }
           },
           {
-            "arabic": "وَهُمْ يَعْلَمُونَ"
+            "arabic": "وَهُمْ يَعْلَمُونَ",
+            "translations": {
+              "ru": {
+                "translit": "вахӏум йаӏльамууна"
+              }
+            }
           },
           {
-            "arabic": "لَذَهَبَ بِسَمْعِهِمْ"
+            "arabic": "لَذَهَبَ بِسَمْعِهِمْ",
+            "translations": {
+              "ru": {
+                "translit": "льазахӏаба бисамӏихӏим"
+              }
+            }
           },
           {
-            "arabic": "يَسْمَعُونَ"
+            "arabic": "يَسْمَعُونَ",
+            "translations": {
+              "ru": {
+                "translit": "йасмаӏууна"
+              }
+            }
           },
           {
-            "arabic": "فَكَيْفَ"
+            "arabic": "فَكَيْفَ",
+            "translations": {
+              "ru": {
+                "translit": "факайфа"
+              }
+            }
           },
           {
-            "arabic": "نَسْتَعِينُ"
+            "arabic": "نَسْتَعِينُ",
+            "translations": {
+              "ru": {
+                "translit": "настаӏиину"
+              }
+            }
           },
           {
-            "arabic": "أَزْلَفَ"
+            "arabic": "أَزْلَفَ",
+            "translations": {
+              "ru": {
+                "translit": "ъазльафа"
+              }
+            }
           },
           {
-            "arabic": "فَوْقَ"
+            "arabic": "فَوْقَ",
+            "translations": {
+              "ru": {
+                "translit": "фавкъо"
+              }
+            }
           },
           {
-            "arabic": "أَلَمْ"
+            "arabic": "أَلَمْ",
+            "translations": {
+              "ru": {
+                "translit": "ъальам"
+              }
+            }
           },
           {
-            "arabic": "قُلْ"
+            "arabic": "قُلْ",
+            "translations": {
+              "ru": {
+                "translit": "къуль"
+              }
+            }
           },
           {
-            "arabic": "يَوْمَ"
+            "arabic": "يَوْمَ",
+            "translations": {
+              "ru": {
+                "translit": "йавма"
+              }
+            }
           },
           {
-            "arabic": "مِنْهُمْ"
+            "arabic": "مِنْهُمْ",
+            "translations": {
+              "ru": {
+                "translit": "минхӏум"
+              }
+            }
           },
           {
-            "arabic": "وَسَوْفَ"
+            "arabic": "وَسَوْفَ",
+            "translations": {
+              "ru": {
+                "translit": "васавфа"
+              }
+            }
           },
           {
-            "arabic": "تَشْكُرُونَ"
+            "arabic": "تَشْكُرُونَ",
+            "translations": {
+              "ru": {
+                "translit": "ташкурууна"
+              }
+            }
           },
           {
-            "arabic": "أَنْزَلْنَا"
+            "arabic": "أَنْزَلْنَا",
+            "translations": {
+              "ru": {
+                "translit": "ъанзальнаа"
+              }
+            }
           },
           {
-            "arabic": "أَتْقَنَ"
+            "arabic": "أَتْقَنَ",
+            "translations": {
+              "ru": {
+                "translit": "ъаткъона"
+              }
+            }
           },
           {
-            "arabic": "لَيْتَ"
+            "arabic": "لَيْتَ",
+            "translations": {
+              "ru": {
+                "translit": "льайта"
+              }
+            }
           },
           {
-            "arabic": "نَسْجُدُ"
+            "arabic": "نَسْجُدُ",
+            "translations": {
+              "ru": {
+                "translit": "насджуду"
+              }
+            }
           },
           {
-            "arabic": "قَدْ"
+            "arabic": "قَدْ",
+            "translations": {
+              "ru": {
+                "translit": "къод"
+              }
+            }
           },
           {
-            "arabic": "يَسْلُكُ"
+            "arabic": "يَسْلُكُ",
+            "translations": {
+              "ru": {
+                "translit": "йасльуку"
+              }
+            }
           },
           {
-            "arabic": "إِسْرَائِيلَ"
+            "arabic": "إِسْرَائِيلَ",
+            "translations": {
+              "ru": {
+                "translit": "ъисрооъиильа"
+              }
+            }
           },
           {
-            "arabic": "لِمَنْ"
+            "arabic": "لِمَنْ",
+            "translations": {
+              "ru": {
+                "translit": "лиман"
+              }
+            }
           },
           {
-            "arabic": "لَكُمْ"
+            "arabic": "لَكُمْ",
+            "translations": {
+              "ru": {
+                "translit": "льакум"
+              }
+            }
           },
           {
-            "arabic": "أَنْفُسَهُمْ"
+            "arabic": "أَنْفُسَهُمْ",
+            "translations": {
+              "ru": {
+                "translit": "ъанфусахӏум"
+              }
+            }
           },
           {
-            "arabic": "أَسْرَفَ"
+            "arabic": "أَسْرَفَ",
+            "translations": {
+              "ru": {
+                "translit": "ъасрофа"
+              }
+            }
           },
           {
-            "arabic": "عَلَيْكُمْ"
+            "arabic": "عَلَيْكُمْ",
+            "translations": {
+              "ru": {
+                "translit": "ӏальайкум"
+              }
+            }
           },
           {
-            "arabic": "نَفْرَحُ"
+            "arabic": "نَفْرَحُ",
+            "translations": {
+              "ru": {
+                "translit": "нафрохьу"
+              }
+            }
           },
           {
-            "arabic": "عِشْنَا"
+            "arabic": "عِشْنَا",
+            "translations": {
+              "ru": {
+                "translit": "ӏишнаа"
+              }
+            }
           },
           {
-            "arabic": "عَنْكَ"
+            "arabic": "عَنْكَ",
+            "translations": {
+              "ru": {
+                "translit": "ӏанка"
+              }
+            }
           },
           {
-            "arabic": "أَثْقَلَ"
+            "arabic": "أَثْقَلَ",
+            "translations": {
+              "ru": {
+                "translit": "ъаскъольа"
+              }
+            }
           },
           {
-            "arabic": "وَكَمْ"
+            "arabic": "وَكَمْ",
+            "translations": {
+              "ru": {
+                "translit": "вакам"
+              }
+            }
           },
           {
-            "arabic": "يُؤْمِنُونَ"
+            "arabic": "يُؤْمِنُونَ",
+            "translations": {
+              "ru": {
+                "translit": "йуъминууна"
+              }
+            }
           },
           {
-            "arabic": "أَذْأَبَ"
+            "arabic": "أَذْأَبَ",
+            "translations": {
+              "ru": {
+                "translit": "ъазъаба"
+              }
+            }
           }
         ]
       }
@@ -4440,148 +6170,388 @@
             }
           },
           {
-            "arabic": "نَارٌ"
+            "arabic": "نَارٌ",
+            "translations": {
+              "ru": {
+                "translit": "наарун"
+              }
+            }
           },
           {
-            "arabic": "عَذَابًا"
+            "arabic": "عَذَابًا",
+            "translations": {
+              "ru": {
+                "translit": "ӏазаабан"
+              }
+            }
           },
           {
-            "arabic": "هُودًا"
+            "arabic": "هُودًا",
+            "translations": {
+              "ru": {
+                "translit": "хӏуудан"
+              }
+            }
           },
           {
-            "arabic": "نُورٌ"
+            "arabic": "نُورٌ",
+            "translations": {
+              "ru": {
+                "translit": "нуурун"
+              }
+            }
           },
           {
-            "arabic": "كَثِيرًا"
+            "arabic": "كَثِيرًا",
+            "translations": {
+              "ru": {
+                "translit": "касиирон"
+              }
+            }
           },
           {
-            "arabic": "رُجُومًا"
+            "arabic": "رُجُومًا",
+            "translations": {
+              "ru": {
+                "translit": "руджууман"
+              }
+            }
           },
           {
-            "arabic": "بَصِيرًا"
+            "arabic": "بَصِيرًا",
+            "translations": {
+              "ru": {
+                "translit": "басыырон"
+              }
+            }
           },
           {
-            "arabic": "ظُلُمَاتٍ"
+            "arabic": "ظُلُمَاتٍ",
+            "translations": {
+              "ru": {
+                "translit": "зульумаатин"
+              }
+            }
           },
           {
-            "arabic": "مَسَدٍ"
+            "arabic": "مَسَدٍ",
+            "translations": {
+              "ru": {
+                "translit": "масадин"
+              }
+            }
           },
           {
-            "arabic": "أَجْرٌ"
+            "arabic": "أَجْرٌ",
+            "translations": {
+              "ru": {
+                "translit": "ъаджрун"
+              }
+            }
           },
           {
-            "arabic": "عَظِيمًا"
+            "arabic": "عَظِيمًا",
+            "translations": {
+              "ru": {
+                "translit": "ӏазыыман"
+              }
+            }
           },
           {
-            "arabic": "كُفُوًا"
+            "arabic": "كُفُوًا",
+            "translations": {
+              "ru": {
+                "translit": "куфуван"
+              }
+            }
           },
           {
-            "arabic": "عَمَدٍ"
+            "arabic": "عَمَدٍ",
+            "translations": {
+              "ru": {
+                "translit": "ӏамадин"
+              }
+            }
           },
           {
-            "arabic": "رَحِيمٌ"
+            "arabic": "رَحِيمٌ",
+            "translations": {
+              "ru": {
+                "translit": "рохьиимун"
+              }
+            }
           },
           {
-            "arabic": "سَبِيلًا"
+            "arabic": "سَبِيلًا",
+            "translations": {
+              "ru": {
+                "translit": "сабиильан"
+              }
+            }
           },
           {
-            "arabic": "لُبَدًا"
+            "arabic": "لُبَدًا",
+            "translations": {
+              "ru": {
+                "translit": "льубадан"
+              }
+            }
           },
           {
-            "arabic": "أَبَدًا"
+            "arabic": "أَبَدًا",
+            "translations": {
+              "ru": {
+                "translit": "ъабадан"
+              }
+            }
           },
           {
-            "arabic": "خَيْرًا"
+            "arabic": "خَيْرًا",
+            "translations": {
+              "ru": {
+                "translit": "хойрон"
+              }
+            }
           },
           {
-            "arabic": "قَدِيرٌ"
+            "arabic": "قَدِيرٌ",
+            "translations": {
+              "ru": {
+                "translit": "къодиирун"
+              }
+            }
           },
           {
-            "arabic": "رَاكِبٌ"
+            "arabic": "رَاكِبٌ",
+            "translations": {
+              "ru": {
+                "translit": "роокибун"
+              }
+            }
           },
           {
-            "arabic": "عَلَقٍ"
+            "arabic": "عَلَقٍ",
+            "translations": {
+              "ru": {
+                "translit": "ӏальакъин"
+              }
+            }
           },
           {
-            "arabic": "يَوْمَئِذٍ"
+            "arabic": "يَوْمَئِذٍ",
+            "translations": {
+              "ru": {
+                "translit": "йавмаъизин"
+              }
+            }
           },
           {
-            "arabic": "طَبَقٍ"
+            "arabic": "طَبَقٍ",
+            "translations": {
+              "ru": {
+                "translit": "тӏобакъин"
+              }
+            }
           },
           {
-            "arabic": "سُرُرٌ"
+            "arabic": "سُرُرٌ",
+            "translations": {
+              "ru": {
+                "translit": "сурурун"
+              }
+            }
           },
           {
-            "arabic": "سَمِيعًا"
+            "arabic": "سَمِيعًا",
+            "translations": {
+              "ru": {
+                "translit": "самииӏан"
+              }
+            }
           },
           {
-            "arabic": "مَجِيدٌ"
+            "arabic": "مَجِيدٌ",
+            "translations": {
+              "ru": {
+                "translit": "маджиидун"
+              }
+            }
           },
           {
-            "arabic": "كَرِيمٍ"
+            "arabic": "كَرِيمٍ",
+            "translations": {
+              "ru": {
+                "translit": "кариимин"
+              }
+            }
           },
           {
-            "arabic": "عِنَبًا"
+            "arabic": "عِنَبًا",
+            "translations": {
+              "ru": {
+                "translit": "ӏинабан"
+              }
+            }
           },
           {
-            "arabic": "بَشَرٍ"
+            "arabic": "بَشَرٍ",
+            "translations": {
+              "ru": {
+                "translit": "башарин"
+              }
+            }
           },
           {
-            "arabic": "قَلِيلًا"
+            "arabic": "قَلِيلًا",
+            "translations": {
+              "ru": {
+                "translit": "къолиильан"
+              }
+            }
           },
           {
-            "arabic": "عَلِيمٌ"
+            "arabic": "عَلِيمٌ",
+            "translations": {
+              "ru": {
+                "translit": "ӏалиимун"
+              }
+            }
           },
           {
-            "arabic": "قَسَمٌ"
+            "arabic": "قَسَمٌ",
+            "translations": {
+              "ru": {
+                "translit": "къосамун"
+              }
+            }
           },
           {
-            "arabic": "أَحَدًا"
+            "arabic": "أَحَدًا",
+            "translations": {
+              "ru": {
+                "translit": "ъахьадан"
+              }
+            }
           },
           {
-            "arabic": "لَكَنُودٌ"
+            "arabic": "لَكَنُودٌ",
+            "translations": {
+              "ru": {
+                "translit": "льакануудун"
+              }
+            }
           },
           {
-            "arabic": "ضَرِيعٍ"
+            "arabic": "ضَرِيعٍ",
+            "translations": {
+              "ru": {
+                "translit": "дорииӏин"
+              }
+            }
           },
           {
-            "arabic": "جُوعٍ"
+            "arabic": "جُوعٍ",
+            "translations": {
+              "ru": {
+                "translit": "джууӏин"
+              }
+            }
           },
           {
-            "arabic": "طَبَقًا"
+            "arabic": "طَبَقًا",
+            "translations": {
+              "ru": {
+                "translit": "тӏобакъон"
+              }
+            }
           },
           {
-            "arabic": "مَثَلًا"
+            "arabic": "مَثَلًا",
+            "translations": {
+              "ru": {
+                "translit": "масальан"
+              }
+            }
           },
           {
-            "arabic": "سَلَامٌ"
+            "arabic": "سَلَامٌ",
+            "translations": {
+              "ru": {
+                "translit": "сальаамун"
+              }
+            }
           },
           {
-            "arabic": "خَبِيرٌ"
+            "arabic": "خَبِيرٌ",
+            "translations": {
+              "ru": {
+                "translit": "хобиирун"
+              }
+            }
           },
           {
-            "arabic": "أَفْوَاجًا"
+            "arabic": "أَفْوَاجًا",
+            "translations": {
+              "ru": {
+                "translit": "ъафвааджан"
+              }
+            }
           },
           {
-            "arabic": "نَاصِرٍ"
+            "arabic": "نَاصِرٍ",
+            "translations": {
+              "ru": {
+                "translit": "наасырин"
+              }
+            }
           },
           {
-            "arabic": "عَذَابٌ"
+            "arabic": "عَذَابٌ",
+            "translations": {
+              "ru": {
+                "translit": "ӏазаабун"
+              }
+            }
           },
           {
-            "arabic": "كِرَامٌ"
+            "arabic": "كِرَامٌ",
+            "translations": {
+              "ru": {
+                "translit": "кироомун"
+              }
+            }
           },
           {
-            "arabic": "كَبَدٍ"
+            "arabic": "كَبَدٍ",
+            "translations": {
+              "ru": {
+                "translit": "кабадин"
+              }
+            }
           },
           {
-            "arabic": "لَهَبٍ"
+            "arabic": "لَهَبٍ",
+            "translations": {
+              "ru": {
+                "translit": "льахӏабин"
+              }
+            }
           },
           {
-            "arabic": "جَزَاءٌ"
+            "arabic": "جَزَاءٌ",
+            "translations": {
+              "ru": {
+                "translit": "джазааъун"
+              }
+            }
           },
           {
-            "arabic": "كُتُبٌ"
+            "arabic": "كُتُبٌ",
+            "translations": {
+              "ru": {
+                "translit": "кутубун"
+              }
+            }
           }
         ]
       }
