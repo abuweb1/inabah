@@ -668,8 +668,11 @@ internal fun FormulasBlock(items: List<ReadingFormula>, columns: Int, hidden: Bo
                                     // Длинная формула (артикль: «как пишется = как читается») переносится по пробелу.
                                     ArabicText(text, FORMULA_WIDE_SIZE, palette.parchmentText, bold = true, textAlign = TextAlign.Center, maxLines = WIDE_FORMULA_LINES)
                                 } else {
-                                    // Узкая ячейка: части - строкой выше, итог - крупно под ними (в одну строку не влезало).
-                                    ArabicText(parts, FORMULA_PARTS_SIZE, palette.parchmentText, bold = true, textAlign = TextAlign.Center, maxLines = 1)
+                                    // Узкая ячейка: части - строкой выше, итог - крупно под ними (в одну строку не влезало);
+                                    // слово без частей (исключения хӏамзату-львасли) - только оно.
+                                    if (formula.parts.isNotEmpty()) {
+                                        ArabicText(parts, FORMULA_PARTS_SIZE, palette.parchmentText, bold = true, textAlign = TextAlign.Center, maxLines = 1)
+                                    }
                                     ArabicText(result, FORMULA_SIZE, palette.parchmentText, bold = true, textAlign = TextAlign.Center, maxLines = 1)
                                 }
                                 formula.transliteration?.let {
@@ -682,7 +685,9 @@ internal fun FormulasBlock(items: List<ReadingFormula>, columns: Int, hidden: Bo
                                 }
                             }
                         }
-                        repeat(columns - row.size) { Spacer(Modifier.weight(1f)) }
+                        // Неполный последний ряд формул - с пустыми местами, ряд слов (8 исключений: 3, 3, 2) -
+                        // во всю ширину, как плитки «Читаем слова».
+                        if (row.any { it.parts.isNotEmpty() }) repeat(columns - row.size) { Spacer(Modifier.weight(1f)) }
                     }
                 }
             }
@@ -705,11 +710,16 @@ private fun SampleFormulas(block: ReadingBlock.Formulas, count: Int, hidden: Boo
     }
 }
 
-/** Все формулы («Весь алфавит» сукуна): по [SYLLABLE_ROWS_PER_CARD] ряда на карточку, как таблица слогов. */
+/**
+ * Все формулы («Весь алфавит» сукуна): по [SYLLABLE_ROWS_PER_CARD] ряда на карточку, как таблица слогов;
+ * формулы во всю ширину (по одной в строку, решение пользователя 2026-10-17) - по [WIDE_FORMULAS_PER_CARD]:
+ * буква с тремя огласовками.
+ */
 @Composable
 internal fun FormulasCards(items: List<ReadingFormula>, columns: Int, hidden: Boolean) {
+    val perCard = if (columns == 1) WIDE_FORMULAS_PER_CARD else columns * SYLLABLE_ROWS_PER_CARD
     Column(verticalArrangement = Arrangement.spacedBy(Spacing.m)) {
-        for (chunk in items.chunked(columns * SYLLABLE_ROWS_PER_CARD)) FormulasBlock(chunk, columns, hidden)
+        for (chunk in items.chunked(perCard)) FormulasBlock(chunk, columns, hidden)
     }
 }
 
@@ -770,6 +780,7 @@ private const val HERO_APPEAR_MILLIS = 500
 private const val LETTER_MILLIS = 2_000L
 private const val PLAYING_SCALE = 1.2f
 private const val SYLLABLE_ROWS_PER_CARD = 4
+private const val WIDE_FORMULAS_PER_CARD = 3
 private const val SAMPLE_COLUMNS = 3
 private const val FORMULA_SIZE = 32f
 private const val FORMULA_PARTS_SIZE = 22f

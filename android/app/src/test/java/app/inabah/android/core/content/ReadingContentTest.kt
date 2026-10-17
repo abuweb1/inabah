@@ -142,7 +142,8 @@ class ReadingContentTest {
         assertEquals(listOf("د ذ ر ز", "و ا"), forms.groups.map { group -> group.joinToString(" ") { it.letter } })
         assertTrue(step.quiz.isEmpty(), "формы группы 4 без проверки - решение пользователя")
         val (madd, small) = step.blocks.filterIsInstance<ReadingBlock.Formulas>()
-        assertEquals(3, madd.columns)
+        assertTrue(step.blocks.indexOf(small) < step.blocks.indexOf(forms), "мадд - до форм: в примерах форм есть буквы мадда")
+        assertEquals(1, madd.columns, "формулы - по одной в строку (решение пользователя)")
         assertEquals(listOf("بَا", "بِي", "بُو"), madd.items.map { it.result })
         assertEquals(listOf("баа", "бии", "буу"), madd.items.map { it.transliteration })
         assertEquals(listOf(listOf("بَ", "ا")), madd.items.take(1).map { it.parts })
@@ -218,7 +219,9 @@ class ReadingContentTest {
         assertEquals("Мадд перед артиклем", course.step(11)?.title, "страницы 40-41 - отдельным шагом (решение пользователя)")
         val read = step.blocks.filterIsInstance<ReadingBlock.Formulas>().flatMap { it.items }
         assertEquals("йавми-ддиини", read.first { it.result == "يَوْمِدِّينِ" }.transliteration, "в середине не читаются ни ٱ, ни лям перед солнечной")
-        assertEquals("ъальхьамду", read.first { it.result == "أَلْحَمْدُ" }.transliteration)
+        // Начало чтения: хӏамзату-львасли - как пишется, «ъ» - в транскрипции, без «=» (решение пользователя).
+        val start = read.first { it.result == "ٱلْحَمْدُ" && it.parts.isEmpty() }
+        assertEquals("ъальхьамду", start.transliteration)
         assertTrue(step.blocks.none { it is ReadingBlock.Rule }, "солнечные и лунные буквы - не на уроке (решение пользователя)")
         val extra = requireNotNull(step.extra)
         assertEquals("Солнечные и лунные буквы", extra.title)

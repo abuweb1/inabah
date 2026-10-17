@@ -290,6 +290,10 @@ class ReadingLogicTest {
         assertEquals(requireNotNull(course.step(10)).extra, requireNotNull(course.step(10)).extra(null))
         // Слово - строкой без «=»: формула без частей.
         assertTrue(step.topics[1].extra.blocks.filterIsInstance<ReadingBlock.Formulas>().first().items.all { it.parts.isEmpty() })
+        // Хӏамзату-львасли - как пишется, без «=»; немой алиф - с кружком (решения пользователя 2026-10-17).
+        val wasl = step.topics[0].extra.blocks.filterIsInstance<ReadingBlock.Formulas>().dropLast(1).flatMap { it.items }
+        assertTrue(wasl.all { it.parts.isEmpty() && it.result.startsWith("ٱ") })
+        assertEquals("ъусджудуу", wasl.first { it.result == "ٱسْجُدُوا۟" }.transliteration)
         assertEquals("Как читается на паузе?", step.quiz.filterIsInstance<ReadingQuestion.Word>().last().prompt)
     }
 }

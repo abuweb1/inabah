@@ -433,6 +433,8 @@ const TATWEEL = 'ـ';
 const NBSP = '\u00A0';
 // Хӏамзату-львасли (алиф васла) артикля.
 const WASL = 'ٱ';
+// Кружок над немым алифом (маленький круглый ноль, как в мусхафе): алиф пишется, но не читается.
+const SILENT_ALIF_MARK = '۟';
 
 /**
  * Слово «Читаем слова»: слова через один пробел; в слове - буква (подставка хамзы) и пройденный знак,
@@ -476,6 +478,8 @@ function readingWordProblem(text, { byLetter, bases, signs, passed }) {
         if (MADD_LETTERS[char] && previous === MADD_LETTERS[char]) { previous = null; c += 1; continue; }
         // Алиф после танвина фатхьи не читается (أَبَدًا, решение по книге 2026-10-16).
         if (char === 'ا' && previous === 'fathatan') { previous = null; c += 1; continue; }
+        // Немой алиф - с кружком сверху (ٱسْجُدُوا۟, решение пользователя 2026-10-17): не читается.
+        if (char === 'ا' && chars[c + 1] === SILENT_ALIF_MARK) { previous = null; c += 2; continue; }
         return `после «${char}» нет знака`;
       }
       if (!passed.has(mark)) return `знак ${mark} ещё не пройден`;
