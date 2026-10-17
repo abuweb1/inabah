@@ -87,6 +87,13 @@ class ReadingContentTest {
     }
 
     @Test
+    fun `«Форма буквы» без карточки в таблицах форм - DecodingFailed, не вопрос с одним вариантом`() = runTest {
+        val broken = repository(minimalJson(quiz = "[{\"type\":\"letterForm\",\"letter\":\"ب\",\"form\":\"initial\"}]"))
+        val error = assertFailsWith<ContentError.DecodingFailed> { broken.reading() }
+        assertEquals("reading.json", error.file)
+    }
+
+    @Test
     fun `Нет файла — ResourceMissing, как и у репозитория по умолчанию`() = runTest {
         val missing = AssetContentRepository(
             { throw FileNotFoundException(it) },
@@ -249,11 +256,11 @@ class ReadingContentTest {
         StandardTestDispatcher(testScheduler),
     )
 
-    private fun minimalJson(stepMarks: String = "[\"fatha\"]", blocks: String = "[]") = """
+    private fun minimalJson(stepMarks: String = "[\"fatha\"]", blocks: String = "[]", quiz: String = "[]") = """
         {
           "marks": [{ "id": "fatha", "sign": "َ", "translations": { "ru": { "name": "фатха" } } }],
           "letters": [{ "id": 1, "letter": "ب", "name": "بَاء", "translations": { "ru": { "name": "Ба" } } }],
-          "steps": [{ "id": 1, "marks": $stepMarks, "translations": { "ru": { "title": "Шаг" } }, "blocks": $blocks }]
+          "steps": [{ "id": 1, "marks": $stepMarks, "translations": { "ru": { "title": "Шаг" } }, "blocks": $blocks, "quiz": $quiz }]
         }
     """.trimIndent()
 }

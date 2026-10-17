@@ -36,6 +36,8 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.LayoutDirection
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.inabah.android.R
 import app.inabah.android.core.content.Loadable
@@ -57,7 +59,7 @@ import app.inabah.android.core.settings.ZikrProgress
  * Зикр итога «Читаем зикр» (решения пользователя 2026-10-17): «По словам» - плитки по порядку зикра,
  * каждое слово как оно есть (отдельно, если начать с него), касание - «прочитал» (один раз); «Слитно» -
  * места, где слова сливаются, строкой с подписью; «Целиком» - вся строка с паузой в конце, ▶ - запись
- * зикра из «Азкаров» (один раз), «Прочитал целиком», «Открыть в азкарах». Прочитаны все зикры - урок
+ * зикра из «Азкаров» (один раз; звучит - «Стоп»), «Прочитал целиком», «Открыть в азкарах». Прочитаны все зикры - урок
  * итога пройден и праздник, как в конце шага.
  */
 @Composable
@@ -73,8 +75,9 @@ fun ReadingZikrScreen(
     onOpenSteps: () -> Unit,
     contentPadding: PaddingValues,
     modifier: Modifier = Modifier,
-    /** Записи в сборке и их проигрывание (`ClipPlayer`): запись зикра. */
+    /** Записи в сборке, звучащая запись и их проигрывание (`ClipPlayer`): запись зикра. */
     clips: Set<String> = emptySet(),
+    playingClip: String? = null,
     onPlayClip: (String) -> Unit = {},
     onStopClip: () -> Unit = {},
 ) {
@@ -82,9 +85,11 @@ fun ReadingZikrScreen(
     val zikrs by progress.zikrs.collectAsStateWithLifecycle()
     val step = (store.course.collectAsStateWithLifecycle().value as? Loadable.Loaded)?.value?.step(stepNumber)
     val zikr = step?.zikrs?.getOrNull(zikrIndex)
-    // Запись длинная - ушли с экрана, звук не продолжается.
+    // Запись длинная - ушли с экрана или свернули приложение, звук не продолжается (остановить его
+    // в фоне нечем: у записей «Учимся читать» нет уведомления плеера).
     val stop by rememberUpdatedState(onStopClip)
     DisposableEffect(Unit) { onDispose { stop() } }
+    LifecycleEventEffect(Lifecycle.Event.ON_STOP) { stop() }
     ReadingScaffold(
         store = store,
         title = step?.let { stringResource(R.string.makharij_zikr_title, zikrIndex + 1, it.zikrs.size) }.orEmpty(),
@@ -95,15 +100,12 @@ fun ReadingZikrScreen(
     ) { course ->
         val current = course.step(stepNumber) ?: return@ReadingScaffold
         val block = current.zikrs.getOrNull(zikrIndex) ?: return@ReadingScaffold
-        val state = zikrs[zikrIndex] ?: ZikrProgress()
+        val state = zikrs[block.zikr] ?: ZikrProgress()
         // Последний зикр прочитан - урок итога пройден (кнопки «Готово» у итога нет) и праздник.
         val allDone = allZikrsDone(current, zikrs)
         var celebrate by rememberSaveable { mutableStateOf(false) }
         LaunchedEffect(allDone) {
-            if (allDone && stepNumber !in progress.lessonsDone.value) {
-                progress.markLessonDone(stepNumber)
-                celebrate = true
-            }
+            if (completeFinalIfRead(current, progress)) celebrate = true
         }
         Box(Modifier.fillMaxSize()) {
             Column(
@@ -115,7 +117,7 @@ fun ReadingZikrScreen(
                 verticalArrangement = Arrangement.spacedBy(Spacing.m),
             ) {
                 SectionTitle(stringResource(R.string.makharij_zikr_words_progress, block.words.indices.count { it in state.words }, block.words.size))
-                ZikrWords(block, state, hidden) { progress.readZikrWord(zikrIndex, it) }
+                ZikrWords(block, state, hidden) { progress.readZikrWord(block.zikr, it) }
                 if (block.joins.isNotEmpty()) {
                     SectionTitle(stringResource(R.string.makharij_zikr_joins))
                     ZikrJoins(block.joins, hidden)
@@ -123,10 +125,14 @@ fun ReadingZikrScreen(
                 SectionTitle(stringResource(R.string.makharij_zikr_whole))
                 ZikrWhole(block, hidden)
                 block.audio?.takeIf { it in clips }?.let { audio ->
-                    ReadingOutlineButton(stringResource(R.string.makharij_zikr_play), onClick = { onPlayClip(audio) })
+                    if (playingClip == audio) {
+                        ReadingOutlineButton(stringResource(R.string.makharij_zikr_stop), onClick = onStopClip)
+                    } else {
+                        ReadingOutlineButton(stringResource(R.string.makharij_zikr_play), onClick = { onPlayClip(audio) })
+                    }
                 }
                 if (!state.isRead) {
-                    ReadingButton(stringResource(R.string.makharij_zikr_read), onClick = { progress.markZikrRead(zikrIndex) })
+                    ReadingButton(stringResource(R.string.makharij_zikr_read), onClick = { progress.markZikrRead(block.zikr) })
                 }
                 ReadingOutlineButton(stringResource(R.string.makharij_zikr_open_azkar), onClick = { onOpenAzkar(block.zikr.section) })
             }

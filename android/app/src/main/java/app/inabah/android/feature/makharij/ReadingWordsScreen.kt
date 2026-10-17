@@ -176,13 +176,18 @@ fun ReadingWordsScreen(
         val stepDone = step.number in completed
         var wasDone by rememberSaveable { mutableStateOf(stepDone) }
         var celebrate by rememberSaveable { mutableStateOf(false) }
+        // Увеличенная плитка (долгое нажатие, просьба пользователя 2026-10-17): номер слова и где стояла плитка.
+        var zoom by remember { mutableStateOf<WordZoom?>(null) }
         LaunchedEffect(stepDone) {
-            if (stepDone && !wasDone) celebrate = true
+            if (stepDone && !wasDone) {
+                celebrate = true
+                // Последнее слово дочитано в увеличенной плитке: она закрывается, иначе её BackHandler под
+                // праздником съест первое «Назад».
+                zoom = null
+            }
             wasDone = stepDone
         }
         val next = loaded.steps.firstOrNull { it.number > step.number && it.hasLesson && isUnlocked(loaded, completed, it) }
-        // Увеличенная плитка (долгое нажатие, просьба пользователя 2026-10-17): номер слова и где стояла плитка.
-        var zoom by remember { mutableStateOf<WordZoom?>(null) }
         Box(Modifier.fillMaxSize()) {
             // Кнопки групп - внизу экрана, вне прокрутки: не прыгают, когда высота группы меняется
             // (последняя группа короче) - просьба пользователя 2026-10-15.
@@ -398,7 +403,12 @@ internal fun WordTile(
     val interaction = remember { MutableInteractionSource() }
     val haptics = LocalHapticFeedback.current
     val readLabel = stringResource(R.string.makharij_words_read_action)
-    val state = stringResource(R.string.makharij_words_tile_state, count, repeat)
+    // Одно прочтение (зикр итога) - счёта на плитке нет, и TalkBack его не читает.
+    val state = when {
+        repeat > 1 -> stringResource(R.string.makharij_words_tile_state, count, repeat)
+        isDone -> stringResource(R.string.makharij_words_tile_read)
+        else -> stringResource(R.string.makharij_words_tile_unread)
+    }
     val description = listOfNotNull(word.arabic, transliteration?.takeIf { showTransliteration }).joinToString(", ")
     val transliterationAlpha by animateFloatAsState(if (showTransliteration) 1f else 0f, label = "wordTransliteration")
     // Живость (просьба пользователя 2026-10-15): плитка наливается золотом снизу вверх с каждым

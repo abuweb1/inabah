@@ -244,4 +244,26 @@ class AppRouterTest {
         assertEquals(AppTab.Makharij, old.selectedTab)
         assertTrue(old.makharijStack.isEmpty())
     }
+
+    @Test
+    fun `Экраны урока - тема, справка, буква, зикр, слова, алфавит - поверх урока и переживают смерть процесса`() {
+        val routes = listOf(
+            12 to MakharijRoute.Extra(12, topic = 2),
+            10 to MakharijRoute.Extra(10),
+            3 to MakharijRoute.LetterForms(3, "ب"),
+            13 to MakharijRoute.Zikr(13, 3),
+            5 to MakharijRoute.Words(5),
+            4 to MakharijRoute.Alphabet(4),
+        )
+        for ((step, route) in routes) {
+            val source = AppRouter()
+            source.open(route)
+            val stack = listOf(MakharijRoute.Steps, MakharijRoute.Lesson(step), route)
+            assertEquals(stack, source.makharijStack.toList(), "$route")
+
+            val restored = AppRouter()
+            restored.restore(source.snapshot())
+            assertEquals(stack, restored.makharijStack.toList(), "$route после восстановления")
+        }
+    }
 }

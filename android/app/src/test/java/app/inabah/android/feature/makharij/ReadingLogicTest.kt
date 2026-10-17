@@ -5,6 +5,8 @@ import app.inabah.android.core.content.model.LetterForm
 import app.inabah.android.core.content.model.ReadingBlock
 import app.inabah.android.core.content.model.ReadingQuestion
 import app.inabah.android.core.content.model.ReadingWord
+import app.inabah.android.core.settings.ReadingProgress
+import app.inabah.android.core.settings.TestStorage
 import app.inabah.android.core.settings.ZikrProgress
 import kotlin.random.Random
 import kotlin.test.assertEquals
@@ -324,9 +326,30 @@ class ReadingLogicTest {
         assertFalse(isZikrDone(first, ZikrProgress(words = allWords)), "без «прочитал целиком»")
         assertFalse(isZikrDone(first, ZikrProgress(words = allWords - 0, isRead = true)), "не все слова")
         assertTrue(isZikrDone(first, ZikrProgress(words = allWords, isRead = true)))
-        val done = zikrs.withIndex().associate { (index, zikr) -> index to ZikrProgress(zikr.words.indices.toSet(), isRead = true) }
+        val done = zikrs.associate { zikr -> zikr.zikr to ZikrProgress(zikr.words.indices.toSet(), isRead = true) }
         assertTrue(allZikrsDone(step, done))
-        assertFalse(allZikrsDone(step, done - 3))
+        assertFalse(allZikrsDone(step, done - zikrs.last().zikr))
+    }
+
+    @Test
+    fun `Урок итога отмечается один раз - когда прочитан последний зикр, шаг без зикров - никогда`() = TestStorage.run { storage ->
+        val course = loadAssetCourse()
+        val step = course.steps.last()
+        val progress = ReadingProgress(storage.storage)
+        for (zikr in step.zikrs) {
+            zikr.words.indices.forEach { progress.readZikrWord(zikr.zikr, it) }
+            if (zikr != step.zikrs.last()) progress.markZikrRead(zikr.zikr)
+        }
+
+        assertFalse(completeFinalIfRead(step, progress), "последний не прочитан целиком")
+        assertFalse(step.number in progress.lessonsDone.value)
+
+        progress.markZikrRead(step.zikrs.last().zikr)
+        assertTrue(completeFinalIfRead(step, progress), "праздник")
+        assertTrue(step.number in progress.lessonsDone.value)
+        assertFalse(completeFinalIfRead(step, progress), "повторный вход - без праздника")
+        assertFalse(completeFinalIfRead(requireNotNull(course.step(1)), progress), "урок без зикров")
+        assertFalse(1 in progress.lessonsDone.value)
     }
 
     @Test

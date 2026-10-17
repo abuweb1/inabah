@@ -1,49 +1,34 @@
 package app.inabah.android.feature.makharij
 
-import androidx.compose.foundation.layout.size
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.semantics.stateDescription
-import androidx.compose.ui.res.pluralStringResource
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.ui.graphics.SolidColor
-import app.inabah.android.core.settings.ZikrProgress
-import app.inabah.android.core.formatting.toArabicIndicDigits
-import app.inabah.android.core.designsystem.components.pressFeedback
-import androidx.compose.material3.Icon
-import androidx.compose.foundation.layout.wrapContentSize
-import app.inabah.android.core.designsystem.Motion
-import androidx.compose.ui.zIndex
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.IntrinsicSize
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.ui.res.painterResource
-import app.inabah.android.core.designsystem.components.BareIconButton
-import app.inabah.android.core.designsystem.components.PopoverPlacement
-import app.inabah.android.core.designsystem.components.AnchoredPopover
-import app.inabah.android.core.content.model.LetterForm
-import androidx.compose.ui.unit.dp
-import androidx.compose.foundation.layout.width
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -53,43 +38,59 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.zIndex
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.inabah.android.R
-import kotlinx.coroutines.delay
-import kotlin.random.Random
 import app.inabah.android.core.content.Loadable
+import app.inabah.android.core.content.model.LetterForm
 import app.inabah.android.core.content.model.ReadingBlock
 import app.inabah.android.core.content.model.ReadingFormula
 import app.inabah.android.core.content.model.ReadingLetter
 import app.inabah.android.core.content.model.ReadingMark
 import app.inabah.android.core.content.model.ReadingStep
+import app.inabah.android.core.content.model.ZikrId
 import app.inabah.android.core.designsystem.InabahTheme
 import app.inabah.android.core.designsystem.InabahType
+import app.inabah.android.core.designsystem.Motion
 import app.inabah.android.core.designsystem.PressFeedback
 import app.inabah.android.core.designsystem.Radius
 import app.inabah.android.core.designsystem.Spacing
+import app.inabah.android.core.designsystem.components.AnchoredPopover
 import app.inabah.android.core.designsystem.components.ArabicText
+import app.inabah.android.core.designsystem.components.BareIconButton
 import app.inabah.android.core.designsystem.components.NoticeCard
 import app.inabah.android.core.designsystem.components.ParchmentPanel
+import app.inabah.android.core.designsystem.components.PopoverPlacement
+import app.inabah.android.core.designsystem.components.pressFeedback
 import app.inabah.android.core.designsystem.components.pressFeedback
 import app.inabah.android.core.designsystem.components.surface
+import app.inabah.android.core.formatting.toArabicIndicDigits
 import app.inabah.android.core.settings.ReadingProgress
 import app.inabah.android.core.settings.ReadingSettings
+import app.inabah.android.core.settings.ZikrProgress
+import kotlin.random.Random
+import kotlinx.coroutines.delay
 
 /**
  * Урок шага (наброски `docs/design/makharij-reading.html`, «Огласовки»; `makharij-audio-themes.html`,
@@ -215,7 +216,7 @@ private fun LessonContent(
     onOpenAlphabet: () -> Unit,
     onOpenLetterForms: (String) -> Unit,
     onOpenExtra: (Int?) -> Unit,
-    zikrs: Map<Int, ZikrProgress>,
+    zikrs: Map<ZikrId, ZikrProgress>,
     onOpenZikr: (Int) -> Unit,
     clips: Set<String>,
     onPlayClip: (String) -> Unit,
@@ -249,7 +250,7 @@ private fun LessonContent(
                     is ReadingBlock.Topic -> TopicCard(block) { onOpenExtra(step.topics.indexOf(block)) }
                     is ReadingBlock.Zikr -> {
                         val index = step.zikrs.indexOf(block)
-                        ZikrCard(block, index, zikrs[index]) { onOpenZikr(index) }
+                        ZikrCard(block, index, zikrs[block.zikr]) { onOpenZikr(index) }
                     }
                     is ReadingBlock.Formulas -> if (block.sample != null) {
                         SampleFormulas(block, block.sample, hidden, onOpenAlphabet)

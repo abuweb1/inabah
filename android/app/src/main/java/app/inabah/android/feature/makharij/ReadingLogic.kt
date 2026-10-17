@@ -10,6 +10,8 @@ import app.inabah.android.core.content.model.ReadingQuestion
 import app.inabah.android.core.content.model.ReadingStep
 import app.inabah.android.core.content.model.ReadingWord
 import app.inabah.android.core.content.model.ReadingWords
+import app.inabah.android.core.content.model.ZikrId
+import app.inabah.android.core.settings.ReadingProgress
 import app.inabah.android.core.settings.ZikrProgress
 import kotlin.random.Random
 
@@ -287,8 +289,18 @@ fun isZikrDone(zikr: ReadingBlock.Zikr, progress: ZikrProgress?): Boolean =
     progress != null && progress.isRead && zikr.words.indices.all { it in progress.words }
 
 /** Итог «Читаем зикр» пройден - прочитаны все его зикры. */
-fun allZikrsDone(step: ReadingStep, progress: Map<Int, ZikrProgress>): Boolean =
-    step.zikrs.isNotEmpty() && step.zikrs.withIndex().all { (index, zikr) -> isZikrDone(zikr, progress[index]) }
+fun allZikrsDone(step: ReadingStep, progress: Map<ZikrId, ZikrProgress>): Boolean =
+    step.zikrs.isNotEmpty() && step.zikrs.all { zikr -> isZikrDone(zikr, progress[zikr.zikr]) }
+
+/**
+ * Урок итога с зикрами пройден, когда прочитаны все зикры (кнопки «Готово» у него нет): отметить урок.
+ * `true` - урок стал пройденным сейчас (праздник); уже был отмечен или прочитаны не все - `false`.
+ */
+fun completeFinalIfRead(step: ReadingStep, progress: ReadingProgress): Boolean {
+    if (step.number in progress.lessonsDone.value || !allZikrsDone(step, progress.zikrs.value)) return false
+    progress.markLessonDone(step.number)
+    return true
+}
 
 /**
  * Ряды «По словам» зикра: слова - по порядку зикра (не перемешиваются и не сортируются, как в «Читаем
