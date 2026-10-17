@@ -290,23 +290,35 @@ private fun WordsProgress(read: Int, total: Int, repeat: Int, modifier: Modifier
  */
 @Composable
 private fun rememberWordPages(words: ReadingWords?, seed: Int): List<List<WordRow>> {
+    val columnsOf = rememberWordColumns()
+    return remember(words, seed, columnsOf) {
+        if (words == null) return@remember emptyList()
+        val random = Random(seed)
+        if (words.pairs) pairPages(words.items, words.rowsPerPage, random) else wordPages(words.items, columnsOf, words.rowsPerPage, random)
+    }
+}
+
+/**
+ * Сколько плиток со словом влезает в ряд (3, 2, иначе 1 - во всю ширину): слово меряется стилем плитки,
+ * ряд - ширина экрана внутри пергамента. Общее для «Читаем слова» и «По словам» зикра итога.
+ */
+@Composable
+internal fun rememberWordColumns(): (ReadingWord) -> Int {
     val measurer = rememberTextMeasurer()
     val style = arabicTextStyle(WORD_SIZE, bold = true)
     val density = LocalDensity.current
     val screenWidth = LocalWindowInfo.current.containerSize.width
-    return remember(words, seed, screenWidth, style, density) {
-        if (words == null) return@remember emptyList()
+    return remember(screenWidth, style, density, measurer) {
         val rowWidth = screenWidth - with(density) { (Spacing.xl * 2 + ParchmentHorizontalPadding * 2).roundToPx() }
         val gap = with(density) { Spacing.s.roundToPx() }
         val padding = with(density) { (TileTextPadding * 2).roundToPx() }
-        val columnsOf = { word: ReadingWord ->
+        val columnsOf: (ReadingWord) -> Int = { word ->
             val width = measurer.measure(word.arabic, style, maxLines = 1, softWrap = false).size.width
             (ReadingWords.MAX_COLUMNS downTo 2).firstOrNull { columns ->
                 width <= ((rowWidth - gap * (columns - 1)) / columns - padding) * WORD_FIT
             } ?: 1
         }
-        val random = Random(seed)
-        if (words.pairs) pairPages(words.items, words.rowsPerPage, random) else wordPages(words.items, columnsOf, words.rowsPerPage, random)
+        columnsOf
     }
 }
 
@@ -353,10 +365,11 @@ private fun WordGrid(
 
 /**
  * Плитка слова: «3/10» в углу, слово, транскрипция (место под ней есть всегда - плитки одной высоты на
- * всех страницах, видна - [showTransliteration]); прочитано 10 раз - зелёная.
+ * всех страницах, видна - [showTransliteration]); прочитано 10 раз - зелёная. Читать один раз ([repeat] = 1,
+ * зикр итога) - без счёта в углу.
  */
 @Composable
-private fun WordTile(
+internal fun WordTile(
     word: ReadingWord,
     count: Int,
     repeat: Int,
@@ -448,7 +461,7 @@ private fun WordTile(
                         .padding(start = Spacing.xxs, top = Spacing.xxs)
                         .size(DoneIconSize),
                 )
-            } else {
+            } else if (repeat > 1) {
                 Text(
                     stringResource(R.string.makharij_words_count, count, repeat),
                     color = colors.parchmentCaption,

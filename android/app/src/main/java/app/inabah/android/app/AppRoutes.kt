@@ -56,6 +56,10 @@ sealed interface MakharijRoute {
     @Serializable
     data class Extra(val step: Int, val topic: Int? = null) : MakharijRoute
 
+    /** Зикр итога «Читаем зикр» по номеру ([zikr] - 0, 1, …) - из урока итога. */
+    @Serializable
+    data class Zikr(val step: Int, val zikr: Int) : MakharijRoute
+
     /** Карточка буквы - формы и слова-примеры (из таблицы форм урока). */
     @Serializable
     data class LetterForms(val step: Int, val letter: String) : MakharijRoute

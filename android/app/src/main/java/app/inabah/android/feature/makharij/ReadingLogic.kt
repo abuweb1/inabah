@@ -1,6 +1,7 @@
 package app.inabah.android.feature.makharij
 
 import app.inabah.android.core.content.model.LetterForm
+import app.inabah.android.core.content.model.ReadingBlock
 import app.inabah.android.core.content.model.ReadingCourse
 import app.inabah.android.core.content.model.ReadingFormula
 import app.inabah.android.core.content.model.ReadingLetter
@@ -9,6 +10,7 @@ import app.inabah.android.core.content.model.ReadingQuestion
 import app.inabah.android.core.content.model.ReadingStep
 import app.inabah.android.core.content.model.ReadingWord
 import app.inabah.android.core.content.model.ReadingWords
+import app.inabah.android.core.settings.ZikrProgress
 import kotlin.random.Random
 
 // Правила «Учимся читать» без Compose (docs/08-screen-makharij.md): цепочка листа буквы,
@@ -279,3 +281,32 @@ private val HARAKAT = ('\u064B'..'\u0652').toSet() + '\u0670'
  */
 fun formExampleAudio(step: Int, letter: ReadingLetter, form: LetterForm): String =
     "reading_s%02d_%02d_%s.m4a".format(step, letter.number, form.id)
+
+/** Зикр итога прочитан (решение пользователя 2026-10-17): все слова отмечены и нажато «Прочитал целиком». */
+fun isZikrDone(zikr: ReadingBlock.Zikr, progress: ZikrProgress?): Boolean =
+    progress != null && progress.isRead && zikr.words.indices.all { it in progress.words }
+
+/** Итог «Читаем зикр» пройден - прочитаны все его зикры. */
+fun allZikrsDone(step: ReadingStep, progress: Map<Int, ZikrProgress>): Boolean =
+    step.zikrs.isNotEmpty() && step.zikrs.withIndex().all { (index, zikr) -> isZikrDone(zikr, progress[index]) }
+
+/**
+ * Ряды «По словам» зикра: слова - по порядку зикра (не перемешиваются и не сортируются, как в «Читаем
+ * слова»); в ряд - сколько влезает у каждого слова ряда ([columnsOf]: 3, 2 или 1); ряд во всю ширину -
+ * `columns` = числу слов, без пустых мест.
+ */
+fun zikrRows(words: List<ReadingWord>, columnsOf: (ReadingWord) -> Int): List<WordRow> {
+    val rows = mutableListOf<WordRow>()
+    var row = mutableListOf<IndexedValue<ReadingWord>>()
+    for (word in words.withIndex()) {
+        val size = row.size + 1
+        val fits = size <= ReadingWords.MAX_COLUMNS && (row + word).all { columnsOf(it.value) >= size }
+        if (!fits && row.isNotEmpty()) {
+            rows += WordRow(row.size, row)
+            row = mutableListOf()
+        }
+        row += word
+    }
+    if (row.isNotEmpty()) rows += WordRow(row.size, row)
+    return rows
+}

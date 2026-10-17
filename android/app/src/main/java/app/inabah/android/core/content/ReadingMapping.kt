@@ -4,18 +4,22 @@ import app.inabah.android.core.content.dto.ReadingBlockDto
 import app.inabah.android.core.content.dto.ReadingFileDto
 import app.inabah.android.core.content.dto.ReadingQuizDto
 import app.inabah.android.core.content.dto.ReadingStepDto
+import app.inabah.android.core.content.dto.ReadingWordDto
+import app.inabah.android.core.content.model.AzkarSection
 import app.inabah.android.core.content.model.FormExamples
 import app.inabah.android.core.content.model.LetterForm
 import app.inabah.android.core.content.model.ReadingBlock
 import app.inabah.android.core.content.model.ReadingCourse
 import app.inabah.android.core.content.model.ReadingExtra
 import app.inabah.android.core.content.model.ReadingFormula
+import app.inabah.android.core.content.model.ReadingJoin
 import app.inabah.android.core.content.model.ReadingLetter
 import app.inabah.android.core.content.model.ReadingMark
 import app.inabah.android.core.content.model.ReadingQuestion
 import app.inabah.android.core.content.model.ReadingStep
 import app.inabah.android.core.content.model.ReadingWord
 import app.inabah.android.core.content.model.ReadingWords
+import app.inabah.android.core.content.model.ZikrId
 
 // reading.json → курс на выбранном языке. Ссылки на неизвестные знак или букву, запись без
 // перевода - ошибка данных (IllegalArgumentException; их ловит check-data, а репозиторий
@@ -54,9 +58,12 @@ internal fun ReadingFileDto.toReadingCourse(priority: ContentLanguagePriority): 
     fun letter(char: String) = requireNotNull(letterByChar[char]) { "reading.json: неизвестная буква $char" }
 
     val learned = mutableSetOf<String>()
+    // Карточки форм пройденных шагов: свой шаг - первым (экзамен шага 12 спрашивает формы прошлых шагов).
+    val learnedFormGroups = mutableListOf<List<String>>()
     val steps = steps.map { dto ->
         dto.marks.forEach(::mark)
         learned += dto.marks
+        learnedFormGroups.addAll(0, dto.blocks.filter { it.type == "forms" }.flatMap { it.groups.orEmpty() })
         val learnedMarks = marks.filter { it.id in learned }
         val text = priority.require(dto.translations, "шаг ${dto.id}")
         ReadingStep(
@@ -75,9 +82,8 @@ internal fun ReadingFileDto.toReadingCourse(priority: ContentLanguagePriority): 
                 )
             },
             quiz = dto.quiz.mapNotNull { quiz ->
-                // Варианты «буквы по форме» - буквы её карточки в таблице форм шага.
-                val formGroups = dto.blocks.filter { it.type == "forms" }.flatMap { it.groups.orEmpty() }
-                quiz.toQuestion(priority, ::mark, ::letter) { char -> formGroups.firstOrNull { char in it }.orEmpty().map(::letter) }
+                // Варианты «буквы по форме» - буквы её карточки в таблице форм этого или прошлого шага.
+                quiz.toQuestion(priority, ::mark, ::letter) { char -> learnedFormGroups.firstOrNull { char in it }.orEmpty().map(::letter) }
             },
             words = dto.words?.let { words ->
                 ReadingWords(
@@ -167,8 +173,27 @@ private fun ReadingBlockDto.toBlock(
         },
         sample = sample,
     )
+    "zikr" -> {
+        val text = priority.require(translations, "шаг ${step.id}, зикр")
+        val zikrSection = requireNotNull(AzkarSection.entries.firstOrNull { it.key == section }) { "reading.json: зикр - неизвестный раздел $section" }
+        ReadingBlock.Zikr(
+            zikr = ZikrId(zikrSection, requireNotNull(id) { "reading.json: зикр без id" }),
+            audio = audio,
+            arabic = requireNotNull(arabic) { "reading.json: зикр без arabic" },
+            words = words.map { ReadingWord(it.arabic, it.translation(priority)?.translit?.trim()?.ifEmpty { null }) },
+            joins = joins.map { join ->
+                val joinText = priority.require(join.translations, "шаг ${step.id}, зикр, ${join.arabic}")
+                ReadingJoin(join.arabic, joinText.translit, joinText.note)
+            },
+            summary = text.text,
+            transliteration = text.translit,
+        )
+    }
     else -> null
 }
+
+private fun ReadingWordDto.translation(priority: ContentLanguagePriority) =
+    priority.select(translations.keyedByLanguage())?.translation
 
 private fun ReadingQuizDto.toQuestion(
     priority: ContentLanguagePriority,

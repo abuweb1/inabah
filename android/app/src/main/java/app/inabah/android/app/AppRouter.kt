@@ -80,6 +80,7 @@ class AppRouter {
             is MakharijRoute.Alphabet -> listOf(MakharijRoute.Steps, MakharijRoute.Lesson(route.step), route)
             is MakharijRoute.Extra -> listOf(MakharijRoute.Steps, MakharijRoute.Lesson(route.step), route)
             is MakharijRoute.LetterForms -> listOf(MakharijRoute.Steps, MakharijRoute.Lesson(route.step), route)
+            is MakharijRoute.Zikr -> listOf(MakharijRoute.Steps, MakharijRoute.Lesson(route.step), route)
         }
         _makharijStack.replaceWith(stack)
     }

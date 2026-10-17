@@ -1,5 +1,13 @@
 package app.inabah.android.feature.makharij
 
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.graphics.SolidColor
+import app.inabah.android.core.settings.ZikrProgress
+import app.inabah.android.core.formatting.toArabicIndicDigits
 import app.inabah.android.core.designsystem.components.pressFeedback
 import androidx.compose.material3.Icon
 import androidx.compose.foundation.layout.wrapContentSize
@@ -104,11 +112,14 @@ fun ReadingLessonScreen(
     modifier: Modifier = Modifier,
     /** Справка к уроку отдельным экраном: `null` - [ReadingStep.extra], номер - тема урока. */
     onOpenExtra: (Int?) -> Unit = {},
+    /** Зикр итога «Читаем зикр» по номеру. */
+    onOpenZikr: (Int) -> Unit = {},
     /** Записи в сборке и их проигрывание (`ClipPlayer`): слова-примеры форм. */
     clips: Set<String> = emptySet(),
     onPlayClip: (String) -> Unit = {},
 ) {
     val hidden by settings.transliterationHidden.collectAsStateWithLifecycle()
+    val zikrs by progress.zikrs.collectAsStateWithLifecycle()
     // Открытый лист - номер буквы: переживает поворот и смерть процесса.
     var sheetLetter by rememberSaveable { mutableStateOf<Int?>(null) }
     val course = (store.course.collectAsStateWithLifecycle().value as? Loadable.Loaded)?.value
@@ -162,6 +173,8 @@ fun ReadingLessonScreen(
                         onOpenAlphabet = onOpenAlphabet,
                         onOpenLetterForms = onOpenLetterForms,
                         onOpenExtra = onOpenExtra,
+                        zikrs = zikrs,
+                        onOpenZikr = onOpenZikr,
                         clips = clips,
                         onPlayClip = onPlayClip,
                         onFinish = {
@@ -202,6 +215,8 @@ private fun LessonContent(
     onOpenAlphabet: () -> Unit,
     onOpenLetterForms: (String) -> Unit,
     onOpenExtra: (Int?) -> Unit,
+    zikrs: Map<Int, ZikrProgress>,
+    onOpenZikr: (Int) -> Unit,
     clips: Set<String>,
     onPlayClip: (String) -> Unit,
     onFinish: () -> Unit,
@@ -232,6 +247,10 @@ private fun LessonContent(
                     }
                     is ReadingBlock.Rule -> RuleBlock(block, onLetter)
                     is ReadingBlock.Topic -> TopicCard(block) { onOpenExtra(step.topics.indexOf(block)) }
+                    is ReadingBlock.Zikr -> {
+                        val index = step.zikrs.indexOf(block)
+                        ZikrCard(block, index, zikrs[index]) { onOpenZikr(index) }
+                    }
                     is ReadingBlock.Formulas -> if (block.sample != null) {
                         SampleFormulas(block, block.sample, hidden, onOpenAlphabet)
                     } else {
@@ -241,11 +260,14 @@ private fun LessonContent(
             }
             // Справка (солнечные и лунные буквы) - для желающих, отдельным экраном (решение пользователя 2026-10-16).
             step.extra?.let { ReadingOutlineButton(it.title, onClick = { onOpenExtra(null) }) }
-            Spacer(Modifier.height(Spacing.s))
-            ReadingButton(
-                text = stringResource(if (step.quiz.isEmpty()) R.string.makharij_lesson_done else R.string.makharij_lesson_check),
-                onClick = onFinish,
-            )
+            // Итог с зикрами - без «Готово»: пройден, когда прочитаны все зикры (экран зикра отмечает сам).
+            if (step.zikrs.isEmpty()) {
+                Spacer(Modifier.height(Spacing.s))
+                ReadingButton(
+                    text = stringResource(if (step.quiz.isEmpty()) R.string.makharij_lesson_done else R.string.makharij_lesson_check),
+                    onClick = onFinish,
+                )
+            }
             // «Читаем слова» - в конце урока (и после проверки); шаг пройден, когда прочитаны все слова.
             if (step.words != null) {
                 ReadingOutlineButton(stringResource(R.string.makharij_words_open), onClick = onOpenWords)
@@ -286,6 +308,54 @@ private fun TopicCard(topic: ReadingBlock.Topic, onClick: () -> Unit) {
             )
         }
         topic.example?.let { ArabicText(it, TOPIC_EXAMPLE_SIZE, colors.tint, bold = true, maxLines = 1) }
+        Icon(painterResource(R.drawable.ic_chevron_right), contentDescription = null, tint = colors.tint)
+    }
+}
+
+/**
+ * Зикр итога (2026-10-17): номер (прочитан - ✓ на зелёном), начало зикра, сколько слов и что в нём
+ * встретится; нажатие - экран зикра.
+ */
+@Composable
+private fun ZikrCard(zikr: ReadingBlock.Zikr, index: Int, state: ZikrProgress?, onClick: () -> Unit) {
+    val palette = InabahTheme.palette
+    val colors = readingColors
+    val interaction = remember { MutableInteractionSource() }
+    val done = isZikrDone(zikr, state)
+    val doneLabel = stringResource(R.string.makharij_zikr_done)
+    val count = pluralStringResource(R.plurals.makharij_zikr_word_count, zikr.words.size, zikr.words.size)
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .clickable(interaction, indication = null, role = Role.Button, onClick = onClick)
+            .pressFeedback(interaction, scale = PressFeedback.WIDE_SCALE, opacity = PressFeedback.WIDE_OPACITY)
+            .surface(colors.tile, Radius.card, border = colors.tileBorder)
+            .padding(start = Spacing.m, end = Spacing.m, top = Spacing.m, bottom = Spacing.m)
+            .semantics(mergeDescendants = true) { if (done) stateDescription = doneLabel },
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(Spacing.m),
+    ) {
+        Box(
+            Modifier
+                .size(ZikrNumberSize)
+                .surface(SolidColor(if (done) palette.success else colors.tile), CircleShape, border = if (done) palette.success else colors.tint)
+                .clearAndSetSemantics {},
+            contentAlignment = Alignment.Center,
+        ) {
+            if (done) {
+                Icon(painterResource(R.drawable.ic_check), contentDescription = null, tint = palette.onAccent, modifier = Modifier.size(ZikrCheckSize))
+            } else {
+                ArabicText((index + 1).toArabicIndicDigits(), ZIKR_NUMBER_SIZE, colors.tint, bold = true)
+            }
+        }
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Spacing.xxs)) {
+            ArabicText(zikr.arabic, TOPIC_EXAMPLE_SIZE, palette.onAccent, bold = true, maxLines = 1)
+            Text(
+                withArabicRuns("$count · ${zikr.summary}"),
+                color = palette.onAccentSecondary,
+                style = InabahType.contentTranslation,
+            )
+        }
         Icon(painterResource(R.drawable.ic_chevron_right), contentDescription = null, tint = colors.tint)
     }
 }
@@ -785,6 +855,10 @@ private const val SAMPLE_COLUMNS = 3
 private const val FORMULA_SIZE = 32f
 private const val FORMULA_PARTS_SIZE = 22f
 private const val FORMULA_WIDE_SIZE = 32f
+/** Номер зикра итога в круге. */
+private val ZikrNumberSize = 36.dp
+private val ZikrCheckSize = 18.dp
+private const val ZIKR_NUMBER_SIZE = 22f
 /** Пример на карточке темы урока. */
 private const val TOPIC_EXAMPLE_SIZE = 28f
 private const val RULE_LETTER_COLUMNS = 7

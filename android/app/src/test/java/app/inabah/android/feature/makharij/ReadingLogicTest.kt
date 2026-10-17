@@ -5,6 +5,7 @@ import app.inabah.android.core.content.model.LetterForm
 import app.inabah.android.core.content.model.ReadingBlock
 import app.inabah.android.core.content.model.ReadingQuestion
 import app.inabah.android.core.content.model.ReadingWord
+import app.inabah.android.core.settings.ZikrProgress
 import kotlin.random.Random
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -71,7 +72,7 @@ class ReadingLogicTest {
         assertEquals(10, currentStep(course, (1..9).toSet())?.number)
         assertEquals(11, currentStep(course, (1..10).toSet())?.number)
         assertEquals(12, currentStep(course, (1..11).toSet())?.number)
-        assertNull(currentStep(course, (1..12).toSet()), "итог без урока пропускается")
+        assertEquals(13, currentStep(course, (1..12).toSet())?.number, "итог «Читаем зикр» - с уроком")
         assertNull(currentStep(course, withLessons.toSet()))
         assertEquals(2.0 / 12, completedFraction(course, setOf(1, 2, 99)), "итог не считается")
     }
@@ -295,5 +296,49 @@ class ReadingLogicTest {
         assertTrue(wasl.all { it.parts.isEmpty() && it.result.startsWith("ٱ") })
         assertEquals("ъусджудуу", wasl.first { it.result == "ٱسْجُدُوا۟" }.transliteration)
         assertEquals("Как читается на паузе?", step.quiz.filterIsInstance<ReadingQuestion.Word>().last().prompt)
+    }
+
+    @Test
+    fun `Слова зикра - по порядку зикра, в ряд сколько влезает у каждого слова, ряд без пустых мест`() {
+        val words = listOf("к1", "к2", "к3", "к4", "д1", "к5", "т1").map { ReadingWord(it, null) }
+        val columnsOf = { word: ReadingWord -> when (word.arabic[0]) { 'к' -> 3; 'д' -> 2; else -> 1 } }
+
+        val rows = zikrRows(words, columnsOf)
+
+        assertEquals(listOf(listOf("к1", "к2", "к3"), listOf("к4", "д1"), listOf("к5"), listOf("т1")), rows.map { row -> row.words.map { it.value.arabic } })
+        assertEquals(rows.map { it.words.size }, rows.map { it.columns }, "во всю ширину")
+        assertEquals((0..6).toList(), rows.flatMap { row -> row.words.map { it.index } }, "индексы - по порядку зикра")
+    }
+
+    @Test
+    fun `Итог «Читаем зикр» - 4 зикра по нарастанию, зикр прочитан - все слова и «целиком», итог - все зикры`() = runTest {
+        val step = requireNotNull(loadAssetCourse().steps.last())
+        assertTrue(step.isFinal)
+
+        val zikrs = step.zikrs
+        assertEquals(4, zikrs.size)
+        assertEquals(zikrs.map { it.words.size }.sorted(), zikrs.map { it.words.size }, "от короткого к длинному")
+        assertTrue(zikrs.all { zikr -> zikr.arabic == zikr.words.joinToString(" ") { it.arabic } && zikr.audio != null })
+        val first = zikrs.first()
+        val allWords = first.words.indices.toSet()
+        assertFalse(isZikrDone(first, ZikrProgress(words = allWords)), "без «прочитал целиком»")
+        assertFalse(isZikrDone(first, ZikrProgress(words = allWords - 0, isRead = true)), "не все слова")
+        assertTrue(isZikrDone(first, ZikrProgress(words = allWords, isRead = true)))
+        val done = zikrs.withIndex().associate { (index, zikr) -> index to ZikrProgress(zikr.words.indices.toSet(), isRead = true) }
+        assertTrue(allZikrsDone(step, done))
+        assertFalse(allZikrsDone(step, done - 3))
+    }
+
+    @Test
+    fun `Экзамен шага 12 - 20 вопросов, форма буквы прошлого шага - варианты из её карточки`() = runTest {
+        val course = loadAssetCourse()
+        val step = requireNotNull(course.step(12))
+
+        assertEquals("Особые случаи и экзамен", step.title)
+        assertEquals(20, step.quiz.size)
+        val form = step.quiz.filterIsInstance<ReadingQuestion.LetterInForm>().first()
+        assertTrue(form.group.size > 1, "карточка из шага форм, не одна буква")
+        val options = quizOptions(course, form, step.number)
+        assertEquals(1, options.count { it.isCorrect })
     }
 }

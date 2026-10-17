@@ -46,6 +46,11 @@ class ClipPlayer(
         exo.play()
     }
 
+    /** Остановить звучащую запись (уход с экрана зикра итога: запись длинная); ничего не звучит - ничего. */
+    fun stop() {
+        player?.stop()
+    }
+
     private companion object {
         const val AUDIO_DIR = "audio"
     }

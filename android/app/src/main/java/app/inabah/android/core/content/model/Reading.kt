@@ -164,6 +164,9 @@ data class ReadingStep(
     /** Темы урока по порядку ([ReadingBlock.Topic]); номер темы - индекс здесь. */
     val topics: List<ReadingBlock.Topic> get() = blocks.filterIsInstance<ReadingBlock.Topic>()
 
+    /** Зикры итога по порядку ([ReadingBlock.Zikr]); номер зикра - индекс здесь. */
+    val zikrs: List<ReadingBlock.Zikr> get() = blocks.filterIsInstance<ReadingBlock.Zikr>()
+
     /** Справка: [topic] - тема урока по номеру, `null` - справка шага ([extra]). */
     fun extra(topic: Int?): ReadingExtra? = if (topic == null) extra else topics.getOrNull(topic)?.extra
 }
@@ -202,6 +205,9 @@ data class ReadingWord(val arabic: String, val transliteration: String?) {
     /** Несколько слов через пробел («لَهُۥ بَنِينَ») - на экране строкой во всю ширину. */
     val isPhrase: Boolean get() = ' ' in arabic
 }
+
+/** Место слитного чтения зикра: слова подряд, как читаются вместе, и почему ([note]). */
+data class ReadingJoin(val arabic: String, val transliteration: String, val note: String)
 
 /** Формула блока [ReadingBlock.Formulas]: части, итог и его транскрипция (`null` - без подписи). */
 data class ReadingFormula(val parts: List<String>, val result: String, val transliteration: String?)
@@ -250,6 +256,21 @@ sealed interface ReadingBlock {
      * описанием [summary] и примером [example], подробности - своим экраном ([extra], как справка).
      */
     data class Topic(val summary: String, val example: String?, val extra: ReadingExtra) : ReadingBlock
+
+    /**
+     * Зикр итога «Читаем зикр» (решения пользователя 2026-10-17): зикр [zikr] из «Азкаров» и его запись
+     * [audio] (`null` - без ▶); [words] - по порядку, каждое как читается отдельно; [joins] - места
+     * слитного чтения; [summary] - что в нём встретится из курса; [transliteration] - строка целиком.
+     */
+    data class Zikr(
+        val zikr: ZikrId,
+        val audio: String?,
+        val arabic: String,
+        val words: List<ReadingWord>,
+        val joins: List<ReadingJoin>,
+        val summary: String,
+        val transliteration: String,
+    ) : ReadingBlock
 
     /** Правило: арабское название и его транскрипция, пояснение, буквы правила. */
     data class Rule(

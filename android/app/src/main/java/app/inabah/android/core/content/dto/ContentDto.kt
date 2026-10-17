@@ -171,6 +171,8 @@ data class ReadingFormulaDto(
 @Serializable
 data class ReadingWordTranslationDto(
     val translit: String = "",
+    /** Место слитного чтения зикра: почему читается так. */
+    val note: String = "",
 )
 
 @Serializable
@@ -201,6 +203,13 @@ data class ReadingBlockDto(
     val items: List<ReadingFormulaDto> = emptyList(),
     /** `topic`: содержимое своего экрана - блоки, как в справке. */
     val blocks: List<ReadingBlockDto> = emptyList(),
+    /** `zikr`: раздел и номер зикра в «Азкарах», его запись (голое имя файла). */
+    val section: String? = null,
+    val id: Int? = null,
+    val audio: String? = null,
+    /** `zikr`: слова по порядку и места слитного чтения (слова подряд, транскрипция и подпись). */
+    val words: List<ReadingWordDto> = emptyList(),
+    val joins: List<ReadingWordDto> = emptyList(),
     val translations: Map<String, ReadingTextTranslationDto> = emptyMap(),
 )
 

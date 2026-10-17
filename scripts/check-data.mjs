@@ -415,7 +415,8 @@ const READING_STEP_TEXT_KEYS = ['title', 'subtitle'];
 const READING_BLOCKS = {
   text: ['type', 'translations'], marks: ['type', 'marks'], letters: ['type', 'letters'], groups: ['type', 'groups'],
   syllables: ['type', 'letters', 'marks', 'sample'], compare: ['type', 'pairs'], join: ['type', 'arabic', 'audio', 'translations'],
-  zikr: ['type', 'section', 'id', 'syllables', 'translations'],
+  // Зикр итога «Читаем зикр» (2026-10-17): ссылка на зикр «Азкаров», слова, места слитного чтения.
+  zikr: ['type', 'section', 'id', 'audio', 'arabic', 'words', 'joins', 'translations'],
   rule: ['type', 'arabic', 'letters', 'translations'],
   forms: ['type', 'groups', 'examples', 'exampleCard'],
   formulas: ['type', 'columns', 'items', 'sample'],
@@ -513,6 +514,40 @@ const READING_ALPHABET = 29;
 const VOWEL_MARKS = ['fatha', 'kasra', 'damma', 'fathatan', 'kasratan', 'dammatan'];
 const READING_AUDIO_DIR = join(AUDIO_DIR, 'reading');
 
+/**
+ * Зикр итога «Читаем зикр» (2026-10-17): зикр есть в azkar.json, запись - его же; `arabic` - слова через
+ * пробел; слово - как в «Читаем слова» (пройденные знаки); место слитного чтения - слова зикра подряд,
+ * с транскрипцией и подписью; у зикра - краткое описание (`text`) и транскрипция строки целиком.
+ */
+function checkReadingZikr(where, block, { byLetter, marks, letters, passed, checkTexts }) {
+  if (!['morning', 'evening'].includes(block.section)) error(where, 'section - morning / evening');
+  const source = (data.azkar[block.section] ?? []).find(z => z.id === block.id);
+  if (!source) error(where, `нет зикра ${block.section} ${block.id} в azkar.json`);
+  else if ((block.audio ?? null) !== (source.audio ?? null)) error(where, `audio - как у зикра в azkar.json (${source.audio ?? 'null'})`);
+  const signs = new Map(marks.map(m => [m.sign, m.id]));
+  const bases = new Set(letters.flatMap(l => Object.values(l?.syllableBases ?? {})));
+  const words = Array.isArray(block.words) && block.words.length ? block.words : (error(where, 'words - непустой массив'), []);
+  for (const [n, item] of words.entries()) {
+    const wat = `${where} word ${n + 1}`;
+    for (const k of Object.keys(item ?? {})) if (!['arabic', 'translations'].includes(k)) error(wat, `неизвестное поле «${k}»`);
+    if (!requireString(wat, item ?? {}, 'arabic')) continue;
+    if (item.arabic.includes(' ')) error(wat, 'одно слово, без пробелов');
+    const problem = readingWordProblem(item.arabic, { byLetter, bases, signs, passed });
+    if (problem) error(wat, `«${item.arabic}»: ${problem}`);
+    checkTexts(wat, item.translations, ['translit'], ['translit']);
+  }
+  if (requireString(where, block, 'arabic') && block.arabic !== words.map(w => w?.arabic).join(' ')) error(where, 'arabic - слова words через пробел');
+  for (const [n, item] of (Array.isArray(block.joins) ? block.joins : (error(where, 'joins - массив'), [])).entries()) {
+    const jat = `${where} join ${n + 1}`;
+    for (const k of Object.keys(item ?? {})) if (!['arabic', 'translations'].includes(k)) error(jat, `неизвестное поле «${k}»`);
+    if (requireString(jat, item ?? {}, 'arabic') && !` ${block.arabic} `.includes(` ${item.arabic} `)) error(jat, 'arabic - слова зикра подряд');
+    const ru = checkTexts(jat, item?.translations, ['translit', 'note'], ['translit', 'note']);
+    if (ru?.note) checkRussian(jat, ru.note);
+  }
+  const ru = checkTexts(where, block.translations, ['text', 'translit'], ['text', 'translit']);
+  if (ru?.text) checkRussian(where, ru.text);
+}
+
 function checkReading(file) {
   if (!file || typeof file !== 'object') { error('reading', 'нет файла или он не объект'); return; }
   for (const k of Object.keys(file)) if (!READING_KEYS.includes(k)) error('reading', `неизвестное поле «${k}»`);
@@ -598,7 +633,10 @@ function checkReading(file) {
   const steps = Array.isArray(file.steps) ? file.steps : [];
   if (!steps.length) error('reading steps', 'нет непустого массива steps');
   const passed = new Set();
+  // Карточки форм этого и прошлых шагов - варианты вопроса letterForm (экзамен шага 12, 2026-10-17).
+  const passedFormGroups = [];
   for (const [i, step] of steps.entries()) {
+    passedFormGroups.push(...(step?.blocks ?? []).filter(b => b?.type === 'forms').flatMap(b => b.groups ?? []));
     const at = `reading step ${step?.id ?? `#${i + 1}`}`;
     if (Object.keys(step ?? {})[0] !== 'id') error(at, 'id должен быть первым полем');
     checkId(at, step ?? {}, i);
@@ -735,7 +773,7 @@ function checkReading(file) {
         }
         checkTexts(where, block.translations, ['words', 'joined', 'why'], ['joined']);
       }
-      if (block.type === 'zikr' && !['morning', 'evening'].includes(block.section)) error(where, 'section - morning / evening');
+      if (block.type === 'zikr') checkReadingZikr(where, block, { byLetter, marks, letters, passed, checkTexts });
     }
     for (const [j, q] of (step?.quiz ?? []).entries()) {
       const where = `${at} quiz ${j + 1}`;
@@ -761,11 +799,10 @@ function checkReading(file) {
         continue;
       }
       knownLetter(where, q.letter);
-      // Форма - из списка; буква - в одной из групп forms этого шага (варианты ответа - буквы её группы).
+      // Форма - из списка; буква - в одной из групп forms этого или прошлого шага (варианты - буквы её группы).
       if (q.type === 'letterForm') {
         if (!READING_FORMS.includes(q.form)) error(where, `form «${q.form}» - одно из ${READING_FORMS.join(', ')}`);
-        const groups = (step?.blocks ?? []).filter(b => b?.type === 'forms').flatMap(b => b.groups ?? []);
-        if (!groups.some(g => g.includes(q.letter))) error(where, `буквы «${q.letter}» нет в таблице форм шага`);
+        if (!passedFormGroups.some(g => g.includes(q.letter))) error(where, `буквы «${q.letter}» нет в таблицах форм шага и прошлых шагов`);
       }
       if (q.type === 'syllable') {
         if (!passed.has(q.mark)) error(where, `знак «${q.mark}» ещё не пройден к этому шагу`);

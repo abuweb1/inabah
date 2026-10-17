@@ -229,6 +229,15 @@
     <string name="makharij_words_read_aloud">Читайте каждое слово вслух: глазами читать не научиться - навык даёт только чтение вслух.</string>
     <string name="makharij_words_next">Дальше ›</string>
     <string name="makharij_words_open">Читаем слова</string>
+    <string name="makharij_zikr_title">Зикр %1$d из %2$d</string>
+    <string name="makharij_zikr_source">%1$s · %2$d</string>
+    <string name="makharij_zikr_words_progress">По словам · %1$d из %2$d</string>
+    <string name="makharij_zikr_joins">Слитно</string>
+    <string name="makharij_zikr_whole">Целиком</string>
+    <string name="makharij_zikr_play">Послушать</string>
+    <string name="makharij_zikr_read">Прочитал целиком</string>
+    <string name="makharij_zikr_open_azkar">Открыть в азкарах</string>
+    <string name="makharij_zikr_done">прочитан</string>
     <string name="makharij_words_previous">‹ Назад</string>
     <string name="makharij_words_progress">прочитано %1$d из %2$d · каждое слово - %3$s</string>
     <string name="makharij_words_read_action">прочитал ещё раз</string>
@@ -400,6 +409,12 @@
     <string name="zikr_translation_toggle">Перевод и транскрипция</string>
     <string name="zikr_translation_toggle_short">Аа</string>
 
+    <plurals name="makharij_zikr_word_count">
+        <item quantity="one">%d слово</item>
+        <item quantity="few">%d слова</item>
+        <item quantity="many">%d слов</item>
+        <item quantity="other">%d слова</item>
+    </plurals>
     <plurals name="azkar_evening_meta">
         <item quantity="one">%d зикр · После аср</item>
         <item quantity="few">%d зикра · После аср</item>

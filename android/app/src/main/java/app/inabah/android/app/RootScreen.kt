@@ -47,6 +47,7 @@ import app.inabah.android.feature.hadith.HadithDetailScreen
 import app.inabah.android.feature.hadith.HadithHomeScreen
 import app.inabah.android.feature.hadith.HadithListScreen
 import app.inabah.android.feature.makharij.MakharijHomeScreen
+import app.inabah.android.feature.makharij.ReadingZikrScreen
 import app.inabah.android.feature.makharij.ReadingAlphabetScreen
 import app.inabah.android.feature.makharij.ReadingExtraScreen
 import app.inabah.android.feature.makharij.ReadingLetterFormsScreen
@@ -304,6 +305,7 @@ private fun TabScreens(tab: AppTab, services: AppServices, contentPadding: Paddi
                         onOpenAlphabet = { router.push(MakharijRoute.Alphabet(route.step)) },
                         onOpenExtra = { router.push(MakharijRoute.Extra(route.step, it)) },
                         onOpenLetterForms = { router.push(MakharijRoute.LetterForms(route.step, it)) },
+                        onOpenZikr = { router.push(MakharijRoute.Zikr(route.step, it)) },
                         clips = clips,
                         onPlayClip = services.clipPlayer::play,
                         contentPadding = contentPadding.bottomOnly(),
@@ -349,6 +351,23 @@ private fun TabScreens(tab: AppTab, services: AppServices, contentPadding: Paddi
                         settings = services.readingSettings,
                         onBack = { router.pop(AppTab.Makharij) },
                         contentPadding = contentPadding.bottomOnly(),
+                    )
+                }
+                entry<MakharijRoute.Zikr> { route ->
+                    ReadingZikrScreen(
+                        stepNumber = route.step,
+                        zikrIndex = route.zikr,
+                        store = services.readingStore,
+                        progress = services.readingProgress,
+                        settings = services.readingSettings,
+                        onBack = { router.pop(AppTab.Makharij) },
+                        onOpenAzkar = { router.open(AzkarRoute.SectionList(it)) },
+                        onOpenStep = { router.open(MakharijRoute.Lesson(it)) },
+                        onOpenSteps = { router.open(MakharijRoute.Steps) },
+                        contentPadding = contentPadding.bottomOnly(),
+                        clips = clips,
+                        onPlayClip = services.clipPlayer::play,
+                        onStopClip = services.clipPlayer::stop,
                     )
                 }
                 entry<MakharijRoute.Words> { route ->
