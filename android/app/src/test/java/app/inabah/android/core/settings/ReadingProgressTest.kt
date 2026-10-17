@@ -49,6 +49,35 @@ class ReadingProgressTest {
     }
 
     @Test
+    fun `Зикр итога - слова по одному разу, «прочитал целиком», переживает перезапуск`() = TestStorage.run { storage ->
+        val progress = ReadingProgress(storage.storage)
+
+        progress.readZikrWord(zikr = 1, word = 2)
+        progress.readZikrWord(zikr = 1, word = 2)
+        progress.readZikrWord(zikr = 1, word = 0)
+        progress.readZikrWord(zikr = 1, word = -1)
+        progress.markZikrRead(1)
+
+        val expected = ZikrProgress(words = setOf(0, 2), isRead = true)
+        assertEquals(expected, progress.zikrs.value[1])
+        assertEquals(expected, ReadingProgress(storage.storage).zikrs.value[1], "после перезапуска")
+        assertEquals("0,2", storage.persisted()[ReadingProgress.zikrWordsKey(1)])
+    }
+
+    @Test
+    fun `Сброс удаляет и прогресс зикров итога`() = TestStorage.run { storage ->
+        val progress = ReadingProgress(storage.storage)
+        progress.readZikrWord(0, 0)
+        progress.markZikrRead(0)
+
+        progress.reset()
+
+        assertTrue(progress.zikrs.value.isEmpty())
+        assertNull(storage.persisted()[ReadingProgress.zikrWordsKey(0)])
+        assertNull(storage.persisted()[ReadingProgress.zikrReadKey(0)])
+    }
+
+    @Test
     fun `«Скрыть транскрипцию» — по умолчанию видна, выбор сохраняется`() = TestStorage.run { storage ->
         val settings = ReadingSettings(storage.storage)
         assertFalse(settings.transliterationHidden.value)

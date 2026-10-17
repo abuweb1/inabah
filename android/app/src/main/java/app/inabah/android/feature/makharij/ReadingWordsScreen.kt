@@ -26,6 +26,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -42,6 +44,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -70,11 +73,39 @@ import app.inabah.android.core.designsystem.components.surface
 import app.inabah.android.core.settings.ReadingProgress
 import app.inabah.android.core.settings.ReadingSettings
 import kotlinx.coroutines.launch
+import kotlin.random.Random
+import androidx.compose.ui.util.lerp
+import androidx.compose.ui.semantics.customActions
+import androidx.compose.ui.semantics.CustomAccessibilityAction
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.boundsInRoot
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.background
+import androidx.compose.animation.core.Animatable
+import androidx.activity.compose.BackHandler
+import app.inabah.android.core.designsystem.components.FeaturedVerseBox
+import app.inabah.android.core.designsystem.components.FeaturedVerse
+import kotlinx.coroutines.delay
+import app.inabah.android.core.designsystem.components.arabicTextStyle
+import app.inabah.android.core.designsystem.components.ParchmentHorizontalPadding
+import app.inabah.android.core.content.model.ReadingWords
+import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.platform.LocalWindowInfo
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.runtime.mutableIntStateOf
 
 /**
- * «Читаем слова» (вариант A, решение пользователя 2026-10-15): группы по 12 слов плитками на пергаменте,
- * нажатие на плитку - «прочитал ещё раз» (в углу «3/10», после 10 - зелёная). Транскрипция и глаз -
- * только в первой группе, дальше - без подсказок. Шаг пройден, когда прочитаны все слова (и урок).
+ * «Читаем слова» (вариант A, решение пользователя 2026-10-15): страницы плиток на пергаменте,
+ * нажатие на плитку - «прочитал ещё раз» (в углу «3/10», после 10 - зелёная). Плитки - по 3, по 2 или во
+ * всю ширину по измеренной ширине слова, короткие - на первых страницах (`wordPages`, 2026-10-16).
+ * Слова перемешаны, не в порядке книги (2026-10-17): порядок постоянный для шага - зерно - номер шага.
+ * Транскрипция и глаз - на первой странице, дальше - лампочка «подсказка» показывает её на миг.
+ * Шаг пройден, когда прочитаны все слова (и урок).
  */
 @Composable
 fun ReadingWordsScreen(
@@ -93,11 +124,20 @@ fun ReadingWordsScreen(
     val wordCounts by progress.wordCounts.collectAsStateWithLifecycle()
     val lessonsDone by progress.lessonsDone.collectAsStateWithLifecycle()
     val course = (store.course.collectAsStateWithLifecycle().value as? Loadable.Loaded)?.value
-    val groupCount = course?.step(stepNumber)?.words?.groups?.size ?: 0
-    // Группы листаются свайпом в обе стороны и кнопками (просьба пользователя 2026-10-15); страница переживает поворот.
+    val pages = rememberWordPages(course?.step(stepNumber)?.words, stepNumber)
+    val groupCount = pages.size
+    // Страницы листаются свайпом в обе стороны и кнопками (просьба пользователя 2026-10-15); страница переживает поворот.
     val pager = rememberPagerState { groupCount }
     val scope = rememberCoroutineScope()
     val group = pager.currentPage
+    // Подсказка: транскрипция страницы на миг (просьба пользователя 2026-10-16); другая страница - гаснет.
+    var hintPage by remember { mutableStateOf<Int?>(null) }
+    var hintRequest by remember { mutableIntStateOf(0) }
+    LaunchedEffect(hintRequest) {
+        if (hintRequest == 0) return@LaunchedEffect
+        delay(HINT_MILLIS)
+        hintPage = null
+    }
     ReadingScaffold(
         store = store,
         title = stringResource(R.string.makharij_words_title),
@@ -105,8 +145,15 @@ fun ReadingWordsScreen(
         onBack = onBack,
         modifier = modifier,
         actions = {
-            // Глаз - только там, где есть транскрипция (первая группа: первые 12 слов).
-            if (group == 0) TransliterationToggle(hidden) { settings.setTransliterationHidden(!hidden) }
+            // Глаз - на первой странице (там транскрипция видна), дальше - подсказка.
+            if (group == 0) {
+                TransliterationToggle(hidden) { settings.setTransliterationHidden(!hidden) }
+            } else if (groupCount > 0) {
+                TransliterationHint {
+                    hintPage = group
+                    hintRequest++
+                }
+            }
         },
     ) { loaded ->
         val step = loaded.step(stepNumber)
@@ -123,7 +170,6 @@ fun ReadingWordsScreen(
             return@ReadingScaffold
         }
         val counts = wordCounts[step.number].orEmpty()
-        val groups = words.groups
         val allRead = wordsDone(step, counts)
         val completed = completedSteps(loaded, lessonsDone, wordCounts)
         // Праздник - когда шаг стал пройденным на этом экране (дочитано последнее слово), не при повторном входе.
@@ -135,6 +181,8 @@ fun ReadingWordsScreen(
             wasDone = stepDone
         }
         val next = loaded.steps.firstOrNull { it.number > step.number && it.hasLesson && isUnlocked(loaded, completed, it) }
+        // Увеличенная плитка (долгое нажатие, просьба пользователя 2026-10-17): номер слова и где стояла плитка.
+        var zoom by remember { mutableStateOf<WordZoom?>(null) }
         Box(Modifier.fillMaxSize()) {
             // Кнопки групп - внизу экрана, вне прокрутки: не прыгают, когда высота группы меняется
             // (последняя группа короче) - просьба пользователя 2026-10-15.
@@ -153,20 +201,22 @@ fun ReadingWordsScreen(
                         repeat = words.repeat,
                         modifier = Modifier.padding(horizontal = Spacing.xl),
                     )
+                    ReadAloudNote(Modifier.padding(horizontal = Spacing.xl))
                     // Страница - во всю ширину, отступ - внутри: соседние группы не выглядывают по краям.
                     HorizontalPager(state = pager, verticalAlignment = Alignment.Top) { page ->
-                        val offset = page * words.groupSize
                         ParchmentPanel(
                             modifier = Modifier.padding(horizontal = Spacing.xl),
                             topCornerRadius = Radius.card,
                             bottomCornerRadius = Radius.card,
                         ) {
                             WordGrid(
-                                words = groups[page],
-                                counts = { counts.getOrNull(offset + it) ?: 0 },
+                                rows = pages.getOrElse(page) { emptyList() },
+                                counts = { counts.getOrNull(it) ?: 0 },
                                 repeat = words.repeat,
-                                hidden = hidden,
-                                onRead = { progress.readWord(step.number, offset + it, words.items.size, words.repeat) },
+                                showTransliteration = (page == 0 && !hidden) || hintPage == page,
+                                onRead = { progress.readWord(step.number, it, words.items.size, words.repeat) },
+                                zoomed = zoom?.index,
+                                onZoom = { index, bounds -> zoom = WordZoom(index, bounds, page) },
                             )
                         }
                     }
@@ -183,12 +233,24 @@ fun ReadingWordsScreen(
                 }
                 GroupNavigation(
                     current = pager.currentPage,
-                    count = groups.size,
+                    count = groupCount,
                     onPrevious = { scope.launch { pager.animateScrollToPage(pager.currentPage - 1) } },
                     onNext = { scope.launch { pager.animateScrollToPage(pager.currentPage + 1) } },
                     modifier = Modifier
                         .padding(horizontal = Spacing.xl)
                         .padding(top = Spacing.s, bottom = Spacing.m + contentPadding.calculateBottomPadding()),
+                )
+            }
+            zoom?.let { current ->
+                val word = words.items.getOrNull(current.index) ?: return@let
+                WordZoomOverlay(
+                    zoom = current,
+                    word = word,
+                    count = counts.getOrNull(current.index) ?: 0,
+                    repeat = words.repeat,
+                    showTransliteration = (current.page == 0 && !hidden) || hintPage == current.page,
+                    onRead = { progress.readWord(step.number, current.index, words.items.size, words.repeat) },
+                    onDismiss = { zoom = null },
                 )
             }
             if (celebrate) {
@@ -209,7 +271,7 @@ private fun WordsProgress(read: Int, total: Int, repeat: Int, modifier: Modifier
     val palette = InabahTheme.palette
     Column(modifier, verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
         Text(
-            stringResource(R.string.makharij_words_progress, read, total, repeat),
+            stringResource(R.string.makharij_words_progress, read, total, pluralStringResource(R.plurals.zikr_repetitions, repeat, repeat)),
             color = palette.onAccentSecondary,
             style = InabahType.footnote,
         )
@@ -221,60 +283,124 @@ private fun WordsProgress(read: Int, total: Int, repeat: Int, modifier: Modifier
     }
 }
 
-/** Слова группы по 3 в ряд справа налево. */
+/**
+ * Страницы «Читаем слова» по ширине слов: слово меряется стилем плитки, ряд - по ширине экрана внутри
+ * пергамента; плиток в ряду - сколько влезает (3, 2, иначе во всю ширину). Пересчёт - при смене слов или
+ * ширины (поворот, другой экран).
+ */
+@Composable
+private fun rememberWordPages(words: ReadingWords?, seed: Int): List<List<WordRow>> {
+    val columnsOf = rememberWordColumns()
+    return remember(words, seed, columnsOf) {
+        if (words == null) return@remember emptyList()
+        val random = Random(seed)
+        if (words.pairs) pairPages(words.items, words.rowsPerPage, random) else wordPages(words.items, columnsOf, words.rowsPerPage, random)
+    }
+}
+
+/**
+ * Сколько плиток со словом влезает в ряд (3, 2, иначе 1 - во всю ширину): слово меряется стилем плитки,
+ * ряд - ширина экрана внутри пергамента. Общее для «Читаем слова» и «По словам» зикра итога.
+ */
+@Composable
+internal fun rememberWordColumns(): (ReadingWord) -> Int {
+    val measurer = rememberTextMeasurer()
+    val style = arabicTextStyle(WORD_SIZE, bold = true)
+    val density = LocalDensity.current
+    val screenWidth = LocalWindowInfo.current.containerSize.width
+    return remember(screenWidth, style, density, measurer) {
+        val rowWidth = screenWidth - with(density) { (Spacing.xl * 2 + ParchmentHorizontalPadding * 2).roundToPx() }
+        val gap = with(density) { Spacing.s.roundToPx() }
+        val padding = with(density) { (TileTextPadding * 2).roundToPx() }
+        val columnsOf: (ReadingWord) -> Int = { word ->
+            val width = measurer.measure(word.arabic, style, maxLines = 1, softWrap = false).size.width
+            (ReadingWords.MAX_COLUMNS downTo 2).firstOrNull { columns ->
+                width <= ((rowWidth - gap * (columns - 1)) / columns - padding) * WORD_FIT
+            } ?: 1
+        }
+        columnsOf
+    }
+}
+
+/** Ряды страницы справа налево; в неполном ряду - пустые места, чтобы плитки были одной ширины. */
 @Composable
 private fun WordGrid(
-    words: List<ReadingWord>,
+    rows: List<WordRow>,
     counts: (Int) -> Int,
     repeat: Int,
-    hidden: Boolean,
+    showTransliteration: Boolean,
     onRead: (Int) -> Unit,
+    /** Номер слова, увеличенного сейчас: его плитка на месте не видна (она «вылетела» в центр). */
+    zoomed: Int?,
+    onZoom: (Int, Rect) -> Unit,
 ) {
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
         Column(verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
-            words.withIndex().chunked(WORD_COLUMNS).forEach { row ->
-                Row(horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
-                    for ((index, word) in row) {
+            for (row in rows) {
+                Row(Modifier.height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
+                    for ((index, word) in row.words) {
                         CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
                             WordTile(
                                 word = word,
                                 count = counts(index),
                                 repeat = repeat,
-                                // Транскрипция - у первых 12 слов, дальше без подсказок (решение пользователя).
                                 transliteration = word.transliteration,
-                                hidden = hidden,
+                                showTransliteration = showTransliteration,
                                 onRead = { onRead(index) },
-                                modifier = Modifier.weight(1f),
+                                onZoom = { bounds -> onZoom(index, bounds) },
+                                // В паре словосочетание шире слова.
+                                modifier = Modifier
+                                    .weight(if (row.isPair && word.isPhrase) PAIR_PHRASE_WEIGHT else 1f)
+                                    .fillMaxHeight()
+                                    .alpha(if (index == zoomed) 0f else 1f),
                             )
                         }
                     }
-                    repeat(WORD_COLUMNS - row.size) { Spacer(Modifier.weight(1f)) }
+                    repeat(row.columns - row.words.size) { Spacer(Modifier.weight(1f)) }
                 }
             }
         }
     }
 }
 
-/** Плитка слова: «3/10» в углу, слово, транскрипция (первая группа); прочитано 10 раз - зелёная. */
+/**
+ * Плитка слова: «3/10» в углу, слово, транскрипция (место под ней есть всегда - плитки одной высоты на
+ * всех страницах, видна - [showTransliteration]); прочитано 10 раз - зелёная. Читать один раз ([repeat] = 1,
+ * зикр итога) - без счёта в углу.
+ */
 @Composable
-private fun WordTile(
+internal fun WordTile(
     word: ReadingWord,
     count: Int,
     repeat: Int,
     transliteration: String?,
-    hidden: Boolean,
+    showTransliteration: Boolean,
     onRead: () -> Unit,
     modifier: Modifier = Modifier,
+    /** Долгое нажатие - увеличить: где плитка на экране (в координатах корня); нет - не увеличивается. */
+    onZoom: ((Rect) -> Unit)? = null,
+    wordSize: Float = WORD_SIZE,
+    /** Слово и транскрипция - по центру плитки по вертикали (увеличенная плитка), иначе - сверху. */
+    centered: Boolean = false,
+    /**
+     * Масштаб содержимого (слово, счёт) поверх масштаба плитки: в полёте плитка растягивается по ширине
+     * и высоте по-разному, а текст - одинаково, без искажений; нет - как у плитки.
+     */
+    contentScale: (() -> Offset)? = null,
 ) {
     val palette = InabahTheme.palette
     val colors = readingColors
     val isDone = count >= repeat
+    // Где плитка - для полёта в центр; хранится без состояния Compose: меняется при каждой раскладке.
+    val bounds = remember { arrayOf(Rect.Zero) }
+    val zoomLabel = stringResource(R.string.makharij_words_zoom_action)
     val initiallyDone = remember(word) { isDone }
     val interaction = remember { MutableInteractionSource() }
     val haptics = LocalHapticFeedback.current
     val readLabel = stringResource(R.string.makharij_words_read_action)
     val state = stringResource(R.string.makharij_words_tile_state, count, repeat)
-    val description = listOfNotNull(word.arabic, transliteration?.takeIf { !hidden }).joinToString(", ")
+    val description = listOfNotNull(word.arabic, transliteration?.takeIf { showTransliteration }).joinToString(", ")
+    val transliterationAlpha by animateFloatAsState(if (showTransliteration) 1f else 0f, label = "wordTransliteration")
     // Живость (просьба пользователя 2026-10-15): плитка наливается золотом снизу вверх с каждым
     // прочтением, толчок и отклик, как у счётчика зикра; на последнем - вспышка ✦ и галочка.
     val fill by animateFloatAsState((count.toFloat() / repeat).coerceIn(0f, 1f), Motion.progress(), label = "wordFill")
@@ -286,11 +412,24 @@ private fun WordTile(
         )
         onRead()
     }
-    Box(modifier.popOn(count)) {
+    val zoom = onZoom?.let { callback ->
+        {
+            haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+            callback(bounds[0])
+        }
+    }
+    Box(modifier.popOn(count).onGloballyPositioned { bounds[0] = it.boundsInRoot() }) {
         Box(
             Modifier
-                .fillMaxWidth()
-                .clickable(interaction, indication = null, enabled = !isDone, role = Role.Button, onClick = read)
+                .fillMaxSize()
+                // Прочитанное не считается, но увеличить его можно.
+                .combinedClickable(
+                    interactionSource = interaction,
+                    indication = null,
+                    role = Role.Button,
+                    onLongClick = zoom,
+                    onClick = { if (!isDone) read() },
+                )
                 .pressFeedback(interaction, scale = PressFeedback.ICON_SCALE)
                 .surface(
                     if (isDone) palette.success.copy(alpha = DONE_FILL_ALPHA) else colors.parchmentCell,
@@ -308,6 +447,7 @@ private fun WordTile(
                     contentDescription = description
                     stateDescription = state
                     if (!isDone) onClick(readLabel) { read(); true }
+                    if (zoom != null) customActions = listOf(CustomAccessibilityAction(zoomLabel) { zoom(); true })
                 },
         ) {
             if (isDone) {
@@ -315,33 +455,178 @@ private fun WordTile(
                     painterResource(R.drawable.ic_check),
                     contentDescription = null,
                     tint = palette.parchmentAccent,
-                    modifier = Modifier.align(Alignment.TopStart).padding(start = Spacing.xxs, top = Spacing.xxs).size(DoneIconSize),
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .contentScale(contentScale, TransformOrigin(0f, 0f))
+                        .padding(start = Spacing.xxs, top = Spacing.xxs)
+                        .size(DoneIconSize),
                 )
-            } else {
+            } else if (repeat > 1) {
                 Text(
                     stringResource(R.string.makharij_words_count, count, repeat),
                     color = colors.parchmentCaption,
                     style = InabahType.caption2.copy(fontWeight = FontWeight.Bold),
-                    modifier = Modifier.align(Alignment.TopStart).padding(start = Spacing.xs, top = Spacing.xxs),
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .contentScale(contentScale, TransformOrigin(0f, 0f))
+                        .padding(start = Spacing.xs, top = Spacing.xxs),
                 )
             }
             Column(
-                Modifier.fillMaxWidth().padding(top = Spacing.m, bottom = Spacing.xs),
+                Modifier
+                    .align(if (centered) Alignment.Center else Alignment.TopCenter)
+                    .contentScale(contentScale, TransformOrigin.Center)
+                    .fillMaxWidth()
+                    .padding(start = TileTextPadding, end = TileTextPadding, top = Spacing.m, bottom = Spacing.xs),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                ArabicText(word.arabic, WORD_SIZE, palette.parchmentText, bold = true, maxLines = 1, textAlign = TextAlign.Center)
+                // Длинное словосочетание (предложение) - до 2 строк, не обрезается.
+                ArabicText(word.arabic, wordSize, palette.parchmentText, bold = true, maxLines = if (word.isPhrase) PHRASE_LINES else 1, textAlign = TextAlign.Center)
                 if (transliteration != null) {
                     Text(
                         transliteration,
                         color = colors.parchmentCaption,
                         style = InabahType.caption,
-                        modifier = Modifier.alpha(transliterationAlpha(hidden)),
+                        modifier = Modifier.alpha(transliterationAlpha),
                     )
                 }
             }
         }
         // Вспышка - только в момент, когда слово дочитано (не у уже прочитанных при открытии экрана).
         if (isDone && !initiallyDone) SparkleBurst(key = word, color = palette.gold, modifier = Modifier.matchParentSize())
+    }
+}
+
+/** Увеличенное слово: номер в шаге, где стояла плитка (в координатах корня), страница (для транскрипции). */
+private data class WordZoom(val index: Int, val from: Rect, val page: Int)
+
+/**
+ * Увеличенная плитка (просьба пользователя 2026-10-17): долгое нажатие - плитка вылетает из своего места в
+ * центр и растёт, вокруг - затемнение; касание по ней - «прочитал ещё раз», по затемнению или «Назад» -
+ * плитка возвращается на место. Полёт - только трансформации отрисовки (`graphicsLayer`), без перевёрстки.
+ */
+@Composable
+private fun WordZoomOverlay(
+    zoom: WordZoom,
+    word: ReadingWord,
+    count: Int,
+    repeat: Int,
+    showTransliteration: Boolean,
+    onRead: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    val palette = InabahTheme.palette
+    val gradients = InabahTheme.gradients
+    val scope = rememberCoroutineScope()
+    val progress = remember(zoom.index) { Animatable(0f) }
+    // Словосочетание (предложение) - мельче: до 2 строк во всю ширину.
+    val zoomSize = if (word.isPhrase) ZOOM_PHRASE_SIZE else ZOOM_WORD_SIZE
+    // Где окажется увеличенная плитка - от неё считается полёт из [WordZoom.from]. Пока не измерена, плитка
+    // не видна и полёт не начинается: иначе первый кадр рисовался сразу в центре в полный размер.
+    var target by remember { mutableStateOf(Rect.Zero) }
+    val measured = target.width > 0f && target.height > 0f
+    var closing by remember { mutableStateOf(false) }
+    LaunchedEffect(zoom.index, measured) {
+        if (measured && !closing) progress.animateTo(1f, Motion.zoom())
+    }
+    val dismiss: () -> Unit = {
+        if (!closing) {
+            closing = true
+            scope.launch {
+                progress.animateTo(0f, Motion.zoom())
+                onDismiss()
+            }
+        }
+    }
+    BackHandler(onBack = dismiss)
+    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Box(
+            Modifier
+                .fillMaxSize()
+                .graphicsLayer { alpha = progress.value }
+                .background(palette.shadow.copy(alpha = ZOOM_SCRIM_ALPHA))
+                .pointerInput(Unit) { detectTapGestures { dismiss() } },
+        )
+        WordTile(
+            word = word,
+            count = count,
+            repeat = repeat,
+            transliteration = word.transliteration,
+            showTransliteration = showTransliteration,
+            onRead = onRead,
+            wordSize = zoomSize,
+            centered = true,
+            // Слово в полёте растёт одинаково по ширине и высоте: от кегля исходной плитки до крупного.
+            contentScale = {
+                val p = progress.value
+                val uniform = lerp(WORD_SIZE / zoomSize, 1f, p)
+                val (sx, sy) = tileScale(target, zoom.from, p)
+                Offset(uniform / sx, uniform / sy)
+            },
+            modifier = Modifier
+                .padding(horizontal = Spacing.xl)
+                .fillMaxWidth()
+                .height(ZoomTileHeight)
+                .onGloballyPositioned { coordinates ->
+                    val bounds = coordinates.boundsInRoot()
+                    if (bounds != target) target = bounds
+                }
+                .graphicsLayer {
+                    val to = target
+                    val from = zoom.from
+                    alpha = if (measured) 1f else 0f
+                    if (measured && from.width > 0f) {
+                        val p = progress.value
+                        val (sx, sy) = tileScale(to, from, p)
+                        transformOrigin = TransformOrigin(0f, 0f)
+                        scaleX = sx
+                        scaleY = sy
+                        translationX = lerp(from.left - to.left, 0f, p)
+                        translationY = lerp(from.top - to.top, 0f, p)
+                    }
+                }
+                // Фон плитки полупрозрачный (рассчитан на пергамент) - под увеличенной подложен пергамент.
+                .background(gradients.parchment, RoundedCornerShape(Radius.box)),
+        )
+    }
+}
+
+/** Масштаб плитки в полёте по ширине и высоте: из [from] (исходная плитка) в [to] (увеличенная). */
+private fun tileScale(to: Rect, from: Rect, progress: Float): Pair<Float, Float> =
+    if (to.width > 0f && to.height > 0f && from.width > 0f) {
+        lerp(from.width / to.width, 1f, progress) to lerp(from.height / to.height, 1f, progress)
+    } else {
+        1f to 1f
+    }
+
+/** Поправка масштаба содержимого плитки ([scale] - по ширине и высоте), вокруг [origin]; нет - без неё. */
+private fun Modifier.contentScale(scale: (() -> Offset)?, origin: TransformOrigin): Modifier =
+    if (scale == null) this else graphicsLayer {
+        val (x, y) = scale()
+        transformOrigin = origin
+        scaleX = x
+        scaleY = y
+    }
+
+/**
+ * Мотивация над словами (просьба пользователя 2026-10-16: читать нужно много, и только вслух): «Читайте
+ * каждое слово вслух…» сразу под прогрессом, по ⓘ - хадис о двойной награде тому, кому чтение даётся
+ * с трудом (как пояснения урока). На каждой странице.
+ */
+@Composable
+private fun ReadAloudNote(modifier: Modifier = Modifier) {
+    Box(modifier) {
+        InfoTextCard(stringResource(R.string.makharij_words_read_aloud)) {
+            FeaturedVerseBox(
+                FeaturedVerse(
+                    arabic = HADITH_ARABIC,
+                    translation = stringResource(R.string.makharij_words_hadith_translation),
+                    reference = stringResource(R.string.makharij_words_hadith_reference),
+                    isFramed = false,
+                ),
+                modifier = Modifier.padding(vertical = Spacing.xl),
+            )
+        }
     }
 }
 
@@ -397,8 +682,22 @@ private fun WordsFinished(
     }
 }
 
-private const val WORD_COLUMNS = 3
 private const val WORD_SIZE = 28f
+/** Увеличенная плитка: кегль слова, высота, затемнение вокруг. */
+private const val ZOOM_WORD_SIZE = 60f
+private const val ZOOM_PHRASE_SIZE = 44f
+private val ZoomTileHeight = 240.dp
+private const val ZOOM_SCRIM_ALPHA = 0.6f
+private const val PAIR_PHRASE_WEIGHT = 2f
+private const val PHRASE_LINES = 2
+// Арабский контент - не переводится (Муслим, 798).
+private const val HADITH_ARABIC = "الْمَاهِرُ بِالْقُرْآنِ مَعَ السَّفَرَةِ الْكِرَامِ الْبَرَرَةِ، وَالَّذِي يَقْرَأُ الْقُرْآنَ وَيَتَتَعْتَعُ فِيهِ وَهُوَ عَلَيْهِ شَاقٌّ لَهُ أَجْرَانِ"
+/** Поле слова в плитке слева и справа - и в расчёте ширины ([rememberWordPages]). */
+private val TileTextPadding = Spacing.xs
+/** Слово «влезает» в плитку, если занимает не больше этой доли её ширины: впритык читать тесно. */
+private const val WORD_FIT = 0.8f
+/** Сколько видна транскрипция по подсказке. */
+private const val HINT_MILLIS = 700L
 private const val DONE_FILL_ALPHA = 0.22f
 private const val WORD_FILL_ALPHA = 0.5f
 private val DoneIconSize = 14.dp

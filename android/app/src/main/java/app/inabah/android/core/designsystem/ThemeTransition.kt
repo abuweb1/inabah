@@ -76,6 +76,7 @@ private fun Palette.lerp(to: Palette, t: Float): Palette = Palette(
     parchmentHighlight = lerp(parchmentHighlight, to.parchmentHighlight, t),
     parchmentText = lerp(parchmentText, to.parchmentText, t),
     parchmentAccent = lerp(parchmentAccent, to.parchmentAccent, t),
+    parchmentMark = lerp(parchmentMark, to.parchmentMark, t),
     tabAzkar = lerp(tabAzkar, to.tabAzkar, t),
     tabHadith = lerp(tabHadith, to.tabHadith, t),
     tabMakharij = lerp(tabMakharij, to.tabMakharij, t),

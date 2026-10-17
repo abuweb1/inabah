@@ -7,6 +7,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
@@ -53,9 +54,20 @@ fun ArabicText(
     bold: Boolean = false,
     textAlign: TextAlign = TextAlign.Start,
     maxLines: Int = Int.MAX_VALUE,
+) = ArabicText(AnnotatedString(text), size, color, modifier, bold, textAlign, maxLines)
+
+/** То же с выделением частей текста (цвет буквы в слове-примере). */
+@Composable
+fun ArabicText(
+    text: AnnotatedString,
+    size: Float,
+    color: Color,
+    modifier: Modifier = Modifier,
+    bold: Boolean = false,
+    textAlign: TextAlign = TextAlign.Start,
+    maxLines: Int = Int.MAX_VALUE,
 ) {
-    val fontSize = fixedSp(size)
-    val lineHeight = fixedSp(size * (NATURAL_LINE_HEIGHT + EXTRA_LINE_SPACING))
+    val style = arabicTextStyle(size, bold, textAlign)
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
         Text(
             text = text,
@@ -63,17 +75,24 @@ fun ArabicText(
             color = color,
             maxLines = maxLines,
             overflow = if (maxLines == Int.MAX_VALUE) TextOverflow.Clip else TextOverflow.Ellipsis,
-            style = TextStyle(
-                fontFamily = ScheherazadeNew,
-                fontWeight = if (bold) FontWeight.Bold else FontWeight.Normal,
-                fontSize = fontSize,
-                lineHeight = lineHeight,
-                textAlign = textAlign,
-                textDirection = TextDirection.Rtl,
-            ),
+            style = style,
         )
     }
 }
+
+/**
+ * Стиль [ArabicText] без цвета: им же меряют арабский текст до вёрстки (`TextMeasurer`), чтобы
+ * размер совпал с нарисованным (ширина плиток «Читаем слова», 2026-10-16).
+ */
+@Composable
+fun arabicTextStyle(size: Float, bold: Boolean = false, textAlign: TextAlign = TextAlign.Start): TextStyle = TextStyle(
+    fontFamily = ScheherazadeNew,
+    fontWeight = if (bold) FontWeight.Bold else FontWeight.Normal,
+    fontSize = fixedSp(size),
+    lineHeight = fixedSp(size * (NATURAL_LINE_HEIGHT + EXTRA_LINE_SPACING)),
+    textAlign = textAlign,
+    textDirection = TextDirection.Rtl,
+)
 
 /**
  * Начало арабского текста для свёрнутой строки (зикр, хадис): первые [words] слов и «…»; короче —

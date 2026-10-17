@@ -19,6 +19,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
@@ -91,14 +92,15 @@ fun StepCompletedOverlay(
                 )
             }
             Text(
-                stringResource(R.string.makharij_done_step, step.number, step.title),
+                if (step.isFinal) stringResource(R.string.makharij_done_final, step.title)
+                else stringResource(R.string.makharij_done_step, step.number, step.title),
                 color = palette.onAccent,
                 style = InabahType.title3.copy(fontWeight = FontWeight.Bold),
                 textAlign = TextAlign.Center,
             )
             step.words?.let { words ->
                 Text(
-                    stringResource(R.string.makharij_done_words, words.items.size, words.repeat),
+                    stringResource(R.string.makharij_done_words, words.items.size, pluralStringResource(R.plurals.zikr_repetitions, words.repeat, words.repeat)),
                     color = palette.onAccentSecondary,
                     style = InabahType.subheadline,
                     textAlign = TextAlign.Center,

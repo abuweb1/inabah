@@ -1,10 +1,17 @@
 package app.inabah.android.feature.makharij
 
+import app.inabah.android.core.content.model.LetterForm
+import app.inabah.android.core.content.model.ReadingBlock
 import app.inabah.android.core.content.model.ReadingCourse
+import app.inabah.android.core.content.model.ReadingFormula
 import app.inabah.android.core.content.model.ReadingLetter
 import app.inabah.android.core.content.model.ReadingMark
 import app.inabah.android.core.content.model.ReadingQuestion
 import app.inabah.android.core.content.model.ReadingStep
+import app.inabah.android.core.content.model.ReadingWord
+import app.inabah.android.core.content.model.ReadingWords
+import app.inabah.android.core.settings.ZikrProgress
+import kotlin.random.Random
 
 // Правила «Учимся читать» без Compose (docs/08-screen-makharij.md): цепочка листа буквы,
 // варианты ответа, текущий шаг.
@@ -25,13 +32,15 @@ data class LetterChainItem(
 }
 
 /**
- * Цепочка буквы [letter] на шаге [stepNumber]: звук (с сукуном), название, затем слоги всех знаков,
+ * Цепочка буквы [letter] на шаге [stepNumber]: звук (с сукуном, если сукун уже пройден), название, затем слоги всех знаков,
  * для которых у буквы есть транскрипция (по порядку знаков курса); знак, не пройденный к шагу, -
- * [LetterChainItem.isLearned] `false`. Сукуна в данных нет - без звука.
+ * [LetterChainItem.isLearned] `false`, а танвин до его шага не показывается. Сукуна в данных нет - без звука.
  */
 fun letterChain(course: ReadingCourse, letter: ReadingLetter, stepNumber: Int): List<LetterChainItem> {
     val learned = course.learnedMarks(stepNumber).mapTo(mutableSetOf()) { it.id }
-    val sound = course.sukun?.let { sukun ->
+    // Звук (буква с сукуном) - только когда сукун пройден: раньше непонятный знак путает (решение
+    // пользователя 2026-10-15, вариант «а»).
+    val sound = course.sukun?.takeIf { it.id in learned }?.let { sukun ->
         LetterChainItem(LetterChainItem.Kind.Sound, letter.soundArabic(sukun), letter.sound, letter.audio[KEY_SOUND], true)
     }
     val name = LetterChainItem(
@@ -40,6 +49,8 @@ fun letterChain(course: ReadingCourse, letter: ReadingLetter, stepNumber: Int): 
     val syllables = course.marks.mapNotNull { mark ->
         val transliteration = letter.syllables[mark.id] ?: return@mapNotNull null
         val isLearned = mark.id in learned
+        // Танвин - только с его шага: до него ещё 3 слога пунктиром загромождали лист (2026-10-16).
+        if (mark.id in ReadingMark.TANWIN && !isLearned) return@mapNotNull null
         LetterChainItem(
             kind = LetterChainItem.Kind.Syllable,
             arabic = letter.syllable(mark),
@@ -62,7 +73,10 @@ data class QuizOption(val text: String, val isCorrect: Boolean)
 /**
  * Варианты ответа по порядку (без случайности - одинаково при каждом открытии):
  * - слог - тот же слог с другими знаками, пройденными к шагу [stepNumber] (у которых у буквы есть
- *   транскрипция), по порядку знаков: «ба · би · бу»; верный - всегда среди них;
+ *   транскрипция), по порядку знаков: «ба · би · бу»; верный - всегда среди них; у танвина варианты -
+ *   танвины: «бан · бин · бун»;
+ * - закрытый слог - с фатхьой, касрой и доммой алифа: «ъаб · ъиб · ъуб»;
+ * - слово - варианты из данных (в их порядке);
  * - буква - она и соседние по алфавиту (у первой и последней - две следующие или предыдущие),
  *   соседние часто и похожи по форме: ب ت ث.
  */
@@ -70,12 +84,29 @@ fun quizOptions(course: ReadingCourse, question: ReadingQuestion, stepNumber: In
     when (question) {
         is ReadingQuestion.Syllable -> {
             val letter = question.letter
-            // Знак вопроса - всегда (сукун: транскрипция - звук буквы), остальные - со слогами.
-            val marks = course.learnedMarks(stepNumber).filter { it.id in letter.syllables || it.id == question.mark.id }
+            // Знак вопроса - всегда (сукун: транскрипция - звук буквы), остальные - со слогами; у танвина -
+            // только другие танвины («бан · бин · бун»), иначе ответ угадывался по «н».
+            val isTanwin = question.mark.id in ReadingMark.TANWIN
+            val marks = course.learnedMarks(stepNumber)
+                .filter { it.id in letter.syllables || it.id == question.mark.id }
+                .filter { (it.id in ReadingMark.TANWIN) == isTanwin }
             val others = marks.filter { it.id != question.mark.id }.take(OPTION_COUNT - 1)
             marks.filter { it.id == question.mark.id || it in others }.map { mark ->
                 QuizOption(letter.transliteration(mark).orEmpty(), mark.id == question.mark.id)
             }
+        }
+        // Слово: варианты - из данных, в их порядке.
+        is ReadingQuestion.Word -> question.options.mapIndexed { index, text -> QuizOption(text, index == question.answer) }
+        // Закрытый слог: тот же с другими огласовками алифа - «ъаб · ъиб · ъуб».
+        is ReadingQuestion.ClosedSyllable -> ReadingQuestion.ClosedSyllable.VOWELS.map { id ->
+            QuizOption(question.transliteration(id), id == question.vowel.id)
+        }
+        // Буквы карточки похожего написания: она и соседние (в карточке из 3 - все).
+        is ReadingQuestion.LetterInForm -> {
+            val group = question.group
+            val index = group.indexOf(question.letter).coerceAtLeast(0)
+            val start = (index - 1).coerceIn(0, (group.size - OPTION_COUNT).coerceAtLeast(0))
+            group.drop(start).take(OPTION_COUNT).map { QuizOption(it.name, it == question.letter) }
         }
         is ReadingQuestion.LetterName -> {
             val letters = course.letters
@@ -92,12 +123,84 @@ fun quizOptions(course: ReadingCourse, question: ReadingQuestion, stepNumber: In
 fun currentStep(course: ReadingCourse, completed: Set<Int>): ReadingStep? =
     course.steps.firstOrNull { it.hasLesson && it.number !in completed }
 
-/** Доля пройденных шагов курса, 0…1; отметки шагов, которых нет в курсе, не считаются. */
-fun completedFraction(course: ReadingCourse, completed: Set<Int>): Double =
-    if (course.steps.isEmpty()) 0.0 else course.steps.count { it.number in completed }.toDouble() / course.steps.size
+/** Число шагов с номером - «M» в «пройдено N из M»; итог не считается. */
+fun numberedStepCount(course: ReadingCourse): Int = course.steps.count { !it.isFinal }
 
-/** Число пройденных шагов курса. */
-fun completedCount(course: ReadingCourse, completed: Set<Int>): Int = course.steps.count { it.number in completed }
+/** Доля пройденных шагов с номером, 0…1; отметки шагов, которых нет в курсе, и итог не считаются. */
+fun completedFraction(course: ReadingCourse, completed: Set<Int>): Double {
+    val total = numberedStepCount(course)
+    return if (total == 0) 0.0 else completedCount(course, completed).toDouble() / total
+}
+
+/** Число пройденных шагов с номером (без итога). */
+fun completedCount(course: ReadingCourse, completed: Set<Int>): Int =
+    course.steps.count { !it.isFinal && it.number in completed }
+
+/** Курс пройден целиком - все шаги, включая итог. */
+fun isCourseDone(course: ReadingCourse, completed: Set<Int>): Boolean =
+    course.steps.isNotEmpty() && course.steps.all { it.number in completed }
+
+/**
+ * Ряд «Читаем слова»: [columns] плиток в ряд (3, 2 или 1 - во всю ширину); индекс слова - номер в шаге.
+ * [isPair] - слово и словосочетание с ним (словосочетание шире).
+ */
+data class WordRow(val columns: Int, val words: List<IndexedValue<ReadingWord>>, val isPair: Boolean = false)
+
+/**
+ * Страницы «Читаем слова» (просьба пользователя 2026-10-16): [columnsOf] - сколько плиток с этим словом
+ * влезает в ряд (экран меряет слово; 3, 2 или 1), словосочетание - всегда во всю ширину. Сначала короткие
+ * (по 3), потом длинные (по 2), потом во всю ширину, внутри - порядок данных; страница - [rowsPerPage]
+ * рядов. Неполных рядов нет: лишние слова очереди переходят в начало следующей, более широкой (в широкой
+ * плитке слово тоже помещается). Индекс слова - его номер в данных: по нему хранится счёт прочтений.
+ * [random] - перемешать слова внутри очередей (не в порядке книги, просьба пользователя 2026-10-17);
+ * нет - порядок данных.
+ */
+fun wordPages(
+    words: List<ReadingWord>,
+    columnsOf: (ReadingWord) -> Int,
+    rowsPerPage: Int,
+    random: Random? = null,
+): List<List<WordRow>> {
+    val queues = (ReadingWords.MAX_COLUMNS downTo 1).associateWith { mutableListOf<IndexedValue<ReadingWord>>() }
+    val ordered = words.withIndex().toList().let { if (random == null) it else it.shuffled(random) }
+    for (word in ordered) {
+        val columns = if (word.value.isPhrase) 1 else columnsOf(word.value).coerceIn(1, ReadingWords.MAX_COLUMNS)
+        queues.getValue(columns) += word
+    }
+    val rows = mutableListOf<WordRow>()
+    for (columns in ReadingWords.MAX_COLUMNS downTo 1) {
+        val queue = queues.getValue(columns)
+        val rest = queue.size % columns
+        if (rest > 0) queues.getValue(columns - 1).addAll(0, queue.takeLast(rest))
+        queue.dropLast(rest).chunked(columns).mapTo(rows) { WordRow(columns, it) }
+    }
+    return rows.chunked(rowsPerPage.coerceAtLeast(1))
+}
+
+/**
+ * Страницы пар (шаг «Мадд перед артиклем»): порядок данных; слово, за которым словосочетание, - с ним в
+ * одном ряду, остальное - во всю ширину. Страница - [rowsPerPage] рядов. [random] - перемешать пары между
+ * собой; одиночные ряды остаются на своих местах: среди них аяты подряд (ат-Таквир 1-3).
+ */
+fun pairPages(words: List<ReadingWord>, rowsPerPage: Int, random: Random? = null): List<List<WordRow>> {
+    val rows = mutableListOf<WordRow>()
+    var i = 0
+    while (i < words.size) {
+        val next = words.getOrNull(i + 1)
+        if (!words[i].isPhrase && next != null && next.isPhrase) {
+            rows += WordRow(2, listOf(IndexedValue(i, words[i]), IndexedValue(i + 1, next)), isPair = true)
+            i += 2
+        } else {
+            rows += WordRow(1, listOf(IndexedValue(i, words[i])))
+            i += 1
+        }
+    }
+    if (random != null) {
+        val pairSlots = rows.indices.filter { rows[it].isPair }
+        pairSlots.map { rows[it] }.shuffled(random).forEachIndexed { n, row -> rows[pairSlots[n]] = row }
+    }
+    return rows.chunked(rowsPerPage.coerceAtLeast(1))
+}
 
 /** Все слова шага прочитаны нужное число раз (слов нет - да). */
 fun wordsDone(step: ReadingStep, counts: List<Int>?): Boolean {
@@ -135,4 +238,75 @@ fun sampleSyllables(
     if (marks.isEmpty()) return emptyList()
     val random = kotlin.random.Random(seed)
     return letters.shuffled(random).take(count).map { it to marks.random(random) }
+}
+
+/**
+ * Случайные формулы для карточки урока (закрытые слоги сукуна, решение пользователя 2026-10-16): [count]
+ * разных формул в порядке таблицы. Одинаковые при том же [seed] (экран хранит его).
+ */
+fun sampleFormulas(items: List<ReadingFormula>, count: Int, seed: Int): List<ReadingFormula> {
+    val picked = items.indices.shuffled(kotlin.random.Random(seed)).take(count).toSet()
+    return items.filterIndexed { index, _ -> index in picked }
+}
+
+/**
+ * Где в слове подсветить букву [letter] формы [form]: диапазон символов буквы вместе с её знаками.
+ * Начало - первая буква, конец - последняя, середина - первая такая буква не с краю. Нет - `null`.
+ */
+fun letterRange(word: String, letter: String, form: LetterForm): IntRange? {
+    // Буквы слова: позиция и длина вместе со следующими за буквой знаками огласовки.
+    val units = mutableListOf<IntRange>()
+    var i = 0
+    while (i < word.length) {
+        var end = i + 1
+        while (end < word.length && word[end] in HARAKAT) end++
+        units += i until end
+        i = end
+    }
+    val matches = units.withIndex().filter { word.substring(it.value.first, it.value.first + 1) == letter }
+    return when (form) {
+        LetterForm.Initial -> matches.firstOrNull { it.index == 0 }
+        LetterForm.Final -> matches.lastOrNull { it.index == units.lastIndex }
+        LetterForm.Medial -> matches.firstOrNull { it.index != 0 && it.index != units.lastIndex }
+        LetterForm.Isolated -> null
+    }?.value
+}
+
+/** Знаки огласовки (U+064B…U+0652) и кинжальный алиф. */
+private val HARAKAT = ('\u064B'..'\u0652').toSet() + '\u0670'
+
+/**
+ * Запись слова-примера формы буквы (docs/process/audio.md, раздел 5): `reading_s03_02_medial.m4a` -
+ * шаг 3, буква 2 (ب), слово, где она в середине.
+ */
+fun formExampleAudio(step: Int, letter: ReadingLetter, form: LetterForm): String =
+    "reading_s%02d_%02d_%s.m4a".format(step, letter.number, form.id)
+
+/** Зикр итога прочитан (решение пользователя 2026-10-17): все слова отмечены и нажато «Прочитал целиком». */
+fun isZikrDone(zikr: ReadingBlock.Zikr, progress: ZikrProgress?): Boolean =
+    progress != null && progress.isRead && zikr.words.indices.all { it in progress.words }
+
+/** Итог «Читаем зикр» пройден - прочитаны все его зикры. */
+fun allZikrsDone(step: ReadingStep, progress: Map<Int, ZikrProgress>): Boolean =
+    step.zikrs.isNotEmpty() && step.zikrs.withIndex().all { (index, zikr) -> isZikrDone(zikr, progress[index]) }
+
+/**
+ * Ряды «По словам» зикра: слова - по порядку зикра (не перемешиваются и не сортируются, как в «Читаем
+ * слова»); в ряд - сколько влезает у каждого слова ряда ([columnsOf]: 3, 2 или 1); ряд во всю ширину -
+ * `columns` = числу слов, без пустых мест.
+ */
+fun zikrRows(words: List<ReadingWord>, columnsOf: (ReadingWord) -> Int): List<WordRow> {
+    val rows = mutableListOf<WordRow>()
+    var row = mutableListOf<IndexedValue<ReadingWord>>()
+    for (word in words.withIndex()) {
+        val size = row.size + 1
+        val fits = size <= ReadingWords.MAX_COLUMNS && (row + word).all { columnsOf(it.value) >= size }
+        if (!fits && row.isNotEmpty()) {
+            rows += WordRow(row.size, row)
+            row = mutableListOf()
+        }
+        row += word
+    }
+    if (row.isNotEmpty()) rows += WordRow(row.size, row)
+    return rows
 }

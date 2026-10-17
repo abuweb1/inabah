@@ -17,6 +17,8 @@ android {
         targetSdk = 37
         versionCode = 3
         versionName = "1.1.1"
+        // Сборка для проверки «Учимся читать»: все шаги открыты (`-Pinabah.unlockAll=true`). По умолчанию - замки.
+        buildConfigField("boolean", "READING_UNLOCK_ALL", (findProperty("inabah.unlockAll") == "true").toString())
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

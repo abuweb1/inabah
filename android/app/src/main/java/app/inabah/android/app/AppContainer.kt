@@ -8,6 +8,7 @@ import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.preferencesDataStoreFile
 import app.inabah.android.core.audio.AudioPlayerController
+import app.inabah.android.core.audio.ClipPlayer
 import app.inabah.android.core.audio.MediaControllerEngine
 import app.inabah.android.core.content.AssetContentRepository
 import app.inabah.android.core.content.ContentLanguagePriority
@@ -68,6 +69,7 @@ class AppServices(
     val hadithCollectionOrder: HadithCollectionOrder,
     val readingStore: ReadingStore,
     val readingProgress: ReadingProgress,
+    val clipPlayer: ClipPlayer,
     val appearanceSettings: AppearanceSettings,
     val parchmentSettings: ParchmentSettings,
     val translationShadeSettings: TranslationShadeSettings,
@@ -143,6 +145,7 @@ class AppContainer(context: Context) {
             services.azkarStore.loadAll()
             services.hadithStore.loadAll()
             services.readingStore.load()
+            services.clipPlayer.load()
             logContentFailures(services)
         }
     }
@@ -196,6 +199,7 @@ class AppContainer(context: Context) {
             hadithCollectionOrder = hadithCollectionOrder,
             readingStore = ReadingStore(repository),
             readingProgress = ReadingProgress(storage),
+            clipPlayer = ClipPlayer(appContext, Dispatchers.IO),
             appearanceSettings = AppearanceSettings(storage),
             parchmentSettings = ParchmentSettings(storage),
             translationShadeSettings = TranslationShadeSettings(storage),

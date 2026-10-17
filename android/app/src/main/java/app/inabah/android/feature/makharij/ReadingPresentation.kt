@@ -41,6 +41,8 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextAlign
 import app.inabah.android.R
+import app.inabah.android.core.content.model.LetterForm
+import app.inabah.android.core.content.model.ReadingStep
 import app.inabah.android.core.designsystem.InabahTheme
 import app.inabah.android.core.designsystem.InabahType
 import app.inabah.android.core.designsystem.Palette
@@ -74,6 +76,8 @@ data class ReadingColors(
     val card: Brush,
     /** Лист буквы: тёмный оттенок цвета раздела (набросок - карточка темы с чёрным). */
     val sheet: Color,
+    /** Буква в слове-примере на пергаменте (формы букв). */
+    val letterHighlight: Color,
     /** Ячейка на пергаменте (слог), её рамка и подпись под слогом. */
     val parchmentCell: Color,
     val parchmentCellBorder: Color,
@@ -93,6 +97,8 @@ data class ReadingColors(
                     listOf(lerp(tint, Color.Black, CARD_SHADE_START), lerp(tint, Color.Black, CARD_SHADE_END)),
                 ),
                 sheet = lerp(Color.Black, tint, SHEET_TINT),
+                // Свой цвет у каждого фона арабского текста (рамка на «Сепии» и «Дымчатом» сливалась с текстом).
+                letterHighlight = palette.parchmentMark,
                 // Ячейка темнее пергамента и с рамкой: светлая ячейка на светлой доске не видна.
                 parchmentCell = palette.parchmentText.copy(alpha = PARCHMENT_CELL_ALPHA),
                 parchmentCellBorder = palette.parchmentText.copy(alpha = PARCHMENT_CELL_BORDER_ALPHA),
@@ -134,6 +140,17 @@ fun TransliterationToggle(hidden: Boolean, onToggle: () -> Unit) {
         contentDescription = stringResource(
             if (hidden) R.string.makharij_translit_show else R.string.makharij_translit_hide,
         ),
+        tint = readingColors.tint,
+    )
+}
+
+/** Лампочка в навбаре «Читаем слова» (страницы без транскрипции): показать её на миг. */
+@Composable
+fun TransliterationHint(onClick: () -> Unit) {
+    GlassIconButton(
+        onClick = onClick,
+        iconRes = R.drawable.ic_lightbulb,
+        contentDescription = stringResource(R.string.makharij_words_hint),
         tint = readingColors.tint,
     )
 }
@@ -248,3 +265,34 @@ private val ArabicRun = Regex("""[؀-ۿ]+(?:\s+[؀-ۿ]+)*""")
 private const val RIGHT_TO_LEFT_ISOLATE = "⁧"
 private const val POP_DIRECTIONAL_ISOLATE = "⁩"
 private const val ARABIC_RUN_SCALE = 1.3f
+
+/** Подпись столбца таблицы форм. */
+val LetterForm.column: Int
+    get() = when (this) {
+        LetterForm.Isolated -> R.string.makharij_form_isolated
+        LetterForm.Initial -> R.string.makharij_form_initial
+        LetterForm.Medial -> R.string.makharij_form_medial
+        LetterForm.Final -> R.string.makharij_form_final
+    }
+
+/** Где стоит буква этой формы - для TalkBack и объяснения в проверке. */
+val LetterForm.place: Int
+    get() = when (this) {
+        LetterForm.Isolated -> R.string.makharij_form_isolated_place
+        LetterForm.Initial -> R.string.makharij_form_initial_place
+        LetterForm.Medial -> R.string.makharij_form_medial_place
+        LetterForm.Final -> R.string.makharij_form_final_place
+    }
+
+/** «Шаг 4 · Огласовки»; у итога номера нет - «Итог · Читаем зикр». */
+@Composable
+@ReadOnlyComposable
+fun stepTitle(step: ReadingStep): String =
+    if (step.isFinal) stringResource(R.string.makharij_final_title, step.title)
+    else stringResource(R.string.makharij_step_title, step.number, step.title)
+
+/** Слово, в котором часть [range] (буква со знаками) выделена цветом [color]; нет диапазона - как есть. */
+fun highlightedWord(word: String, range: IntRange?, color: Color): AnnotatedString = buildAnnotatedString {
+    append(word)
+    if (range != null) addStyle(SpanStyle(color = color), range.first, range.last + 1)
+}

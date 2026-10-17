@@ -1,5 +1,27 @@
 package app.inabah.android.feature.makharij
 
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.graphics.SolidColor
+import app.inabah.android.core.settings.ZikrProgress
+import app.inabah.android.core.formatting.toArabicIndicDigits
+import app.inabah.android.core.designsystem.components.pressFeedback
+import androidx.compose.material3.Icon
+import androidx.compose.foundation.layout.wrapContentSize
+import app.inabah.android.core.designsystem.Motion
+import androidx.compose.ui.zIndex
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.ui.res.painterResource
+import app.inabah.android.core.designsystem.components.BareIconButton
+import app.inabah.android.core.designsystem.components.PopoverPlacement
+import app.inabah.android.core.designsystem.components.AnchoredPopover
+import app.inabah.android.core.content.model.LetterForm
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.width
 import androidx.compose.ui.graphics.graphicsLayer
@@ -37,7 +59,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.sp
@@ -48,6 +74,7 @@ import kotlinx.coroutines.delay
 import kotlin.random.Random
 import app.inabah.android.core.content.Loadable
 import app.inabah.android.core.content.model.ReadingBlock
+import app.inabah.android.core.content.model.ReadingFormula
 import app.inabah.android.core.content.model.ReadingLetter
 import app.inabah.android.core.content.model.ReadingMark
 import app.inabah.android.core.content.model.ReadingStep
@@ -80,10 +107,19 @@ fun ReadingLessonScreen(
     onOpenQuiz: () -> Unit,
     onOpenWords: () -> Unit,
     onOpenAlphabet: () -> Unit,
+    onOpenLetterForms: (String) -> Unit,
     contentPadding: PaddingValues,
     modifier: Modifier = Modifier,
+    /** Справка к уроку отдельным экраном: `null` - [ReadingStep.extra], номер - тема урока. */
+    onOpenExtra: (Int?) -> Unit = {},
+    /** Зикр итога «Читаем зикр» по номеру. */
+    onOpenZikr: (Int) -> Unit = {},
+    /** Записи в сборке и их проигрывание (`ClipPlayer`): слова-примеры форм. */
+    clips: Set<String> = emptySet(),
+    onPlayClip: (String) -> Unit = {},
 ) {
     val hidden by settings.transliterationHidden.collectAsStateWithLifecycle()
+    val zikrs by progress.zikrs.collectAsStateWithLifecycle()
     // Открытый лист - номер буквы: переживает поворот и смерть процесса.
     var sheetLetter by rememberSaveable { mutableStateOf<Int?>(null) }
     val course = (store.course.collectAsStateWithLifecycle().value as? Loadable.Loaded)?.value
@@ -102,7 +138,7 @@ fun ReadingLessonScreen(
     }
     ReadingScaffold(
         store = store,
-        title = step?.let { stringResource(R.string.makharij_step_title, it.number, it.title) }
+        title = step?.let { stepTitle(it) }
             ?: stringResource(R.string.makharij_reading_title),
         subtitle = step?.subtitle,
         onBack = onBack,
@@ -135,6 +171,12 @@ fun ReadingLessonScreen(
                         onLetter = { sheetLetter = it.number },
                         onOpenWords = onOpenWords,
                         onOpenAlphabet = onOpenAlphabet,
+                        onOpenLetterForms = onOpenLetterForms,
+                        onOpenExtra = onOpenExtra,
+                        zikrs = zikrs,
+                        onOpenZikr = onOpenZikr,
+                        clips = clips,
+                        onPlayClip = onPlayClip,
                         onFinish = {
                             if (current.quiz.isEmpty()) {
                                 progress.markLessonDone(current.number)
@@ -171,6 +213,12 @@ private fun LessonContent(
     onLetter: (ReadingLetter) -> Unit,
     onOpenWords: () -> Unit,
     onOpenAlphabet: () -> Unit,
+    onOpenLetterForms: (String) -> Unit,
+    onOpenExtra: (Int?) -> Unit,
+    zikrs: Map<Int, ZikrProgress>,
+    onOpenZikr: (Int) -> Unit,
+    clips: Set<String>,
+    onPlayClip: (String) -> Unit,
     onFinish: () -> Unit,
     contentPadding: PaddingValues,
 ) {
@@ -187,7 +235,9 @@ private fun LessonContent(
             step.example?.let { LessonHero(it) }
             for (block in step.blocks) {
                 when (block) {
-                    is ReadingBlock.Text -> TextBlock(block.text)
+                    is ReadingBlock.Text -> TextBlock(block.text, block.info)
+                // Нажатие на букву таблицы - экран буквы (вариант B), не лист: новичку нужна вся картина.
+                is ReadingBlock.Forms -> FormsTable(block, step.number, clips, onPlayClip) { onOpenLetterForms(it.letter) }
                     is ReadingBlock.Marks -> MarksBlock(block.marks, block.example)
                     is ReadingBlock.Letters -> LettersGrid(block.letters, onLetter, playing = playing)
                     is ReadingBlock.Syllables -> if (block.sample != null) {
@@ -196,13 +246,28 @@ private fun LessonContent(
                         SyllablesTable(block.letters, block.marks, hidden, onLetter)
                     }
                     is ReadingBlock.Rule -> RuleBlock(block, onLetter)
+                    is ReadingBlock.Topic -> TopicCard(block) { onOpenExtra(step.topics.indexOf(block)) }
+                    is ReadingBlock.Zikr -> {
+                        val index = step.zikrs.indexOf(block)
+                        ZikrCard(block, index, zikrs[index]) { onOpenZikr(index) }
+                    }
+                    is ReadingBlock.Formulas -> if (block.sample != null) {
+                        SampleFormulas(block, block.sample, hidden, onOpenAlphabet)
+                    } else {
+                        FormulasBlock(block.items, block.columns, hidden)
+                    }
                 }
             }
-            Spacer(Modifier.height(Spacing.s))
-            ReadingButton(
-                text = stringResource(if (step.quiz.isEmpty()) R.string.makharij_lesson_done else R.string.makharij_lesson_check),
-                onClick = onFinish,
-            )
+            // Справка (солнечные и лунные буквы) - для желающих, отдельным экраном (решение пользователя 2026-10-16).
+            step.extra?.let { ReadingOutlineButton(it.title, onClick = { onOpenExtra(null) }) }
+            // Итог с зикрами - без «Готово»: пройден, когда прочитаны все зикры (экран зикра отмечает сам).
+            if (step.zikrs.isEmpty()) {
+                Spacer(Modifier.height(Spacing.s))
+                ReadingButton(
+                    text = stringResource(if (step.quiz.isEmpty()) R.string.makharij_lesson_done else R.string.makharij_lesson_check),
+                    onClick = onFinish,
+                )
+            }
             // «Читаем слова» - в конце урока (и после проверки); шаг пройден, когда прочитаны все слова.
             if (step.words != null) {
                 ReadingOutlineButton(stringResource(R.string.makharij_words_open), onClick = onOpenWords)
@@ -211,19 +276,252 @@ private fun LessonContent(
     }
 }
 
+/**
+ * Тема урока (шаг «Особые случаи», 2026-10-17): название, краткое описание, пример справа и ›;
+ * нажатие - экран темы.
+ */
+@Composable
+private fun TopicCard(topic: ReadingBlock.Topic, onClick: () -> Unit) {
+    val palette = InabahTheme.palette
+    val colors = readingColors
+    val interaction = remember { MutableInteractionSource() }
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .clickable(interaction, indication = null, role = Role.Button, onClick = onClick)
+            .pressFeedback(interaction, scale = PressFeedback.WIDE_SCALE, opacity = PressFeedback.WIDE_OPACITY)
+            .surface(colors.tile, Radius.card, border = colors.tileBorder)
+            .padding(start = Spacing.xl, end = Spacing.m, top = Spacing.m, bottom = Spacing.m),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(Spacing.m),
+    ) {
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Spacing.xxs)) {
+            Text(
+                withArabicRuns(topic.extra.title),
+                color = palette.onAccent,
+                style = InabahType.body.copy(fontWeight = FontWeight.SemiBold),
+            )
+            Text(
+                withArabicRuns(topic.summary),
+                color = palette.onAccentSecondary,
+                style = InabahType.contentTranslation,
+            )
+        }
+        topic.example?.let { ArabicText(it, TOPIC_EXAMPLE_SIZE, colors.tint, bold = true, maxLines = 1) }
+        Icon(painterResource(R.drawable.ic_chevron_right), contentDescription = null, tint = colors.tint)
+    }
+}
+
+/**
+ * Зикр итога (2026-10-17): номер (прочитан - ✓ на зелёном), начало зикра, сколько слов и что в нём
+ * встретится; нажатие - экран зикра.
+ */
+@Composable
+private fun ZikrCard(zikr: ReadingBlock.Zikr, index: Int, state: ZikrProgress?, onClick: () -> Unit) {
+    val palette = InabahTheme.palette
+    val colors = readingColors
+    val interaction = remember { MutableInteractionSource() }
+    val done = isZikrDone(zikr, state)
+    val doneLabel = stringResource(R.string.makharij_zikr_done)
+    val count = pluralStringResource(R.plurals.makharij_zikr_word_count, zikr.words.size, zikr.words.size)
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .clickable(interaction, indication = null, role = Role.Button, onClick = onClick)
+            .pressFeedback(interaction, scale = PressFeedback.WIDE_SCALE, opacity = PressFeedback.WIDE_OPACITY)
+            .surface(colors.tile, Radius.card, border = colors.tileBorder)
+            .padding(start = Spacing.m, end = Spacing.m, top = Spacing.m, bottom = Spacing.m)
+            .semantics(mergeDescendants = true) { if (done) stateDescription = doneLabel },
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(Spacing.m),
+    ) {
+        Box(
+            Modifier
+                .size(ZikrNumberSize)
+                .surface(SolidColor(if (done) palette.success else colors.tile), CircleShape, border = if (done) palette.success else colors.tint)
+                .clearAndSetSemantics {},
+            contentAlignment = Alignment.Center,
+        ) {
+            if (done) {
+                Icon(painterResource(R.drawable.ic_check), contentDescription = null, tint = palette.onAccent, modifier = Modifier.size(ZikrCheckSize))
+            } else {
+                ArabicText((index + 1).toArabicIndicDigits(), ZIKR_NUMBER_SIZE, colors.tint, bold = true)
+            }
+        }
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Spacing.xxs)) {
+            ArabicText(zikr.arabic, TOPIC_EXAMPLE_SIZE, palette.onAccent, bold = true, maxLines = 1)
+            Text(
+                withArabicRuns("$count · ${zikr.summary}"),
+                color = palette.onAccentSecondary,
+                style = InabahType.contentTranslation,
+            )
+        }
+        Icon(painterResource(R.drawable.ic_chevron_right), contentDescription = null, tint = colors.tint)
+    }
+}
+
 /** Абзац объяснения - категория «перевод» (растёт с «Размером текста»). */
 @Composable
-private fun TextBlock(text: String) {
+internal fun TextBlock(text: String, info: String?) = InfoTextCard(
+    text = text,
+    info = info?.let { full ->
+        @Composable {
+            Text(
+                full,
+                color = InabahTheme.palette.onAccent,
+                style = InabahType.contentTranslation,
+                modifier = Modifier.padding(Spacing.xl),
+            )
+        }
+    },
+)
+
+/**
+ * Короткий текст на карточке раздела и ⓘ (если есть [info]) - всплывающее окно с [info]: полный текст
+ * урока или хадис в «Читаем слова» (2026-10-16).
+ */
+@Composable
+internal fun InfoTextCard(text: String, info: (@Composable () -> Unit)?) {
     val colors = readingColors
-    Text(
-        withArabicRuns(text),
-        color = InabahTheme.palette.onAccent,
-        style = InabahType.contentTranslation,
-        modifier = Modifier
+    Row(
+        Modifier
             .fillMaxWidth()
             .surface(colors.tile, Radius.card, border = colors.tileBorder)
-            .padding(horizontal = Spacing.xl, vertical = Spacing.m),
-    )
+            .padding(start = Spacing.xl, end = if (info != null) Spacing.xs else Spacing.xl, top = Spacing.m, bottom = Spacing.m),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            withArabicRuns(text),
+            color = InabahTheme.palette.onAccent,
+            style = InabahType.contentTranslation,
+            modifier = Modifier.weight(1f),
+        )
+        // Полный текст - по ⓘ во всплывающем окне, чтобы не загружать экран (решение пользователя 2026-10-15).
+        info?.let { InfoButton(it) }
+    }
+}
+
+/** ⓘ и всплывающее окно с [content] - как подтверждение сброса в настройках. */
+@Composable
+private fun InfoButton(content: @Composable () -> Unit) {
+    val colors = readingColors
+    var expanded by rememberSaveable { mutableStateOf(false) }
+    Box {
+        BareIconButton(
+            onClick = { expanded = true },
+            icon = painterResource(R.drawable.ic_info),
+            contentDescription = stringResource(R.string.makharij_info_more),
+            foreground = colors.tint,
+        )
+        AnchoredPopover(expanded, PopoverPlacement.BelowEnd, colors.tint, onDismiss = { expanded = false }) {
+            Box(Modifier.widthIn(max = InfoMaxWidth)) { content() }
+        }
+    }
+}
+
+/**
+ * Таблица форм (вариант A, решение пользователя 2026-10-15): карточки пергамента по группам похожего
+ * написания (ب ت ث ن ي, ج ح خ), ряд - буква, столбцы справа налево - отдельно, в начале, в середине,
+ * в конце. Формы строит буква сама. Нажатие - лист буквы.
+ */
+@Composable
+private fun FormsTable(
+    block: ReadingBlock.Forms,
+    stepNumber: Int,
+    clips: Set<String>,
+    onPlayClip: (String) -> Unit,
+    onLetter: (ReadingLetter) -> Unit,
+) {
+    val groups = block.groups
+    val palette = InabahTheme.palette
+    val colors = readingColors
+    Column(verticalArrangement = Arrangement.spacedBy(Spacing.m)) {
+        groups.forEachIndexed { index, group ->
+            ParchmentPanel(topCornerRadius = Radius.card, bottomCornerRadius = Radius.card) {
+                CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+                    Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+                        // Подписи столбцов - только над первой карточкой.
+                        if (index == 0) {
+                            Row(horizontalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+                                for (form in LetterForm.entries) {
+                                    Text(
+                                        stringResource(form.column),
+                                        color = colors.parchmentCaption,
+                                        style = InabahType.caption2,
+                                        textAlign = TextAlign.Center,
+                                        maxLines = 1,
+                                        modifier = Modifier.weight(1f),
+                                    )
+                                }
+                            }
+                        }
+                        for (letter in group) {
+                            Row(horizontalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+                                for (form in LetterForm.entries) {
+                                    val interaction = remember { MutableInteractionSource() }
+                                    val place = stringResource(form.place)
+                                    Box(
+                                        Modifier
+                                            .weight(1f)
+                                            .clickable(interaction, indication = null, role = Role.Button) { onLetter(letter) }
+                                            .pressFeedback(interaction, scale = PressFeedback.ICON_SCALE)
+                                            .surface(colors.parchmentCell, Radius.box, border = colors.parchmentCellBorder)
+                                            .padding(top = Spacing.xs)
+                                            .clearAndSetSemantics { contentDescription = "${letter.name}, $place" },
+                                        contentAlignment = Alignment.Center,
+                                    ) {
+                                        ArabicText(letter.form(form), FORM_SIZE, palette.parchmentText, bold = true, maxLines = 1)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        // Третья карточка - «в словах» (просьба пользователя 2026-10-15): буква и слова, где она
+        // в начале, в середине и в конце, в тех же столбцах; буква в слове подсвечена.
+        if (block.exampleCard.isNotEmpty()) {
+            ParchmentPanel(topCornerRadius = Radius.card, bottomCornerRadius = Radius.card) {
+                CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+                    Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+                        for (letter in block.exampleCard) {
+                            val examples = block.examples[letter] ?: continue
+                            // Отдельная буква - узкая ячейка, слова - шире и крупнее; ряд одной высоты.
+                            Row(Modifier.height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+                                val interaction = remember { MutableInteractionSource() }
+                                Box(
+                                    Modifier
+                                        .weight(ISOLATED_WEIGHT)
+                                        .fillMaxHeight()
+                                        .clickable(interaction, indication = null, role = Role.Button) { onLetter(letter) }
+                                        .pressFeedback(interaction, scale = PressFeedback.ICON_SCALE)
+                                        .surface(colors.parchmentCell, Radius.box, border = colors.parchmentCellBorder)
+                                        .clearAndSetSemantics { contentDescription = letter.name },
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    ArabicText(letter.letter, FORM_SIZE, palette.parchmentText, bold = true, maxLines = 1)
+                                }
+                                for (form in PLACED_FORMS) {
+                                    ExampleWordCell(
+                                        word = examples.word(form).orEmpty(),
+                                        letter = letter,
+                                        form = form,
+                                        audioFile = formExampleAudio(stepNumber, letter, form),
+                                        clips = clips,
+                                        onPlay = onPlayClip,
+                                        size = FORM_WORD_SIZE,
+                                        modifier = Modifier.weight(WORD_WEIGHT).fillMaxHeight(),
+                                        onClickWithoutAudio = { onLetter(letter) },
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 /** Знаки на одной букве: слог, название, «над буквой · «а»». */
@@ -263,7 +561,7 @@ private fun MarksBlock(marks: List<ReadingMark>, example: ReadingLetter) {
  * пояснение и буквы правила в ряд справа налево (нажатие - лист буквы).
  */
 @Composable
-private fun RuleBlock(rule: ReadingBlock.Rule, onLetter: (ReadingLetter) -> Unit) {
+internal fun RuleBlock(rule: ReadingBlock.Rule, onLetter: (ReadingLetter) -> Unit) {
     val palette = InabahTheme.palette
     val colors = readingColors
     Column(
@@ -324,9 +622,17 @@ private fun LettersGrid(
                 Row(horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
                     for (letter in row) {
                         val interaction = remember { MutableInteractionSource() }
+                        // Звучащая буква «Послушать алфавит» - крупнее и поверх соседей (просьба пользователя).
+                        val isPlaying = letter == playing
+                        val scale by animateFloatAsState(if (isPlaying) PLAYING_SCALE else 1f, Motion.collapse(), label = "playingScale")
                         Box(
                             Modifier
                                 .weight(1f)
+                                .zIndex(if (isPlaying) 1f else 0f)
+                                .graphicsLayer {
+                                    scaleX = scale
+                                    scaleY = scale
+                                }
                                 .height(tileHeight)
                                 .clickable(interaction, indication = null, role = Role.Button) { onLetter(letter) }
                                 .pressFeedback(interaction, scale = PressFeedback.ICON_SCALE)
@@ -340,6 +646,9 @@ private fun LettersGrid(
                             contentAlignment = Alignment.Center,
                         ) {
                             ArabicText(letter.letter, LETTER_SIZE, palette.onAccent, maxLines = 1)
+                            // Звучащая буква - название над ней в своей рамке (просьба пользователя 2026-10-15):
+                            // сдвиг отрисовки вверх на свою высоту, раскладка ряда не меняется.
+                            if (isPlaying) PlayingNameBubble(letter.name, Modifier.align(Alignment.TopCenter))
                         }
                     }
                     // Неполный ряд - пустые места, чтобы плитки были одной ширины.
@@ -385,6 +694,106 @@ private fun SampleSyllables(
 }
 
 /**
+ * Формулы (мадд, 2026-10-15): одна карточка пергамента, ячейки по [ReadingBlock.Formulas.columns] в ряд
+ * справа налево; в ячейке «بَ + ا = بَا» - добавленные части выделены (буква мадда), под ней транскрипция
+ * итога (прячется «глазом»). Одна часть - равенство «تَشَٰبَهَ = تَشَابَهَ», без выделения.
+ */
+@Composable
+internal fun FormulasBlock(items: List<ReadingFormula>, columns: Int, hidden: Boolean) {
+    val palette = InabahTheme.palette
+    val colors = readingColors
+
+    ParchmentPanel(topCornerRadius = Radius.card, bottomCornerRadius = Radius.card) {
+        CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+            Column(verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
+                for (row in items.chunked(columns)) {
+                    Row(Modifier.height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
+                        for (formula in row) {
+                            val parts = remember(formula, colors.letterHighlight) {
+                                buildAnnotatedString {
+                                    formula.parts.forEachIndexed { index, part ->
+                                        if (index > 0) {
+                                            append(" + ")
+                                            withStyle(SpanStyle(color = colors.letterHighlight)) { append(part) }
+                                        } else append(part)
+                                    }
+                                }
+                            }
+                            // Без частей - просто слово с транскрипцией (примеры «льам твёрдый / мягкий»).
+                            val result = if (formula.parts.isEmpty()) formula.result else "= ${formula.result}"
+                            val text = parts + AnnotatedString(" $result")
+                            Column(
+                                Modifier
+                                    .weight(1f)
+                                    .fillMaxHeight()
+                                    .surface(colors.parchmentCell, Radius.box, border = colors.parchmentCellBorder)
+                                    .padding(horizontal = Spacing.xxs, vertical = Spacing.xs)
+                                    .clearAndSetSemantics {
+                                        contentDescription = listOfNotNull(text.text, formula.transliteration).joinToString(", ")
+                                    },
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center,
+                            ) {
+                                if (columns == 1) {
+                                    // Длинная формула (артикль: «как пишется = как читается») переносится по пробелу.
+                                    ArabicText(text, FORMULA_WIDE_SIZE, palette.parchmentText, bold = true, textAlign = TextAlign.Center, maxLines = WIDE_FORMULA_LINES)
+                                } else {
+                                    // Узкая ячейка: части - строкой выше, итог - крупно под ними (в одну строку не влезало);
+                                    // слово без частей (исключения хӏамзату-львасли) - только оно.
+                                    if (formula.parts.isNotEmpty()) {
+                                        ArabicText(parts, FORMULA_PARTS_SIZE, palette.parchmentText, bold = true, textAlign = TextAlign.Center, maxLines = 1)
+                                    }
+                                    ArabicText(result, FORMULA_SIZE, palette.parchmentText, bold = true, textAlign = TextAlign.Center, maxLines = 1)
+                                }
+                                formula.transliteration?.let {
+                                    Text(
+                                        it,
+                                        color = colors.parchmentCaption,
+                                        style = InabahType.caption,
+                                        modifier = Modifier.alpha(transliterationAlpha(hidden)),
+                                    )
+                                }
+                            }
+                        }
+                        // Неполный последний ряд формул - с пустыми местами, ряд слов (8 исключений: 3, 3, 2) -
+                        // во всю ширину, как плитки «Читаем слова».
+                        if (row.any { it.parts.isNotEmpty() }) repeat(columns - row.size) { Spacer(Modifier.weight(1f)) }
+                    }
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Карточка случайных формул (закрытые слоги сукуна) и под ней «Прочтите весь алфавит» - все формулы
+ * отдельным экраном (решение пользователя 2026-10-16, как слоги шага «Огласовки»). Набор - при каждом
+ * открытии урока свой, переживает поворот.
+ */
+@Composable
+private fun SampleFormulas(block: ReadingBlock.Formulas, count: Int, hidden: Boolean, onOpenAlphabet: () -> Unit) {
+    val seed = rememberSaveable { Random.nextInt() }
+    val sample = remember(block, count, seed) { sampleFormulas(block.items, count, seed) }
+    Column(verticalArrangement = Arrangement.spacedBy(Spacing.m)) {
+        FormulasBlock(sample, block.columns, hidden)
+        ReadingOutlineButton(stringResource(R.string.makharij_alphabet_formulas_open), onClick = onOpenAlphabet)
+    }
+}
+
+/**
+ * Все формулы («Весь алфавит» сукуна): по [SYLLABLE_ROWS_PER_CARD] ряда на карточку, как таблица слогов;
+ * формулы во всю ширину (по одной в строку, решение пользователя 2026-10-17) - по [WIDE_FORMULAS_PER_CARD]:
+ * буква с тремя огласовками.
+ */
+@Composable
+internal fun FormulasCards(items: List<ReadingFormula>, columns: Int, hidden: Boolean) {
+    val perCard = if (columns == 1) WIDE_FORMULAS_PER_CARD else columns * SYLLABLE_ROWS_PER_CARD
+    Column(verticalArrangement = Arrangement.spacedBy(Spacing.m)) {
+        for (chunk in items.chunked(perCard)) FormulasBlock(chunk, columns, hidden)
+    }
+}
+
+/**
  * Таблица слогов: по [SYLLABLE_ROWS_PER_CARD] буквы на карточку пергамента (одна длинная доска
  * растягивала градиент - ячейки терялись, просьба пользователя 2026-10-15). Ряд - буква, столбцы -
  * знаки справа налево; ячейка - свой тон и рамка, под слогом - транскрипция.
@@ -426,14 +835,32 @@ private fun SyllableRows(
 }
 
 private const val LETTER_COLUMNS = 5
+private const val WIDE_FORMULA_LINES = 2
+private const val FORM_SIZE = 28f
+private const val FORM_WORD_SIZE = 26f
+private const val ISOLATED_WEIGHT = 0.6f
+private const val WORD_WEIGHT = 1.15f
+private val PLACED_FORMS = listOf(LetterForm.Initial, LetterForm.Medial, LetterForm.Final)
+private val InfoMaxWidth = 300.dp
 private const val SINGLE_LETTER_TILE = 64f
 private const val HERO_SIZE = 46f
 private const val HERO_STAGGER_MILLIS = 350
 private const val HERO_APPEAR_MILLIS = 500
 /** «Послушать алфавит» без записей - сколько подсвечена буква. */
-private const val LETTER_MILLIS = 1_200L
+private const val LETTER_MILLIS = 2_000L
+private const val PLAYING_SCALE = 1.2f
 private const val SYLLABLE_ROWS_PER_CARD = 4
+private const val WIDE_FORMULAS_PER_CARD = 3
 private const val SAMPLE_COLUMNS = 3
+private const val FORMULA_SIZE = 32f
+private const val FORMULA_PARTS_SIZE = 22f
+private const val FORMULA_WIDE_SIZE = 32f
+/** Номер зикра итога в круге. */
+private val ZikrNumberSize = 36.dp
+private val ZikrCheckSize = 18.dp
+private const val ZIKR_NUMBER_SIZE = 22f
+/** Пример на карточке темы урока. */
+private const val TOPIC_EXAMPLE_SIZE = 28f
 private const val RULE_LETTER_COLUMNS = 7
 private const val RULE_TITLE_SIZE = 26f
 /** Плитка буквы 64, в sp - растёт с шагом интерфейса. */
@@ -470,7 +897,8 @@ private fun SyllableCell(
             transliteration,
             color = colors.parchmentCaption,
             style = InabahType.caption,
-            modifier = Modifier.alpha(transliterationAlpha(hidden)),
+            // Сверху - место под знак под буквой: касратан у ع уходил на подпись (2026-10-16).
+            modifier = Modifier.padding(top = Spacing.xs).alpha(transliterationAlpha(hidden)),
         )
     }
 }
@@ -518,4 +946,31 @@ private fun LessonHero(example: String) {
 
 private const val HERO_START_SCALE = 0.6f
 private val HERO_RISE = 12.dp
+
+/** Подсказка над звучащей буквой «Послушать алфавит»: название в рамке цвета раздела, над плиткой. */
+@Composable
+private fun PlayingNameBubble(name: String, modifier: Modifier = Modifier) {
+    val colors = readingColors
+    val appear = remember(name) { Animatable(0f) }
+    LaunchedEffect(name) { appear.animateTo(1f, tween(BUBBLE_APPEAR_MILLIS)) }
+    val gap = with(LocalDensity.current) { Spacing.xs.toPx() }
+    Text(
+        name,
+        color = InabahTheme.palette.onAccent,
+        style = InabahType.title3.copy(fontWeight = FontWeight.Bold),
+        maxLines = 1,
+        softWrap = false,
+        modifier = modifier
+            .wrapContentSize(unbounded = true)
+            .graphicsLayer {
+                alpha = appear.value
+                translationY = -size.height - gap - (1 - appear.value) * gap
+            }
+            .surface(colors.sheet, Radius.box, border = colors.highlightBorder, lineWidth = ReadingTileBorder)
+            .padding(horizontal = Spacing.m, vertical = Spacing.xs)
+            .clearAndSetSemantics {},
+    )
+}
+
+private const val BUBBLE_APPEAR_MILLIS = 250
 

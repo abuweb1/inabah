@@ -403,26 +403,150 @@ function checkVersions(file) {
 }
 
 // reading.json - «Учимся читать» в разделе «Махрадж» (docs/06-data-structure.md, «Учимся читать»):
-// знаки огласовок, 28 букв и хамза (29-я) и 10 шагов. Слоги и формы букв не хранятся - их строят приложения из буквы и знака;
+// знаки огласовок, 28 букв и хамза (29-я) и шаги. Слоги и формы букв не хранятся - их строят приложения из буквы и знака;
 // хранится транскрипция слогов (нерегулярна: «ли», а не «льи»). В текстах - только «-», без длинного тире (решение пользователя).
 const READING_KEYS = ['marks', 'letters', 'steps'];
 const READING_MARK_KEYS = ['id', 'sign', 'translations'];
 const READING_MARK_TEXT_KEYS = ['name', 'where', 'sound'];
 const READING_LETTER_KEYS = ['id', 'letter', 'name', 'joinsNext', 'joinsPrevious', 'syllableBases', 'audio', 'translations'];
 const READING_LETTER_TEXT_KEYS = ['name', 'nameTranslit', 'sound', 'syllables', 'note'];
-const READING_STEP_KEYS = ['id', 'marks', 'example', 'translations', 'blocks', 'quiz', 'words'];
+const READING_STEP_KEYS = ['id', 'marks', 'example', 'translations', 'blocks', 'quiz', 'words', 'final', 'extra'];
 const READING_STEP_TEXT_KEYS = ['title', 'subtitle'];
 const READING_BLOCKS = {
   text: ['type', 'translations'], marks: ['type', 'marks'], letters: ['type', 'letters'], groups: ['type', 'groups'],
-  syllables: ['type', 'letters', 'sample'], compare: ['type', 'pairs'], join: ['type', 'arabic', 'audio', 'translations'],
-  zikr: ['type', 'section', 'id', 'syllables', 'translations'],
+  syllables: ['type', 'letters', 'marks', 'sample'], compare: ['type', 'pairs'], join: ['type', 'arabic', 'audio', 'translations'],
+  // Зикр итога «Читаем зикр» (2026-10-17): ссылка на зикр «Азкаров», слова, места слитного чтения.
+  zikr: ['type', 'section', 'id', 'audio', 'arabic', 'words', 'joins', 'translations'],
   rule: ['type', 'arabic', 'letters', 'translations'],
+  forms: ['type', 'groups', 'examples', 'exampleCard'],
+  formulas: ['type', 'columns', 'items', 'sample'],
+  // Тема урока (шаг «Особые случаи», 2026-10-17): карточка - название, описание, пример; блоки - её экран.
+  topic: ['type', 'arabic', 'blocks', 'translations'],
 };
-const READING_QUIZ = { syllable: ['type', 'letter', 'mark'], letterName: ['type', 'letter'] };
+// Мадд (2026-10-15): буква мадда без знака тянет огласовку перед ней - ا после фатхьи, ي после касры,
+// و после доммы; маленькие буквы мадда (ٰ ۥ ۦ) - сразу после той же огласовки (алиф - на черте ـٰ).
+const MADD_LETTERS = { 'ا': 'fatha', 'ي': 'kasra', 'و': 'damma' };
+const SMALL_MADD = { 'ٰ': 'fatha', 'ۦ': 'kasra', 'ۥ': 'damma' };
+// Хамза на подставке вав / йа - как буква хамза.
+const HAMZA_SEATS = ['ؤ', 'ئ'];
+const TATWEEL = 'ـ';
+// Неразрывный пробел - основа маленького алифа после несоединяемой буквы (صِرَ ٰطُ).
+const NBSP = '\u00A0';
+// Хӏамзату-львасли (алиф васла) артикля.
+const WASL = 'ٱ';
+// Кружок над немым алифом (маленький круглый ноль, как в мусхафе): алиф пишется, но не читается.
+const SILENT_ALIF_MARK = '۟';
+
+/**
+ * Слово «Читаем слова»: слова через один пробел; в слове - буква (подставка хамзы) и пройденный знак,
+ * после знака - необязательная маленькая буква мадда того же звука; буква мадда без знака - только после
+ * своей огласовки. Ошибка - текст, всё верно - `null`.
+ */
+function readingWordProblem(text, { byLetter, bases, signs, passed }) {
+  for (const word of text.split(' ')) {
+    if (!word) return 'лишний пробел';
+    const chars = [...word];
+    let previous = null;
+    for (let c = 0; c < chars.length;) {
+      const char = chars[c];
+      // Артикль (шаг «Артикль», 2026-10-16): хӏамзату-львасли ٱ - без знака; лям после неё - с сукуном
+      // (лунная буква) или без знака, и тогда следующая буква - с шаддой (солнечная).
+      if (char === WASL) {
+        if (signs.has(chars[c + 1])) return 'у хӏамзату-львасли ٱ знака нет';
+        previous = 'wasl'; c += 1; continue;
+      }
+      if (char === 'ل' && previous === 'wasl' && !signs.has(chars[c + 1])) {
+        const next = chars.slice(c + 2, c + 4);
+        if (!next.includes('ّ')) return 'лям артикля без знака - только перед буквой с шаддой (солнечной)';
+        previous = null; c += 1; continue;
+      }
+      // Та марбута (шаг «Мадд перед артиклем», 2026-10-16) - пока как буква та, с огласовкой.
+      const known = byLetter.has(char) || bases.has(char) || HAMZA_SEATS.includes(char) || char === 'ة';
+      if (!known) return `неизвестная буква «${char}»`;
+      if (chars[c + 1] === 'ٰ') return 'маленький алиф - после фатхьи, не вместо неё';
+      // Шадда (шаг «Шадда», 2026-10-16) - вместе с огласовкой в любом порядке: بَّ или بَّ (Unicode
+      // ставит огласовку перед шаддой); после шадды обязательна огласовка или танвин.
+      let mark = signs.get(chars[c + 1]);
+      let width = 2;
+      const doubled = mark === 'shadda' || signs.get(chars[c + 2]) === 'shadda';
+      if (doubled) {
+        if (mark === 'shadda') mark = signs.get(chars[c + 2]);
+        width = 3;
+        if (!passed.has('shadda')) return 'знак shadda ещё не пройден';
+        if (!mark || mark === 'sukun' || mark === 'shadda') return `после шадды у «${char}» нужна огласовка`;
+      }
+      if (!mark) {
+        if (MADD_LETTERS[char] && previous === MADD_LETTERS[char]) { previous = null; c += 1; continue; }
+        // Алиф после танвина фатхьи не читается (أَبَدًا, решение по книге 2026-10-16).
+        if (char === 'ا' && previous === 'fathatan') { previous = null; c += 1; continue; }
+        // Немой алиф - с кружком сверху (ٱسْجُدُوا۟, решение пользователя 2026-10-17): не читается.
+        if (char === 'ا' && chars[c + 1] === SILENT_ALIF_MARK) { previous = null; c += 2; continue; }
+        return `после «${char}» нет знака`;
+      }
+      if (!passed.has(mark)) return `знак ${mark} ещё не пройден`;
+      c += width;
+      // Маленький алиф - после фатхьи на соединительной черте (هَـٰذَا, как в Къуране, решение
+      // пользователя 2026-10-16); после несоединяемой буквы - на неразрывном пробеле: صِرَ ٰطُ - алиф стоит
+      // отдельно после ر, а не над её фатхьой (как в книге, вариант E - решение пользователя 2026-10-17).
+      const joins = byLetter.get(char)?.joinsNext ?? true;
+      if (chars[c] === TATWEEL || chars[c] === NBSP) {
+        if (chars[c + 1] !== 'ٰ') return 'соединительная черта или неразрывный пробел - только перед маленьким алифом';
+        if (chars[c] === TATWEEL && !joins) return `после «${char}» маленький алиф - на неразрывном пробеле, не на черте`;
+        if (chars[c] === NBSP && joins) return `после «${char}» маленький алиф - на соединительной черте (ـٰ)`;
+        c += 1;
+      } else if (chars[c] === 'ٰ') {
+        return joins ? 'маленький алиф - на соединительной черте (ـٰ)' : 'маленький алиф после несоединяемой буквы - на неразрывном пробеле';
+      }
+      if (SMALL_MADD[chars[c]]) {
+        if (SMALL_MADD[chars[c]] !== mark) return 'маленькая буква мадда не к своей огласовке';
+        c += 1;
+        previous = null;
+      } else previous = mark;
+    }
+  }
+  return null;
+}
+const READING_QUIZ = { syllable: ['type', 'letter', 'mark'], closedSyllable: ['type', 'letter', 'mark'], letterName: ['type', 'letter'], letterForm: ['type', 'letter', 'form'], word: ['type', 'arabic', 'answer', 'translations'] };
+// Формы буквы: отдельная, в начале, в середине, в конце слова.
+const READING_FORMS = ['isolated', 'initial', 'medial', 'final'];
 const READING_ALPHABET = 29;
 // Слоги с этими знаками читаются по-своему у каждой буквы - их транскрипция нужна в letters[].syllables.
 const VOWEL_MARKS = ['fatha', 'kasra', 'damma', 'fathatan', 'kasratan', 'dammatan'];
 const READING_AUDIO_DIR = join(AUDIO_DIR, 'reading');
+
+/**
+ * Зикр итога «Читаем зикр» (2026-10-17): зикр есть в azkar.json, запись - его же; `arabic` - слова через
+ * пробел; слово - как в «Читаем слова» (пройденные знаки); место слитного чтения - слова зикра подряд,
+ * с транскрипцией и подписью; у зикра - краткое описание (`text`) и транскрипция строки целиком.
+ */
+function checkReadingZikr(where, block, { byLetter, marks, letters, passed, checkTexts }) {
+  if (!['morning', 'evening'].includes(block.section)) error(where, 'section - morning / evening');
+  const source = (data.azkar[block.section] ?? []).find(z => z.id === block.id);
+  if (!source) error(where, `нет зикра ${block.section} ${block.id} в azkar.json`);
+  else if ((block.audio ?? null) !== (source.audio ?? null)) error(where, `audio - как у зикра в azkar.json (${source.audio ?? 'null'})`);
+  const signs = new Map(marks.map(m => [m.sign, m.id]));
+  const bases = new Set(letters.flatMap(l => Object.values(l?.syllableBases ?? {})));
+  const words = Array.isArray(block.words) && block.words.length ? block.words : (error(where, 'words - непустой массив'), []);
+  for (const [n, item] of words.entries()) {
+    const wat = `${where} word ${n + 1}`;
+    for (const k of Object.keys(item ?? {})) if (!['arabic', 'translations'].includes(k)) error(wat, `неизвестное поле «${k}»`);
+    if (!requireString(wat, item ?? {}, 'arabic')) continue;
+    if (item.arabic.includes(' ')) error(wat, 'одно слово, без пробелов');
+    const problem = readingWordProblem(item.arabic, { byLetter, bases, signs, passed });
+    if (problem) error(wat, `«${item.arabic}»: ${problem}`);
+    checkTexts(wat, item.translations, ['translit'], ['translit']);
+  }
+  if (requireString(where, block, 'arabic') && block.arabic !== words.map(w => w?.arabic).join(' ')) error(where, 'arabic - слова words через пробел');
+  for (const [n, item] of (Array.isArray(block.joins) ? block.joins : (error(where, 'joins - массив'), [])).entries()) {
+    const jat = `${where} join ${n + 1}`;
+    for (const k of Object.keys(item ?? {})) if (!['arabic', 'translations'].includes(k)) error(jat, `неизвестное поле «${k}»`);
+    if (requireString(jat, item ?? {}, 'arabic') && !` ${block.arabic} `.includes(` ${item.arabic} `)) error(jat, 'arabic - слова зикра подряд');
+    const ru = checkTexts(jat, item?.translations, ['translit', 'note'], ['translit', 'note']);
+    if (ru?.note) checkRussian(jat, ru.note);
+  }
+  const ru = checkTexts(where, block.translations, ['text', 'translit'], ['text', 'translit']);
+  if (ru?.text) checkRussian(where, ru.text);
+}
 
 function checkReading(file) {
   if (!file || typeof file !== 'object') { error('reading', 'нет файла или он не объект'); return; }
@@ -509,12 +633,17 @@ function checkReading(file) {
   const steps = Array.isArray(file.steps) ? file.steps : [];
   if (!steps.length) error('reading steps', 'нет непустого массива steps');
   const passed = new Set();
+  // Карточки форм этого и прошлых шагов - варианты вопроса letterForm (экзамен шага 12, 2026-10-17).
+  const passedFormGroups = [];
   for (const [i, step] of steps.entries()) {
+    passedFormGroups.push(...(step?.blocks ?? []).filter(b => b?.type === 'forms').flatMap(b => b.groups ?? []));
     const at = `reading step ${step?.id ?? `#${i + 1}`}`;
     if (Object.keys(step ?? {})[0] !== 'id') error(at, 'id должен быть первым полем');
     checkId(at, step ?? {}, i);
     for (const k of Object.keys(step ?? {})) if (!READING_STEP_KEYS.includes(k)) error(at, `неизвестное поле «${k}»`);
     checkTexts(at, step?.translations, READING_STEP_TEXT_KEYS, ['title', 'subtitle']);
+    // Итог курса («Читаем зикр») - только `true` и только у последнего шага, без номера на экране.
+    if (step?.final !== undefined && (step.final !== true || i !== steps.length - 1)) error(at, 'final - только true и только у последнего шага');
     // Пример справа в списке шагов - необязательный, только арабский.
     if (step?.example !== undefined && requireString(at, step, 'example')) checkArabic(at, step.example);
     for (const m of step?.marks ?? []) { knownMark(at, m); passed.add(m); }
@@ -530,7 +659,7 @@ function checkReading(file) {
     if (step?.words !== undefined) {
       const w = step.words;
       const where = `${at} words`;
-      for (const k of Object.keys(w ?? {})) if (!['groupSize', 'repeat', 'items'].includes(k)) error(where, `неизвестное поле «${k}»`);
+      for (const k of Object.keys(w ?? {})) if (!['groupSize', 'repeat', 'items', 'pairs'].includes(k)) error(where, `неизвестное поле «${k}»`);
       for (const k of ['groupSize', 'repeat']) if (!Number.isInteger(w?.[k]) || w[k] < 1) error(where, `${k} - целое ≥ 1`);
       const items = Array.isArray(w?.items) ? w.items : (error(where, 'items - массив'), []);
       const signs = new Map(marks.map(m => [m.sign, m.id]));
@@ -542,39 +671,89 @@ function checkReading(file) {
         if (!requireString(wat, item ?? {}, 'arabic')) continue;
         if (seen.has(item.arabic)) warn('reading: повтор слова', wat, item.arabic);
         seen.add(item.arabic);
-        const chars = [...item.arabic];
-        for (let c = 0; c < chars.length; c += 2) {
-          if (!byLetter.has(chars[c]) && !bases.has(chars[c])) { error(wat, `«${item.arabic}»: неизвестная буква «${chars[c]}»`); break; }
-          const mark = signs.get(chars[c + 1]);
-          if (!mark) { error(wat, `«${item.arabic}»: после «${chars[c]}» нет знака`); break; }
-          if (!passed.has(mark)) { error(wat, `«${item.arabic}»: знак ${mark} ещё не пройден`); break; }
-        }
+        const problem = readingWordProblem(item.arabic, { byLetter, bases, signs, passed });
+        if (problem) error(wat, `«${item.arabic}»: ${problem}`);
         if (item.translations !== undefined) checkTexts(wat, item.translations, ['translit'], ['translit']);
       }
     }
     const blocks = Array.isArray(step?.blocks) ? step.blocks : (error(at, 'blocks - массив'), []);
     if (!blocks.length) warn('reading: шаг без содержания', at, step?.translations?.[BASE_LANGUAGE]?.title ?? '');
+    // Справка (extra, 2026-10-16): заголовок и блоки - те же правила, что у блоков урока.
+    let extraBlocks = [];
+    if (step?.extra !== undefined) {
+      for (const k of Object.keys(step.extra ?? {})) if (!['translations', 'blocks'].includes(k)) error(`${at} extra`, `неизвестное поле «${k}»`);
+      const ru = checkTexts(`${at} extra`, step.extra?.translations, ['title'], ['title']);
+      if (ru?.title) checkRussian(`${at} extra`, ru.title);
+      extraBlocks = Array.isArray(step.extra?.blocks) && step.extra.blocks.length ? step.extra.blocks : (error(`${at} extra`, 'blocks - непустой массив'), []);
+    }
+    const entries = [
+      ...blocks.map((block, j) => ({ block, where: `${at} block ${j + 1}` })),
+      ...extraBlocks.map((block, j) => ({ block, where: `${at} extra block ${j + 1}` })),
+    ];
+    // Блоки темы проверяются как блоки урока; тема в теме - нет.
     for (const [j, block] of blocks.entries()) {
-      const where = `${at} block ${j + 1}`;
+      if (block?.type !== 'topic') continue;
+      const tat = `${at} block ${j + 1}`;
+      const ru = checkTexts(tat, block.translations, ['title', 'text'], ['title', 'text']);
+      if (ru?.title) checkRussian(tat, ru.title);
+      if (ru?.text) checkRussian(tat, ru.text);
+      if (block.arabic !== undefined && requireString(tat, block, 'arabic')) checkArabic(tat, block.arabic);
+      const inner = Array.isArray(block.blocks) && block.blocks.length ? block.blocks : (error(tat, 'blocks - непустой массив'), []);
+      for (const [k, b] of inner.entries()) {
+        if (b?.type === 'topic') error(`${tat} topic block ${k + 1}`, 'тема внутри темы');
+        else entries.push({ block: b, where: `${tat} topic block ${k + 1}` });
+      }
+    }
+    for (const { block, where } of entries) {
+      if (block?.type === 'topic') continue;
       const keys = READING_BLOCKS[block?.type];
       if (!keys) { error(where, `неизвестный тип «${block?.type}»`); continue; }
       for (const k of Object.keys(block)) if (!keys.includes(k)) error(where, `неизвестное поле «${k}»`);
       if (block.type === 'text') {
-        const ru = checkTexts(where, block.translations, ['text'], ['text']);
+        // info - полный текст во всплывающем окне по ⓘ.
+        const ru = checkTexts(where, block.translations, ['text', 'info'], ['text']);
         if (ru?.text) checkRussian(where, ru.text);
+        if (ru?.info) checkRussian(where, ru.info);
       }
-      if (block.type === 'marks') for (const m of block.marks ?? []) knownMark(where, m);
+      // syllables.marks - столбцы таблицы (танвин), без поля - пройденные огласовки.
+      if (block.type === 'marks' || block.type === 'syllables') for (const m of block.marks ?? []) knownMark(where, m);
       // Без letters - весь алфавит.
       if (block.type === 'letters' || block.type === 'syllables') for (const l of block.letters ?? []) knownLetter(where, l);
       // sample - на уроке столько случайных слогов, весь алфавит - отдельным экраном.
-      if (block.type === 'syllables' && block.sample !== undefined && (!Number.isInteger(block.sample) || block.sample < 1)) error(where, 'sample - целое ≥ 1');
+      if ((block.type === 'syllables' || block.type === 'formulas') && block.sample !== undefined && (!Number.isInteger(block.sample) || block.sample < 1)) error(where, 'sample - целое ≥ 1');
       if (block.type === 'rule') {
         if (requireString(where, block, 'arabic')) checkArabic(where, block.arabic);
         for (const l of block.letters ?? []) knownLetter(where, l);
         const ru = checkTexts(where, block.translations, ['translit', 'text'], ['translit', 'text']);
         if (ru?.text) checkRussian(where, ru.text);
       }
-      if (block.type === 'groups') for (const g of block.groups ?? []) for (const l of g ?? []) knownLetter(where, l);
+      if (block.type === 'groups' || block.type === 'forms') for (const g of block.groups ?? []) for (const l of g ?? []) knownLetter(where, l);
+      // Примеры форм: буква → 3 слова (буква в начале, в середине, в конце); exampleCard - буквы третьей карточки.
+      if (block.type === 'forms') {
+        for (const [l, words] of Object.entries(block.examples ?? {})) {
+          knownLetter(where, l);
+          if (!Array.isArray(words) || words.length !== 3) { error(where, `examples.${l} - 3 слова: начало, середина, конец`); continue; }
+          for (const w of words) {
+            if (typeof w !== 'string' || !w.includes(l)) error(where, `examples.${l}: в слове «${w}» нет буквы ${l}`);
+            else checkArabic(where, w);
+          }
+        }
+        for (const l of block.exampleCard ?? []) if (!block.examples?.[l]) error(where, `exampleCard: у буквы ${l} нет примеров`);
+      }
+      // Формулы (мадд: بَ + ا = بَا; маленькие буквы мадда: تَشَٰبَهَ = تَشَابَهَ): части, итог, транскрипция итога.
+      if (block.type === 'formulas') {
+        if (block.columns !== undefined && (!Number.isInteger(block.columns) || block.columns < 1 || block.columns > 3)) error(where, 'columns - 1…3');
+        const items = Array.isArray(block.items) && block.items.length ? block.items : (error(where, 'items - непустой массив'), []);
+        for (const [n, item] of items.entries()) {
+          const iat = `${where} item ${n + 1}`;
+          for (const k of Object.keys(item ?? {})) if (!['parts', 'result', 'translations'].includes(k)) error(iat, `неизвестное поле «${k}»`);
+          // Пустые части - просто слово с транскрипцией (льам твёрдый / мягкий).
+          if (!Array.isArray(item?.parts)) error(iat, 'parts - массив');
+          for (const p of item?.parts ?? []) if (typeof p !== 'string' || !p) error(iat, 'parts - строки'); else checkArabic(iat, p);
+          if (requireString(iat, item ?? {}, 'result')) checkArabic(iat, item.result);
+          if (item?.translations !== undefined) checkTexts(iat, item.translations, ['translit'], ['translit']);
+        }
+      }
       if (block.type === 'compare') for (const pair of block.pairs ?? []) {
         if (!Array.isArray(pair) || pair.length !== 2) { error(where, 'pairs - пары из двух вариантов'); continue; }
         for (const v of pair) {
@@ -594,19 +773,50 @@ function checkReading(file) {
         }
         checkTexts(where, block.translations, ['words', 'joined', 'why'], ['joined']);
       }
-      if (block.type === 'zikr' && !['morning', 'evening'].includes(block.section)) error(where, 'section - morning / evening');
+      if (block.type === 'zikr') checkReadingZikr(where, block, { byLetter, marks, letters, passed, checkTexts });
     }
     for (const [j, q] of (step?.quiz ?? []).entries()) {
       const where = `${at} quiz ${j + 1}`;
       const keys = READING_QUIZ[q?.type];
       if (!keys) { error(where, `неизвестный тип «${q?.type}»`); continue; }
       for (const k of Object.keys(q)) if (!keys.includes(k)) error(where, `неизвестное поле «${k}»`);
+      // Слово (шаг «Шадда»): слово - как в «Читаем слова», 3 варианта транскрипции, answer - номер верного.
+      if (q.type === 'word') {
+        const signs = new Map(marks.map(m => [m.sign, m.id]));
+        const bases = new Set(letters.flatMap(l => Object.values(l?.syllableBases ?? {})));
+        if (requireString(where, q, 'arabic')) {
+          const problem = readingWordProblem(q.arabic, { byLetter, bases, signs, passed });
+          if (problem) error(where, `«${q.arabic}»: ${problem}`);
+        }
+        // question - свой вопрос («Как читается на паузе?»).
+        const ru = checkTexts(where, q.translations, ['options', 'explain', 'question'], []);
+        if (typeof ru?.question === 'string') checkRussian(where, ru.question);
+        const options = ru?.options;
+        if (!Array.isArray(options) || options.length !== 3 || options.some(o => typeof o !== 'string' || !o.trim())) error(where, 'options - 3 непустые строки');
+        else if (new Set(options).size !== 3) error(where, 'options - без повторов');
+        if (!Number.isInteger(q.answer) || q.answer < 0 || q.answer > 2) error(where, 'answer - номер варианта 0…2');
+        if (typeof ru?.explain === 'string') checkRussian(where, ru.explain);
+        continue;
+      }
       knownLetter(where, q.letter);
+      // Форма - из списка; буква - в одной из групп forms этого или прошлого шага (варианты - буквы её группы).
+      if (q.type === 'letterForm') {
+        if (!READING_FORMS.includes(q.form)) error(where, `form «${q.form}» - одно из ${READING_FORMS.join(', ')}`);
+        if (!passedFormGroups.some(g => g.includes(q.letter))) error(where, `буквы «${q.letter}» нет в таблицах форм шага и прошлых шагов`);
+      }
       if (q.type === 'syllable') {
         if (!passed.has(q.mark)) error(where, `знак «${q.mark}» ещё не пройден к этому шагу`);
-        if (!byLetter.get(q.letter)?.translations?.[BASE_LANGUAGE]?.syllables?.[q.mark]) {
+        // С сукуном ответ - звук буквы (sound), как в приложении.
+        const ru = byLetter.get(q.letter)?.translations?.[BASE_LANGUAGE];
+        if (!(q.mark === 'sukun' ? ru?.sound : ru?.syllables?.[q.mark])) {
           error(where, `нет транскрипции слога ${q.letter} + ${q.mark} - нечего показать в ответе`);
         }
+      }
+      // Закрытый слог (أِبْ): огласовка алифа - фатхьа, касра или домма; сукун пройден; у буквы есть звук.
+      if (q.type === 'closedSyllable') {
+        if (!['fatha', 'kasra', 'damma'].includes(q.mark)) error(where, 'closedSyllable: mark - fatha, kasra или damma');
+        if (!passed.has('sukun')) error(where, 'closedSyllable: сукун ещё не пройден к этому шагу');
+        if (!byLetter.get(q.letter)?.translations?.[BASE_LANGUAGE]?.sound) error(where, `нет звука буквы ${q.letter}`);
       }
     }
   }

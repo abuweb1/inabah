@@ -17,13 +17,15 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.inabah.android.R
+import app.inabah.android.core.content.Loadable
 import app.inabah.android.core.content.model.ReadingBlock
 import app.inabah.android.core.designsystem.Spacing
 import app.inabah.android.core.settings.ReadingSettings
 
 /**
  * «Весь алфавит» с огласовками (решение пользователя 2026-10-15): таблица шага карточками по 4 буквы,
- * глаз, нажатие - лист буквы. Открывается кнопкой под карточкой случайных слогов урока.
+ * глаз, нажатие - лист буквы. Открывается кнопкой под карточкой случайных слогов урока. У шага без
+ * таблицы слогов (сукун, 2026-10-16) - все формулы блока с [ReadingBlock.Formulas.sample], «закрытые слоги».
  */
 @Composable
 fun ReadingAlphabetScreen(
@@ -36,10 +38,15 @@ fun ReadingAlphabetScreen(
 ) {
     val hidden by settings.transliterationHidden.collectAsStateWithLifecycle()
     var sheetLetter by rememberSaveable { mutableStateOf<Int?>(null) }
+    // Подзаголовок - до загрузки курса «с огласовками»; у шага без таблицы слогов - «закрытые слоги».
+    val course by store.course.collectAsStateWithLifecycle()
+    val step = (course as? Loadable.Loaded)?.value?.step(stepNumber)
+    val subtitle = if (step?.blocks?.none { it is ReadingBlock.Syllables } == true) R.string.makharij_alphabet_formulas_subtitle
+    else R.string.makharij_alphabet_table_subtitle
     ReadingScaffold(
         store = store,
         title = stringResource(R.string.makharij_alphabet_table_title),
-        subtitle = stringResource(R.string.makharij_alphabet_table_subtitle),
+        subtitle = stringResource(subtitle),
         onBack = onBack,
         modifier = modifier,
         actions = { TransliterationToggle(hidden) { settings.setTransliterationHidden(!hidden) } },
@@ -56,7 +63,11 @@ fun ReadingAlphabetScreen(
                     .padding(horizontal = Spacing.xl)
                     .padding(top = Spacing.s, bottom = Spacing.xl + contentPadding.calculateBottomPadding()),
             ) {
-                table?.let { SyllablesTable(it.letters, it.marks, hidden, onLetter = { letter -> sheetLetter = letter.number }) }
+                val formulas = course.step(stepNumber)?.blocks?.filterIsInstance<ReadingBlock.Formulas>()?.firstOrNull { it.sample != null }
+                when {
+                    table != null -> SyllablesTable(table.letters, table.marks, hidden, onLetter = { letter -> sheetLetter = letter.number })
+                    formulas != null -> FormulasCards(formulas.items, formulas.columns, hidden)
+                }
             }
             LetterSheet(
                 course = course,

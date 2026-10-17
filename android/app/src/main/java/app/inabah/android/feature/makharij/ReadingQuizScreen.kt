@@ -166,10 +166,11 @@ private fun QuizQuestion(
     ) {
         ProgressDots(count = step.quiz.size, current = index)
         Text(
-            stringResource(
+            (question as? ReadingQuestion.Word)?.prompt ?: stringResource(
                 when (question) {
-                    is ReadingQuestion.Syllable -> R.string.makharij_quiz_syllable
-                    is ReadingQuestion.LetterName -> R.string.makharij_quiz_letter
+                    is ReadingQuestion.Syllable, is ReadingQuestion.ClosedSyllable -> R.string.makharij_quiz_syllable
+                    is ReadingQuestion.LetterName, is ReadingQuestion.LetterInForm -> R.string.makharij_quiz_letter
+                    is ReadingQuestion.Word -> R.string.makharij_quiz_word
                 },
             ),
             color = palette.onAccentSecondary,
@@ -178,31 +179,50 @@ private fun QuizQuestion(
         )
         val arabic = when (question) {
             is ReadingQuestion.Syllable -> question.letter.syllable(question.mark)
+            is ReadingQuestion.ClosedSyllable -> question.arabic
             is ReadingQuestion.LetterName -> question.letter.letter
+            is ReadingQuestion.LetterInForm -> question.letter.form(question.form)
+            is ReadingQuestion.Word -> question.arabic
         }
-        ParchmentTile(arabic, QUESTION_SIZE, Modifier.padding(top = Spacing.m).size(QUESTION_BOX), cornerRadius = Radius.panel)
-        Row(
-            Modifier.fillMaxWidth().padding(top = Spacing.xxl),
-            horizontalArrangement = Arrangement.spacedBy(Spacing.s),
-        ) {
-            options.forEachIndexed { i, option ->
-                OptionButton(
-                    text = option.text,
-                    state = when {
-                        solved && option.isCorrect -> OptionState.Correct
-                        wrongMask and (1 shl i) != 0 -> OptionState.Wrong
-                        solved -> OptionState.Other
-                        else -> OptionState.Open
-                    },
-                    onClick = {
-                        // Отклик: верно - подтверждение, неверно - «отказ» (просьба пользователя: живость).
-                        haptics.performHapticFeedback(
-                            if (option.isCorrect) HapticFeedbackType.Confirm else HapticFeedbackType.Reject,
-                        )
-                        onAnswer(i, option.isCorrect)
-                    },
-                    modifier = Modifier.weight(1f),
-                )
+        // Слово - в широкой плитке и мельче: в квадрат буквы длинное слово не влезает.
+        if (question is ReadingQuestion.Word) {
+            ParchmentTile(arabic, QUESTION_WORD_SIZE, Modifier.padding(top = Spacing.m).fillMaxWidth().height(QUESTION_BOX), cornerRadius = Radius.panel)
+        } else {
+            ParchmentTile(arabic, QUESTION_SIZE, Modifier.padding(top = Spacing.m).size(QUESTION_BOX), cornerRadius = Radius.panel)
+        }
+        val option: @Composable (Int, QuizOption, Modifier) -> Unit = { i, option, modifier ->
+            OptionButton(
+                text = option.text,
+                state = when {
+                    solved && option.isCorrect -> OptionState.Correct
+                    wrongMask and (1 shl i) != 0 -> OptionState.Wrong
+                    solved -> OptionState.Other
+                    else -> OptionState.Open
+                },
+                onClick = {
+                    // Отклик: верно - подтверждение, неверно - «отказ» (просьба пользователя: живость).
+                    haptics.performHapticFeedback(
+                        if (option.isCorrect) HapticFeedbackType.Confirm else HapticFeedbackType.Reject,
+                    )
+                    onAnswer(i, option.isCorrect)
+                },
+                modifier = modifier,
+            )
+        }
+        // Транскрипция слова длинная (таӏаджджальа) - варианты столбцом во всю ширину; слоги и буквы - в ряд.
+        if (question is ReadingQuestion.Word) {
+            Column(
+                Modifier.fillMaxWidth().padding(top = Spacing.xxl),
+                verticalArrangement = Arrangement.spacedBy(Spacing.s),
+            ) {
+                options.forEachIndexed { i, it -> option(i, it, Modifier.fillMaxWidth()) }
+            }
+        } else {
+            Row(
+                Modifier.fillMaxWidth().padding(top = Spacing.xxl),
+                horizontalArrangement = Arrangement.spacedBy(Spacing.s),
+            ) {
+                options.forEachIndexed { i, it -> option(i, it, Modifier.weight(1f)) }
             }
         }
         // Ошибся - «неверно», выбирать дальше (верный сам не подсвечивается - решение пользователя
@@ -231,10 +251,22 @@ private fun explanation(question: ReadingQuestion): String = when (question) {
         question.mark.name,
         question.mark.sound,
     )
+    is ReadingQuestion.Word -> question.explanation
+        ?: stringResource(R.string.makharij_quiz_explain_word, question.options.getOrElse(question.answer) { "" })
+    is ReadingQuestion.ClosedSyllable -> stringResource(
+        R.string.makharij_quiz_explain_closed,
+        question.letter.name,
+        question.transliteration(question.vowel.id),
+    )
     is ReadingQuestion.LetterName -> stringResource(
         R.string.makharij_quiz_explain_letter,
         question.letter.name,
         question.letter.sound,
+    )
+    is ReadingQuestion.LetterInForm -> stringResource(
+        R.string.makharij_quiz_explain_form,
+        question.letter.name,
+        stringResource(question.form.place),
     )
 }
 
@@ -365,6 +397,7 @@ private fun QuizFinished(
 private val QUESTION_BOX = 180.dp
 private const val CURRENT_DOT_STRETCH = 2.5f
 private const val QUESTION_SIZE = 72f
+private const val QUESTION_WORD_SIZE = 52f
 private val OPTION_HEIGHT = 60.dp
 private val OPTION_BORDER = 1.5.dp
 private const val CORRECT_FILL_ALPHA = 0.25f

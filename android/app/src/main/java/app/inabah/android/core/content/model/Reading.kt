@@ -3,7 +3,7 @@ package app.inabah.android.core.content.model
 // «Учимся читать» (раздел «Махрадж», data/reading.json, docs/06-data-structure.md) - уже на
 // выбранном языке. Слоги и звук буквы не хранятся: строятся из буквы и знака.
 
-/** Курс целиком: знаки, 28 букв и хамза, 10 шагов. */
+/** Курс целиком: знаки, 28 букв и хамза, шаги. */
 data class ReadingCourse(
     val marks: List<ReadingMark>,
     val letters: List<ReadingLetter>,
@@ -34,6 +34,10 @@ data class ReadingMark(
 ) {
     companion object {
         const val SUKUN = "sukun"
+        const val FATHATAN = "fathatan"
+
+        /** Танвин: фатхьатан, касратан, домматан. */
+        val TANWIN = setOf(FATHATAN, "kasratan", "dammatan")
     }
 }
 
@@ -50,7 +54,7 @@ data class ReadingLetter(
     val joinsPrevious: Boolean,
     /** Подставка слога по знакам: у алифа - хамза на алифе (`أ`, с касрой `إ`); нет знака - сама буква. */
     val syllableBases: Map<String, String>,
-    /** «Лям». */
+    /** «Льам». */
     val name: String,
     /** Транскрипция названия: «льаам». */
     val nameTransliteration: String,
@@ -65,8 +69,30 @@ data class ReadingLetter(
 ) {
     private fun base(mark: ReadingMark): String = syllableBases[mark.id] ?: letter
 
-    /** Слог: буква (или её подставка) и знак (`لَ`, у алифа `إِ`). */
-    fun syllable(mark: ReadingMark): String = base(mark) + mark.sign
+    /**
+     * Форма буквы в слове, с татвилем на месте соседних букв: начало `بـ`, середина `ـبـ`, конец `ـب`.
+     * Не соединяется со следующей (ا د ذ ر ز و) - без правого хвоста; хамза ни с чем - всегда одна буква.
+     */
+    fun form(form: LetterForm): String {
+        val before = if (joinsPrevious) TATWEEL else ""
+        val after = if (joinsNext) TATWEEL else ""
+        return when (form) {
+            LetterForm.Isolated -> letter
+            LetterForm.Initial -> letter + after
+            LetterForm.Medial -> before + letter + after
+            LetterForm.Final -> before + letter
+        }
+    }
+
+    /**
+     * Слог: буква (или её подставка) и знак (`لَ`, у алифа `إِ`). С танвином фатхьи - и алиф, который не
+     * читается (`بًا`, стр. 34 книги); у алифа - без него (`أً`): там алиф уже есть.
+     */
+    fun syllable(mark: ReadingMark): String {
+        val base = base(mark)
+        val silentAlif = if (mark.id == ReadingMark.FATHATAN && base != SEAT_ALIF) ALIF else ""
+        return base + mark.sign + silentAlif
+    }
 
     /** Транскрипция слога; с сукуном - звук буквы; нет в данных - `null`. */
     fun transliteration(mark: ReadingMark): String? =
@@ -83,11 +109,36 @@ data class ReadingLetter(
 
     companion object {
         const val TATWEEL = "ـ"
+        private const val ALIF = "ا"
+        private const val SEAT_ALIF = "أ"
+    }
+}
+
+/** Форма буквы по месту в слове; [id] - как в `reading.json`. */
+enum class LetterForm(val id: String) {
+    Isolated("isolated"),
+    Initial("initial"),
+    Medial("medial"),
+    Final("final"),
+    ;
+
+    companion object {
+        fun of(id: String): LetterForm? = entries.firstOrNull { it.id == id }
+    }
+}
+
+/** Слова-примеры буквы: она в начале, в середине и в конце слова. */
+data class FormExamples(val initial: String, val medial: String, val final: String) {
+    fun word(form: LetterForm): String? = when (form) {
+        LetterForm.Initial -> initial
+        LetterForm.Medial -> medial
+        LetterForm.Final -> final
+        LetterForm.Isolated -> null
     }
 }
 
 data class ReadingStep(
-    /** 1…10. */
+    /** 1, 2, 3… по порядку; ключ прогресса. У итога тоже есть, но не показывается. */
     val number: Int,
     /** Знаки, которые шаг вводит. */
     val markIds: List<String>,
@@ -99,24 +150,84 @@ data class ReadingStep(
     val quiz: List<ReadingQuestion>,
     /** «Читаем слова»; `null` - у шага слов нет. */
     val words: ReadingWords? = null,
+    /**
+     * Итог курса («Читаем зикр», решение пользователя 2026-10-15): последний, вместо номера - ✦,
+     * в «пройдено N из M» не считается; открывается, как и шаги, после всех предыдущих.
+     */
+    val isFinal: Boolean = false,
+    /** Справка к уроку отдельным экраном (кнопка под уроком); нет - `null`. */
+    val extra: ReadingExtra? = null,
 ) {
     /** Пустые шаги - «Урок готовится». */
     val hasLesson: Boolean get() = blocks.isNotEmpty()
+
+    /** Темы урока по порядку ([ReadingBlock.Topic]); номер темы - индекс здесь. */
+    val topics: List<ReadingBlock.Topic> get() = blocks.filterIsInstance<ReadingBlock.Topic>()
+
+    /** Зикры итога по порядку ([ReadingBlock.Zikr]); номер зикра - индекс здесь. */
+    val zikrs: List<ReadingBlock.Zikr> get() = blocks.filterIsInstance<ReadingBlock.Zikr>()
+
+    /** Справка: [topic] - тема урока по номеру, `null` - справка шага ([extra]). */
+    fun extra(topic: Int?): ReadingExtra? = if (topic == null) extra else topics.getOrNull(topic)?.extra
 }
 
 /**
- * «Читаем слова» (решение пользователя 2026-10-15): слова только из букв, которые в слове не меняют
- * форму, группами по [groupSize]; каждое прочитать [repeat] раз. Транскрипция - только у первой группы.
+ * Справка к уроку (решение пользователя 2026-10-16: солнечные и лунные буквы - общая информация, читать
+ * учиться без неё можно): [title] - на кнопке и в навбаре своего экрана, [blocks] - его содержимое.
  */
-data class ReadingWords(val groupSize: Int, val repeat: Int, val items: List<ReadingWord>) {
-    val groups: List<List<ReadingWord>> get() = items.chunked(groupSize.coerceAtLeast(1))
+data class ReadingExtra(val title: String, val blocks: List<ReadingBlock>)
+
+/**
+ * «Читаем слова» (решение пользователя 2026-10-15): каждое слово прочитать [repeat] раз. Страницы строит
+ * экран (`wordPages`, 2026-10-16): [groupSize] - слов на странице из коротких слов (15 = 5 рядов по 3).
+ * Транскрипция - у всех слов, на экране - только на первой странице (дальше - подсказкой).
+ */
+data class ReadingWords(
+    val groupSize: Int,
+    val repeat: Int,
+    val items: List<ReadingWord>,
+    /**
+     * Пары (шаг «Мадд перед артиклем», решение пользователя 2026-10-16): слово и за ним словосочетание с
+     * ним - в одном ряду, в порядке данных (по ширине не сортируются): «маа» и «ма лькъоориӏату».
+     */
+    val pairs: Boolean = false,
+) {
+    /** Рядов на странице: [groupSize] коротких слов по [MAX_COLUMNS] в ряд. */
+    val rowsPerPage: Int get() = ((groupSize + MAX_COLUMNS - 1) / MAX_COLUMNS).coerceAtLeast(1)
+
+    companion object {
+        /** Больше всего плиток в ряду - у коротких слов. */
+        const val MAX_COLUMNS = 3
+    }
 }
 
-data class ReadingWord(val arabic: String, val transliteration: String?)
+data class ReadingWord(val arabic: String, val transliteration: String?) {
+    /** Несколько слов через пробел («لَهُۥ بَنِينَ») - на экране строкой во всю ширину. */
+    val isPhrase: Boolean get() = ' ' in arabic
+}
+
+/** Место слитного чтения зикра: слова подряд, как читаются вместе, и почему ([note]). */
+data class ReadingJoin(val arabic: String, val transliteration: String, val note: String)
+
+/** Формула блока [ReadingBlock.Formulas]: части, итог и его транскрипция (`null` - без подписи). */
+data class ReadingFormula(val parts: List<String>, val result: String, val transliteration: String?)
 
 /** Блок урока; неизвестные типы данных сюда не попадают. */
 sealed interface ReadingBlock {
-    data class Text(val text: String) : ReadingBlock
+    /** Короткий текст; [info] - полный, во всплывающем окне по ⓘ. */
+    data class Text(val text: String, val info: String? = null) : ReadingBlock
+
+    /**
+     * Таблица форм: карточки по группам похожего написания, ряд - буква, столбцы - 4 формы; [examples] -
+     * слова, где буква в начале, в середине и в конце; [exampleCard] - буквы третьей карточки «в словах».
+     */
+    data class Forms(
+        val groups: List<List<ReadingLetter>>,
+        val examples: Map<ReadingLetter, FormExamples> = emptyMap(),
+        val exampleCard: List<ReadingLetter> = emptyList(),
+    ) : ReadingBlock {
+        val letters: List<ReadingLetter> get() = groups.flatten()
+    }
 
     /** Знаки с названием и звуком, на примере [example]. */
     data class Marks(val marks: List<ReadingMark>, val example: ReadingLetter) : ReadingBlock
@@ -132,6 +243,35 @@ sealed interface ReadingBlock {
         val sample: Int? = null,
     ) : ReadingBlock
 
+    /**
+     * Формулы на пергаменте (мадд, 2026-10-15): части через «+» и итог после «=», справа налево -
+     * «بَ + ا = بَا»; одна часть - равенство («تَشَٰبَهَ = تَشَابَهَ»). [columns] - формул в ряду.
+     * [sample] - на уроке столько случайных формул и «Прочтите весь алфавит», все - отдельным экраном
+     * (закрытые слоги сукуна, решение пользователя 2026-10-16); `null` - все на уроке.
+     */
+    data class Formulas(val columns: Int, val items: List<ReadingFormula>, val sample: Int? = null) : ReadingBlock
+
+    /**
+     * Тема урока (шаг «Особые случаи», решение пользователя 2026-10-17): карточка с названием, кратким
+     * описанием [summary] и примером [example], подробности - своим экраном ([extra], как справка).
+     */
+    data class Topic(val summary: String, val example: String?, val extra: ReadingExtra) : ReadingBlock
+
+    /**
+     * Зикр итога «Читаем зикр» (решения пользователя 2026-10-17): зикр [zikr] из «Азкаров» и его запись
+     * [audio] (`null` - без ▶); [words] - по порядку, каждое как читается отдельно; [joins] - места
+     * слитного чтения; [summary] - что в нём встретится из курса; [transliteration] - строка целиком.
+     */
+    data class Zikr(
+        val zikr: ZikrId,
+        val audio: String?,
+        val arabic: String,
+        val words: List<ReadingWord>,
+        val joins: List<ReadingJoin>,
+        val summary: String,
+        val transliteration: String,
+    ) : ReadingBlock
+
     /** Правило: арабское название и его транскрипция, пояснение, буквы правила. */
     data class Rule(
         val arabic: String,
@@ -143,11 +283,52 @@ sealed interface ReadingBlock {
 
 /** Вопрос проверки; варианты ответа строит экран проверки. */
 sealed interface ReadingQuestion {
-    val letter: ReadingLetter
 
     /** «Как читается этот слог?». */
-    data class Syllable(override val letter: ReadingLetter, val mark: ReadingMark) : ReadingQuestion
+    data class Syllable(val letter: ReadingLetter, val mark: ReadingMark) : ReadingQuestion
+
+    /**
+     * «Как читается этот слог?» - закрытый слог шага «Сукун» (просьба пользователя 2026-10-16, как в
+     * «Весь алфавит»): алиф-хамза с [vowel] и [letter] с сукуном - `أِبْ`. [alif] - буква алиф курса
+     * (её подставки и слоги), [sukun] - знак.
+     */
+    data class ClosedSyllable(
+        val letter: ReadingLetter,
+        val vowel: ReadingMark,
+        val alif: ReadingLetter,
+        val sukun: ReadingMark,
+    ) : ReadingQuestion {
+        val arabic: String get() = alif.syllable(vowel) + letter.letter + sukun.sign
+
+        /** Транскрипция слога с огласовкой [vowelId]: «ъиб». */
+        fun transliteration(vowelId: String): String = alif.syllables[vowelId].orEmpty() + letter.sound
+
+        companion object {
+            /** Огласовки алифа в вариантах ответа, по порядку. */
+            val VOWELS = listOf("fatha", "kasra", "damma")
+        }
+    }
+
+    /**
+     * «Как читается это слово?» (шаг «Шадда», 2026-10-16): слово и варианты транскрипции из данных
+     * (в показанном порядке), [answer] - номер верного, [explanation] - почему так (нет - «Читается «…».»).
+     */
+    data class Word(
+        val arabic: String,
+        val options: List<String>,
+        val answer: Int,
+        val explanation: String?,
+        /** Свой вопрос («Как читается на паузе?»); нет - «Как читается это слово?». */
+        val prompt: String? = null,
+    ) : ReadingQuestion
 
     /** «Какая это буква?». */
-    data class LetterName(override val letter: ReadingLetter) : ReadingQuestion
+    data class LetterName(val letter: ReadingLetter) : ReadingQuestion
+
+    /** «Какая это буква?» по одной форме; варианты - буквы её группы похожего написания ([group]). */
+    data class LetterInForm(
+        val letter: ReadingLetter,
+        val form: LetterForm,
+        val group: List<ReadingLetter>,
+    ) : ReadingQuestion
 }

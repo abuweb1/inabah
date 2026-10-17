@@ -132,6 +132,16 @@ data class ReadingStepDto(
     val quiz: List<ReadingQuizDto> = emptyList(),
     /** «Читаем слова»; нет - у шага слов нет. */
     val words: ReadingWordsDto? = null,
+    /** Итог курса («Читаем зикр») - последний шаг, без номера. */
+    val final: Boolean = false,
+    /** Справка не для чтения (солнечные и лунные буквы) - отдельным экраном по кнопке; нет - без неё. */
+    val extra: ReadingExtraDto? = null,
+)
+
+@Serializable
+data class ReadingExtraDto(
+    val translations: Map<String, ReadingStepTranslationDto>,
+    val blocks: List<ReadingBlockDto> = emptyList(),
 )
 
 @Serializable
@@ -139,6 +149,8 @@ data class ReadingWordsDto(
     val groupSize: Int,
     val repeat: Int,
     val items: List<ReadingWordDto>,
+    /** Пары «слово → словосочетание с ним» - в порядке данных, рядом (шаг «Мадд перед артиклем»). */
+    val pairs: Boolean = false,
 )
 
 @Serializable
@@ -149,8 +161,18 @@ data class ReadingWordDto(
 )
 
 @Serializable
+data class ReadingFormulaDto(
+    val parts: List<String>,
+    val result: String,
+    /** Транскрипция итога; нет - без подписи. */
+    val translations: Map<String, ReadingWordTranslationDto> = emptyMap(),
+)
+
+@Serializable
 data class ReadingWordTranslationDto(
     val translit: String = "",
+    /** Место слитного чтения зикра: почему читается так. */
+    val note: String = "",
 )
 
 @Serializable
@@ -167,8 +189,27 @@ data class ReadingBlockDto(
     val letters: List<String>? = null,
     /** `rule`: арабское название правила. */
     val arabic: String? = null,
-    /** `syllables`: на уроке - столько случайных слогов, весь алфавит - отдельным экраном. */
+    /** `syllables`, `formulas`: на уроке - столько случайных слогов (формул), все - отдельным экраном. */
     val sample: Int? = null,
+    /** `forms`: буквы карточками (группы похожего написания). */
+    val groups: List<List<String>>? = null,
+    /** `forms`: буква → 3 слова, где она в начале, в середине и в конце. */
+    val examples: Map<String, List<String>> = emptyMap(),
+    /** `forms`: буквы третьей карточки «в словах». */
+    val exampleCard: List<String> = emptyList(),
+    /** `formulas`: формул в ряду (1…3). */
+    val columns: Int = 1,
+    /** `formulas`: «بَ + ا = بَا», «تَشَٰبَهَ = تَشَابَهَ». */
+    val items: List<ReadingFormulaDto> = emptyList(),
+    /** `topic`: содержимое своего экрана - блоки, как в справке. */
+    val blocks: List<ReadingBlockDto> = emptyList(),
+    /** `zikr`: раздел и номер зикра в «Азкарах», его запись (голое имя файла). */
+    val section: String? = null,
+    val id: Int? = null,
+    val audio: String? = null,
+    /** `zikr`: слова по порядку и места слитного чтения (слова подряд, транскрипция и подпись). */
+    val words: List<ReadingWordDto> = emptyList(),
+    val joins: List<ReadingWordDto> = emptyList(),
     val translations: Map<String, ReadingTextTranslationDto> = emptyMap(),
 )
 
@@ -177,11 +218,32 @@ data class ReadingTextTranslationDto(
     val text: String = "",
     /** `rule`: транскрипция названия правила. */
     val translit: String = "",
+    /** `text`: полный текст во всплывающем окне по ⓘ. */
+    val info: String = "",
+    /** `topic`: название (на карточке и в навбаре экрана темы); `text` - краткое описание. */
+    val title: String = "",
 )
 
 @Serializable
 data class ReadingQuizDto(
     val type: String,
-    val letter: String,
+    /** У `word` буквы нет. */
+    val letter: String = "",
     val mark: String? = null,
+    /** `letterForm`: isolated, initial, medial, final. */
+    val form: String? = null,
+    /** `word`: слово вопроса. */
+    val arabic: String? = null,
+    /** `word`: номер верного варианта в `translations.<язык>.options`. */
+    val answer: Int = 0,
+    val translations: Map<String, ReadingQuizTranslationDto> = emptyMap(),
+)
+
+/** `word`: варианты транскрипции (в показанном порядке) и пояснение к ответу. */
+@Serializable
+data class ReadingQuizTranslationDto(
+    val options: List<String> = emptyList(),
+    val explain: String = "",
+    /** Свой вопрос («Как читается на паузе?»); нет - «Как читается это слово?». */
+    val question: String = "",
 )

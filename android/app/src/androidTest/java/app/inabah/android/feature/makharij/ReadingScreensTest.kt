@@ -64,7 +64,7 @@ class ReadingScreensTest {
                     contentPadding = PaddingValues())
             }
         }
-        waitForText("Шаг 1 из 10 · Буквы")
+        waitForText("Шаг 1 из 12 · Буквы")
         compose.onNodeWithText("Учимся читать").performClick()
         assertTrue(opened)
     }
@@ -74,7 +74,7 @@ class ReadingScreensTest {
         compose.setContent {
             InabahTheme {
                 ReadingLessonScreen(1, store, ReadingProgress(dataStore.storage), ReadingSettings(dataStore.storage),
-                    onBack = {}, onOpenQuiz = {}, onOpenWords = {}, onOpenAlphabet = {}, contentPadding = PaddingValues())
+                    onBack = {}, onOpenQuiz = {}, onOpenWords = {}, onOpenAlphabet = {}, onOpenLetterForms = {}, contentPadding = PaddingValues())
             }
         }
         waitForText("Шаг 1 · Буквы")
@@ -94,12 +94,12 @@ class ReadingScreensTest {
         val settings = ReadingSettings(dataStore.storage)
         compose.setContent {
             InabahTheme {
-                ReadingLessonScreen(1, store, ReadingProgress(dataStore.storage), settings, onBack = {}, onOpenQuiz = {}, onOpenWords = {}, onOpenAlphabet = {},
+                ReadingLessonScreen(1, store, ReadingProgress(dataStore.storage), settings, onBack = {}, onOpenQuiz = {}, onOpenWords = {}, onOpenAlphabet = {}, onOpenLetterForms = {},
                     contentPadding = PaddingValues())
             }
         }
         waitForText("Шаг 1 · Буквы")
-        compose.onNodeWithContentDescription("Лям").performClick()
+        compose.onNodeWithContentDescription("Льам").performClick()
         compose.onNodeWithText("23-я буква").assertExists()
         // До огласовок слоги цепочки — «ещё не пройдено».
         compose.onNodeWithContentDescription("фатхьа, льа, ещё не пройдено").assertExists()
@@ -145,11 +145,11 @@ class ReadingScreensTest {
             }
         }
         waitForText("группа 1 из 4")
-        val tile = compose.onNodeWithContentDescription("زَرَدَ, зарода")
+        val tile = compose.onNodeWithContentDescription("ذَأَمَ, заъама")
         repeat(3) { tile.performClick() }
         assertEquals(3, progress.wordCounts.value[2]?.first())
         // Свайп - в обе стороны (кнопки - тоже).
-        compose.onNodeWithContentDescription("زَرَدَ, зарода").performTouchInput { swipeLeft() }
+        compose.onNodeWithContentDescription("ذَأَمَ, заъама").performTouchInput { swipeLeft() }
         waitForText("группа 2 из 4")
         compose.onNodeWithText("‹ Назад").performClick()
         waitForText("группа 1 из 4")
@@ -157,6 +157,19 @@ class ReadingScreensTest {
         waitForText("группа 2 из 4")
         // Во второй группе - без транскрипции и без глаза.
         assertTrue(compose.onAllNodesWithContentDescription("Скрыть транскрипцию").fetchSemanticsNodes().isEmpty())
+    }
+
+    @Test
+    fun letterFormsScreenSwitchesLettersOfGroup() {
+        compose.setContent {
+            InabahTheme {
+                ReadingLetterFormsScreen(3, "ب", store, onBack = {}, contentPadding = PaddingValues())
+            }
+        }
+        waitForText("буква 1 из 8")
+        compose.onNodeWithText("Ба").assertExists()
+        compose.onNodeWithContentDescription("Хо").performClick()
+        waitForText("буква 8 из 8")
     }
 
     // Верные ответы шага 2: ب domma, م fatha, ن kasra, ل domma, ب kasra, م domma, ص kasra, ق fatha, ر kasra, ر fatha.

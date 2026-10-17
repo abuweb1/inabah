@@ -3,6 +3,7 @@ package app.inabah.android.core.designsystem
 import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.EaseInOut
 import androidx.compose.animation.core.EaseOut
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
@@ -94,6 +95,9 @@ object Motion {
     fun <T> cardPress() = tween<T>(durationMillis = 180, easing = EaseOut)
 
     fun <T> overlay() = tween<T>(durationMillis = 400, easing = EaseOut)
+
+    /** Увеличение плитки «Читаем слова»: плавный разгон и торможение в обе стороны. */
+    fun <T> zoom() = tween<T>(durationMillis = 300, easing = FastOutSlowInEasing)
 
     /** Золотая рамка звучащей карточки, выбор плитки, смена процента. */
     fun <T> highlight() = tween<T>(durationMillis = 300, easing = EaseInOut)
