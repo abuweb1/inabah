@@ -4,6 +4,8 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
+import app.inabah.android.core.content.model.AzkarSection
+import app.inabah.android.core.content.model.ZikrId
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -13,8 +15,9 @@ import kotlinx.coroutines.flow.asStateFlow
  * - урок шага пройден - даны ответы на все вопросы проверки (правильность не важна) или нажато «Готово»
  *   у урока без вопросов; ключ `reading.step.<N>.done` = `true`;
  * - «Читаем слова» - сколько раз прочитано каждое слово шага: `reading.words.<N>` = `"10,10,3,0"`;
- * - итог «Читаем зикр» (2026-10-17) - зикр по номеру `<K>` (0, 1, …): прочитанные слова
- *   `reading.zikr.<K>.words` = `"0,1,4"` (каждое - один раз) и «прочитал целиком» `reading.zikr.<K>.read` = `true`.
+ * - итог «Читаем зикр» (2026-10-17) - зикр по разделу и номеру в «Азкарах» (`morning.6`, не по месту в шаге:
+ *   отметки не переходят к другому зикру, если зикры итога переставят): прочитанные слова
+ *   `reading.zikr.morning.6.words` = `"0,1,4"` (каждое - один раз) и «прочитал целиком» `reading.zikr.morning.6.read` = `true`.
  * Пройден ли шаг целиком (урок и все слова) - решает `completedSteps` (feature/makharij).
  */
 class ReadingProgress(private val storage: PreferencesStorage) {
@@ -29,8 +32,8 @@ class ReadingProgress(private val storage: PreferencesStorage) {
     /** Шаг → сколько раз прочитано каждое слово (по порядку слов шага); нет шага - ничего не читали. */
     val wordCounts: StateFlow<Map<Int, List<Int>>> = _wordCounts.asStateFlow()
 
-    /** Зикр итога по номеру → прочитанные слова и прочитан ли целиком; нет зикра - ничего не читали. */
-    val zikrs: StateFlow<Map<Int, ZikrProgress>> = _zikrs.asStateFlow()
+    /** Зикр итога → прочитанные слова и прочитан ли целиком; нет зикра - ничего не читали. */
+    val zikrs: StateFlow<Map<ZikrId, ZikrProgress>> = _zikrs.asStateFlow()
 
     /** Последний открытый шаг, открытие которого уже показано (замок «отщёлкнулся»); по умолчанию 1. */
     val unlockSeen: StateFlow<Int> = _unlockSeen.asStateFlow()
@@ -57,7 +60,7 @@ class ReadingProgress(private val storage: PreferencesStorage) {
     }
 
     /** Прочитал слово [word] зикра [zikr]; повторное касание не считается. */
-    fun readZikrWord(zikr: Int, word: Int) {
+    fun readZikrWord(zikr: ZikrId, word: Int) {
         val current = _zikrs.value[zikr] ?: ZikrProgress()
         if (word < 0 || word in current.words) return
         val updated = current.copy(words = current.words + word)
@@ -66,7 +69,7 @@ class ReadingProgress(private val storage: PreferencesStorage) {
     }
 
     /** Прочитал зикр [zikr] целиком. */
-    fun markZikrRead(zikr: Int) {
+    fun markZikrRead(zikr: ZikrId) {
         val current = _zikrs.value[zikr] ?: ZikrProgress()
         if (current.isRead) return
         _zikrs.value += zikr to current.copy(isRead = true)
@@ -92,27 +95,38 @@ class ReadingProgress(private val storage: PreferencesStorage) {
     companion object {
         private val LessonPattern = Regex("""^reading\.step\.(\d+)\.done$""")
         private val WordsPattern = Regex("""^reading\.words\.(\d+)$""")
-        private val ZikrWordsPattern = Regex("""^reading\.zikr\.(\d+)\.words$""")
-        private val ZikrReadPattern = Regex("""^reading\.zikr\.(\d+)\.read$""")
+        private val ZikrWordsPattern = Regex("""^reading\.zikr\.(\w+)\.(\d+)\.words$""")
+        private val ZikrReadPattern = Regex("""^reading\.zikr\.(\w+)\.(\d+)\.read$""")
         private val UNLOCK_SEEN_KEY = intPreferencesKey("reading.unlockSeen")
 
+        // Зикры - любой ключ `reading.zikr.…`: и ключи по номеру в шаге из проверочных сборок до 2026-10-17.
         private fun isProgressKey(name: String) = LessonPattern.matches(name) || WordsPattern.matches(name) ||
-            ZikrWordsPattern.matches(name) || ZikrReadPattern.matches(name)
+            name.startsWith(ZIKR_KEY_PREFIX)
+        private const val ZIKR_KEY_PREFIX = "reading.zikr."
 
         fun lessonKey(step: Int) = booleanPreferencesKey("reading.step.$step.done")
         fun wordsKey(step: Int) = stringPreferencesKey("reading.words.$step")
-        fun zikrWordsKey(zikr: Int) = stringPreferencesKey("reading.zikr.$zikr.words")
-        fun zikrReadKey(zikr: Int) = booleanPreferencesKey("reading.zikr.$zikr.read")
+        fun zikrWordsKey(zikr: ZikrId) = stringPreferencesKey("reading.zikr.${zikr.section.key}.${zikr.number}.words")
+        fun zikrReadKey(zikr: ZikrId) = booleanPreferencesKey("reading.zikr.${zikr.section.key}.${zikr.number}.read")
+
+        /** Зикр из ключа: неизвестный раздел или номер < 1 - null. */
+        private fun zikrOf(pattern: Regex, name: String): ZikrId? {
+            val (section, number) = pattern.matchEntire(name)?.destructured ?: return null
+            return ZikrId(
+                AzkarSection.entries.firstOrNull { it.key == section } ?: return null,
+                number.toIntOrNull()?.takeIf { it >= 1 } ?: return null,
+            )
+        }
 
         /** Испорченный номер слова - пропустить; «прочитан» - только `true`. */
-        private fun readZikrs(preferences: Preferences): Map<Int, ZikrProgress> {
-            val result = mutableMapOf<Int, ZikrProgress>()
+        private fun readZikrs(preferences: Preferences): Map<ZikrId, ZikrProgress> {
+            val result = mutableMapOf<ZikrId, ZikrProgress>()
             for ((key, value) in preferences.asMap()) {
-                ZikrWordsPattern.matchEntire(key.name)?.groupValues?.get(1)?.toIntOrNull()?.let { zikr ->
+                zikrOf(ZikrWordsPattern, key.name)?.let { zikr ->
                     val words = (value as? String).orEmpty().split(',').mapNotNullTo(mutableSetOf()) { it.trim().toIntOrNull()?.takeIf { n -> n >= 0 } }
                     result[zikr] = (result[zikr] ?: ZikrProgress()).copy(words = words)
                 }
-                ZikrReadPattern.matchEntire(key.name)?.groupValues?.get(1)?.toIntOrNull()?.let { zikr ->
+                zikrOf(ZikrReadPattern, key.name)?.let { zikr ->
                     if (value == true) result[zikr] = (result[zikr] ?: ZikrProgress()).copy(isRead = true)
                 }
             }

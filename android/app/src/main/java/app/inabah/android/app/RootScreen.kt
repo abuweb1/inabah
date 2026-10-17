@@ -366,6 +366,7 @@ private fun TabScreens(tab: AppTab, services: AppServices, contentPadding: Paddi
                         onOpenSteps = { router.open(MakharijRoute.Steps) },
                         contentPadding = contentPadding.bottomOnly(),
                         clips = clips,
+                        playingClip = services.clipPlayer.playing.collectAsStateWithLifecycle().value,
                         onPlayClip = services.clipPlayer::play,
                         onStopClip = services.clipPlayer::stop,
                     )

@@ -412,9 +412,11 @@ const READING_LETTER_KEYS = ['id', 'letter', 'name', 'joinsNext', 'joinsPrevious
 const READING_LETTER_TEXT_KEYS = ['name', 'nameTranslit', 'sound', 'syllables', 'note'];
 const READING_STEP_KEYS = ['id', 'marks', 'example', 'translations', 'blocks', 'quiz', 'words', 'final', 'extra'];
 const READING_STEP_TEXT_KEYS = ['title', 'subtitle'];
+// Только типы, которые приложения рисуют (аудит 2026-10-17: «groups», «compare», «join» описывались в
+// формате, но экранов у них нет - блок молча пропал бы).
 const READING_BLOCKS = {
-  text: ['type', 'translations'], marks: ['type', 'marks'], letters: ['type', 'letters'], groups: ['type', 'groups'],
-  syllables: ['type', 'letters', 'marks', 'sample'], compare: ['type', 'pairs'], join: ['type', 'arabic', 'audio', 'translations'],
+  text: ['type', 'translations'], marks: ['type', 'marks'], letters: ['type', 'letters'],
+  syllables: ['type', 'letters', 'marks', 'sample'],
   // Зикр итога «Читаем зикр» (2026-10-17): ссылка на зикр «Азкаров», слова, места слитного чтения.
   zikr: ['type', 'section', 'id', 'audio', 'arabic', 'words', 'joins', 'translations'],
   rule: ['type', 'arabic', 'letters', 'translations'],
@@ -423,6 +425,8 @@ const READING_BLOCKS = {
   // Тема урока (шаг «Особые случаи», 2026-10-17): карточка - название, описание, пример; блоки - её экран.
   topic: ['type', 'arabic', 'blocks', 'translations'],
 };
+// Справка (extra) и экран темы рисуют только текст, правила и формулы (ReadingExtraScreen).
+const READING_EXTRA_BLOCKS = ['text', 'rule', 'formulas'];
 // Мадд (2026-10-15): буква мадда без знака тянет огласовку перед ней - ا после фатхьи, ي после касры,
 // و после доммы; маленькие буквы мадда (ٰ ۥ ۦ) - сразу после той же огласовки (алиф - на черте ـٰ).
 const MADD_LETTERS = { 'ا': 'fatha', 'ي': 'kasra', 'و': 'damma' };
@@ -644,6 +648,8 @@ function checkReading(file) {
     checkTexts(at, step?.translations, READING_STEP_TEXT_KEYS, ['title', 'subtitle']);
     // Итог курса («Читаем зикр») - только `true` и только у последнего шага, без номера на экране.
     if (step?.final !== undefined && (step.final !== true || i !== steps.length - 1)) error(at, 'final - только true и только у последнего шага');
+    // Итог пройден, когда прочитаны все его зикры (кнопки «Готово» нет): без зикров его не пройти.
+    if (step?.final === true && !(step.blocks ?? []).some(b => b?.type === 'zikr')) error(at, 'итог (final) без блоков zikr - его не пройти');
     // Пример справа в списке шагов - необязательный, только арабский.
     if (step?.example !== undefined && requireString(at, step, 'example')) checkArabic(at, step.example);
     for (const m of step?.marks ?? []) { knownMark(at, m); passed.add(m); }
@@ -688,7 +694,7 @@ function checkReading(file) {
     }
     const entries = [
       ...blocks.map((block, j) => ({ block, where: `${at} block ${j + 1}` })),
-      ...extraBlocks.map((block, j) => ({ block, where: `${at} extra block ${j + 1}` })),
+      ...extraBlocks.map((block, j) => ({ block, where: `${at} extra block ${j + 1}`, inExtra: true })),
     ];
     // Блоки темы проверяются как блоки урока; тема в теме - нет.
     for (const [j, block] of blocks.entries()) {
@@ -701,10 +707,14 @@ function checkReading(file) {
       const inner = Array.isArray(block.blocks) && block.blocks.length ? block.blocks : (error(tat, 'blocks - непустой массив'), []);
       for (const [k, b] of inner.entries()) {
         if (b?.type === 'topic') error(`${tat} topic block ${k + 1}`, 'тема внутри темы');
-        else entries.push({ block: b, where: `${tat} topic block ${k + 1}` });
+        else entries.push({ block: b, where: `${tat} topic block ${k + 1}`, inExtra: true });
       }
     }
-    for (const { block, where } of entries) {
+    for (const { block, where, inExtra } of entries) {
+      if (inExtra && !READING_EXTRA_BLOCKS.includes(block?.type)) {
+        error(where, `«${block?.type}» - справка и тема показывают только ${READING_EXTRA_BLOCKS.join(', ')}`);
+        continue;
+      }
       if (block?.type === 'topic') continue;
       const keys = READING_BLOCKS[block?.type];
       if (!keys) { error(where, `неизвестный тип «${block?.type}»`); continue; }
@@ -727,7 +737,7 @@ function checkReading(file) {
         const ru = checkTexts(where, block.translations, ['translit', 'text'], ['translit', 'text']);
         if (ru?.text) checkRussian(where, ru.text);
       }
-      if (block.type === 'groups' || block.type === 'forms') for (const g of block.groups ?? []) for (const l of g ?? []) knownLetter(where, l);
+      if (block.type === 'forms') for (const g of block.groups ?? []) for (const l of g ?? []) knownLetter(where, l);
       // Примеры форм: буква → 3 слова (буква в начале, в середине, в конце); exampleCard - буквы третьей карточки.
       if (block.type === 'forms') {
         for (const [l, words] of Object.entries(block.examples ?? {})) {
@@ -753,25 +763,6 @@ function checkReading(file) {
           if (requireString(iat, item ?? {}, 'result')) checkArabic(iat, item.result);
           if (item?.translations !== undefined) checkTexts(iat, item.translations, ['translit'], ['translit']);
         }
-      }
-      if (block.type === 'compare') for (const pair of block.pairs ?? []) {
-        if (!Array.isArray(pair) || pair.length !== 2) { error(where, 'pairs - пары из двух вариантов'); continue; }
-        for (const v of pair) {
-          if (requireString(where, v ?? {}, 'arabic')) checkArabic(where, v.arabic);
-          checkAudio(`${where} audio`, v?.audio ?? null);
-          checkTexts(where, v?.translations, ['translit'], ['translit']);
-        }
-      }
-      if (block.type === 'join') {
-        // В «{…}» - буквы, которые при слитном чтении не звучат: скобки парные, без вложений.
-        const text = block.arabic ?? '';
-        if (!/^[^{}]*(\{[^{}]+\}[^{}]*)*$/.test(text)) error(where, 'arabic - непарные или вложенные «{ }»');
-        else checkArabic(where, text.replace(/[{}]/g, ''));
-        for (const [k, v] of Object.entries(block.audio ?? {})) {
-          if (k !== 'words' && k !== 'joined') error(where, `audio.${k} - только words / joined`);
-          checkAudio(`${where} audio.${k}`, v);
-        }
-        checkTexts(where, block.translations, ['words', 'joined', 'why'], ['joined']);
       }
       if (block.type === 'zikr') checkReadingZikr(where, block, { byLetter, marks, letters, passed, checkTexts });
     }

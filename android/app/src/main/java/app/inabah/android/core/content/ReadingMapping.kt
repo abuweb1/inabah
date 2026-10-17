@@ -204,7 +204,8 @@ private fun ReadingQuizDto.toQuestion(
     "letterForm" -> ReadingQuestion.LetterInForm(
         letter = findLetter(letter),
         form = requireNotNull(form?.let(LetterForm::of)) { "reading.json: неизвестная форма $form" },
-        group = formGroup(letter).ifEmpty { listOf(findLetter(letter)) },
+        // Варианты - буквы карточки; буквы нет в таблицах форм - вопрос с одним вариантом, ошибка данных.
+        group = formGroup(letter).also { require(it.size > 1) { "reading.json: «letterForm» $letter - нет карточки в таблицах форм пройденных шагов" } },
     )
     "syllable" -> ReadingQuestion.Syllable(
         findLetter(letter),

@@ -235,6 +235,7 @@
     <string name="makharij_zikr_joins">Слитно</string>
     <string name="makharij_zikr_whole">Целиком</string>
     <string name="makharij_zikr_play">Послушать</string>
+    <string name="makharij_zikr_stop">Стоп</string>
     <string name="makharij_zikr_read">Прочитал целиком</string>
     <string name="makharij_zikr_open_azkar">Открыть в азкарах</string>
     <string name="makharij_zikr_done">прочитан</string>
@@ -242,6 +243,8 @@
     <string name="makharij_words_progress">прочитано %1$d из %2$d · каждое слово - %3$s</string>
     <string name="makharij_words_read_action">прочитал ещё раз</string>
     <string name="makharij_words_tile_state">прочитано %1$d из %2$d</string>
+    <string name="makharij_words_tile_read">прочитано</string>
+    <string name="makharij_words_tile_unread">не прочитано</string>
     <string name="makharij_words_zoom_action">увеличить</string>
     <string name="makharij_words_title">Читаем слова</string>
     <string name="palette_amber">Янтарная</string>

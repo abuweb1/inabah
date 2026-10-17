@@ -1,5 +1,9 @@
 package app.inabah.android.core.settings
 
+import androidx.datastore.preferences.core.booleanPreferencesKey
+import androidx.datastore.preferences.core.stringPreferencesKey
+import app.inabah.android.core.content.model.AzkarSection
+import app.inabah.android.core.content.model.ZikrId
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
@@ -8,6 +12,11 @@ import org.junit.Test
 
 /** «Учимся читать»: пройденные уроки, счёт слов и «Скрыть транскрипцию». */
 class ReadingProgressTest {
+    private companion object {
+        val MORNING_6 = ZikrId(AzkarSection.Morning, 6)
+        val EVENING_1 = ZikrId(AzkarSection.Evening, 1)
+    }
+
     @Test
     fun `Пройденный урок переживает перезапуск в ключе reading_step_N_done`() = TestStorage.run { storage ->
         val progress = ReadingProgress(storage.storage)
@@ -49,32 +58,51 @@ class ReadingProgressTest {
     }
 
     @Test
-    fun `Зикр итога - слова по одному разу, «прочитал целиком», переживает перезапуск`() = TestStorage.run { storage ->
+    fun `Зикр итога - по разделу и номеру, слова по одному разу, «прочитал целиком», переживает перезапуск`() = TestStorage.run { storage ->
         val progress = ReadingProgress(storage.storage)
 
-        progress.readZikrWord(zikr = 1, word = 2)
-        progress.readZikrWord(zikr = 1, word = 2)
-        progress.readZikrWord(zikr = 1, word = 0)
-        progress.readZikrWord(zikr = 1, word = -1)
-        progress.markZikrRead(1)
+        progress.readZikrWord(zikr = MORNING_6, word = 2)
+        progress.readZikrWord(zikr = MORNING_6, word = 2)
+        progress.readZikrWord(zikr = MORNING_6, word = 0)
+        progress.readZikrWord(zikr = MORNING_6, word = -1)
+        progress.markZikrRead(MORNING_6)
 
         val expected = ZikrProgress(words = setOf(0, 2), isRead = true)
-        assertEquals(expected, progress.zikrs.value[1])
-        assertEquals(expected, ReadingProgress(storage.storage).zikrs.value[1], "после перезапуска")
-        assertEquals("0,2", storage.persisted()[ReadingProgress.zikrWordsKey(1)])
+        assertEquals(expected, progress.zikrs.value[MORNING_6])
+        assertNull(progress.zikrs.value[EVENING_1], "другой зикр не задет")
+        assertEquals(expected, ReadingProgress(storage.storage).zikrs.value[MORNING_6], "после перезапуска")
+        val persisted = storage.persisted()
+        assertEquals("0,2", persisted[stringPreferencesKey("reading.zikr.morning.6.words")])
+        assertEquals(true, persisted[booleanPreferencesKey("reading.zikr.morning.6.read")])
     }
 
     @Test
     fun `Сброс удаляет и прогресс зикров итога`() = TestStorage.run { storage ->
         val progress = ReadingProgress(storage.storage)
-        progress.readZikrWord(0, 0)
-        progress.markZikrRead(0)
+        progress.readZikrWord(EVENING_1, 0)
+        progress.markZikrRead(EVENING_1)
 
         progress.reset()
 
         assertTrue(progress.zikrs.value.isEmpty())
-        assertNull(storage.persisted()[ReadingProgress.zikrWordsKey(0)])
-        assertNull(storage.persisted()[ReadingProgress.zikrReadKey(0)])
+        assertNull(storage.persisted()[ReadingProgress.zikrWordsKey(EVENING_1)])
+        assertNull(storage.persisted()[ReadingProgress.zikrReadKey(EVENING_1)])
+    }
+
+    @Test
+    fun `Ключи зикров по номеру в шаге и неизвестный раздел не читаются, сброс их удаляет`() = TestStorage.run { storage ->
+        storage.seed {
+            it[stringPreferencesKey("reading.zikr.0.words")] = "0,1"
+            it[booleanPreferencesKey("reading.zikr.0.read")] = true
+            it[stringPreferencesKey("reading.zikr.night.3.words")] = "0"
+            it[stringPreferencesKey("reading.zikr.morning.0.words")] = "0"
+        }
+        val progress = ReadingProgress(storage.storage)
+        assertTrue(progress.zikrs.value.isEmpty())
+
+        progress.reset()
+
+        assertTrue(storage.persisted().asMap().keys.none { it.name.startsWith("reading.zikr.") })
     }
 
     @Test

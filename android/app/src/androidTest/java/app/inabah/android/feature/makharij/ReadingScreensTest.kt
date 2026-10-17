@@ -1,6 +1,12 @@
 package app.inabah.android.feature.makharij
 
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.semantics.getOrNull
+import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.accessibility.enableAccessibilityChecks
@@ -23,7 +29,9 @@ import app.inabah.android.core.settings.ReadingProgress
 import app.inabah.android.core.settings.ReadingSettings
 import app.inabah.android.core.settings.TestDataStoreRule
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
@@ -42,13 +50,12 @@ class ReadingScreensTest {
     @get:Rule(order = 1)
     val compose = createComposeRule()
 
-    private val store = ReadingStore(
-        AssetContentRepository(
-            InstrumentationRegistry.getInstrumentation().targetContext.assets::open,
-            ContentLanguagePriority(listOf(ContentLanguage.Base)),
-            Dispatchers.IO,
-        ),
+    private val repository = AssetContentRepository(
+        InstrumentationRegistry.getInstrumentation().targetContext.assets::open,
+        ContentLanguagePriority(listOf(ContentLanguage.Base)),
+        Dispatchers.IO,
     )
+    private val store = ReadingStore(repository)
 
     @Before
     fun enableChecks() {
@@ -145,11 +152,15 @@ class ReadingScreensTest {
             }
         }
         waitForText("группа 1 из 4")
-        val tile = compose.onNodeWithContentDescription("ذَأَمَ, заъама")
+        // Слова перемешаны: первая плитка группы - любое слово; в первой группе - с транскрипцией.
+        val first = compose.onAllNodes(hasClickAction() and hasStateDescriptionPrefix("прочитано 0 из"))[0].fetchSemanticsNode()
+        val description = first.config[SemanticsProperties.ContentDescription].single()
+        assertTrue(description, description.contains(", "))
+        val tile = compose.onNodeWithContentDescription(description)
         repeat(3) { tile.performClick() }
-        assertEquals(3, progress.wordCounts.value[2]?.first())
+        assertEquals(3, progress.wordCounts.value[2]?.max())
         // Свайп - в обе стороны (кнопки - тоже).
-        compose.onNodeWithContentDescription("ذَأَمَ, заъама").performTouchInput { swipeLeft() }
+        tile.performTouchInput { swipeLeft() }
         waitForText("группа 2 из 4")
         compose.onNodeWithText("‹ Назад").performClick()
         waitForText("группа 1 из 4")
@@ -174,6 +185,67 @@ class ReadingScreensTest {
 
     // Верные ответы шага 2: ب domma, م fatha, ن kasra, ل domma, ب kasra, م domma, ص kasra, ق fatha, ر kasra, ر fatha.
     private fun correctOption(question: Int) = listOf("бу", "ма", "ни", "льу", "би", "му", "сы", "къо", "ри", "ро")[question]
+
+    @Test
+    fun finalLessonListsZikrsWithoutDoneButton() {
+        val final = runBlocking { repository.reading() }.steps.last()
+        var opened: Int? = null
+        compose.setContent {
+            InabahTheme {
+                ReadingLessonScreen(final.number, store, ReadingProgress(dataStore.storage), ReadingSettings(dataStore.storage),
+                    onBack = {}, onOpenQuiz = {}, onOpenWords = {}, onOpenAlphabet = {}, onOpenLetterForms = {},
+                    onOpenZikr = { opened = it }, contentPadding = PaddingValues())
+            }
+        }
+        val last = final.zikrs.last()
+        val card = hasClickAction() and hasText(last.arabic, substring = true)
+        compose.waitUntil(TIMEOUT_MILLIS) { compose.onAllNodes(card).fetchSemanticsNodes().isNotEmpty() }
+        assertEquals(final.zikrs.size, compose.onAllNodes(hasClickAction() and hasText("·", substring = true)).fetchSemanticsNodes().size)
+        compose.onNode(card).performScrollTo().performClick()
+        assertEquals(final.zikrs.lastIndex, opened)
+        // Итог проходится зикрами - кнопки «Готово» нет.
+        assertTrue(compose.onAllNodesWithText("Готово").fetchSemanticsNodes().isEmpty())
+    }
+
+    @Test
+    fun zikrScreenPlaysAndStopsAndLastWordWithWholeCompletesFinal() {
+        val final = runBlocking { repository.reading() }.steps.last()
+        val progress = ReadingProgress(dataStore.storage)
+        // Прочитано всё, кроме последнего слова последнего зикра и его «целиком».
+        for (zikr in final.zikrs) {
+            zikr.words.indices.forEach { if (zikr != final.zikrs.last() || it != zikr.words.lastIndex) progress.readZikrWord(zikr.zikr, it) }
+            if (zikr != final.zikrs.last()) progress.markZikrRead(zikr.zikr)
+        }
+        val zikr = final.zikrs.last()
+        val audio = requireNotNull(zikr.audio)
+        compose.setContent {
+            var playing by mutableStateOf<String?>(null)
+            InabahTheme {
+                ReadingZikrScreen(final.number, final.zikrs.lastIndex, store, progress, ReadingSettings(dataStore.storage),
+                    onBack = {}, onOpenAzkar = {}, onOpenStep = {}, onOpenSteps = {}, contentPadding = PaddingValues(),
+                    clips = setOf(audio), playingClip = playing, onPlayClip = { playing = it }, onStopClip = { playing = null })
+            }
+        }
+        waitForText("Послушать")
+        compose.onNodeWithText("Послушать").performScrollTo().performClick()
+        compose.onNodeWithText("Стоп").performClick()
+        compose.onNodeWithText("Послушать").assertExists()
+
+        // Плитка зикра - без счёта: TalkBack читает «не прочитано», не «прочитано 0 из 1».
+        val unread = SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "не прочитано")
+        assertEquals(1, compose.onAllNodes(unread).fetchSemanticsNodes().size)
+        compose.onNode(unread).performScrollTo().performClick()
+        assertTrue(compose.onAllNodes(unread).fetchSemanticsNodes().isEmpty())
+        assertFalse(final.number in progress.lessonsDone.value)
+
+        compose.onNodeWithText("Прочитал целиком").performScrollTo().performClick()
+        compose.waitUntil(TIMEOUT_MILLIS) { compose.onAllNodesWithContentDescription("Машаа Аллах!").fetchSemanticsNodes().isNotEmpty() }
+        assertTrue(final.number in progress.lessonsDone.value)
+    }
+
+    private fun hasStateDescriptionPrefix(prefix: String) = SemanticsMatcher("StateDescription начинается с «$prefix»") {
+        it.config.getOrNull(SemanticsProperties.StateDescription)?.startsWith(prefix) == true
+    }
 
     private fun waitForText(text: String) {
         compose.waitUntil(TIMEOUT_MILLIS) { compose.onAllNodesWithText(text).fetchSemanticsNodes().isNotEmpty() }
