@@ -83,6 +83,7 @@ struct RootTabView: View {
                                 case .palette: PaletteSettingsView()
                                 case .textSize: TextSizeSettingsView()
                                 case .about: AboutView()
+                                case .licenses: LicensesView()
                                 case .license(let document): LicenseView(document: document)
                                 case .versionHistory: VersionHistoryView()
                                 }

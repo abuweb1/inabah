@@ -78,24 +78,24 @@
         }
       }
     },
+    "about.licenses" : {
+      "comment" : "О приложении: строка «Лицензии» и навбар экрана лицензий",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Лицензии"
+          }
+        }
+      }
+    },
     "about.licenses.header" : {
-      "comment" : "О приложении: заголовок группы лицензий",
+      "comment" : "Лицензии: заголовок группы шрифта и значков",
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Шрифт и значки"
-          }
-        }
-      }
-    },
-    "about.link.issues" : {
-      "comment" : "О приложении: ссылка на Issues репозитория",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Вопросы и предложения"
           }
         }
       }
@@ -107,17 +107,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Политика конфиденциальности"
-          }
-        }
-      }
-    },
-    "about.link.repository" : {
-      "comment" : "О приложении: ссылка на репозиторий",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Исходный код на GitHub"
           }
         }
       }
