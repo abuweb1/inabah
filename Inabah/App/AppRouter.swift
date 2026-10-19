@@ -53,6 +53,16 @@ nonisolated enum MakharijRoute: Hashable, Codable, Sendable {
     case steps
     /// Урок шага - поверх списка шагов.
     case lesson(Int)
+    /// «Весь алфавит» шага: все слоги или все закрытые слоги - поверх урока.
+    case alphabet(Int)
+    /// Справка к уроку (`topic == nil`) или тема урока «Особые случаи» по номеру - поверх урока.
+    case extra(step: Int, topic: Int?)
+    /// Карточка буквы из таблицы форм: формы и слова-примеры букв группы - поверх урока.
+    case letterForms(step: Int, letter: String)
+    /// «Проверить себя» - поверх урока.
+    case quiz(Int)
+    /// «Читаем слова» - поверх урока.
+    case words(Int)
 }
 
 /// Навигация приложения: выбранная вкладка и типизированный стек каждой вкладки.
@@ -111,7 +121,8 @@ final class AppRouter {
         }
     }
 
-    /// Урок открывается поверх списка шагов - «назад» ведёт в список (как Android `AppRouter.open`).
+    /// Урок открывается поверх списка шагов, экраны урока - поверх урока: «назад» ведёт туда, откуда
+    /// пришли бы в приложении (как Android `AppRouter.open`).
     func open(_ route: MakharijRoute) {
         selectedTab = .makharij
         switch route {
@@ -119,6 +130,9 @@ final class AppRouter {
             makharijPath = [route]
         case .lesson:
             makharijPath = [.steps, route]
+        case .alphabet(let step), .quiz(let step), .words(let step),
+             .extra(let step, _), .letterForms(let step, _):
+            makharijPath = [.steps, .lesson(step), route]
         }
     }
 

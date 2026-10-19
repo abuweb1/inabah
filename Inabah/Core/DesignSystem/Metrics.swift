@@ -124,6 +124,10 @@ enum Motion {
     static let sparkleBurst = Animation.timingCurve(0.4, 0, 0.2, 1, duration: 0.7)
     /// Замок открывшегося шага «отщёлкивается»: пауза 0,4 с, затем 0,8 с.
     static let unlock = Animation.timingCurve(0.4, 0, 0.2, 1, duration: 0.8).delay(0.4)
+    /// Увеличение плитки долгим нажатием и обратно (Android `Motion.zoom`).
+    static let zoom = Animation.timingCurve(0.4, 0, 0.2, 1, duration: 0.3)
+    /// Подсказка транскрипции по лампочке.
+    static let transliterationHint = Duration.milliseconds(700)
     /// Сколько показывать открытие шага, прежде чем запомнить, что его видели.
     static let unlockSeenDelay = Duration.milliseconds(1200)
     /// Пауза между заполнением счётчика и сворачиванием карточки (вспышка «готово»).
