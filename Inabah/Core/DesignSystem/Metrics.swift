@@ -118,6 +118,14 @@ enum Motion {
     static let fontSize = Animation.smooth(duration: 0.3)
     /// Полоса прогресса раздела.
     static let progress = Animation.easeInOut(duration: 0.5)
+    /// «Дыхание» текущего шага курса: ×1,08 и обратно, 1,1 с в одну сторону (Android `FastOutSlowIn`).
+    static let breathe = Animation.timingCurve(0.4, 0, 0.2, 1, duration: 1.1).repeatForever(autoreverses: true)
+    /// Вспышка звёздочек (открытие шага, верный ответ).
+    static let sparkleBurst = Animation.timingCurve(0.4, 0, 0.2, 1, duration: 0.7)
+    /// Замок открывшегося шага «отщёлкивается»: пауза 0,4 с, затем 0,8 с.
+    static let unlock = Animation.timingCurve(0.4, 0, 0.2, 1, duration: 0.8).delay(0.4)
+    /// Сколько показывать открытие шага, прежде чем запомнить, что его видели.
+    static let unlockSeenDelay = Duration.milliseconds(1200)
     /// Пауза между заполнением счётчика и сворачиванием карточки (вспышка «готово»).
     static let collapseDelay = Duration.milliseconds(550)
     /// Пауза перед показом оверлея «Машаа Аллах!» после последнего зикра.

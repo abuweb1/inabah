@@ -1668,6 +1668,17 @@
         }
       }
     },
+    "makharij.final.title %@" : {
+      "comment" : "Учимся читать: итог курса вместо номера шага",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Итог · %@"
+          }
+        }
+      }
+    },
     "makharij.home.brand.tagline" : {
       "comment" : "Главная «Махрадж»: подзаголовок под арабским названием",
       "localizations" : {
@@ -1701,24 +1712,123 @@
         }
       }
     },
-    "makharij.soon.message" : {
-      "comment" : "Главная «Махрадж»: что появится в разделе",
+    "makharij.lesson.soon.message" : {
+      "comment" : "Урок шага без содержания: пояснение",
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Здесь появятся махраджи арабских букв: где и как произносится каждая, с аудио"
+            "value" : "Содержание этого шага ещё пишется."
           }
         }
       }
     },
-    "makharij.soon.title" : {
-      "comment" : "Главная «Махрадж»: заглушка — раздел в разработке",
+    "makharij.lesson.soon.title" : {
+      "comment" : "Урок шага без содержания",
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Скоро"
+            "value" : "Урок готовится"
+          }
+        }
+      }
+    },
+    "makharij.reading.allDone" : {
+      "comment" : "Карточка «Учимся читать»: курс пройден вместе с итогом",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Все шаги пройдены"
+          }
+        }
+      }
+    },
+    "makharij.reading.card.progress %lld %lld" : {
+      "comment" : "Карточка «Учимся читать»: шаги с уроком пройдены, но есть шаги без урока",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пройдено %1$lld из %2$lld"
+          }
+        }
+      }
+    },
+    "makharij.reading.card.step %lld %lld %@" : {
+      "comment" : "Карточка «Учимся читать»: текущий шаг, всего шагов (без итога), название шага",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Шаг %1$lld из %2$lld · %3$@"
+          }
+        }
+      }
+    },
+    "makharij.reading.title" : {
+      "comment" : "Учимся читать: карточка на главной «Махраджа» и навбар списка шагов",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Учимся читать"
+          }
+        }
+      }
+    },
+    "makharij.step.state.current" : {
+      "comment" : "Список шагов: состояние шага для VoiceOver",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "текущий"
+          }
+        }
+      }
+    },
+    "makharij.step.state.done" : {
+      "comment" : "Список шагов: состояние шага для VoiceOver",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "пройден"
+          }
+        }
+      }
+    },
+    "makharij.step.state.locked" : {
+      "comment" : "Список шагов: состояние закрытого шага для VoiceOver",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "закрыт: сначала пройдите предыдущий шаг"
+          }
+        }
+      }
+    },
+    "makharij.step.title %lld %@" : {
+      "comment" : "Учимся читать: название шага с номером (навбар урока, VoiceOver строки)",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Шаг %1$lld · %2$@"
+          }
+        }
+      }
+    },
+    "makharij.steps.progress %lld %lld" : {
+      "comment" : "Список шагов: прогресс над полосой (итог не считается)",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "пройдено %1$lld из %2$lld"
           }
         }
       }

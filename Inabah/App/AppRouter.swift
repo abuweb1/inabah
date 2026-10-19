@@ -47,6 +47,14 @@ nonisolated enum HadithRoute: Hashable, Codable, Sendable {
     case favorites
 }
 
+/// Экраны внутри вкладки «Махрадж» (курс «Учимся читать»). Номер шага - `ReadingStep.number`.
+nonisolated enum MakharijRoute: Hashable, Codable, Sendable {
+    /// Список шагов курса - из карточки на главной.
+    case steps
+    /// Урок шага - поверх списка шагов.
+    case lesson(Int)
+}
+
 /// Навигация приложения: выбранная вкладка и типизированный стек каждой вкладки.
 ///
 /// Типизированный путь вместо `NavigationPath` позволяет открыть любой экран из кода
@@ -56,6 +64,7 @@ final class AppRouter {
     var selectedTab: AppTab = .azkar
     var azkarPath: [AzkarRoute] = []
     var hadithPath: [HadithRoute] = []
+    var makharijPath: [MakharijRoute] = []
     var settingsPath: [SettingsRoute] = []
 
     /// Выбор вкладки из таб-бара. Повторный выбор активной вкладки возвращает к её корню.
@@ -77,8 +86,7 @@ final class AppRouter {
         case .hadith:
             if !hadithPath.isEmpty { hadithPath.removeAll() }
         case .makharij:
-            // Пока раздел — одна главная (заглушка), стека нет.
-            break
+            if !makharijPath.isEmpty { makharijPath.removeAll() }
         case .settings:
             if !settingsPath.isEmpty { settingsPath.removeAll() }
         }
@@ -100,6 +108,17 @@ final class AppRouter {
             hadithPath = [.list(id.collection), route]
         case .about(let collection):
             hadithPath = [.list(collection), route]
+        }
+    }
+
+    /// Урок открывается поверх списка шагов - «назад» ведёт в список (как Android `AppRouter.open`).
+    func open(_ route: MakharijRoute) {
+        selectedTab = .makharij
+        switch route {
+        case .steps:
+            makharijPath = [route]
+        case .lesson:
+            makharijPath = [.steps, route]
         }
     }
 

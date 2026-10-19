@@ -61,9 +61,18 @@ struct RootTabView: View {
             }
             // «ع» (айн) — гортанная буква, хрестоматийный пример махраджа.
             Tab("tab.makharij", image: "tabIconMakharij", value: AppTab.makharij) {
-                NavigationStack {
+                NavigationStack(path: $router.makharijPath) {
                     MakharijHomeView()
                         .interfaceTextSize()
+                        .navigationDestination(for: MakharijRoute.self) { route in
+                            Group {
+                                switch route {
+                                case .steps: ReadingStepsView()
+                                case .lesson(let number): ReadingLessonView(stepNumber: number)
+                                }
+                            }
+                            .interfaceTextSize()
+                        }
                 }
                 .tint(theme.palette.accentLight)
                 .floatingTabBarSpace(chromeStyle, safeAreaBottom: safeAreaBottom)
