@@ -408,7 +408,10 @@ function checkVersions(file) {
 const READING_KEYS = ['marks', 'letters', 'steps'];
 const READING_MARK_KEYS = ['id', 'sign', 'translations'];
 const READING_MARK_TEXT_KEYS = ['name', 'where', 'sound'];
-const READING_LETTER_KEYS = ['id', 'letter', 'name', 'joinsNext', 'joinsPrevious', 'syllableBases', 'audio', 'translations'];
+const READING_LETTER_KEYS = ['id', 'letter', 'name', 'joinsNext', 'joinsPrevious', 'syllableBases', 'closedBase', 'closedVowels', 'audioLike', 'audio', 'translations'];
+// Записи закрытых слогов буквы (أَبْ «ъаб», إِبْ, أُبْ; просьба пользователя 2026-10-19 - согласная с сукуном
+// одна не произносится): ключ audio → огласовка алифа перед буквой.
+const READING_CLOSED_AUDIO = { closedFatha: 'fatha', closedKasra: 'kasra', closedDamma: 'damma' };
 const READING_LETTER_TEXT_KEYS = ['name', 'nameTranslit', 'sound', 'syllables', 'note'];
 const READING_STEP_KEYS = ['id', 'marks', 'example', 'translations', 'blocks', 'quiz', 'quizCount', 'words', 'final', 'extra'];
 // Вопросов в одном заходе в «Проверить себя» (просьба пользователя 2026-10-19): берутся случайно из запаса quiz;
@@ -424,7 +427,10 @@ const READING_BLOCKS = {
   zikr: ['type', 'section', 'id', 'audio', 'arabic', 'words', 'joins', 'translations'],
   rule: ['type', 'arabic', 'letters', 'translations'],
   forms: ['type', 'groups', 'examples', 'exampleCard', 'translations'],
-  formulas: ['type', 'columns', 'items', 'sample'],
+  formulas: ['type', 'columns', 'items'],
+  // Закрытые слоги шага «Сукун» (2026-10-19): строит приложение из букв (closedVowels, closedBase) - ряд на букву;
+  // на уроке - sample случайных, весь алфавит - отдельным экраном.
+  closedSyllables: ['type', 'letters', 'sample'],
   // Тема урока (шаг «Особые случаи», 2026-10-17): карточка - название, описание, пример; блоки - её экран.
   topic: ['type', 'arabic', 'blocks', 'translations'],
 };
@@ -621,10 +627,19 @@ function checkReading(file) {
       knownMark(`${at} syllableBases`, k);
       if (!/^[ء-ي]$/.test(v ?? '')) error(at, `syllableBases.${k} - одна арабская буква`);
     }
+    // Буква с сукуном в закрытом слоге, если не сама буква (алиф и хӏамза - хӏамза на алифе: أَأْ إِأْ أُأْ).
+    if (letter?.closedBase !== undefined && !/^[ء-ي]$/.test(letter.closedBase)) error(at, 'closedBase - одна арабская буква');
+    // После каких огласовок у буквы бывает закрытый слог (у و ي - только после фатхьи: أُوْ, إِيْ - мадд); нет - после всех трёх.
+    const vowels = letter?.closedVowels;
+    if (vowels !== undefined && (!Array.isArray(vowels) || !vowels.length || vowels.some(v => !Object.values(READING_CLOSED_AUDIO).includes(v)))) {
+      error(at, 'closedVowels - непустой массив из fatha, kasra, damma');
+    }
     const audio = letter?.audio;
-    if (!audio || typeof audio !== 'object' || Array.isArray(audio)) error(at, 'audio - объект { sound, name, <знак>: файл | null }');
+    if (!audio || typeof audio !== 'object' || Array.isArray(audio)) error(at, 'audio - объект { name, <знак>, closedFatha…: файл | null }');
     else for (const [k, v] of Object.entries(audio)) {
-      if (k !== 'sound' && k !== 'name') knownMark(`${at} audio`, k);
+      if (k === 'sound') error(`${at} audio`, 'sound - больше нет: вместо звука с сукуном - закрытые слоги closedFatha, closedKasra, closedDamma');
+      else if (k !== 'name' && !(k in READING_CLOSED_AUDIO)) knownMark(`${at} audio`, k);
+      if (k in READING_CLOSED_AUDIO && Array.isArray(vowels) && !vowels.includes(READING_CLOSED_AUDIO[k])) error(`${at} audio`, `${k} - нет в closedVowels`);
       checkAudio(`${at} audio.${k}`, v);
     }
     const ru = checkTexts(at, letter?.translations, READING_LETTER_TEXT_KEYS, ['name', 'nameTranslit', 'sound']);
@@ -636,6 +651,17 @@ function checkReading(file) {
     }
   }
   const knownLetter = (at, l) => { if (!byLetter.has(l)) error(at, `неизвестная буква «${l}»`); };
+  // Буква звучит как другая (хӏамза - как алиф, решение пользователя 2026-10-19): своя запись - только название,
+  // остальные записи - той буквы (reading_<NN той буквы>_…).
+  for (const letter of letters) {
+    if (letter?.audioLike === undefined) continue;
+    const at = `reading letter ${letter.id}`;
+    const like = byLetter.get(letter.audioLike);
+    if (!like || like === letter || like.audioLike !== undefined) { error(at, `audioLike - другая буква курса без своего audioLike`); continue; }
+    for (const [k, v] of Object.entries(letter.audio ?? {})) {
+      if (k !== 'name' && v !== null && v !== like.audio?.[k]) error(`${at} audio.${k}`, `${v} - запись буквы ${like.letter} (${like.audio?.[k] ?? 'у неё нет'})`);
+    }
+  }
 
   const steps = Array.isArray(file.steps) ? file.steps : [];
   // Транскрипция слов «Читаем слова» - с ней сверяются слова-примеры форм (одно слово - одна транскрипция).
@@ -737,9 +763,10 @@ function checkReading(file) {
       // syllables.marks - столбцы таблицы (танвин), без поля - пройденные огласовки.
       if (block.type === 'marks' || block.type === 'syllables') for (const m of block.marks ?? []) knownMark(where, m);
       // Без letters - весь алфавит.
-      if (block.type === 'letters' || block.type === 'syllables') for (const l of block.letters ?? []) knownLetter(where, l);
+      if (['letters', 'syllables', 'closedSyllables'].includes(block.type)) for (const l of block.letters ?? []) knownLetter(where, l);
+      if (block.type === 'closedSyllables' && !passed.has('sukun')) error(where, 'closedSyllables: сукун ещё не пройден к этому шагу');
       // sample - на уроке столько случайных слогов, весь алфавит - отдельным экраном.
-      if ((block.type === 'syllables' || block.type === 'formulas') && block.sample !== undefined && (!Number.isInteger(block.sample) || block.sample < 1)) error(where, 'sample - целое ≥ 1');
+      if ((block.type === 'syllables' || block.type === 'closedSyllables') && block.sample !== undefined && (!Number.isInteger(block.sample) || block.sample < 1)) error(where, 'sample - целое ≥ 1');
       if (block.type === 'rule') {
         if (requireString(where, block, 'arabic')) checkArabic(where, block.arabic);
         for (const l of block.letters ?? []) knownLetter(where, l);
@@ -836,6 +863,9 @@ function checkReading(file) {
         if (!['fatha', 'kasra', 'damma'].includes(q.mark)) error(where, 'closedSyllable: mark - fatha, kasra или damma');
         if (!passed.has('sukun')) error(where, 'closedSyllable: сукун ещё не пройден к этому шагу');
         if (!byLetter.get(q.letter)?.translations?.[BASE_LANGUAGE]?.sound) error(where, `нет звука буквы ${q.letter}`);
+        // После этой огласовки буква слог не закрывает (أُوْ, إِيْ - мадд): closedVowels буквы.
+        const vowels = byLetter.get(q.letter)?.closedVowels;
+        if (vowels && !vowels.includes(q.mark)) error(where, `closedSyllable: у ${q.letter} после ${q.mark} закрытого слога нет (closedVowels)`);
       }
     }
   }

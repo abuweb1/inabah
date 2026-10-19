@@ -7,7 +7,10 @@
 //
 // Имена - docs/process/audio.md, раздел 5:
 //   reading_<NN буквы>_name.m4a          название буквы (лист буквы, «Послушать алфавит»)
-//   reading_<NN буквы>_sound.m4a         звук буквы с сукуном (лист буквы)
+//   reading_<NN буквы>_closed_<знак>.m4a закрытый слог: алиф-хӏамза с фатхьой / касрой / доммой и буква с сукуном -
+//                                        أَبْ «ъаб» (лист буквы, таблица шага «Сукун»; у алифа нет: согласная с сукуном
+//                                        одна не произносится, решение пользователя 2026-10-19). У хӏамзы своё -
+//                                        только название: остальное - записи алифа (audioLike)
 //   reading_<NN буквы>_<знак>.m4a        слог с фатхьой / касрой / доммой (лист буквы, таблица слогов)
 //   reading_s<NN шага>_<NN буквы>_<initial|medial|final>.m4a   слово-пример формы буквы (формы букв)
 
@@ -20,7 +23,8 @@ const DATA = join(ROOT, 'data', 'reading.json');
 const AUDIO = join(ROOT, 'audio', 'reading');
 const args = new Set(process.argv.slice(2));
 
-const data = JSON.parse(readFileSync(DATA, 'utf8'));
+const raw = readFileSync(DATA, 'utf8');
+const data = JSON.parse(raw);
 const present = new Set(existsSync(AUDIO) ? readdirSync(AUDIO) : []);
 const pad = n => String(n).padStart(2, '0');
 const ru = x => x?.translations?.ru ?? {};
@@ -33,14 +37,29 @@ sections.push({
   title: 'Названия букв (лист буквы, «Послушать алфавит»)',
   items: data.letters.map(l => ({ file: `reading_${pad(l.id)}_name.m4a`, what: `${l.letter} ${ru(l).name} - «${ru(l).nameTranslit}»` })),
 });
-sections.push({
-  title: 'Звук буквы с сукуном (лист буквы)',
-  items: data.letters.map(l => ({ file: `reading_${pad(l.id)}_sound.m4a`, what: `${l.letter}ْ - «${ru(l).sound}»` })),
-});
 const marks = Object.fromEntries(data.marks.map(m => [m.id, m]));
+// Закрытый слог: алиф-хӏамза с огласовкой и буква с сукуном (у алифа и хӏамзы - хӏамза с сукуном на алифе,
+// closedBase: أَأْ إِأْ أُأْ «ъаъ ъиъ ъуъ», решение пользователя 2026-10-19).
+const alif = data.letters.find(l => l.letter === 'ا');
+const CLOSED = { fatha: 'closedFatha', kasra: 'closedKasra', damma: 'closedDamma' };
+const closedArabic = (l, v) => `${alif.syllableBases?.[v] ?? alif.letter}${marks[v].sign}${l.closedBase ?? l.letter}${marks.sukun.sign}`;
+const closedFile = (l, v) => `reading_${pad(l.id)}_closed_${v}.m4a`;
+// Хӏамза звучит как алиф (audioLike, решение пользователя 2026-10-19): своё у неё только название, слоги, танвин и
+// закрытые слоги - записи алифа (reading_01_…). Свои записи слогов - только у букв без audioLike.
+const letterOf = Object.fromEntries(data.letters.map(l => [l.letter, l]));
+const owner = l => (l.audioLike ? letterOf[l.audioLike] : l);
+const own = data.letters.filter(l => !l.audioLike);
+// У و ي - только после фатхьи (closedVowels): أُوْ, إِيْ - мадд, إِوْ, أُيْ не бывает.
+const closedVowels = l => l.closedVowels ?? VOWELS;
+sections.push({
+  title: 'Закрытые слоги (лист буквы, таблица шага «Сукун»)',
+  items: own.flatMap(l => closedVowels(l).map(v => ({
+    file: closedFile(l, v), what: `${closedArabic(l, v)} - «${ru(alif).syllables[v]}${ru(l).sound}»`,
+  }))),
+});
 sections.push({
   title: 'Слоги с фатхьой, касрой, доммой (лист буквы, таблица слогов)',
-  items: data.letters.flatMap(l => VOWELS.filter(v => ru(l).syllables?.[v]).map(v => {
+  items: own.flatMap(l => VOWELS.filter(v => ru(l).syllables?.[v]).map(v => {
     const base = l.syllableBases?.[v] ?? l.letter;
     return { file: `reading_${pad(l.id)}_${v}.m4a`, what: `${base}${marks[v].sign} - «${ru(l).syllables[v]}»` };
   })),
@@ -49,7 +68,7 @@ sections.push({
 const TANWIN = ['fathatan', 'kasratan', 'dammatan'];
 sections.push({
   title: 'Слоги с танвином (лист буквы, таблица слогов шага «Танвин»)',
-  items: data.letters.flatMap(l => TANWIN.filter(v => ru(l).syllables?.[v]).map(v => {
+  items: own.flatMap(l => TANWIN.filter(v => ru(l).syllables?.[v]).map(v => {
     const base = l.syllableBases?.[v] ?? l.letter;
     const alif = v === 'fathatan' && base !== 'أ' ? 'ا' : '';
     return { file: `reading_${pad(l.id)}_${v}.m4a`, what: `${base}${marks[v].sign}${alif} - «${ru(l).syllables[v]}»` };
@@ -85,18 +104,21 @@ for (const { title, items } of sections) {
 }
 console.log(`\nВсего: ${done} из ${total} записей.`);
 
-// Записи букв - в data/reading.json (название, звук, слоги, танвин): приложение берёт их оттуда.
+// Записи букв - в data/reading.json (название, слоги, танвин, закрытые слоги): приложение берёт их оттуда -
+// и в листе буквы, и в таблице закрытых слогов шага «Сукун».
 if (args.has('--write')) {
   let changed = 0;
-  for (const l of data.letters) {
-    for (const key of ['name', 'sound', ...VOWELS, ...TANWIN]) {
-      const file = `reading_${pad(l.id)}_${key}.m4a`;
-      if (present.has(file) && l.audio?.[key] !== file) {
-        l.audio = { ...l.audio, [key]: file };
-        changed++;
-      }
+  const put = (l, key, file) => {
+    if (present.has(file) && l.audio?.[key] !== file) {
+      l.audio = { ...l.audio, [key]: file };
+      changed++;
     }
+  };
+  for (const l of data.letters) {
+    put(l, 'name', `reading_${pad(l.id)}_name.m4a`);
+    for (const key of [...VOWELS, ...TANWIN]) put(l, key, `reading_${pad(owner(l).id)}_${key}.m4a`);
+    for (const v of closedVowels(l)) put(l, CLOSED[v], closedFile(owner(l), v));
   }
-  if (changed) writeFileSync(DATA, JSON.stringify(data, null, 2) + '\n');
+  if (changed) writeFileSync(DATA, JSON.stringify(data, null, 2) + (raw.endsWith('\n') ? '\n' : ''));
   console.log(`--write: в reading.json вписано записей: ${changed}`);
 }

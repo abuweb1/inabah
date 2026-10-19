@@ -26,7 +26,7 @@ import app.inabah.android.core.settings.ReadingSettings
 /**
  * «Весь алфавит» с огласовками (решение пользователя 2026-10-15): таблица шага карточками по 4 буквы,
  * глаз, нажатие - лист буквы. Открывается кнопкой под карточкой случайных слогов урока. У шага без
- * таблицы слогов (сукун, 2026-10-16) - все формулы блока с [ReadingBlock.Formulas.sample], «закрытые слоги».
+ * таблицы слогов (сукун, 2026-10-16) - таблица [ReadingBlock.ClosedSyllables] (слоги без формул, 2026-10-19), «закрытые слоги».
  */
 @Composable
 fun ReadingAlphabetScreen(
@@ -36,10 +36,11 @@ fun ReadingAlphabetScreen(
     onBack: () -> Unit,
     contentPadding: PaddingValues,
     modifier: Modifier = Modifier,
-    /** Записи листа буквы (`ClipPlayer`). */
+    /** Записи листа буквы и закрытых слогов (`ClipPlayer`). */
     clips: ClipPlayback = ClipPlayback.None,
 ) {
     val hidden by settings.transliterationHidden.collectAsStateWithLifecycle()
+    val available by clips.available.collectAsStateWithLifecycle()
     var sheetLetter by rememberSaveable { mutableStateOf<Int?>(null) }
     // Подзаголовок - до загрузки курса «с огласовками»; у шага без таблицы слогов - «закрытые слоги».
     val course by store.course.collectAsStateWithLifecycle()
@@ -66,10 +67,10 @@ fun ReadingAlphabetScreen(
                     .padding(horizontal = Spacing.xl)
                     .padding(top = Spacing.s, bottom = Spacing.xl + contentPadding.calculateBottomPadding()),
             ) {
-                val formulas = course.step(stepNumber)?.blocks?.filterIsInstance<ReadingBlock.Formulas>()?.firstOrNull { it.sample != null }
+                val closed = course.step(stepNumber)?.blocks?.filterIsInstance<ReadingBlock.ClosedSyllables>()?.firstOrNull()
                 when {
                     table != null -> SyllablesTable(table.letters, table.marks, hidden, onLetter = { letter -> sheetLetter = letter.number })
-                    formulas != null -> FormulasCards(formulas.items, formulas.columns, hidden)
+                    closed != null -> ClosedSyllablesTable(closed, hidden, available, clips::play)
                 }
             }
             LetterSheet(

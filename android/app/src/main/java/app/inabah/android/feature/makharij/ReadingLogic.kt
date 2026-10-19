@@ -3,7 +3,7 @@ package app.inabah.android.feature.makharij
 import app.inabah.android.core.content.model.LetterForm
 import app.inabah.android.core.content.model.ReadingBlock
 import app.inabah.android.core.content.model.ReadingCourse
-import app.inabah.android.core.content.model.ReadingFormula
+import app.inabah.android.core.content.model.ReadingClosedSyllable
 import app.inabah.android.core.content.model.ReadingLetter
 import app.inabah.android.core.content.model.ReadingMark
 import app.inabah.android.core.content.model.ReadingQuestion
@@ -11,6 +11,7 @@ import app.inabah.android.core.content.model.ReadingStep
 import app.inabah.android.core.content.model.ReadingWord
 import app.inabah.android.core.content.model.ReadingWords
 import app.inabah.android.core.content.model.ZikrId
+import app.inabah.android.core.content.model.closedSyllables
 import app.inabah.android.core.settings.ReadingProgress
 import app.inabah.android.core.settings.ZikrProgress
 import kotlin.random.Random
@@ -18,7 +19,7 @@ import kotlin.random.Random
 // Правила «Учимся читать» без Compose (docs/08-screen-makharij.md): цепочка листа буквы,
 // варианты ответа, текущий шаг.
 
-/** Элемент цепочки листа буквы: звук → название → слоги. */
+/** Элемент цепочки листа буквы: название → слоги → закрытые слоги. */
 data class LetterChainItem(
     val kind: Kind,
     val arabic: String,
@@ -27,24 +28,19 @@ data class LetterChainItem(
     val audioFile: String?,
     /** Слог с ещё не пройденным знаком - пунктиром, без звука. */
     val isLearned: Boolean,
-    /** Название знака слога (`фатха`); у звука и названия - `null`. */
+    /** Название знака слога (`фатха`, у закрытого слога - `сукун`); у названия - `null`. */
     val markName: String? = null,
 ) {
-    enum class Kind { Sound, Name, Syllable }
+    enum class Kind { Name, Syllable, Closed }
 }
 
 /**
- * Цепочка буквы [letter] на шаге [stepNumber]: звук (с сукуном, если сукун уже пройден), название, затем слоги всех знаков,
- * для которых у буквы есть транскрипция (по порядку знаков курса); знак, не пройденный к шагу, -
- * [LetterChainItem.isLearned] `false`, а танвин до его шага не показывается. Сукуна в данных нет - без звука.
+ * Цепочка буквы [letter] на шаге [stepNumber]: название, слоги всех знаков, для которых у буквы есть транскрипция
+ * (по порядку знаков курса), затем закрытые слоги (`أَبْ أِبْ أُبْ`). Знак, не пройденный к шагу, -
+ * [LetterChainItem.isLearned] `false`, а танвин до его шага не показывается.
  */
 fun letterChain(course: ReadingCourse, letter: ReadingLetter, stepNumber: Int): List<LetterChainItem> {
     val learned = course.learnedMarks(stepNumber).mapTo(mutableSetOf()) { it.id }
-    // Звук (буква с сукуном) - только когда сукун пройден: раньше непонятный знак путает (решение
-    // пользователя 2026-10-15, вариант «а»).
-    val sound = course.sukun?.takeIf { it.id in learned }?.let { sukun ->
-        LetterChainItem(LetterChainItem.Kind.Sound, letter.soundArabic(sukun), letter.sound, letter.audio[KEY_SOUND], true)
-    }
     val name = LetterChainItem(
         LetterChainItem.Kind.Name, letter.arabicName, letter.nameTransliteration, letter.audio[KEY_NAME], true,
     )
@@ -62,17 +58,38 @@ fun letterChain(course: ReadingCourse, letter: ReadingLetter, stepNumber: Int): 
             markName = mark.name,
         )
     }
-    return listOfNotNull(sound, name) + syllables
+    return listOf(name) + syllables + closedChain(course, letter, learned)
+}
+
+/**
+ * Закрытые слоги буквы (решение пользователя 2026-10-19: согласная с сукуном одна не произносится - «ъаб ъиб ъуб»
+ * вместо «б»): только когда сукун пройден (раньше непонятный знак путает, решение 2026-10-15); у алифа - те же, что
+ * у хамзы (`أَأْ إِأْ أُأْ`: своего звука у алифа нет, он подставка хамзы), у و и ي - кроме мадда (أُوْ, إِيْ;
+ * [ReadingLetter.closedVowels]). Нет в данных сукуна или алифа - пусто.
+ */
+private fun closedChain(course: ReadingCourse, letter: ReadingLetter, learned: Set<String>): List<LetterChainItem> {
+    val sukun = course.sukun?.takeIf { it.id in learned } ?: return emptyList()
+    val alif = course.alif ?: return emptyList()
+    val vowels = course.marks.filter { it.id in ReadingLetter.CLOSED_VOWELS }
+    return closedSyllables(letter, alif, vowels, sukun).map { closed ->
+        LetterChainItem(
+            kind = LetterChainItem.Kind.Closed,
+            arabic = closed.arabic,
+            transliteration = closed.transliteration,
+            audioFile = closed.audio,
+            isLearned = true,
+            markName = sukun.name,
+        )
+    }
 }
 
 /** Запись названия буквы (`reading_NN_name.m4a`) - она звучит и в «Послушать алфавит»; нет - `null`. */
 val ReadingLetter.nameAudio: String? get() = audio[KEY_NAME]
 
-/** Записи цепочки листа буквы по порядку (звук → название → слоги) из тех, что есть в сборке [available]. */
+/** Записи цепочки листа буквы по порядку (название → слоги → закрытые слоги) из тех, что есть в сборке [available]. */
 fun List<LetterChainItem>.playableFiles(available: Set<String>): List<String> =
     mapNotNull { item -> item.audioFile?.takeIf { it in available } }
 
-private const val KEY_SOUND = "sound"
 private const val KEY_NAME = "name"
 private const val OPTION_COUNT = 3
 
@@ -279,10 +296,10 @@ fun sampleSyllables(
 }
 
 /**
- * Случайные формулы для карточки урока (закрытые слоги сукуна, решение пользователя 2026-10-16): [count]
- * разных формул в порядке таблицы. Одинаковые при том же [seed] (экран хранит его).
+ * Случайные закрытые слоги для карточки урока (шаг «Сукун», решение пользователя 2026-10-16): [count] разных
+ * слогов в порядке таблицы. Одинаковые при том же [seed] (экран хранит его).
  */
-fun sampleFormulas(items: List<ReadingFormula>, count: Int, seed: Int): List<ReadingFormula> {
+fun sampleClosedSyllables(items: List<ReadingClosedSyllable>, count: Int, seed: Int): List<ReadingClosedSyllable> {
     val picked = items.indices.shuffled(kotlin.random.Random(seed)).take(count).toSet()
     return items.filterIndexed { index, _ -> index in picked }
 }

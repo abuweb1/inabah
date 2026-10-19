@@ -92,7 +92,7 @@ import kotlinx.coroutines.launch
 
 /**
  * Лист буквы снизу (1A, решение пользователя 2026-10-15; набросок `docs/design/makharij-audio-themes.html`):
- * буква на пергаменте, название, номер, цепочка справа налево - звук → название → слоги; слог с ещё не
+ * буква на пергаменте, название, номер, цепочка справа налево - название → слоги → закрытые слоги; слог с ещё не
  * пройденным знаком - пунктиром. Закрывается смахиванием вниз, нажатием на затемнение, «×» и «Назад».
  * Озвучка (набросок 1A): есть записи цепочки - справа в шапке круглая ▶ «Прослушать» цвета раздела;
  * при открытии листа цепочка звучит сама, по очереди, звучащий элемент подсвечен, во время цепочки - ⏹;
@@ -261,7 +261,7 @@ private fun SheetPanel(
                 modifier = Modifier.fillMaxWidth().padding(top = Spacing.m),
             )
         }
-        // Справа налево: звук - первым справа.
+        // Справа налево: название - первым справа.
         CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
             FlowRow(
                 Modifier.fillMaxWidth().padding(top = Spacing.xl),
@@ -285,7 +285,7 @@ private fun SheetPanel(
 }
 
 /**
- * Элемент цепочки: подпись сверху («звук», «название», знак), арабское и транскрипция. Звучит - подсвечен цветом
+ * Элемент цепочки: подпись сверху («название», знак, у закрытого слога - «сукун»), арабское и транскрипция. Звучит - подсвечен цветом
  * раздела, как буква «Послушать алфавит»; [onPlay] - есть запись: нажатие проигрывает только его.
  */
 @Composable
@@ -302,9 +302,8 @@ private fun ChainChip(item: LetterChainItem, hidden: Boolean, isPlaying: Boolean
         }
     }
     val label = when (item.kind) {
-        LetterChainItem.Kind.Sound -> stringResource(R.string.makharij_chain_sound)
         LetterChainItem.Kind.Name -> stringResource(R.string.makharij_chain_name)
-        LetterChainItem.Kind.Syllable -> item.markName.orEmpty()
+        LetterChainItem.Kind.Syllable, LetterChainItem.Kind.Closed -> item.markName.orEmpty()
     }
     val description = if (item.isLearned) {
         "$label, ${item.transliteration}"

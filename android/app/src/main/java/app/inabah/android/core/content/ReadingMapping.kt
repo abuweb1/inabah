@@ -20,6 +20,7 @@ import app.inabah.android.core.content.model.ReadingStep
 import app.inabah.android.core.content.model.ReadingWord
 import app.inabah.android.core.content.model.ReadingWords
 import app.inabah.android.core.content.model.ZikrId
+import app.inabah.android.core.content.model.closedSyllables
 
 // reading.json → курс на выбранном языке. Ссылки на неизвестные знак или букву, запись без
 // перевода - ошибка данных (IllegalArgumentException; их ловит check-data, а репозиторий
@@ -53,6 +54,8 @@ internal fun ReadingFileDto.toReadingCourse(priority: ContentLanguagePriority): 
             syllables = text.syllables,
             audio = dto.audio.mapNotNull { (key, file) -> file?.let { key to it } }.toMap(),
             note = text.note?.trim()?.ifEmpty { null },
+            closedBase = dto.closedBase,
+            closedVowels = dto.closedVowels ?: ReadingLetter.CLOSED_VOWELS,
         )
     }
     val markById = marks.associateBy { it.id }
@@ -180,8 +183,18 @@ private fun ReadingBlockDto.toBlock(
                     ?.translation?.translit?.trim()?.ifEmpty { null },
             )
         },
-        sample = sample,
     )
+    // Закрытые слоги (шаг «Сукун», 2026-10-19): ряд на букву, столбцы - огласовки алифа; без букв - весь алфавит.
+    "closedSyllables" -> {
+        val vowels = ReadingLetter.CLOSED_VOWELS.map(mark)
+        val alif = letter(ReadingLetter.ALIF)
+        val sukun = mark(ReadingMark.SUKUN)
+        val rows = (letters?.map(letter) ?: alphabet).map { row ->
+            val cells = closedSyllables(row, alif, vowels, sukun)
+            vowels.map { vowel -> cells.firstOrNull { it.vowel == vowel } }
+        }
+        ReadingBlock.ClosedSyllables(vowels, rows, sample)
+    }
     "zikr" -> {
         val text = priority.require(translations, "шаг ${step.id}, зикр")
         val zikrSection = requireNotNull(AzkarSection.entries.firstOrNull { it.key == section }) { "reading.json: зикр - неизвестный раздел $section" }
@@ -236,7 +249,7 @@ private fun ReadingQuizDto.toQuestion(
     "closedSyllable" -> ReadingQuestion.ClosedSyllable(
         letter = findLetter(letter),
         vowel = findMark(requireNotNull(mark) { "reading.json: вопрос «closedSyllable» без огласовки" }),
-        alif = findLetter(ALIF),
+        alif = findLetter(ReadingLetter.ALIF),
         sukun = findMark(ReadingMark.SUKUN),
     )
     else -> null
@@ -244,6 +257,3 @@ private fun ReadingQuizDto.toQuestion(
 
 private fun <T> ContentLanguagePriority.require(translations: Map<String, T>, what: String): T =
     requireNotNull(select(translations.keyedByLanguage())) { "reading.json: нет перевода - $what" }.translation
-
-/** Подставка слога закрытых слогов в проверке. */
-private const val ALIF = "ا"
