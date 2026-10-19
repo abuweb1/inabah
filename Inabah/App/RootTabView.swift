@@ -35,6 +35,7 @@ struct RootTabView: View {
                                 }
                             }
                             .interfaceTextSize()
+                            .floatingTabBarDestinationSpace(chromeStyle, safeAreaBottom: safeAreaBottom)
                         }
                 }
                 .tint(theme.palette.accentLight)
@@ -54,6 +55,7 @@ struct RootTabView: View {
                                 }
                             }
                             .interfaceTextSize()
+                            .floatingTabBarDestinationSpace(chromeStyle, safeAreaBottom: safeAreaBottom)
                         }
                 }
                 .tint(theme.palette.accentLight)
@@ -77,6 +79,7 @@ struct RootTabView: View {
                                 }
                             }
                             .interfaceTextSize()
+                            .floatingTabBarDestinationSpace(chromeStyle, safeAreaBottom: safeAreaBottom)
                         }
                 }
                 .tint(theme.palette.accentLight)
@@ -103,6 +106,7 @@ struct RootTabView: View {
                                 }
                             }
                             .interfaceTextSize()
+                            .floatingTabBarDestinationSpace(chromeStyle, safeAreaBottom: safeAreaBottom)
                         }
                 }
                 .tint(theme.palette.accentLight)

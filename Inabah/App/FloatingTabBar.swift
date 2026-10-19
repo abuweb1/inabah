@@ -265,6 +265,23 @@ extension View {
                 }
         }
     }
+
+    /// Экран стека вкладки (поверх главной) - то же место под капсулой. Отступ всего стека
+    /// (`floatingTabBarSpace`) UIKit-навигация передаёт только корню: без этого низ списков и кнопки
+    /// в конце экранов стека оставались под панелью (iOS 18-25, 2026-10-19).
+    @ViewBuilder
+    func floatingTabBarDestinationSpace(_ style: ChromeStyle, safeAreaBottom: CGFloat) -> some View {
+        switch style {
+        case .system:
+            self
+        case .custom:
+            self.safeAreaInset(edge: .bottom, spacing: 0) {
+                Color.clear
+                    .frame(height: FloatingTabBar.reservedHeight(safeAreaBottom: safeAreaBottom))
+                    .allowsHitTesting(false)
+            }
+        }
+    }
 }
 
 #Preview {
