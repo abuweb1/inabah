@@ -43,7 +43,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import app.inabah.android.BuildConfig
 import app.inabah.android.R
 import app.inabah.android.core.content.model.ReadingStep
 import app.inabah.android.core.designsystem.InabahTheme
@@ -128,8 +127,8 @@ fun ReadingStepsScreen(
                 val state = when {
                     step.number in completed -> StepState.Done
                     step == current -> StepState.Current
-                    // «Открыть все шаги» в настройках и сборка для проверки (`inabah.unlockAll`) - без замков.
-                    !allStepsOpen && !BuildConfig.READING_UNLOCK_ALL && !isUnlocked(course, completed, step) -> StepState.Locked
+                    // «Открыть все шаги» в настройках - без замков.
+                    !allStepsOpen && !isUnlocked(course, completed, step) -> StepState.Locked
                     else -> StepState.Open
                 }
                 // Нить между кружками: золотая после пройденного шага, иначе - дорожка.
