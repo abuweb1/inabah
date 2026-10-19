@@ -17,6 +17,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.inabah.android.R
+import app.inabah.android.core.audio.ClipPlayback
 import app.inabah.android.core.content.Loadable
 import app.inabah.android.core.content.model.ReadingBlock
 import app.inabah.android.core.designsystem.Spacing
@@ -35,6 +36,8 @@ fun ReadingAlphabetScreen(
     onBack: () -> Unit,
     contentPadding: PaddingValues,
     modifier: Modifier = Modifier,
+    /** Записи листа буквы (`ClipPlayer`). */
+    clips: ClipPlayback = ClipPlayback.None,
 ) {
     val hidden by settings.transliterationHidden.collectAsStateWithLifecycle()
     var sheetLetter by rememberSaveable { mutableStateOf<Int?>(null) }
@@ -76,6 +79,7 @@ fun ReadingAlphabetScreen(
                 transliterationHidden = hidden,
                 onDismiss = { sheetLetter = null },
                 contentPadding = contentPadding,
+                clips = clips,
             )
         }
     }

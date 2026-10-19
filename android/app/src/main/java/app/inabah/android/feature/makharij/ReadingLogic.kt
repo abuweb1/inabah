@@ -65,6 +65,13 @@ fun letterChain(course: ReadingCourse, letter: ReadingLetter, stepNumber: Int): 
     return listOfNotNull(sound, name) + syllables
 }
 
+/** Запись названия буквы (`reading_NN_name.m4a`) - она звучит и в «Послушать алфавит»; нет - `null`. */
+val ReadingLetter.nameAudio: String? get() = audio[KEY_NAME]
+
+/** Записи цепочки листа буквы по порядку (звук → название → слоги) из тех, что есть в сборке [available]. */
+fun List<LetterChainItem>.playableFiles(available: Set<String>): List<String> =
+    mapNotNull { item -> item.audioFile?.takeIf { it in available } }
+
 private const val KEY_SOUND = "sound"
 private const val KEY_NAME = "name"
 private const val OPTION_COUNT = 3

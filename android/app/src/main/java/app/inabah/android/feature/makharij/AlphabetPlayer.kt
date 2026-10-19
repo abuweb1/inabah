@@ -58,6 +58,11 @@ class AlphabetPlayback(index: Int? = null, paused: Boolean = false) {
         isPaused = false
     }
 
+    /** Пауза (уход в фон, зазвучал лист буквы); остановлено - ничего. */
+    fun pause() {
+        if (isActive) isPaused = true
+    }
+
     fun togglePause() {
         isPaused = !isPaused
     }

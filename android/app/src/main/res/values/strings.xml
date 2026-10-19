@@ -182,6 +182,8 @@
     <string name="makharij_lesson_soon_message">Содержание этого шага ещё пишется.</string>
     <string name="makharij_lesson_soon_title">Урок готовится</string>
     <string name="makharij_letter_close">Закрыть</string>
+    <string name="makharij_letter_play">Прослушать</string>
+    <string name="makharij_letter_stop">Стоп</string>
     <string name="makharij_letter_number">%1$d-я буква</string>
     <string name="makharij_mark_caption">%1$s · «%2$s»</string>
     <string name="makharij_quiz_correct">Верно!</string>

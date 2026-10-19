@@ -98,4 +98,5 @@ fun ExampleWordCell(
     }
 }
 
-private val SpeakerSize = 12.dp
+/** Значок 🔈 «есть запись» - у слова-примера и у плитки буквы. */
+internal val SpeakerSize = 12.dp
