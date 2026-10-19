@@ -61,6 +61,31 @@ struct ReadingSettingsTests {
         #expect(defaults.bool(forKey: "reading.hadithArabicCollapsed"))
         #expect(ReadingSettings(defaults: defaults).hadithArabicCollapsed)
     }
+
+    @Test("«Скрыть транскрипцию» курса: по умолчанию видна, выбор сохраняется под ключом Android")
+    func transliterationHidden() {
+        let settings = ReadingSettings(defaults: defaults)
+        #expect(!settings.transliterationHidden)
+
+        settings.setTransliterationHidden(true)
+
+        #expect(defaults.bool(forKey: "reading.transliterationHidden"))
+        #expect(ReadingSettings(defaults: defaults).transliterationHidden, "после перезапуска")
+    }
+
+    @Test("«Открыть все шаги»: по умолчанию выключено, сохраняется и не сбрасывается с прогрессом")
+    func allStepsOpen() {
+        let settings = ReadingSettings(defaults: defaults)
+        #expect(!settings.allStepsOpen)
+
+        settings.setAllStepsOpen(true)
+        let progress = ReadingProgress(defaults: defaults)
+        progress.markLessonDone(1)
+        progress.reset()
+
+        #expect(defaults.bool(forKey: "reading.allStepsOpen"))
+        #expect(ReadingSettings(defaults: defaults).allStepsOpen, "после перезапуска")
+    }
 }
 
 @Suite("Превью арабского текста")

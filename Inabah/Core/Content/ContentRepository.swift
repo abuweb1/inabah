@@ -11,6 +11,8 @@ nonisolated protocol ContentRepository: Sendable {
     func reminderTexts() async throws -> ReminderTexts?
     /// История версий («Что нового», «История версий»), новые сверху; негодные записи пропущены.
     func releaseNotes() async throws -> [ReleaseNote]
+    /// Курс «Учимся читать» (раздел «Махрадж»); ошибка данных курса - `ContentError.decodingFailed`.
+    func readingCourse() async throws -> ReadingCourse
 }
 
 nonisolated enum ContentError: Error, Equatable {
@@ -38,6 +40,8 @@ actor BundleContentRepository: ContentRepository {
     private var collectionsFile: [String: CollectionInfoDTO]?
     private var remindersFile: RemindersFileDTO?
     private var versionsFile: VersionsFileDTO?
+    /// Только удачно собранный курс: ошибка не кэшируется (как на Android).
+    private var course: ReadingCourse?
 
     init(bundle: Bundle = .main, languages: ContentLanguagePriority = .system) {
         self.bundle = bundle
@@ -84,6 +88,18 @@ actor BundleContentRepository: ContentRepository {
         return ReleaseNote.notes(from: file, languages: languages)
     }
 
+    func readingCourse() throws -> ReadingCourse {
+        if let course { return course }
+        let file = try decode(ReadingFileDTO.self, resource: "reading")
+        do {
+            let loaded = try ReadingCourse(dto: file, languages: languages)
+            course = loaded
+            return loaded
+        } catch {
+            throw ContentError.decodingFailed(resource: "reading.json", description: String(describing: error))
+        }
+    }
+
     private func loadedAzkarFile() throws -> AzkarFileDTO {
         if let azkarFile { return azkarFile }
         let file = try decode(AzkarFileDTO.self, resource: "azkar")
@@ -117,6 +133,8 @@ nonisolated struct InMemoryContentRepository: ContentRepository {
     var infos: [HadithCollection: CollectionInfo] = [:]
     var reminders: ReminderTexts?
     var notes: [ReleaseNote] = []
+    /// Курс «Учимся читать»; `nil` - файла нет (`resourceMissing`), как у Android `InMemoryContentRepository`.
+    var course: ReadingCourse?
     var error: ContentError?
 
     func azkar(in section: AzkarSection) throws -> [Zikr] {
@@ -142,5 +160,11 @@ nonisolated struct InMemoryContentRepository: ContentRepository {
     func releaseNotes() throws -> [ReleaseNote] {
         if let error { throw error }
         return notes
+    }
+
+    func readingCourse() throws -> ReadingCourse {
+        if let error { throw error }
+        guard let course else { throw ContentError.resourceMissing("reading.json") }
+        return course
     }
 }
