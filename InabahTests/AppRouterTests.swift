@@ -149,6 +149,23 @@ struct AppRouterTests {
         #expect(router.makharijPath == [.steps, .lesson(3)])
     }
 
+    @Test("Экраны урока открываются поверх урока своего шага", arguments: [
+        MakharijRoute.alphabet(2),
+        .extra(step: 2, topic: nil),
+        .extra(step: 2, topic: 1),
+        .letterForms(step: 2, letter: "ب"),
+        .quiz(2),
+        .words(2),
+    ])
+    func openLessonScreen(route: MakharijRoute) {
+        let router = AppRouter()
+
+        router.open(route)
+
+        #expect(router.selectedTab == .makharij)
+        #expect(router.makharijPath == [.steps, .lesson(2), route])
+    }
+
     @Test("Повторный выбор вкладки «Махрадж» возвращает к главной, другие вкладки не задеты")
     func reselectMakharijPopsToRoot() {
         let router = AppRouter()

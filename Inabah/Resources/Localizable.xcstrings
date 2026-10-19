@@ -1668,6 +1668,94 @@
         }
       }
     },
+    "makharij.alphabet.formulas.open" : {
+      "comment" : "Учимся читать: кнопка под случайными закрытыми слогами урока",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Прочтите весь алфавит"
+          }
+        }
+      }
+    },
+    "makharij.alphabet.formulas.subtitle" : {
+      "comment" : "Учимся читать: подзаголовок «Весь алфавит» (закрытые слоги)",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "закрытые слоги"
+          }
+        }
+      }
+    },
+    "makharij.alphabet.table.open" : {
+      "comment" : "Учимся читать: кнопка под случайными слогами урока",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Посмотреть весь алфавит"
+          }
+        }
+      }
+    },
+    "makharij.alphabet.table.subtitle" : {
+      "comment" : "Учимся читать: подзаголовок «Весь алфавит» (слоги)",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "с огласовками"
+          }
+        }
+      }
+    },
+    "makharij.alphabet.table.title" : {
+      "comment" : "Учимся читать: навбар экрана всех слогов",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Весь алфавит"
+          }
+        }
+      }
+    },
+    "makharij.chain.locked %@ %@" : {
+      "comment" : "Учимся читать: лист буквы: VoiceOver слога с непройденным знаком",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@, ещё не пройдено"
+          }
+        }
+      }
+    },
+    "makharij.chain.name" : {
+      "comment" : "Учимся читать: лист буквы: подпись названия буквы",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "название"
+          }
+        }
+      }
+    },
+    "makharij.chain.sound" : {
+      "comment" : "Учимся читать: лист буквы: подпись звука буквы (с сукуном)",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "звук"
+          }
+        }
+      }
+    },
     "makharij.final.title %@" : {
       "comment" : "Учимся читать: итог курса вместо номера шага",
       "localizations" : {
@@ -1675,6 +1763,116 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Итог · %@"
+          }
+        }
+      }
+    },
+    "makharij.form.final" : {
+      "comment" : "Учимся читать: подпись формы буквы в таблице и на карточке буквы",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "в конце"
+          }
+        }
+      }
+    },
+    "makharij.form.final.place" : {
+      "comment" : "Учимся читать: форма буквы для VoiceOver",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "в конце слова"
+          }
+        }
+      }
+    },
+    "makharij.form.initial" : {
+      "comment" : "Учимся читать: подпись формы буквы в таблице и на карточке буквы",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "в начале"
+          }
+        }
+      }
+    },
+    "makharij.form.initial.place" : {
+      "comment" : "Учимся читать: форма буквы для VoiceOver",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "в начале слова"
+          }
+        }
+      }
+    },
+    "makharij.form.isolated" : {
+      "comment" : "Учимся читать: подпись формы буквы в таблице и на карточке буквы",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "отдельно"
+          }
+        }
+      }
+    },
+    "makharij.form.isolated.place" : {
+      "comment" : "Учимся читать: форма буквы для VoiceOver",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "отдельная форма"
+          }
+        }
+      }
+    },
+    "makharij.form.medial" : {
+      "comment" : "Учимся читать: подпись формы буквы в таблице и на карточке буквы",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "в середине"
+          }
+        }
+      }
+    },
+    "makharij.form.medial.place" : {
+      "comment" : "Учимся читать: форма буквы для VoiceOver",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "в середине слова"
+          }
+        }
+      }
+    },
+    "makharij.forms.position %lld %lld" : {
+      "comment" : "Учимся читать: карточка буквы: подзаголовок навбара",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "буква %1$lld из %2$lld"
+          }
+        }
+      }
+    },
+    "makharij.forms.title" : {
+      "comment" : "Учимся читать: навбар карточки буквы до загрузки",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Формы буквы"
           }
         }
       }
@@ -1712,6 +1910,39 @@
         }
       }
     },
+    "makharij.info.more" : {
+      "comment" : "Учимся читать: кнопка ⓘ у текста урока",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Подробнее"
+          }
+        }
+      }
+    },
+    "makharij.lesson.check" : {
+      "comment" : "Учимся читать: кнопка проверки под уроком",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Проверить себя"
+          }
+        }
+      }
+    },
+    "makharij.lesson.done" : {
+      "comment" : "Учимся читать: урок без вопросов пройден",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Готово"
+          }
+        }
+      }
+    },
     "makharij.lesson.soon.message" : {
       "comment" : "Урок шага без содержания: пояснение",
       "localizations" : {
@@ -1730,6 +1961,39 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Урок готовится"
+          }
+        }
+      }
+    },
+    "makharij.letter.close" : {
+      "comment" : "Учимся читать: лист буквы: закрыть",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Закрыть"
+          }
+        }
+      }
+    },
+    "makharij.letter.number %lld" : {
+      "comment" : "Учимся читать: лист буквы: номер буквы в алфавите",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld-я буква"
+          }
+        }
+      }
+    },
+    "makharij.mark.caption %@ %@" : {
+      "comment" : "Учимся читать: знак: где пишется и звук («над буквой · «а»»)",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · «%2$@»"
           }
         }
       }
@@ -1829,6 +2093,61 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "пройдено %1$lld из %2$lld"
+          }
+        }
+      }
+    },
+    "makharij.translit.hide" : {
+      "comment" : "Учимся читать: кнопка-глаз в навбаре урока",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Скрыть транскрипцию"
+          }
+        }
+      }
+    },
+    "makharij.translit.show" : {
+      "comment" : "Учимся читать: кнопка-глаз в навбаре урока",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показать транскрипцию"
+          }
+        }
+      }
+    },
+    "makharij.words.hint" : {
+      "comment" : "Учимся читать: кнопка-лампочка: транскрипция на 0,7 с",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Подсказка: показать транскрипцию"
+          }
+        }
+      }
+    },
+    "makharij.words.open" : {
+      "comment" : "Учимся читать: кнопка «Читаем слова» под уроком",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Читаем слова"
+          }
+        }
+      }
+    },
+    "makharij.words.zoomAction" : {
+      "comment" : "Учимся читать: VoiceOver: увеличить слово (как долгое нажатие)",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "увеличить"
           }
         }
       }
