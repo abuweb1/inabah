@@ -114,4 +114,53 @@ class ReadingProgressTest {
 
         assertTrue(ReadingSettings(storage.storage).transliterationHidden.value, "после перезапуска")
     }
+
+    @Test
+    fun `Сброс шага удаляет только его урок, слова и зикры, замок откатывается к нему`() = TestStorage.run { storage ->
+        val progress = ReadingProgress(storage.storage)
+        progress.markLessonDone(2)
+        progress.readWord(2, 0, 2, 10)
+        progress.markLessonDone(3)
+        progress.readWord(3, 1, 2, 10)
+        progress.markLessonDone(13)
+        progress.readZikrWord(MORNING_6, 0)
+        progress.markZikrRead(EVENING_1)
+        progress.markUnlockSeen(5)
+
+        progress.resetStep(3)
+        progress.resetStep(13, listOf(MORNING_6))
+
+        assertEquals(setOf(2), progress.lessonsDone.value)
+        assertEquals(setOf(2), progress.wordCounts.value.keys)
+        assertEquals(setOf(EVENING_1), progress.zikrs.value.keys, "зикр другого шага не задет")
+        assertEquals(3, progress.unlockSeen.value)
+        val restarted = ReadingProgress(storage.storage)
+        assertEquals(setOf(2), restarted.lessonsDone.value, "после перезапуска")
+        assertEquals(setOf(2), restarted.wordCounts.value.keys)
+        assertEquals(setOf(EVENING_1), restarted.zikrs.value.keys)
+        assertEquals(3, restarted.unlockSeen.value)
+        assertNull(storage.persisted()[ReadingProgress.zikrWordsKey(MORNING_6)])
+    }
+
+    @Test
+    fun `Сброс шага без прогресса ничего не меняет`() = TestStorage.run { storage ->
+        val progress = ReadingProgress(storage.storage)
+        progress.markUnlockSeen(5)
+
+        progress.resetStep(2, listOf(MORNING_6))
+
+        assertEquals(5, progress.unlockSeen.value)
+        assertEquals(5, ReadingProgress(storage.storage).unlockSeen.value)
+    }
+
+    @Test
+    fun `«Открыть все шаги» - по умолчанию выключено, выбор сохраняется и не сбрасывается с прогрессом`() = TestStorage.run { storage ->
+        val settings = ReadingSettings(storage.storage)
+        assertFalse(settings.allStepsOpen.value)
+
+        settings.setAllStepsOpen(true)
+        ReadingProgress(storage.storage).reset()
+
+        assertTrue(ReadingSettings(storage.storage).allStepsOpen.value, "после перезапуска")
+    }
 }

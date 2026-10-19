@@ -76,6 +76,29 @@ class ReadingProgress(private val storage: PreferencesStorage) {
         storage.edit { it[zikrReadKey(zikr)] = true }
     }
 
+    /**
+     * Сбросить шаг [step]: урок, прочитанные слова и зикры [zikrs] (зикры итога - у итога). Шаги после него
+     * снова закрыты, поэтому и «отщёлкнутый» замок - не дальше [step]: при новом открытии он отщёлкнется снова.
+     */
+    fun resetStep(step: Int, zikrs: Collection<ZikrId> = emptyList()) {
+        val stepZikrs = zikrs.filter { it in _zikrs.value }
+        if (step !in _lessonsDone.value && step !in _wordCounts.value && stepZikrs.isEmpty()) return
+        _lessonsDone.value -= step
+        _wordCounts.value -= step
+        _zikrs.value -= stepZikrs.toSet()
+        val seen = _unlockSeen.value.coerceAtMost(step)
+        _unlockSeen.value = seen
+        storage.edit { preferences ->
+            preferences.remove(lessonKey(step))
+            preferences.remove(wordsKey(step))
+            stepZikrs.forEach { zikr ->
+                preferences.remove(zikrWordsKey(zikr))
+                preferences.remove(zikrReadKey(zikr))
+            }
+            preferences[UNLOCK_SEEN_KEY] = seen
+        }
+    }
+
     /** Сбросить весь прогресс - все ключи `reading.step.…`, `reading.words.…` и `reading.zikr.…`. */
     fun reset() {
         val keys = storage.snapshot.asMap().keys.filter { isProgressKey(it.name) }

@@ -262,8 +262,8 @@ fun withArabicRuns(text: String): AnnotatedString = buildAnnotatedString {
 
 /** Арабские буквы и знаки, с пробелами между ними (но не по краям). */
 private val ArabicRun = Regex("""[؀-ۿ]+(?:\s+[؀-ۿ]+)*""")
-private const val RIGHT_TO_LEFT_ISOLATE = "⁧"
-private const val POP_DIRECTIONAL_ISOLATE = "⁩"
+private const val RIGHT_TO_LEFT_ISOLATE = "\u2067"
+private const val POP_DIRECTIONAL_ISOLATE = "\u2069"
 private const val ARABIC_RUN_SCALE = 1.3f
 
 /** Подпись столбца таблицы форм. */
