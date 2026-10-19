@@ -130,6 +130,8 @@ data class ReadingStepDto(
     val translations: Map<String, ReadingStepTranslationDto>,
     val blocks: List<ReadingBlockDto> = emptyList(),
     val quiz: List<ReadingQuizDto> = emptyList(),
+    /** Вопросов в одном заходе (экзамен - 20); нет - [app.inabah.android.core.content.model.ReadingStep.QUIZ_ROUND]. */
+    val quizCount: Int? = null,
     /** «Читаем слова»; нет - у шага слов нет. */
     val words: ReadingWordsDto? = null,
     /** Итог курса («Читаем зикр») - последний шаг, без номера. */
@@ -222,6 +224,8 @@ data class ReadingTextTranslationDto(
     val info: String = "",
     /** `topic`: название (на карточке и в навбаре экрана темы); `text` - краткое описание. */
     val title: String = "",
+    /** `forms`: буква → транскрипция её 3 слов-примеров (по порядку `examples`). */
+    val examples: Map<String, List<String>> = emptyMap(),
 )
 
 @Serializable

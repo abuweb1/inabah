@@ -410,7 +410,10 @@ const READING_MARK_KEYS = ['id', 'sign', 'translations'];
 const READING_MARK_TEXT_KEYS = ['name', 'where', 'sound'];
 const READING_LETTER_KEYS = ['id', 'letter', 'name', 'joinsNext', 'joinsPrevious', 'syllableBases', 'audio', 'translations'];
 const READING_LETTER_TEXT_KEYS = ['name', 'nameTranslit', 'sound', 'syllables', 'note'];
-const READING_STEP_KEYS = ['id', 'marks', 'example', 'translations', 'blocks', 'quiz', 'words', 'final', 'extra'];
+const READING_STEP_KEYS = ['id', 'marks', 'example', 'translations', 'blocks', 'quiz', 'quizCount', 'words', 'final', 'extra'];
+// Вопросов в одном заходе в «Проверить себя» (просьба пользователя 2026-10-19): берутся случайно из запаса quiz;
+// у шага - quizCount (экзамен - 20), иначе столько.
+const READING_QUIZ_ROUND = 16;
 const READING_STEP_TEXT_KEYS = ['title', 'subtitle'];
 // Только типы, которые приложения рисуют (аудит 2026-10-17: «groups», «compare», «join» описывались в
 // формате, но экранов у них нет - блок молча пропал бы).
@@ -420,7 +423,7 @@ const READING_BLOCKS = {
   // Зикр итога «Читаем зикр» (2026-10-17): ссылка на зикр «Азкаров», слова, места слитного чтения.
   zikr: ['type', 'section', 'id', 'audio', 'arabic', 'words', 'joins', 'translations'],
   rule: ['type', 'arabic', 'letters', 'translations'],
-  forms: ['type', 'groups', 'examples', 'exampleCard'],
+  forms: ['type', 'groups', 'examples', 'exampleCard', 'translations'],
   formulas: ['type', 'columns', 'items', 'sample'],
   // Тема урока (шаг «Особые случаи», 2026-10-17): карточка - название, описание, пример; блоки - её экран.
   topic: ['type', 'arabic', 'blocks', 'translations'],
@@ -635,6 +638,12 @@ function checkReading(file) {
   const knownLetter = (at, l) => { if (!byLetter.has(l)) error(at, `неизвестная буква «${l}»`); };
 
   const steps = Array.isArray(file.steps) ? file.steps : [];
+  // Транскрипция слов «Читаем слова» - с ней сверяются слова-примеры форм (одно слово - одна транскрипция).
+  const wordTranslit = new Map();
+  for (const s of steps) for (const w of s?.words?.items ?? []) {
+    const t = w?.translations?.[BASE_LANGUAGE]?.translit;
+    if (typeof w?.arabic === 'string' && typeof t === 'string') wordTranslit.set(w.arabic, t);
+  }
   if (!steps.length) error('reading steps', 'нет непустого массива steps');
   const passed = new Set();
   // Карточки форм этого и прошлых шагов - варианты вопроса letterForm (экзамен шага 12, 2026-10-17).
@@ -749,6 +758,21 @@ function checkReading(file) {
           }
         }
         for (const l of block.exampleCard ?? []) if (!block.examples?.[l]) error(where, `exampleCard: у буквы ${l} нет примеров`);
+        // Транскрипция примеров (карточка буквы, «подсмотреть»): у каждой буквы - 3, по словам examples.
+        const ru = checkTexts(where, block.translations, ['examples'], []);
+        const translit = ru?.examples ?? {};
+        for (const [l, words] of Object.entries(block.examples ?? {})) {
+          const t = translit[l];
+          if (!Array.isArray(t) || t.length !== words.length || t.some(x => typeof x !== 'string' || !x.trim())) {
+            error(where, `translations.${BASE_LANGUAGE}.examples.${l} - ${words.length} транскрипции, как слов`);
+            continue;
+          }
+          t.forEach((x, n) => {
+            const other = wordTranslit.get(words[n]);
+            if (other !== undefined && other !== x) error(where, `«${words[n]}»: «${x}», а в «Читаем слова» - «${other}»`);
+          });
+        }
+        for (const l of Object.keys(translit)) if (!block.examples?.[l]) error(where, `translations.${BASE_LANGUAGE}.examples.${l}: у буквы нет примеров`);
       }
       // Формулы (мадд: بَ + ا = بَا; маленькие буквы мадда: تَشَٰبَهَ = تَشَابَهَ): части, итог, транскрипция итога.
       if (block.type === 'formulas') {
@@ -766,6 +790,10 @@ function checkReading(file) {
       }
       if (block.type === 'zikr') checkReadingZikr(where, block, { byLetter, marks, letters, passed, checkTexts });
     }
+    const quizCount = step?.quizCount ?? READING_QUIZ_ROUND;
+    if (step?.quizCount !== undefined && (!Number.isInteger(step.quizCount) || step.quizCount < 1)) error(at, 'quizCount - целое больше 0');
+    // Запас меньше захода - вопросы каждый раз одни и те же, только в другом порядке.
+    else if (step?.quiz?.length && step.quiz.length < quizCount) error(at, `в quiz ${step.quiz.length} вопросов - меньше, чем в заходе (${quizCount})`);
     for (const [j, q] of (step?.quiz ?? []).entries()) {
       const where = `${at} quiz ${j + 1}`;
       const keys = READING_QUIZ[q?.type];

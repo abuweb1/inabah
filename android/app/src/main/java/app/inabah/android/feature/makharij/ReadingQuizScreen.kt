@@ -47,7 +47,6 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.inabah.android.R
 import app.inabah.android.core.content.Loadable
-import app.inabah.android.core.content.model.ReadingCourse
 import app.inabah.android.core.content.model.ReadingQuestion
 import app.inabah.android.core.content.model.ReadingStep
 import app.inabah.android.core.designsystem.InabahTheme
@@ -61,6 +60,7 @@ import app.inabah.android.core.designsystem.components.NoticeCard
 import app.inabah.android.core.designsystem.components.pressFeedback
 import app.inabah.android.core.designsystem.components.surface
 import app.inabah.android.core.settings.ReadingProgress
+import kotlin.random.Random
 
 /**
  * Проверка после урока (набросок `docs/design/makharij-reading.html`, «Как читается?»): 3 варианта,
@@ -78,6 +78,8 @@ fun ReadingQuizScreen(
     onOpenWords: () -> Unit,
     contentPadding: PaddingValues,
     modifier: Modifier = Modifier,
+    /** Зерно захода: новый заход - новые вопросы (просьба пользователя 2026-10-19); поворот экрана - тот же. */
+    seed: Long = rememberSaveable { Random.nextLong() },
 ) {
     // Номер вопроса и выбранный ответ переживают поворот; после последнего - «Шаг пройден».
     var index by rememberSaveable { mutableIntStateOf(0) }
@@ -85,7 +87,10 @@ fun ReadingQuizScreen(
     var wrongMask by rememberSaveable { mutableIntStateOf(0) }
     var solved by rememberSaveable { mutableStateOf(false) }
     val course = (store.course.collectAsStateWithLifecycle().value as? Loadable.Loaded)?.value
-    val total = course?.step(stepNumber)?.quiz?.size ?: 0
+    val round = remember(course, stepNumber, seed) {
+        course?.step(stepNumber)?.let { quizRound(course, it, seed) }.orEmpty()
+    }
+    val total = round.size
     val isFinished = total > 0 && index >= total
     ReadingScaffold(
         store = store,
@@ -96,7 +101,7 @@ fun ReadingQuizScreen(
     ) { loaded ->
         val step = loaded.step(stepNumber)
         when {
-            step == null || step.quiz.isEmpty() -> Box(Modifier.fillMaxSize()) {
+            step == null || round.isEmpty() -> Box(Modifier.fillMaxSize()) {
                 NoticeCard(
                     icon = R.drawable.ic_hourglass,
                     title = stringResource(R.string.makharij_lesson_soon_title),
@@ -105,14 +110,14 @@ fun ReadingQuizScreen(
                 )
             }
             // Шаг без слов пройден проверкой - праздник; со словами - «Осталось прочитать слова».
-            index >= step.quiz.size && step.words == null -> StepCompletedOverlay(
+            index >= round.size && step.words == null -> StepCompletedOverlay(
                 step = step,
                 next = loaded.steps.firstOrNull { it.number > step.number && it.hasLesson },
                 onOpenStep = onOpenStep,
                 onOpenSteps = onOpenSteps,
                 contentPadding = contentPadding,
             )
-            index >= step.quiz.size -> QuizFinished(
+            index >= round.size -> QuizFinished(
                 // У шага есть слова - сначала «Читаем слова»: без них следующий шаг закрыт.
                 hasWords = step.words != null,
                 onOpenWords = onOpenWords,
@@ -123,14 +128,13 @@ fun ReadingQuizScreen(
                 contentPadding = contentPadding,
             )
             else -> QuizQuestion(
-                course = loaded,
-                step = step,
+                round = round,
                 index = index,
                 wrongMask = wrongMask,
                 solved = solved,
                 onAnswer = { i, isCorrect -> if (isCorrect) solved = true else wrongMask = wrongMask or (1 shl i) },
                 onNext = {
-                    if (index == step.quiz.lastIndex) progress.markLessonDone(step.number)
+                    if (index == round.lastIndex) progress.markLessonDone(step.number)
                     wrongMask = 0
                     solved = false
                     index += 1
@@ -143,8 +147,7 @@ fun ReadingQuizScreen(
 
 @Composable
 private fun QuizQuestion(
-    course: ReadingCourse,
-    step: ReadingStep,
+    round: List<QuizItem>,
     index: Int,
     wrongMask: Int,
     solved: Boolean,
@@ -153,8 +156,7 @@ private fun QuizQuestion(
     contentPadding: PaddingValues,
 ) {
     val palette = InabahTheme.palette
-    val question = step.quiz[index]
-    val options = remember(course, question, step) { quizOptions(course, question, step.number) }
+    val (question, options) = round[index]
     val haptics = LocalHapticFeedback.current
     Column(
         Modifier
@@ -164,7 +166,7 @@ private fun QuizQuestion(
             .padding(top = Spacing.s, bottom = Spacing.xl + contentPadding.calculateBottomPadding()),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        ProgressDots(count = step.quiz.size, current = index)
+        ProgressDots(count = round.size, current = index)
         Text(
             (question as? ReadingQuestion.Word)?.prompt ?: stringResource(
                 when (question) {
@@ -235,7 +237,7 @@ private fun QuizQuestion(
         if (solved) {
             Spacer(Modifier.height(Spacing.xl))
             ReadingButton(
-                text = stringResource(if (index == step.quiz.lastIndex) R.string.makharij_quiz_finish else R.string.makharij_quiz_next),
+                text = stringResource(if (index == round.lastIndex) R.string.makharij_quiz_finish else R.string.makharij_quiz_next),
                 onClick = onNext,
             )
         }

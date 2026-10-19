@@ -144,7 +144,10 @@ fun TransliterationToggle(hidden: Boolean, onToggle: () -> Unit) {
     )
 }
 
-/** Лампочка в навбаре «Читаем слова» (страницы без транскрипции): показать её на миг. */
+/** Сколько видна транскрипция по лампочке ([TransliterationHint]). */
+internal const val TRANSLITERATION_HINT_MILLIS = 700L
+
+/** Лампочка в навбаре «Читаем слова» (страницы без транскрипции) и карточки буквы: показать её на миг. */
 @Composable
 fun TransliterationHint(onClick: () -> Unit) {
     GlassIconButton(

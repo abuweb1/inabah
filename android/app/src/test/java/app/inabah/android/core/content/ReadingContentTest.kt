@@ -129,7 +129,7 @@ class ReadingContentTest {
     }
 
     @Test
-    fun `Шаг 3 — формы группы 1 карточками, пояснение по ⓘ, 8 вопросов по форме, 60 слов`() = runTest {
+    fun `Шаг 3 - формы группы 1 карточками, пояснение по ⓘ, вопросы по форме, 60 слов`() = runTest {
         val step = requireNotNull(loadAssetCourse().step(3))
 
         val forms = step.blocks.filterIsInstance<ReadingBlock.Forms>().single()
@@ -137,17 +137,19 @@ class ReadingContentTest {
         assertEquals(8, forms.examples.size, "слова-примеры у каждой буквы группы")
         assertEquals(listOf("ب", "ن", "ج"), forms.exampleCard.map { it.letter })
         assertTrue(step.blocks.filterIsInstance<ReadingBlock.Text>().single().info != null)
-        assertEquals(8, step.quiz.filterIsInstance<ReadingQuestion.LetterInForm>().size)
+        assertEquals(24, step.quiz.filterIsInstance<ReadingQuestion.LetterInForm>().size, "запас - 8 букв в трёх формах")
         assertEquals(60, step.words?.items?.size)
     }
 
     @Test
-    fun `Шаг 6 — формы группы 4 без проверки, формулы мадда, слова-экзамен`() = runTest {
+    fun `Шаг 6 - формы группы 4, формулы мадда, проверка - формы и слова с маддом`() = runTest {
         val step = requireNotNull(loadAssetCourse().step(6))
 
         val forms = step.blocks.filterIsInstance<ReadingBlock.Forms>().single()
         assertEquals(listOf("د ذ ر ز", "و ا"), forms.groups.map { group -> group.joinToString(" ") { it.letter } })
-        assertTrue(step.quiz.isEmpty(), "формы группы 4 без проверки - решение пользователя")
+        // Проверка - с 2026-10-19 (просьба пользователя; до этого шаг был без неё).
+        assertEquals(8, step.quiz.count { it is ReadingQuestion.LetterInForm }, "د ذ ر ز - в начале и в конце")
+        assertEquals(16, step.quiz.count { it is ReadingQuestion.Word }, "слова с буквами мадда")
         val (madd, small) = step.blocks.filterIsInstance<ReadingBlock.Formulas>()
         assertTrue(step.blocks.indexOf(small) < step.blocks.indexOf(forms), "мадд - до форм: в примерах форм есть буквы мадда")
         assertEquals(1, madd.columns, "формулы - по одной в строку (решение пользователя)")
@@ -172,8 +174,9 @@ class ReadingContentTest {
         assertEquals(listOf("ъав", "ъай"), diphthongs.items.map { it.transliteration })
         val closed = step.quiz.filterIsInstance<ReadingQuestion.ClosedSyllable>()
         assertEquals(step.quiz.size, closed.size, "проверка - закрытые слоги, как в «Весь алфавит»")
-        assertEquals("إِبْ", closed.first().arabic)
-        assertEquals("ъиб", closed.first().transliteration("kasra"))
+        val bi = closed.first { it.letter.letter == "ب" && it.vowel.id == "kasra" }
+        assertEquals("إِبْ", bi.arabic)
+        assertEquals("ъиб", bi.transliteration("kasra"))
         val words = requireNotNull(step.words)
         assertEquals(60, words.items.size)
         assertEquals(6, words.repeat)
@@ -248,6 +251,19 @@ class ReadingContentTest {
         assertEquals("маа", words.items.first { it.arabic == "مَا" }.transliteration, "отдельно - долго")
         assertEquals("ма-лькъоориӏату", words.items.first { it.arabic == "مَا ٱلْقَارِعَةُ" }.transliteration, "перед артиклем - коротко, та марбута - как та")
         assertTrue(step.quiz.all { it is ReadingQuestion.Word })
+    }
+
+    @Test
+    fun `Запас вопросов каждого шага с проверкой - не меньше захода, экзамен - 20 из 20`() = runTest {
+        val course = loadAssetCourse()
+
+        for (step in course.steps.filter { it.quiz.isNotEmpty() }) {
+            assertTrue(step.quiz.size >= step.quizCount, "шаг ${step.number}: ${step.quiz.size} < ${step.quizCount}")
+        }
+        val withQuiz = course.steps.filter { it.quiz.isNotEmpty() }.map { it.number }
+        assertEquals((1..12).toList(), withQuiz, "проверка - у всех шагов, кроме итога")
+        assertEquals(listOf(16), course.steps.filter { it.quiz.isNotEmpty() && it.number != 12 }.map { it.quizCount }.distinct())
+        assertEquals(20, course.step(12)?.quizCount)
     }
 
     private fun TestScope.repository(json: String) = AssetContentRepository(
