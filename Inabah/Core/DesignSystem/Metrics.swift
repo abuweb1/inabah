@@ -88,6 +88,9 @@ enum PressFeedback {
     static let wideOpacity: Double = 0.8
     /// Неактивная кнопка.
     static let disabledOpacity: Double = 0.4
+    /// Удержание для увеличения плитки слова (у Android - 0,4 с). Удержание и касание плитки - одним жестом
+    /// (`exclusively`), иначе удержание ждёт отказа касания и запаздывает.
+    static let zoomHold: Double = 0.2
 }
 
 /// Длительности анимаций — единые для всего приложения.

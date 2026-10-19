@@ -297,11 +297,16 @@ private struct ZoomableExampleWord: View {
         )
         .onGeometryChange(for: CGRect.self) { $0.frame(in: .named(coordinateSpace)) } action: { frame = $0 }
         .contentShape(.rect(cornerRadius: Radius.box))
-        .onTapGesture(perform: play)
-        .onLongPressGesture {
-            zoomCount += 1
-            onZoom(frame)
-        }
+        // Один жест: удержание - увеличение, отпустили раньше - касание (отдельные спорили, и увеличение
+        // срабатывало только при отпускании пальца).
+        .gesture(
+            LongPressGesture(minimumDuration: PressFeedback.zoomHold)
+                .onEnded { _ in
+                    zoomCount += 1
+                    onZoom(frame)
+                }
+                .exclusively(before: TapGesture().onEnded(play))
+        )
         .sensoryFeedback(.impact(weight: .medium), trigger: zoomCount)
         .sensoryFeedback(.selection, trigger: playCount)
         .accessibilityElement(children: .ignore)
