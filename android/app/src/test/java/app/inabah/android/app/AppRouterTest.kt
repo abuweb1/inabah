@@ -101,6 +101,7 @@ class AppRouterTest {
             listOf(SettingsRoute.Hadith),
             listOf(SettingsRoute.Hadith, SettingsRoute.HadithOrder),
             listOf(SettingsRoute.Makharij),
+            listOf(SettingsRoute.About, SettingsRoute.Licenses),
             listOf(SettingsRoute.AppIcon),
             listOf(SettingsRoute.Palette),
         )
