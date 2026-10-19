@@ -9,6 +9,7 @@ struct LessonActions {
     var openLetterForms: (ReadingLetter) -> Void = { _ in }
     var openAlphabet: () -> Void = {}
     var openTopic: (Int) -> Void = { _ in }
+    var openZikr: (Int) -> Void = { _ in }
 }
 
 // MARK: - Текст с ⓘ
@@ -729,5 +730,87 @@ struct LessonTopicCard: View {
         }
         .buttonStyle(PressScaleButtonStyle(pressedScale: PressFeedback.wideScale))
         .accessibilityElement(children: .combine)
+    }
+}
+
+// MARK: - Зикр итога
+
+/// Зикр итога «Читаем зикр» в уроке: номер (или ✓, когда прочитан), зикр, «N слов · что в нём из курса».
+struct LessonZikrCard: View {
+    let zikr: ReadingBlock.Zikr
+    let number: Int
+    let colors: ReadingColors
+    let onOpen: () -> Void
+
+    @Environment(ReadingProgress.self) private var progress
+    @Environment(\.theme) private var theme
+    @Environment(\.contentTextScale) private var scale
+
+    @ScaledMetric(relativeTo: .body) private var circle: CGFloat = 36
+
+    private enum Layout {
+        static let numberSize: Double = 22
+        static let check: CGFloat = 18
+        static let arabicSize: Double = 28
+    }
+
+    var body: some View {
+        let isDone = ReadingLogic.isZikrDone(zikr, progress: progress.zikrs[zikr.zikr])
+        Button(action: onOpen) {
+            HStack(spacing: Spacing.m) {
+                badge(isDone: isDone)
+                VStack(alignment: .leading, spacing: Spacing.xxs) {
+                    Text(verbatim: zikr.arabic)
+                        .font(.arabic(size: Layout.arabicSize, bold: true))
+                        .foregroundStyle(theme.palette.onAccent)
+                        .lineLimit(1)
+                        .environment(\.layoutDirection, .rightToLeft)
+                    Text(summary)
+                        .font(.content(.translation, scale: scale))
+                        .lineSpacing(ContentTextStyle.translationLineSpacing * scale)
+                        .foregroundStyle(theme.palette.onAccentSecondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                Image(systemName: "chevron.forward")
+                    .font(.body.weight(.semibold))
+                    .foregroundStyle(colors.tint)
+                    .accessibilityHidden(true)
+            }
+            .multilineTextAlignment(.leading)
+            .padding(Spacing.m)
+            .readingTile(colors)
+            .contentShape(.rect(cornerRadius: Radius.card))
+        }
+        .buttonStyle(PressScaleButtonStyle(pressedScale: PressFeedback.wideScale))
+        .accessibilityElement(children: .combine)
+        .accessibilityValue(isDone ? Text("makharij.zikr.done") : Text(verbatim: ""))
+    }
+
+    /// «6 слов · …» - число слов и что в зикре встретится из курса (с арабскими вставками).
+    private var summary: AttributedString {
+        AttributedString(localized: "makharij.zikr.wordCount \(zikr.words.count)")
+            + AttributedString(" · ")
+            + ReadingText.withArabicRuns(zikr.summary, baseSize: ContentTextStyle.translation.baseSize * scale)
+    }
+
+    private func badge(isDone: Bool) -> some View {
+        ZStack {
+            if isDone {
+                Circle().fill(theme.palette.success)
+                Image(systemName: "checkmark")
+                    .font(.system(size: Layout.check, weight: .bold))
+                    .foregroundStyle(theme.palette.onAccent)
+            } else {
+                Circle()
+                    .fill(colors.tile)
+                    .strokeBorder(colors.tint, lineWidth: Size.hairline)
+                Text(verbatim: number.formatted(.arabicIndic))
+                    .font(.arabic(size: Layout.numberSize, bold: true))
+                    .foregroundStyle(colors.tint)
+            }
+        }
+        .frame(width: circle, height: circle)
+        .accessibilityHidden(true)
     }
 }

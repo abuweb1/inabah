@@ -54,7 +54,8 @@ private struct LessonContent: View {
             openSheet: openSheet,
             openLetterForms: { router.makharijPath.append(.letterForms(step: step.number, letter: $0.letter)) },
             openAlphabet: { router.makharijPath.append(.alphabet(step.number)) },
-            openTopic: { router.makharijPath.append(.extra(step: step.number, topic: $0)) }
+            openTopic: { router.makharijPath.append(.extra(step: step.number, topic: $0)) },
+            openZikr: { router.makharijPath.append(.zikr(step: step.number, zikr: $0)) }
         )
         ScrollView {
             VStack(spacing: Spacing.m) {
@@ -155,8 +156,14 @@ struct LessonBlockView: View {
             LessonTopicCard(topic: topic, colors: colors) {
                 actions.openTopic(step.topics.firstIndex(of: topic) ?? 0)
             }
-        case .zikr:
-            EmptyView()
+        case .zikr(let zikr):
+            LessonZikrCard(
+                zikr: zikr,
+                number: (step.zikrs.firstIndex(of: zikr) ?? 0) + 1,
+                colors: colors
+            ) {
+                actions.openZikr(step.zikrs.firstIndex(of: zikr) ?? 0)
+            }
         }
     }
 }
