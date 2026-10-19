@@ -113,6 +113,7 @@ struct AppRouterTests {
         [.appIcon],
         [.palette],
         [.about, .versionHistory],
+        [.about, .licenses, .license(.scheherazade)],
     ])
     func reselectSettingsPopsToRoot(path: [SettingsRoute]) {
         let router = AppRouter()

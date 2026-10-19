@@ -1,7 +1,7 @@
 import SwiftUI
 
-/// «О приложении»: версия, «История версий», источники текстов и записей, лицензии шрифта и значков,
-/// политика конфиденциальности и репозиторий. Источники согласованы с пользователем 2026-10-05.
+/// «О приложении»: версия, «История версий», источники текстов и записей, политика конфиденциальности
+/// и строка «Лицензии». Источники согласованы с пользователем 2026-10-05.
 struct AboutView: View {
     @Environment(\.theme) private var theme
 
@@ -32,27 +32,16 @@ struct AboutView: View {
                     .foregroundStyle(theme.palette.onAccentSecondary)
             }
 
-            SettingsGroup {
-                ForEach(LicenseDocument.allCases) { document in
-                    NavigationLink(value: SettingsRoute.license(document)) {
-                        SettingsLinkLabel {
-                            AboutTextRow(title: document.title, text: document.subtitle)
-                        }
-                    }
-                }
-            } header: {
-                Text("about.licenses.header")
-            }
-
+            // Политику требует Apple (5.1.1(i)); ссылок на исходный код и Issues нет —
+            // решение пользователя 2026-10-19, как на Android.
             SettingsGroup {
                 Link(destination: AboutLinks.privacy) {
                     AboutLinkLabel(title: "about.link.privacy")
                 }
-                Link(destination: AboutLinks.repository) {
-                    AboutLinkLabel(title: "about.link.repository")
-                }
-                Link(destination: AboutLinks.issues) {
-                    AboutLinkLabel(title: "about.link.issues")
+                NavigationLink(value: SettingsRoute.licenses) {
+                    SettingsLinkLabel {
+                        Text("about.licenses")
+                    }
                 }
             } header: {
                 Text("about.app.header")
@@ -64,6 +53,32 @@ struct AboutView: View {
         .settingsForm(background: theme.gradients.settingsBackground)
         .glassBackButton(tint: theme.palette.tabSettings, header: nil)
         .navigationTitle(Text("about.title"))
+        .navigationBarTitleDisplayMode(.inline)
+        .audioPlayerInset()
+    }
+}
+
+/// «Лицензии»: шрифт и значки, каждая строка — полный текст лицензии.
+struct LicensesView: View {
+    @Environment(\.theme) private var theme
+
+    var body: some View {
+        SettingsForm {
+            SettingsGroup {
+                ForEach(LicenseDocument.allCases) { document in
+                    NavigationLink(value: SettingsRoute.license(document)) {
+                        SettingsLinkLabel {
+                            AboutTextRow(title: document.title, text: document.subtitle)
+                        }
+                    }
+                }
+            } header: {
+                Text("about.licenses.header")
+            }
+        }
+        .settingsForm(background: theme.gradients.settingsBackground)
+        .glassBackButton(tint: theme.palette.tabSettings, header: nil)
+        .navigationTitle(Text("about.licenses"))
         .navigationBarTitleDisplayMode(.inline)
         .audioPlayerInset()
     }
@@ -151,14 +166,19 @@ enum AboutLinks {
     /// Страница в App Store (Apple ID приложения из App Store Connect) — последний блок
     /// текста «Поделиться».
     static let appStore = URL(string: "https://apps.apple.com/app/id6819638881")!
-    static let repository = URL(string: "https://github.com/abuweb1/inabah")!
     static let privacy = URL(string: "https://github.com/abuweb1/inabah/blob/main/PRIVACY.md")!
-    static let issues = URL(string: "https://github.com/abuweb1/inabah/issues")!
 }
 
 #Preview {
     NavigationStack {
         AboutView()
+    }
+    .appEnvironment(.preview)
+}
+
+#Preview("Лицензии") {
+    NavigationStack {
+        LicensesView()
     }
     .appEnvironment(.preview)
 }
