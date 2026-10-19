@@ -97,6 +97,7 @@ struct RootTabView: View {
                                 case .azkar: AzkarSettingsView()
                                 case .hadith: HadithSettingsView()
                                 case .hadithOrder: HadithOrderSettingsView()
+                                case .makharij: MakharijSettingsView()
                                 case .appIcon: AppIconSettingsView()
                                 case .palette: PaletteSettingsView()
                                 case .textSize: TextSizeSettingsView()

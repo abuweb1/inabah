@@ -110,6 +110,7 @@ struct AppRouterTests {
     @Test("Повторный выбор вкладки «Настройки» возвращает к списку разделов", arguments: [
         [SettingsRoute.hadith],
         [.hadith, .hadithOrder],
+        [.makharij],
         [.appIcon],
         [.palette],
         [.about, .versionHistory],

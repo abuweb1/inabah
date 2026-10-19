@@ -3626,6 +3626,204 @@
         }
       }
     },
+    "settings.makharij.allSteps" : {
+      "comment" : "Настройки «Махраджа»: открыть все шаги",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Открыть все шаги"
+          }
+        }
+      }
+    },
+    "settings.makharij.allSteps.subtitle" : {
+      "comment" : "Подпись «Открыть все шаги»",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Без замков: начать можно с любого шага. Пройденные отмечаются как обычно"
+          }
+        }
+      }
+    },
+    "settings.makharij.lessons.header" : {
+      "comment" : "Настройки «Махраджа»: группа уроков",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Уроки"
+          }
+        }
+      }
+    },
+    "settings.makharij.progress.empty" : {
+      "comment" : "Подпись группы прогресса без начатых шагов",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Здесь появятся начатые и пройденные шаги - любой можно сбросить и пройти заново."
+          }
+        }
+      }
+    },
+    "settings.makharij.progress.header" : {
+      "comment" : "Настройки «Махраджа»: группа прогресса",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Прогресс"
+          }
+        }
+      }
+    },
+    "settings.makharij.reset.confirm.action" : {
+      "comment" : "Действие подтверждения сброса",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сбросить"
+          }
+        }
+      }
+    },
+    "settings.makharij.resetAll" : {
+      "comment" : "Сброс всего прогресса «Учимся читать»",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сбросить весь прогресс"
+          }
+        }
+      }
+    },
+    "settings.makharij.resetAll.confirm.message" : {
+      "comment" : "Подтверждение сброса всего прогресса: текст",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Все шаги «Учимся читать» начнутся заново: уроки, прочитанные слова и зикры итога."
+          }
+        }
+      }
+    },
+    "settings.makharij.resetAll.confirm.title" : {
+      "comment" : "Подтверждение сброса всего прогресса: заголовок",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сбросить весь прогресс?"
+          }
+        }
+      }
+    },
+    "settings.makharij.step.done" : {
+      "comment" : "Состояние шага в настройках",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "пройден"
+          }
+        }
+      }
+    },
+    "settings.makharij.step.reset" : {
+      "comment" : "Кнопка сброса шага",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сбросить"
+          }
+        }
+      }
+    },
+    "settings.makharij.step.reset.confirm.message %@" : {
+      "comment" : "Подтверждение сброса шага: название шага",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Прогресс шага «%@» будет удалён: урок, прочитанные слова и зикры. Пройти его можно заново."
+          }
+        }
+      }
+    },
+    "settings.makharij.step.reset.confirm.title" : {
+      "comment" : "Подтверждение сброса шага: заголовок",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сбросить шаг?"
+          }
+        }
+      }
+    },
+    "settings.makharij.step.started" : {
+      "comment" : "Состояние шага в настройках",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "начат"
+          }
+        }
+      }
+    },
+    "settings.makharij.subtitle" : {
+      "comment" : "Настройки: подпись раздела «Махрадж»",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Учимся читать: шаги и сброс прогресса"
+          }
+        }
+      }
+    },
+    "settings.makharij.title" : {
+      "comment" : "Настройки: раздел «Махрадж»",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Махрадж"
+          }
+        }
+      }
+    },
+    "settings.makharij.translit" : {
+      "comment" : "Настройки «Махраджа»: переключатель транскрипции",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показывать транскрипцию"
+          }
+        }
+      }
+    },
+    "settings.makharij.translit.subtitle" : {
+      "comment" : "Подпись переключателя транскрипции",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Кириллицей под арабским текстом. На экране урока её скрывает и показывает кнопка-глаз"
+          }
+        }
+      }
+    },
     "settings.palette.footer" : {
       "comment" : "Палитра: подпись под вариантами",
       "localizations" : {
