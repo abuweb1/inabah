@@ -44,6 +44,9 @@ final class AudioPlayerController {
     @ObservationIgnored private let engine: any AudioEngine
     @ObservationIgnored private let session: (any AudioSessionHandling)?
     @ObservationIgnored private let nowPlaying: (any NowPlayingUpdating)?
+    /// Звук вот-вот начнётся (запуск и продолжение): записи курса (`ClipPlayer`) замолкают - по очереди,
+    /// как аудиофокус на Android. Задаёт `AppEnvironment`.
+    @ObservationIgnored var onWillStart: (() -> Void)?
     @ObservationIgnored private(set) var playbackRate: Float = 1
     @ObservationIgnored private var pauseBetweenItems: TimeInterval = 0
     @ObservationIgnored private var tickerTask: Task<Void, Never>?
@@ -553,6 +556,8 @@ final class AudioPlayerController {
     // MARK: - Прогресс
 
     private func setPlaying(_ playing: Bool) {
+        // Любой старт - загрузка, продолжение, после ошибки, следующий зикр - проходит здесь.
+        if playing { onWillStart?() }
         assign(\.isPlaying, playing)
         nowPlaying?.playbackDidChange()
         updateTicker()

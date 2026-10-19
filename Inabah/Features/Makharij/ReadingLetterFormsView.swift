@@ -2,7 +2,7 @@ import SwiftUI
 
 /// Карточка буквы (Android `ReadingLetterFormsScreen.kt`): буквы группы - полосой и страницами справа
 /// налево; на странице - буква, её формы и слова-примеры с выделенной буквой. Лампочка - транскрипция слов
-/// на 0,7 с; долгое нажатие на слово - увеличение. Звук слов - этап записей курса.
+/// на 0,7 с; долгое нажатие на слово - увеличение; есть запись слова - 🔈, нажатие играет её.
 struct ReadingLetterFormsView: View {
     let stepNumber: Int
     let letter: String
@@ -34,7 +34,8 @@ struct ReadingLetterFormsView: View {
             content: { course, colors, _ in
                 if let forms = Self.forms(course.step(stepNumber)) {
                     LetterFormsContent(
-                        forms: forms, stepLetter: letter, colors: colors, isHintShown: isHintShown, current: $current
+                        forms: forms, stepNumber: stepNumber, stepLetter: letter, colors: colors,
+                        isHintShown: isHintShown, current: $current
                     )
                 } else {
                     ReadingLessonSoon()
@@ -67,12 +68,14 @@ struct ReadingLetterFormsView: View {
 
 private struct LetterFormsContent: View {
     let forms: ReadingBlock.Forms
+    let stepNumber: Int
     /// Буква, с которой открыли карточку.
     let stepLetter: String
     let colors: ReadingColors
     let isHintShown: Bool
     @Binding var current: String?
 
+    @Environment(ClipPlayer.self) private var clips
     @State private var zoom: ExampleZoom?
 
     private static let space = "letterForms"
@@ -92,7 +95,8 @@ private struct LetterFormsContent: View {
                                 colors: colors,
                                 isHintShown: isHintShown,
                                 zoomedForm: zoom?.letter == letter ? zoom?.form : nil,
-                                coordinateSpace: Self.space
+                                coordinateSpace: Self.space,
+                                audio: { audio(letter, $0) }
                             ) { form, frame in
                                 zoom = ExampleZoom(letter: letter, form: form, source: frame)
                             }
@@ -118,20 +122,29 @@ private struct LetterFormsContent: View {
         .coordinateSpace(.named(Self.space))
         .overlay {
             if let zoom, let examples = forms.examples[zoom.letter], let word = examples.word(zoom.form) {
+                let audio = audio(zoom.letter, zoom.form)
                 TileZoomOverlay(
                     source: zoom.source,
                     sourceTextSize: ExampleWordCell.wordSize,
                     zoomedTextSize: ExampleWordCell.zoomedWordSize,
-                    onDismissed: { self.zoom = nil }
+                    onDismissed: { self.zoom = nil },
+                    // Увеличенное слово с записью - нажатие играет её.
+                    onTileTap: audio.map { file in { clips.play(file) } }
                 ) {
                     ExampleWordCell(
                         word: word, letter: zoom.letter, form: zoom.form,
                         transliteration: examples.transliteration(zoom.form),
-                        isHintShown: isHintShown, isZoomed: true, colors: colors
+                        isHintShown: isHintShown, isZoomed: true, colors: colors, hasAudio: audio != nil
                     )
                 }
             }
         }
+    }
+
+    /// Запись слова-примера, если она есть в сборке.
+    private func audio(_ letter: ReadingLetter, _ form: LetterForm) -> String? {
+        let file = ReadingLogic.formExampleAudio(step: stepNumber, letter: letter, form: form)
+        return clips.available.contains(file) ? file : nil
     }
 }
 
@@ -197,6 +210,8 @@ private struct LetterFormsPage: View {
     /// Форма слова, которое сейчас увеличено - его ячейка «вылетела» и пуста.
     let zoomedForm: LetterForm?
     let coordinateSpace: String
+    /// Запись слова формы; нет - `nil`.
+    let audio: (LetterForm) -> String?
     let onZoom: (LetterForm, CGRect) -> Void
 
     @Environment(\.theme) private var theme
@@ -241,7 +256,7 @@ private struct LetterFormsPage: View {
                                         word: word, letter: letter, form: form,
                                         transliteration: examples.transliteration(form),
                                         isHintShown: isHintShown, colors: colors,
-                                        coordinateSpace: coordinateSpace
+                                        coordinateSpace: coordinateSpace, audio: audio(form)
                                     ) { frame in onZoom(form, frame) }
                                     .opacity(zoomedForm == form ? 0 : 1)
                                 }
@@ -266,26 +281,53 @@ private struct ZoomableExampleWord: View {
     let isHintShown: Bool
     let colors: ReadingColors
     let coordinateSpace: String
+    /// Запись слова: есть - нажатие играет её (без записи ячейка не нажимается).
+    let audio: String?
     let onZoom: (CGRect) -> Void
 
+    @Environment(ClipPlayer.self) private var clips
     @State private var frame: CGRect = .zero
     @State private var zoomCount = 0
+    @State private var playCount = 0
 
     var body: some View {
         ExampleWordCell(
             word: word, letter: letter, form: form, transliteration: transliteration,
-            isHintShown: isHintShown, isZoomed: false, colors: colors
+            isHintShown: isHintShown, isZoomed: false, colors: colors, hasAudio: audio != nil
         )
         .onGeometryChange(for: CGRect.self) { $0.frame(in: .named(coordinateSpace)) } action: { frame = $0 }
         .contentShape(.rect(cornerRadius: Radius.box))
+        .onTapGesture(perform: play)
         .onLongPressGesture {
             zoomCount += 1
             onZoom(frame)
         }
         .sensoryFeedback(.impact(weight: .medium), trigger: zoomCount)
+        .sensoryFeedback(.selection, trigger: playCount)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(Text(verbatim: isHintShown ? [word, transliteration].compactMap { $0 }.joined(separator: ", ") : word))
         .accessibilityAction(named: Text("makharij.words.zoomAction")) { onZoom(frame) }
+        .modifier(ListenAction(isEnabled: audio != nil, action: play))
+    }
+
+    private func play() {
+        guard let audio else { return }
+        playCount += 1
+        clips.play(audio)
+    }
+}
+
+/// VoiceOver-действие «Послушать» - только у слова с записью.
+struct ListenAction: ViewModifier {
+    let isEnabled: Bool
+    let action: () -> Void
+
+    func body(content: Content) -> some View {
+        if isEnabled {
+            content.accessibilityAction(named: Text("makharij.word.listen"), action)
+        } else {
+            content
+        }
     }
 }
 
@@ -301,6 +343,8 @@ struct ExampleWordCell: View {
     let isHintShown: Bool
     let isZoomed: Bool
     let colors: ReadingColors
+    /// Есть запись слова - 🔈 в углу.
+    var hasAudio = false
 
     @Environment(\.theme) private var theme
 
@@ -333,5 +377,23 @@ struct ExampleWordCell: View {
             }
         }
         .parchmentCell(colors)
+        .overlay(alignment: .topLeading) {
+            if hasAudio { ExampleWordSpeaker(colors: colors) }
+        }
+    }
+}
+
+/// 🔈 слова-примера с записью (Android `ExampleWordCell`): сверху слева, при звучании не меняется.
+struct ExampleWordSpeaker: View {
+    let colors: ReadingColors
+
+    @ScaledMetric(relativeTo: .body) private var size: CGFloat = 12
+
+    var body: some View {
+        Image(systemName: "speaker.wave.2.fill")
+            .font(.system(size: size))
+            .foregroundStyle(colors.parchmentCaption)
+            .padding(Spacing.xxs)
+            .accessibilityHidden(true)
     }
 }
