@@ -194,14 +194,21 @@ struct LessonLettersGrid: View {
     let letters: [ReadingLetter]
     var columns = Self.defaultColumns
     let colors: ReadingColors
+    /// Номер буквы, звучащей в «Послушать алфавит»: увеличена поверх соседей, над ней - название.
+    var playingLetter: Int? = nil
     let onTap: (ReadingLetter) -> Void
 
     static let defaultColumns = 5
 
     @Environment(\.theme) private var theme
+    @Environment(ClipPlayer.self) private var clips
     @ScaledMetric(relativeTo: .body) private var tileHeight: CGFloat = 64
+    @ScaledMetric(relativeTo: .body) private var speakerSize: CGFloat = 12
 
-    private static let letterSize: Double = 30
+    private enum Layout {
+        static let letterSize: Double = 30
+        static let playingScale: CGFloat = 1.2
+    }
 
     var body: some View {
         VStack(spacing: Spacing.s) {
@@ -209,24 +216,80 @@ struct LessonLettersGrid: View {
                 WeightedRow(spacing: Spacing.s) {
                     ForEach(Array(row.enumerated()), id: \.offset) { _, letter in
                         if let letter {
-                            Button { onTap(letter) } label: {
-                                Text(verbatim: letter.letter)
-                                    .font(.arabic(size: Self.letterSize))
-                                    .foregroundStyle(theme.palette.onAccent)
-                                    .fixedSize()
-                                    .frame(maxWidth: .infinity, minHeight: tileHeight)
-                                    .readingTile(colors, cornerRadius: Radius.box, lineWidth: ReadingMetrics.tileBorder)
-                                    .contentShape(.rect(cornerRadius: Radius.box))
-                            }
-                            .buttonStyle(PressScaleButtonStyle(pressedScale: PressFeedback.iconScale))
-                            .accessibilityLabel(Text(verbatim: letter.name))
+                            tile(letter, isPlaying: letter.number == playingLetter)
                         } else {
                             Color.clear.frame(height: tileHeight)
                         }
                     }
                 }
+                // Увеличенная буква и название над ней - поверх соседнего ряда.
+                .zIndex(row.contains { $0?.number == playingLetter && playingLetter != nil } ? 1 : 0)
             }
         }
+        .animation(Motion.collapse, value: playingLetter)
+    }
+
+    private func tile(_ letter: ReadingLetter, isPlaying: Bool) -> some View {
+        Button { onTap(letter) } label: {
+            Text(verbatim: letter.letter)
+                .font(.arabic(size: Layout.letterSize))
+                .foregroundStyle(theme.palette.onAccent)
+                .fixedSize()
+                .frame(maxWidth: .infinity, minHeight: tileHeight)
+                .readingTile(colors, cornerRadius: Radius.box, lineWidth: ReadingMetrics.tileBorder, isHighlighted: isPlaying)
+                // Есть запись буквы - значок в левом нижнем углу (и в сетке справа налево - слева).
+                .overlay(alignment: .bottomLeading) {
+                    if letter.audio.values.contains(where: clips.available.contains) {
+                        Image(systemName: "speaker.wave.2.fill")
+                            .font(.system(size: speakerSize))
+                            .foregroundStyle(theme.palette.onAccentTertiary)
+                            .padding(Spacing.xs)
+                            .accessibilityHidden(true)
+                    }
+                }
+                .contentShape(.rect(cornerRadius: Radius.box))
+        }
+        .buttonStyle(PressScaleButtonStyle(pressedScale: PressFeedback.iconScale))
+        .scaleEffect(isPlaying ? Layout.playingScale : 1)
+        .overlay(alignment: .top) {
+            if isPlaying {
+                PlayingNameBubble(name: letter.name, colors: colors)
+                    .transition(.opacity.animation(Motion.nameBubble))
+            }
+        }
+        .zIndex(isPlaying ? 1 : 0)
+        .accessibilityLabel(Text(verbatim: letter.name))
+    }
+}
+
+/// Название звучащей буквы над ней (Android `PlayingNameBubble`): рамка цвета раздела, сдвиг отрисовки вверх.
+private struct PlayingNameBubble: View {
+    let name: String
+    let colors: ReadingColors
+
+    @Environment(\.theme) private var theme
+
+    /// Название выше верха плитки на столько: плитка увеличена (×1,2), её рамка выше на 0,1 высоты -
+    /// название заходит на рамку, не на букву.
+    private static let lift: CGFloat = 2
+
+    var body: some View {
+        Text(verbatim: name)
+            .font(.headline)
+            .foregroundStyle(theme.palette.onAccent)
+            .lineLimit(1)
+            .fixedSize()
+            .padding(.horizontal, Spacing.m)
+            .padding(.vertical, Spacing.xxs)
+            .background {
+                Capsule()
+                    .fill(colors.sheet)
+                    .strokeBorder(colors.tint, lineWidth: ReadingMetrics.tileBorder)
+            }
+            // Нижний край названия - у верха плитки: рамка нулевой высоты, название выходит вверх.
+            .frame(height: 0, alignment: .bottom)
+            .offset(y: -Self.lift)
+            .accessibilityHidden(true)
     }
 }
 
@@ -402,10 +465,14 @@ struct LessonRuleBlock: View {
 /// «в словах». Нажатие - карточка буквы.
 struct LessonFormsTable: View {
     let block: ReadingBlock.Forms
+    /// Шаг - для имени записи слова-примера.
+    let step: Int
     let colors: ReadingColors
     let onOpen: (ReadingLetter) -> Void
 
     @Environment(\.theme) private var theme
+    @Environment(ClipPlayer.self) private var clips
+    @State private var playCount = 0
 
     private enum Layout {
         static let form: Double = 28
@@ -486,19 +553,34 @@ struct LessonFormsTable: View {
             .accessibilityLabel(Text(verbatim: letter.name))
             ForEach(LetterForm.placed, id: \.self) { form in
                 if let word = examples.word(form) {
-                    Button { onOpen(letter) } label: {
+                    // Есть запись - нажатие играет её; нет - карточка буквы.
+                    let file = ReadingLogic.formExampleAudio(step: step, letter: letter, form: form)
+                    let audio = clips.available.contains(file) ? file : nil
+                    Button {
+                        if let audio {
+                            playCount += 1
+                            clips.play(audio)
+                        } else {
+                            onOpen(letter)
+                        }
+                    } label: {
                         ExampleWordText(word: word, letter: letter, form: form, size: Layout.word, colors: colors)
                             .padding(.top, Spacing.xs)
                             .padding(.bottom, Spacing.xxs)
                             .frame(maxWidth: .infinity, maxHeight: .infinity)
                             .parchmentCell(colors)
+                            .overlay(alignment: .topLeading) {
+                                if audio != nil { ExampleWordSpeaker(colors: colors) }
+                            }
                             .contentShape(.rect(cornerRadius: Radius.box))
                     }
                     .buttonStyle(PressScaleButtonStyle(pressedScale: PressFeedback.iconScale))
                     .accessibilityLabel(Text(verbatim: word))
+                    .modifier(ListenAction(isEnabled: audio != nil) { if let audio { clips.play(audio) } })
                 }
             }
         }
+        .sensoryFeedback(.selection, trigger: playCount)
     }
 }
 

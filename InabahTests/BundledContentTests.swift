@@ -46,11 +46,13 @@ struct BundledContentTests {
         }
     }
 
-    @Test("Все записи — AAC .m4a и читаются плеером; MP3 нет")
+    @Test("Все записи — AAC .m4a и читаются плеером; MP3 нет; азкаров — 20")
     func audioFilesPlay() throws {
         let files = Bundle.main.urls(forResourcesWithExtension: "m4a", subdirectory: nil) ?? []
+        // Записи курса «Учимся читать» (`reading_*`) - в том же Bundle, но не азкары.
+        let azkar = files.filter { url in ["morning_", "evening_"].contains { url.lastPathComponent.hasPrefix($0) } }
 
-        #expect(files.count == 20)
+        #expect(azkar.count == 20)
         #expect(Bundle.main.urls(forResourcesWithExtension: "mp3", subdirectory: nil) ?? [] == [])
         for url in files {
             let player = try AVAudioPlayer(contentsOf: url)

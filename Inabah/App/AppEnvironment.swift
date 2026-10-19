@@ -21,6 +21,8 @@ struct AppEnvironment {
     let readingProgress: ReadingProgress
     let appIconSettings: AppIconSettings
     let audioPlayer: AudioPlayerController
+    /// Короткие записи «Учимся читать»; с плеером азкаров - по очереди.
+    let clipPlayer: ClipPlayer
     /// Палитра оформления — тема в окружении берётся из неё (`themed()`).
     let appearanceSettings: AppearanceSettings
     /// Фон под арабским текстом — накладывается на тему палитры (`Theme.withParchment`).
@@ -43,6 +45,7 @@ struct AppEnvironment {
         repository: any ContentRepository = BundleContentRepository(),
         defaults: UserDefaults = .standard,
         audioPlayer: AudioPlayerController? = nil,
+        clipPlayer: ClipPlayer? = nil,
         appIconSwitcher: (any AppIconSwitching)? = nil,
         notificationCenter: (any NotificationCentering)? = nil,
         updateSource: any UpdateSource = NoUpdateSource()
@@ -73,6 +76,10 @@ struct AppEnvironment {
             session: AudioSessionController(),
             nowPlaying: NowPlayingCoordinator()
         )
+        self.clipPlayer = clipPlayer ?? ClipPlayer()
+        // Звучит что-то одно (как аудиофокус на Android): запись курса - азкары на паузу, и наоборот.
+        self.clipPlayer.onWillPlay = { [weak player = self.audioPlayer] in player?.pause() }
+        self.audioPlayer.onWillStart = { [weak clips = self.clipPlayer] in clips?.stop() }
         appearanceSettings = AppearanceSettings(defaults: defaults)
         parchmentSettings = ParchmentSettings(defaults: defaults)
         translationShadeSettings = TranslationShadeSettings(defaults: defaults)
@@ -106,6 +113,7 @@ struct AppEnvironment {
             repository: InMemoryContentRepository.preview,
             defaults: previewDefaults(),
             audioPlayer: AudioPlayerController(engine: AVAudioEngineAdapter()),
+            clipPlayer: ClipPlayer(session: nil),
             appIconSwitcher: PreviewAppIconSwitcher(),
             notificationCenter: InertNotificationCenter()
         )
@@ -160,6 +168,7 @@ extension View {
             .environment(environment.hadithCollectionOrder)
             .environment(environment.appIconSettings)
             .environment(environment.audioPlayer)
+            .environment(environment.clipPlayer)
             .environment(environment.appearanceSettings)
             .environment(environment.parchmentSettings)
             .environment(environment.translationShadeSettings)

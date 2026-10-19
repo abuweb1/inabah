@@ -43,6 +43,8 @@ private struct ZikrContent: View {
     @Environment(ReadingProgress.self) private var progress
     @Environment(ReadingSettings.self) private var settings
     @Environment(AppRouter.self) private var router
+    @Environment(ClipPlayer.self) private var clips
+    @Environment(\.scenePhase) private var scenePhase
 
     @State private var rows: [WordRow] = []
     @State private var isCelebrating = false
@@ -91,6 +93,13 @@ private struct ZikrContent: View {
                 }
                 SectionTitle(text: Text("makharij.zikr.whole"), colors: colors)
                 WholeZikr(zikr: zikr, isTransliterationHidden: isHidden, colors: colors)
+                if let audio = zikr.audio, clips.available.contains(audio) {
+                    let isPlaying = clips.playing == audio
+                    Button(isPlaying ? "makharij.zikr.stop" : "makharij.zikr.play") {
+                        if isPlaying { clips.stop() } else { clips.play(audio) }
+                    }
+                    .buttonStyle(ReadingButtonStyle(colors: colors, isProminent: false))
+                }
                 if !state.isRead {
                     Button("makharij.zikr.read") { progress.markZikrRead(zikr.zikr) }
                         .buttonStyle(ReadingButtonStyle(colors: colors))
@@ -116,6 +125,15 @@ private struct ZikrContent: View {
         // Прочитан последний зикр - итог пройден (один раз: урок отмечается здесь же).
         .onAppear(perform: completeIfRead)
         .onChange(of: ReadingLogic.allZikrsDone(step: step, progress: progress.zikrs)) { completeIfRead() }
+        // Запись зикра длинная: уход с экрана и в фон - тишина (как Android).
+        .onDisappear(perform: stopOwnClip)
+        .onChange(of: scenePhase) { _, phase in
+            if phase != .active { stopOwnClip() }
+        }
+    }
+
+    private func stopOwnClip() {
+        if let audio = zikr.audio, clips.playing == audio { clips.stop() }
     }
 
     private func completeIfRead() {

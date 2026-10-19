@@ -1690,6 +1690,83 @@
         }
       }
     },
+    "makharij.alphabet.next" : {
+      "comment" : "Учимся читать: панель алфавита: дальше",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Следующая буква"
+          }
+        }
+      }
+    },
+    "makharij.alphabet.pause" : {
+      "comment" : "Учимся читать: панель алфавита: пауза",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пауза"
+          }
+        }
+      }
+    },
+    "makharij.alphabet.play" : {
+      "comment" : "Учимся читать: кнопка в навбаре урока с буквами",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Послушать алфавит"
+          }
+        }
+      }
+    },
+    "makharij.alphabet.position %lld %lld" : {
+      "comment" : "Учимся читать: панель алфавита: номер буквы",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld из %2$lld"
+          }
+        }
+      }
+    },
+    "makharij.alphabet.previous" : {
+      "comment" : "Учимся читать: панель алфавита: назад",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Предыдущая буква"
+          }
+        }
+      }
+    },
+    "makharij.alphabet.resume" : {
+      "comment" : "Учимся читать: панель алфавита: продолжить",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Продолжить"
+          }
+        }
+      }
+    },
+    "makharij.alphabet.stop" : {
+      "comment" : "Учимся читать: остановить «Послушать алфавит»",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Стоп"
+          }
+        }
+      }
+    },
     "makharij.alphabet.table.open" : {
       "comment" : "Учимся читать: кнопка под случайными слогами урока",
       "localizations" : {
@@ -2038,6 +2115,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%lld-я буква"
+          }
+        }
+      }
+    },
+    "makharij.letter.play" : {
+      "comment" : "Учимся читать: лист буквы: прослушать цепочку",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Прослушать"
+          }
+        }
+      }
+    },
+    "makharij.letter.stop" : {
+      "comment" : "Учимся читать: лист буквы: остановить цепочку",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Стоп"
           }
         }
       }
@@ -2394,6 +2493,17 @@
         }
       }
     },
+    "makharij.word.listen" : {
+      "comment" : "Учимся читать: VoiceOver: проиграть запись слова или слога",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Послушать"
+          }
+        }
+      }
+    },
     "makharij.words.count %lld %lld" : {
       "comment" : "Учимся читать: «Читаем слова»: счёт прочтений слова",
       "localizations" : {
@@ -2636,6 +2746,17 @@
         }
       }
     },
+    "makharij.zikr.play" : {
+      "comment" : "Учимся читать: зикр итога: запись",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Послушать"
+          }
+        }
+      }
+    },
     "makharij.zikr.read" : {
       "comment" : "Учимся читать: зикр: кнопка «прочитал целиком»",
       "localizations" : {
@@ -2654,6 +2775,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@ · %2$lld"
+          }
+        }
+      }
+    },
+    "makharij.zikr.stop" : {
+      "comment" : "Учимся читать: зикр итога: остановить запись",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Стоп"
           }
         }
       }
