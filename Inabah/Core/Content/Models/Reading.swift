@@ -19,6 +19,9 @@ nonisolated struct ReadingCourse: Hashable, Sendable {
 
     /// Звук буквы - она же с сукуном; сукуна в данных нет - `nil`.
     var sukun: ReadingMark? { marks.first { $0.id == ReadingMark.sukun } }
+
+    /// Алиф - подставка огласовки в закрытых слогах (`أَبْ`); нет в данных - `nil`.
+    var alif: ReadingLetter? { letters.first { $0.letter == ReadingLetter.alif } }
 }
 
 /// Знак огласовки; `id` - слово латиницей (`fatha`), по нему ссылаются шаги и слоги.
@@ -40,9 +43,12 @@ nonisolated struct ReadingMark: Hashable, Sendable {
 
 nonisolated struct ReadingLetter: Hashable, Sendable {
     static let tatweel = "ـ"
-    private static let alif = "ا"
+    static let alif = "ا"
+    /// Огласовки алифа закрытых слогов по порядку: фатхьа, касра, домма.
+    static let closedVowels = ["fatha", "kasra", "damma"]
     private static let seatAlif = "أ"
     private static let nameAudioKey = "name"
+    private static let closedAudioKeys = ["fatha": "closedFatha", "kasra": "closedKasra", "damma": "closedDamma"]
 
     /// Номер в алфавите, 1…29 (хамза - последняя).
     let number: Int
@@ -64,10 +70,16 @@ nonisolated struct ReadingLetter: Hashable, Sendable {
     let sound: String
     /// Транскрипция слогов по знакам: `fatha` → «льа».
     let syllables: [String: String]
-    /// Записи: `sound`, `name`, `<знак>` → имя файла; записи нет - ключа нет.
+    /// Записи: `name`, `<знак>`, `closedFatha` / `closedKasra` / `closedDamma` → имя файла; записи нет - ключа нет.
     let audio: [String: String]
     /// Пояснение в листе буквы (алиф не бывает сам по себе); нет - `nil`.
     let note: String?
+    /// Буква с сукуном в закрытом слоге, если не сама буква: у алифа и хамзы - хамза на алифе `أ` при любой
+    /// огласовке (`أَأْ إِأْ أُأْ`); `nil` - сама буква.
+    var closedBase: String? = nil
+    /// Огласовки алифа, после которых у буквы бывает закрытый слог: у و - фатхьа и касра, у ي - фатхьа и домма
+    /// (أُوْ и إِيْ - мадд).
+    var closedVowels: [String] = Self.closedVowels
 
     /// Запись названия - она звучит и в «Послушать алфавит»; нет - `nil`.
     var nameAudio: String? { audio[Self.nameAudioKey] }
@@ -100,11 +112,42 @@ nonisolated struct ReadingLetter: Hashable, Sendable {
         mark.id == ReadingMark.sukun ? sound : syllables[mark.id]
     }
 
-    /// Звук буквы на письме: с сукуном и татвилем перед ней (`ـلْ`, как в конце слова); без татвиля - у
-    /// подставки (алиф → `أْ`) и у буквы, которая ни с чем не соединяется (хамза → `ءْ`).
-    func soundArabic(sukun: ReadingMark) -> String {
-        let base = base(sukun)
-        return base == letter && joinsPrevious ? Self.tatweel + letter + sukun.sign : base + sukun.sign
+    /// Закрытый слог (согласная с сукуном одна не произносится): алиф-хамза `alif` с огласовкой `vowel` и эта
+    /// буква с сукуном - `أَبْ`; у алифа и хамзы - хамза на алифе (`closedBase`, `إِأْ`).
+    func closedSyllable(alif: ReadingLetter, vowel: ReadingMark, sukun: ReadingMark) -> String {
+        alif.syllable(vowel) + (closedBase ?? letter) + sukun.sign
+    }
+
+    /// Транскрипция закрытого слога с огласовкой алифа `vowel`: «ъиб».
+    func closedTransliteration(alif: ReadingLetter, vowel: String) -> String {
+        (alif.syllables[vowel] ?? "") + sound
+    }
+
+    /// Ключ записи закрытого слога с огласовкой `vowel` в `audio`; не огласовка закрытого слога - `nil`.
+    static func closedAudioKey(_ vowel: String) -> String? { closedAudioKeys[vowel] }
+}
+
+/// Закрытый слог буквы `letter` с огласовкой алифа `vowel`: как пишется (`أَبْ`) и читается («ъаб»), запись
+/// (`nil` - нет).
+nonisolated struct ReadingClosedSyllable: Hashable, Sendable {
+    let letter: ReadingLetter
+    let vowel: ReadingMark
+    let arabic: String
+    let transliteration: String
+    let audio: String?
+
+    /// Закрытые слоги буквы по огласовкам `vowels` (фатхьа, касра, домма), после которых они у неё бывают
+    /// (`ReadingLetter.closedVowels`): алиф-хамза `alif` с огласовкой и буква с сукуном `sukun`.
+    static func all(of letter: ReadingLetter, alif: ReadingLetter, vowels: [ReadingMark], sukun: ReadingMark) -> [ReadingClosedSyllable] {
+        vowels.filter { letter.closedVowels.contains($0.id) }.map { vowel in
+            ReadingClosedSyllable(
+                letter: letter,
+                vowel: vowel,
+                arabic: letter.closedSyllable(alif: alif, vowel: vowel, sukun: sukun),
+                transliteration: letter.closedTransliteration(alif: alif, vowel: vowel.id),
+                audio: ReadingLetter.closedAudioKey(vowel.id).flatMap { letter.audio[$0] }
+            )
+        }
     }
 }
 
@@ -225,6 +268,7 @@ nonisolated enum ReadingBlock: Hashable, Sendable {
     case letters(Letters)
     case syllables(Syllables)
     case formulas(Formulas)
+    case closedSyllables(ClosedSyllables)
     case topic(Topic)
     case zikr(Zikr)
     case rule(Rule)
@@ -265,12 +309,23 @@ nonisolated enum ReadingBlock: Hashable, Sendable {
     }
 
     /// Формулы на пергаменте: части через «+» и итог после «=», справа налево - «بَ + ا = بَا»; одна часть -
-    /// равенство, без частей - слово строкой. `columns` - формул в ряду; `sample` - на уроке столько
-    /// случайных и «Весь алфавит» отдельным экраном, `nil` - все на уроке.
+    /// равенство, без частей - слово строкой. `columns` - формул в ряду.
     struct Formulas: Hashable, Sendable {
         let columns: Int
         let items: [ReadingFormula]
+    }
+
+    /// Закрытые слоги шага «Сукун» (без формул, просто слог - «ъиб»): ряд на букву, столбцы - `vowels`
+    /// (фатхьа, касра, домма); `nil` - после этой огласовки у буквы закрытого слога нет (мадд у و ي).
+    /// `sample` - на уроке столько случайных и «Прочтите весь алфавит», все - отдельным экраном; `nil` -
+    /// вся таблица на уроке.
+    struct ClosedSyllables: Hashable, Sendable {
+        let vowels: [ReadingMark]
+        let rows: [[ReadingClosedSyllable?]]
         var sample: Int?
+
+        /// Все слоги таблицы по порядку.
+        var all: [ReadingClosedSyllable] { rows.flatMap { $0.compactMap { $0 } } }
     }
 
     /// Тема урока («Особые случаи»): карточка с кратким описанием `summary` и примером `example`,
@@ -321,17 +376,17 @@ nonisolated enum ReadingQuestion: Hashable, Sendable {
     /// `إِبْ`. `alif` - буква алиф курса (её подставки и слоги), `sukun` - знак.
     struct ClosedSyllable: Hashable, Sendable {
         /// Огласовки алифа в вариантах ответа, по порядку.
-        static let vowels = ["fatha", "kasra", "damma"]
+        static let vowels = ReadingLetter.closedVowels
 
         let letter: ReadingLetter
         let vowel: ReadingMark
         let alif: ReadingLetter
         let sukun: ReadingMark
 
-        var arabic: String { alif.syllable(vowel) + letter.letter + sukun.sign }
+        var arabic: String { letter.closedSyllable(alif: alif, vowel: vowel, sukun: sukun) }
 
         /// Транскрипция слога с огласовкой `vowel`: «ъиб».
-        func transliteration(vowel: String) -> String { (alif.syllables[vowel] ?? "") + letter.sound }
+        func transliteration(vowel: String) -> String { letter.closedTransliteration(alif: alif, vowel: vowel) }
     }
 
     /// «Как читается это слово?»: варианты транскрипции из данных (в их порядке), `answer` - номер верного,

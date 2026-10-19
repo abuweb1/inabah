@@ -12,7 +12,6 @@ nonisolated struct ReadingMappingError: Error, Equatable, CustomStringConvertibl
 
 nonisolated extension ReadingCourse {
     private static let exampleLetter = "ب"
-    private static let alif = "ا"
     private static let formExamples = 3
     private static let maxFormulaColumns = 3
     /// Места слов-примеров по порядку `examples`.
@@ -95,7 +94,9 @@ nonisolated extension ReadingCourse {
                     sound: text.sound,
                     syllables: text.syllables,
                     audio: letter.audio.compactMapValues { $0 },
-                    note: text.note.nonEmpty
+                    note: text.note.nonEmpty,
+                    closedBase: letter.closedBase,
+                    closedVowels: letter.closedVowels ?? ReadingLetter.closedVowels
                 ))
             }
             self.marks = marks
@@ -170,6 +171,19 @@ nonisolated extension ReadingCourse {
                     columns: Swift.min(Swift.max(block.columns, 1), ReadingCourse.maxFormulaColumns),
                     items: block.items.map {
                         ReadingFormula(parts: $0.parts, result: $0.result, transliteration: transliteration($0.translations))
+                    }
+                ))
+            case "closedSyllables":
+                // Ряд на букву, столбцы - огласовки алифа; без букв - весь алфавит.
+                let vowels = try ReadingLetter.closedVowels.map(mark)
+                let alif = try letter(ReadingLetter.alif)
+                let sukun = try mark(ReadingMark.sukun)
+                let rows = try block.letters?.map(letter) ?? letters
+                return .closedSyllables(.init(
+                    vowels: vowels,
+                    rows: rows.map { row in
+                        let cells = ReadingClosedSyllable.all(of: row, alif: alif, vowels: vowels, sukun: sukun)
+                        return vowels.map { vowel in cells.first { $0.vowel == vowel } }
                     },
                     sample: block.sample
                 ))
@@ -267,7 +281,7 @@ nonisolated extension ReadingCourse {
                 return .closedSyllable(.init(
                     letter: try letter(quiz.letter),
                     vowel: try mark(vowel),
-                    alif: try letter(ReadingCourse.alif),
+                    alif: try letter(ReadingLetter.alif),
                     sukun: try mark(ReadingMark.sukun)
                 ))
             default:

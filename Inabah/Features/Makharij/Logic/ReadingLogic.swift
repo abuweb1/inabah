@@ -3,9 +3,9 @@ import Foundation
 // Правила «Учимся читать» без SwiftUI (docs/08-screen-makharij.md; как Android `ReadingLogic.kt`): цепочка
 // листа буквы, варианты ответа и заход в проверку, шаги, страницы «Читаем слова», зикры итога.
 
-/// Элемент цепочки листа буквы: звук → название → слоги.
+/// Элемент цепочки листа буквы: название → слоги → закрытые слоги.
 nonisolated struct LetterChainItem: Hashable, Sendable {
-    enum Kind: Hashable, Sendable { case sound, name, syllable }
+    enum Kind: Hashable, Sendable { case name, syllable, closed }
 
     let kind: Kind
     let arabic: String
@@ -14,12 +14,12 @@ nonisolated struct LetterChainItem: Hashable, Sendable {
     let audioFile: String?
     /// Слог с ещё не пройденным знаком - пунктиром, без звука.
     let isLearned: Bool
-    /// Название знака слога (`фатха`); у звука и названия - `nil`.
+    /// Название знака слога (`фатха`, у закрытого слога - `сукун`); у названия - `nil`.
     var markName: String?
 }
 
 nonisolated extension [LetterChainItem] {
-    /// Записи цепочки листа буквы по порядку (звук → название → слоги) из тех, что есть в сборке `available`.
+    /// Записи цепочки листа буквы по порядку (название → слоги → закрытые слоги) из тех, что есть в сборке `available`.
     func playableFiles(available: Set<String>) -> [String] {
         compactMap { item in item.audioFile.flatMap { available.contains($0) ? $0 : nil } }
     }
@@ -58,7 +58,6 @@ nonisolated struct SyllableSample: Hashable, Sendable {
 }
 
 nonisolated enum ReadingLogic {
-    private static let soundKey = "sound"
     private static let nameKey = "name"
     private static let optionCount = 3
     /// Знаки огласовки (U+064B…U+0652) и кинжальный алиф (U+0670) - часть буквы при подсветке в слове.
@@ -66,19 +65,12 @@ nonisolated enum ReadingLogic {
 
     // MARK: - Лист буквы
 
-    /// Цепочка буквы `letter` на шаге `stepNumber`: звук (с сукуном, если сукун уже пройден), название,
-    /// затем слоги всех знаков, для которых у буквы есть транскрипция (по порядку знаков курса); знак, не
-    /// пройденный к шагу, - `isLearned == false`, а танвин до его шага не показывается.
+    /// Цепочка буквы `letter` на шаге `stepNumber`: название, слоги всех знаков, для которых у буквы есть
+    /// транскрипция (по порядку знаков курса), затем закрытые слоги (`أَبْ إِبْ أُبْ`). Знак, не пройденный к
+    /// шагу, - `isLearned == false`, а танвин до его шага не показывается.
     static func letterChain(course: ReadingCourse, letter: ReadingLetter, stepNumber: Int) -> [LetterChainItem] {
         let learned = Set(course.learnedMarks(through: stepNumber).map(\.id))
         var chain: [LetterChainItem] = []
-        // Звук (буква с сукуном) - только когда сукун пройден: раньше непонятный знак путает.
-        if let sukun = course.sukun, learned.contains(sukun.id) {
-            chain.append(LetterChainItem(
-                kind: .sound, arabic: letter.soundArabic(sukun: sukun), transliteration: letter.sound,
-                audioFile: letter.audio[soundKey], isLearned: true
-            ))
-        }
         chain.append(LetterChainItem(
             kind: .name, arabic: letter.arabicName, transliteration: letter.nameTransliteration,
             audioFile: letter.audio[nameKey], isLearned: true
@@ -93,7 +85,21 @@ nonisolated enum ReadingLogic {
                 audioFile: isLearned ? letter.audio[mark.id] : nil, isLearned: isLearned, markName: mark.name
             ))
         }
-        return chain
+        return chain + closedChain(course: course, letter: letter, learned: learned)
+    }
+
+    /// Закрытые слоги буквы (согласная с сукуном одна не произносится - «ъаб ъиб ъуб» вместо «б»): только
+    /// когда сукун пройден (раньше непонятный знак путает); у алифа - те же, что у хамзы (`أَأْ إِأْ أُأْ`),
+    /// у و и ي - без мадда (`ReadingLetter.closedVowels`). Нет в данных сукуна или алифа - пусто.
+    private static func closedChain(course: ReadingCourse, letter: ReadingLetter, learned: Set<String>) -> [LetterChainItem] {
+        guard let sukun = course.sukun, learned.contains(sukun.id), let alif = course.alif else { return [] }
+        let vowels = course.marks.filter { ReadingLetter.closedVowels.contains($0.id) }
+        return ReadingClosedSyllable.all(of: letter, alif: alif, vowels: vowels, sukun: sukun).map { closed in
+            LetterChainItem(
+                kind: .closed, arabic: closed.arabic, transliteration: closed.transliteration,
+                audioFile: closed.audio, isLearned: true, markName: sukun.name
+            )
+        }
     }
 
     // MARK: - Проверка
@@ -216,7 +222,7 @@ nonisolated enum ReadingLogic {
             || step.zikrs.contains { block in zikrs[block.zikr].map { $0.isRead || !$0.words.isEmpty } ?? false }
     }
 
-    // MARK: - Случайные слоги и формулы урока
+    // MARK: - Случайные слоги урока
 
     /// Случайные слоги для карточки урока: `count` разных букв, у каждой - случайный знак из `marks`.
     /// Одинаковые при том же `seed` (экран хранит его).
@@ -228,9 +234,9 @@ nonisolated enum ReadingLogic {
         }
     }
 
-    /// Случайные формулы для карточки урока: `count` разных формул в порядке таблицы. Одинаковые при том же
-    /// `seed` (экран хранит его).
-    static func sampleFormulas(items: [ReadingFormula], count: Int, seed: UInt64) -> [ReadingFormula] {
+    /// Случайные закрытые слоги для карточки урока (шаг «Сукун»): `count` разных слогов в порядке таблицы.
+    /// Одинаковые при том же `seed` (экран хранит его).
+    static func sampleClosedSyllables(items: [ReadingClosedSyllable], count: Int, seed: UInt64) -> [ReadingClosedSyllable] {
         var generator = SeededGenerator(seed: seed)
         let picked = Set(items.indices.shuffled(using: &generator).prefix(count))
         return items.indices.filter(picked.contains).map { items[$0] }

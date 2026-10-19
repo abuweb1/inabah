@@ -222,17 +222,15 @@ struct LessonBlockView: View {
         case .forms(let forms):
             LessonFormsTable(block: forms, step: step.number, colors: colors, onOpen: actions.openLetterForms)
         case .formulas(let formulas):
-            if let sample = formulas.sample {
-                VStack(spacing: Spacing.m) {
-                    LessonFormulasBlock(
-                        items: ReadingLogic.sampleFormulas(items: formulas.items, count: sample, seed: seed),
-                        columns: formulas.columns, isTransliterationHidden: isTransliterationHidden, colors: colors
-                    )
-                    Button("makharij.alphabet.formulas.open", action: actions.openAlphabet)
-                        .buttonStyle(ReadingButtonStyle(colors: colors, isProminent: false))
-                }
+            LessonFormulasBlock(items: formulas.items, columns: formulas.columns, isTransliterationHidden: isTransliterationHidden, colors: colors)
+        case .closedSyllables(let closed):
+            if let sample = closed.sample {
+                LessonSampleClosedSyllables(
+                    samples: ReadingLogic.sampleClosedSyllables(items: closed.all, count: sample, seed: seed),
+                    isTransliterationHidden: isTransliterationHidden, colors: colors, onOpenAlphabet: actions.openAlphabet
+                )
             } else {
-                LessonFormulasBlock(items: formulas.items, columns: formulas.columns, isTransliterationHidden: isTransliterationHidden, colors: colors)
+                ClosedSyllablesTable(block: closed, isTransliterationHidden: isTransliterationHidden, colors: colors)
             }
         case .topic(let topic):
             LessonTopicCard(topic: topic, colors: colors) {

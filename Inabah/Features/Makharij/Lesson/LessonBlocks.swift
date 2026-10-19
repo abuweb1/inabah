@@ -398,6 +398,130 @@ struct SyllablesTable: View {
     }
 }
 
+// MARK: - Закрытые слоги
+
+/// Случайные закрытые слоги урока (шаг «Сукун», без формул - просто слог): пергамент по 3 в ряд и
+/// «Прочтите весь алфавит».
+struct LessonSampleClosedSyllables: View {
+    let samples: [ReadingClosedSyllable]
+    let isTransliterationHidden: Bool
+    let colors: ReadingColors
+    let onOpenAlphabet: () -> Void
+
+    private static let columns = 3
+
+    var body: some View {
+        VStack(spacing: Spacing.m) {
+            ParchmentPanel(bottomCornerRadius: Radius.card) {
+                VStack(spacing: Spacing.s) {
+                    ForEach(Array(ReadingLogic.paddedRows(samples, columns: Self.columns).enumerated()), id: \.offset) { _, row in
+                        ClosedSyllablesRow(cells: row, isTransliterationHidden: isTransliterationHidden, colors: colors)
+                    }
+                }
+            }
+            Button("makharij.alphabet.formulas.open", action: onOpenAlphabet)
+                .buttonStyle(ReadingButtonStyle(colors: colors, isProminent: false))
+        }
+    }
+}
+
+/// Все закрытые слоги («Весь алфавит» шага «Сукун»): карточки по 4 буквы, ряд - буква, столбцы - фатхьа,
+/// касра, домма справа налево; нет слога (мадд у و ي) - пустое место.
+struct ClosedSyllablesTable: View {
+    let block: ReadingBlock.ClosedSyllables
+    let isTransliterationHidden: Bool
+    let colors: ReadingColors
+
+    private static let lettersPerCard = 4
+
+    var body: some View {
+        VStack(spacing: Spacing.m) {
+            ForEach(Array(stride(from: 0, to: block.rows.count, by: Self.lettersPerCard)), id: \.self) { start in
+                ParchmentPanel(bottomCornerRadius: Radius.card) {
+                    VStack(spacing: Spacing.s) {
+                        ForEach(start..<min(start + Self.lettersPerCard, block.rows.count), id: \.self) { index in
+                            ClosedSyllablesRow(cells: block.rows[index], isTransliterationHidden: isTransliterationHidden, colors: colors)
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+/// Ряд закрытых слогов; `nil` - пустое место той же ширины.
+private struct ClosedSyllablesRow: View {
+    let cells: [ReadingClosedSyllable?]
+    let isTransliterationHidden: Bool
+    let colors: ReadingColors
+
+    var body: some View {
+        WeightedRow(spacing: Spacing.s) {
+            ForEach(Array(cells.enumerated()), id: \.offset) { _, cell in
+                if let cell {
+                    ClosedSyllableCell(cell: cell, isTransliterationHidden: isTransliterationHidden, colors: colors)
+                } else {
+                    Color.clear
+                }
+            }
+        }
+    }
+}
+
+/// Ячейка закрытого слога: слог и транскрипция под ним. Есть запись в сборке - 🔈 в углу, нажатие играет её
+/// (как слова-примеры форм); нет - не нажимается.
+private struct ClosedSyllableCell: View {
+    let cell: ReadingClosedSyllable
+    let isTransliterationHidden: Bool
+    let colors: ReadingColors
+
+    @Environment(\.theme) private var theme
+    @Environment(ClipPlayer.self) private var clips
+    @State private var playCount = 0
+
+    private static let syllableSize: Double = 32
+
+    var body: some View {
+        let audio = cell.audio.flatMap { clips.available.contains($0) ? $0 : nil }
+        Group {
+            if let audio {
+                Button {
+                    playCount += 1
+                    clips.play(audio)
+                } label: {
+                    content
+                        .overlay(alignment: .topLeading) { ExampleWordSpeaker(colors: colors) }
+                        .contentShape(.rect(cornerRadius: Radius.box))
+                }
+                .buttonStyle(PressScaleButtonStyle(pressedScale: PressFeedback.iconScale))
+                .sensoryFeedback(.selection, trigger: playCount)
+            } else {
+                content
+                    .accessibilityElement(children: .ignore)
+            }
+        }
+        .accessibilityLabel(Text(verbatim: "\(cell.letter.name), \(cell.transliteration)"))
+        .modifier(ListenAction(isEnabled: audio != nil) { if let audio { clips.play(audio) } })
+    }
+
+    private var content: some View {
+        VStack(spacing: 0) {
+            Text(verbatim: cell.arabic)
+                .font(.arabic(size: Self.syllableSize, bold: true))
+                .foregroundStyle(theme.palette.parchmentText)
+                .fixedSize()
+            Text(verbatim: cell.transliteration)
+                .font(.caption)
+                .foregroundStyle(colors.parchmentCaption)
+                .padding(.top, Spacing.xs)
+                .opacity(isTransliterationHidden ? 0 : 1)
+        }
+        .padding(.vertical, Spacing.xs)
+        .frame(maxWidth: .infinity)
+        .parchmentCell(colors)
+    }
+}
+
 // MARK: - Правило
 
 /// Правило: арабское название, транскрипция, пояснение и буквы правила (одна - рядом с текстом).
@@ -643,32 +767,6 @@ struct LessonFormulasBlock: View {
     var body: some View {
         ParchmentPanel(bottomCornerRadius: Radius.card) {
             FormulaRows(items: items, columns: columns, isTransliterationHidden: isTransliterationHidden, colors: colors)
-        }
-    }
-}
-
-/// Все формулы - карточками (в одну колонку - по 3, иначе по 4 ряда): «Весь алфавит» закрытых слогов.
-struct FormulasCards: View {
-    let block: ReadingBlock.Formulas
-    let isTransliterationHidden: Bool
-    let colors: ReadingColors
-
-    private enum Layout {
-        static let wideFormulasPerCard = 3
-        static let rowsPerCard = 4
-    }
-
-    var body: some View {
-        let perCard = block.columns == 1 ? Layout.wideFormulasPerCard : block.columns * Layout.rowsPerCard
-        VStack(spacing: Spacing.m) {
-            ForEach(Array(stride(from: 0, to: block.items.count, by: perCard)), id: \.self) { start in
-                LessonFormulasBlock(
-                    items: Array(block.items[start..<min(start + perCard, block.items.count)]),
-                    columns: block.columns,
-                    isTransliterationHidden: isTransliterationHidden,
-                    colors: colors
-                )
-            }
         }
     }
 }

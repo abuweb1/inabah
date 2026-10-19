@@ -37,12 +37,16 @@ nonisolated struct ReadingLetterDTO: Decodable, Sendable {
     let joinsNext: Bool
     let joinsPrevious: Bool
     let syllableBases: [String: String]
-    /// Записи: `sound`, `name`, `<знак>` → файл; `null` - записи нет.
+    /// Буква с сукуном в закрытом слоге, если не сама буква: у алифа и хамзы - `أ` (`إِأْ`).
+    let closedBase: String?
+    /// После каких огласовок у буквы бывает закрытый слог (у و ي - без мадда); нет - после всех.
+    let closedVowels: [String]?
+    /// Записи: `name`, `<знак>`, `closedFatha` / `closedKasra` / `closedDamma` → файл; `null` - записи нет.
     let audio: [String: String?]
     let translations: [String: ReadingLetterTranslationDTO]
 
     private enum CodingKeys: String, CodingKey {
-        case id, letter, name, joinsNext, joinsPrevious, syllableBases, audio, translations
+        case id, letter, name, joinsNext, joinsPrevious, syllableBases, closedBase, closedVowels, audio, translations
     }
 
     init(from decoder: any Decoder) throws {
@@ -53,6 +57,8 @@ nonisolated struct ReadingLetterDTO: Decodable, Sendable {
         joinsNext = try c.decode(.joinsNext, default: true)
         joinsPrevious = try c.decode(.joinsPrevious, default: true)
         syllableBases = try c.decode(.syllableBases, default: [:])
+        closedBase = try c.decodeIfPresent(String.self, forKey: .closedBase)
+        closedVowels = try c.decodeIfPresent([String].self, forKey: .closedVowels)
         audio = try c.decode(.audio, default: [:])
         translations = try c.decode([String: ReadingLetterTranslationDTO].self, forKey: .translations)
     }

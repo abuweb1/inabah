@@ -14,7 +14,7 @@ struct ReadingLogicTests {
 
     // MARK: - Лист буквы
 
-    @Test("Цепочка - название и слоги, звук только с шага «Сукун», до шага 2 огласовки не пройдены")
+    @Test("Цепочка - название и слоги, закрытые слоги только с шага «Сукун», до шага 2 огласовки не пройдены")
     func letterChain() async throws {
         let course = try await ReadingCourseFixture.load()
         let lam = try course.letter("ل")
@@ -26,8 +26,27 @@ struct ReadingLogicTests {
         #expect(chain.map(\.transliteration) == ["льаам", "льа", "ли", "льу"])
         #expect(chain.map(\.isLearned) == [true, false, false, false])
         #expect(ReadingLogic.letterChain(course: course, letter: lam, stepNumber: 2).allSatisfy { $0.isLearned })
-        #expect(ReadingLogic.letterChain(course: course, letter: lam, stepNumber: sukunStep).first?.kind == .sound,
-                "с шага «Сукун» - звук первым")
+        let closed = ReadingLogic.letterChain(course: course, letter: lam, stepNumber: sukunStep).filter { $0.kind == .closed }
+        #expect(closed.map(\.arabic) == ["أَلْ", "إِلْ", "أُلْ"], "с шага «Сукун» - закрытые слоги")
+        #expect(closed.map(\.transliteration) == ["ъаль", "ъиль", "ъуль"])
+        #expect(closed.allSatisfy { $0.markName == "сукун" })
+        #expect(ReadingLogic.letterChain(course: course, letter: lam, stepNumber: sukunStep).last?.kind == .closed, "закрытые слоги - в конце")
+        #expect(!ReadingLogic.letterChain(course: course, letter: lam, stepNumber: sukunStep - 1).contains { $0.kind == .closed })
+    }
+
+    @Test("Закрытые слоги в цепочке: у алифа - хамзы на алифе, у و и ي - без мадда", arguments: [
+        ("ا", ["ъаъ", "ъиъ", "ъуъ"]),
+        ("و", ["ъав", "ъив"]),
+        ("ي", ["ъай", "ъуй"]),
+        ("ء", ["ъаъ", "ъиъ", "ъуъ"]),
+    ])
+    func closedChain(letter: String, expected: [String]) async throws {
+        let course = try await ReadingCourseFixture.load()
+        let sukunStep = try #require(course.steps.first { $0.markIds.contains("sukun") }).number
+
+        let chain = ReadingLogic.letterChain(course: course, letter: try course.letter(letter), stepNumber: sukunStep)
+
+        #expect(chain.filter { $0.kind == .closed }.map(\.transliteration) == expected)
     }
 
     @Test("Записи цепочки - по порядку, только есть в сборке и только у пройденных знаков")
@@ -44,6 +63,10 @@ struct ReadingLogicTests {
         #expect(ReadingLogic.letterChain(course: course, letter: lam, stepNumber: 2).playableFiles(available: ["n.m4a", "d.m4a"])
                 == ["n.m4a", "d.m4a"])
         #expect(lam.nameAudio == "n.m4a")
+        let sukunStep = try #require(course.steps.first { $0.markIds.contains("sukun") }).number
+        let closed = lam.with(audio: lam.audio.merging(["closedKasra": "ck.m4a"]) { $1 })
+        #expect(ReadingLogic.letterChain(course: course, letter: closed, stepNumber: sukunStep).playableFiles(available: all.union(["ck.m4a"])).last
+                == "ck.m4a", "закрытый слог - последним")
         #expect(course.letters.first?.nameAudio == nil, "записей в данных пока нет")
     }
 
@@ -128,7 +151,7 @@ struct ReadingLogicTests {
 
         #expect(options.map(\.text) == ["бан", "бин", "бун"])
         #expect(options.filter(\.isCorrect).map(\.text) == ["бин"])
-        let chain = ReadingLogic.letterChain(course: course, letter: ba, stepNumber: step.number).suffix(3)
+        let chain = ReadingLogic.letterChain(course: course, letter: ba, stepNumber: step.number).filter { $0.kind == .syllable }.suffix(3)
         #expect(chain.map(\.transliteration) == ["бан", "бин", "бун"])
         #expect(chain.allSatisfy { $0.isLearned })
         #expect(!ReadingLogic.letterChain(course: course, letter: ba, stepNumber: step.number - 1).contains { $0.transliteration == "бан" })
@@ -362,16 +385,16 @@ struct ReadingLogicTests {
         #expect(sample == ReadingLogic.sampleSyllables(letters: table.letters, marks: table.marks, count: 12, seed: 7))
     }
 
-    @Test("Случайные формулы - разные, в порядке таблицы, те же при том же зерне")
-    func sampleFormulas() async throws {
-        let items = try #require(try await ReadingCourseFixture.load().requiredStep(7).formulasBlocks.first { $0.sample != nil }).items
+    @Test("Случайные закрытые слоги - разные, в порядке таблицы, те же при том же зерне")
+    func sampleClosedSyllables() async throws {
+        let items = try #require(try await ReadingCourseFixture.load().requiredStep(7).closedSyllablesBlocks.only).all
 
-        let sample = ReadingLogic.sampleFormulas(items: items, count: 6, seed: 7)
+        let sample = ReadingLogic.sampleClosedSyllables(items: items, count: 6, seed: 7)
 
         #expect(Set(sample).count == 6)
         #expect(sample.compactMap { items.firstIndex(of: $0) } == sample.compactMap { items.firstIndex(of: $0) }.sorted())
-        #expect(sample == ReadingLogic.sampleFormulas(items: items, count: 6, seed: 7))
-        #expect(ReadingLogic.sampleFormulas(items: items, count: 100, seed: 1) == items, "больше, чем есть - все")
+        #expect(sample == ReadingLogic.sampleClosedSyllables(items: items, count: 6, seed: 7))
+        #expect(ReadingLogic.sampleClosedSyllables(items: items, count: 100, seed: 1) == items, "больше, чем есть - все")
     }
 
     // MARK: - Слова-примеры
@@ -555,7 +578,7 @@ private extension ReadingLetter {
         ReadingLetter(
             number: number, letter: letter, arabicName: arabicName, joinsNext: joinsNext, joinsPrevious: joinsPrevious,
             syllableBases: syllableBases, name: name, nameTransliteration: nameTransliteration, sound: sound,
-            syllables: syllables, audio: audio, note: note
+            syllables: syllables, audio: audio, note: note, closedBase: closedBase, closedVowels: closedVowels
         )
     }
 }
