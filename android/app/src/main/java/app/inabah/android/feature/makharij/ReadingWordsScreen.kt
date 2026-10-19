@@ -121,6 +121,7 @@ fun ReadingWordsScreen(
     modifier: Modifier = Modifier,
 ) {
     val hidden by settings.transliterationHidden.collectAsStateWithLifecycle()
+    val allStepsOpen by settings.allStepsOpen.collectAsStateWithLifecycle()
     val wordCounts by progress.wordCounts.collectAsStateWithLifecycle()
     val lessonsDone by progress.lessonsDone.collectAsStateWithLifecycle()
     val course = (store.course.collectAsStateWithLifecycle().value as? Loadable.Loaded)?.value
@@ -187,7 +188,9 @@ fun ReadingWordsScreen(
             }
             wasDone = stepDone
         }
-        val next = loaded.steps.firstOrNull { it.number > step.number && it.hasLesson && isUnlocked(loaded, completed, it) }
+        val next = loaded.steps.firstOrNull {
+            it.number > step.number && it.hasLesson && (allStepsOpen || isUnlocked(loaded, completed, it))
+        }
         Box(Modifier.fillMaxSize()) {
             // Кнопки групп - внизу экрана, вне прокрутки: не прыгают, когда высота группы меняется
             // (последняя группа короче) - просьба пользователя 2026-10-15.

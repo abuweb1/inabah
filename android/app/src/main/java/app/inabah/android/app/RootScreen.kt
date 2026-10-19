@@ -61,6 +61,7 @@ import app.inabah.android.feature.settings.LicenseScreen
 import app.inabah.android.feature.settings.AzkarSettingsScreen
 import app.inabah.android.feature.settings.HadithOrderSettingsScreen
 import app.inabah.android.feature.settings.HadithSettingsScreen
+import app.inabah.android.feature.settings.MakharijSettingsScreen
 import app.inabah.android.feature.settings.PaletteSettingsScreen
 import app.inabah.android.feature.settings.SettingsScreen
 import app.inabah.android.feature.settings.TextSizeSettingsScreen
@@ -288,6 +289,7 @@ private fun TabScreens(tab: AppTab, services: AppServices, contentPadding: Paddi
                     ReadingStepsScreen(
                         store = services.readingStore,
                         progress = services.readingProgress,
+                        settings = services.readingSettings,
                         onBack = { router.pop(AppTab.Makharij) },
                         onOpenStep = { router.push(MakharijRoute.Lesson(it)) },
                         contentPadding = contentPadding.bottomOnly(),
@@ -409,6 +411,15 @@ private fun TabScreens(tab: AppTab, services: AppServices, contentPadding: Paddi
                     reminderSettings = services.reminderSettings,
                     readingSettings = services.readingSettings,
                     onOpenOrder = { router.push(SettingsRoute.HadithOrder) },
+                    onBack = { router.pop(AppTab.Settings) },
+                    contentPadding = contentPadding.bottomOnly(),
+                )
+            }
+            entry<SettingsRoute.Makharij> {
+                MakharijSettingsScreen(
+                    store = services.readingStore,
+                    progress = services.readingProgress,
+                    settings = services.readingSettings,
                     onBack = { router.pop(AppTab.Settings) },
                     contentPadding = contentPadding.bottomOnly(),
                 )

@@ -59,6 +59,7 @@ import app.inabah.android.core.designsystem.components.pressFeedback
 import app.inabah.android.core.designsystem.components.surface
 import app.inabah.android.core.formatting.toArabicIndicDigits
 import app.inabah.android.core.settings.ReadingProgress
+import app.inabah.android.core.settings.ReadingSettings
 
 /** Состояние строки шага. */
 enum class StepState { Done, Current, Open, Locked }
@@ -66,12 +67,13 @@ enum class StepState { Done, Current, Open, Locked }
 /**
  * Список шагов «Учимся читать» (вариант A, решение пользователя 2026-10-15): «пройдено N из 10»,
  * полоса и строки - номер арабскими цифрами (пройденный - ✓), название, о чём шаг, пример справа.
- * Шаги не запираются: открыть можно любой.
+ * Шаг закрыт, пока не пройдены предыдущие; «Открыть все шаги» в настройках снимает замки.
  */
 @Composable
 fun ReadingStepsScreen(
     store: ReadingStore,
     progress: ReadingProgress,
+    settings: ReadingSettings,
     onBack: () -> Unit,
     onOpenStep: (Int) -> Unit,
     contentPadding: PaddingValues,
@@ -80,6 +82,7 @@ fun ReadingStepsScreen(
     val lessonsDone by progress.lessonsDone.collectAsStateWithLifecycle()
     val wordCounts by progress.wordCounts.collectAsStateWithLifecycle()
     val unlockSeen by progress.unlockSeen.collectAsStateWithLifecycle()
+    val allStepsOpen by settings.allStepsOpen.collectAsStateWithLifecycle()
     ReadingScaffold(
         store = store,
         title = stringResource(R.string.makharij_reading_title),
@@ -125,8 +128,8 @@ fun ReadingStepsScreen(
                 val state = when {
                     step.number in completed -> StepState.Done
                     step == current -> StepState.Current
-                    // Сборка для проверки (`inabah.unlockAll`) - без замков.
-                    !BuildConfig.READING_UNLOCK_ALL && !isUnlocked(course, completed, step) -> StepState.Locked
+                    // «Открыть все шаги» в настройках и сборка для проверки (`inabah.unlockAll`) - без замков.
+                    !allStepsOpen && !BuildConfig.READING_UNLOCK_ALL && !isUnlocked(course, completed, step) -> StepState.Locked
                     else -> StepState.Open
                 }
                 // Нить между кружками: золотая после пройденного шага, иначе - дорожка.

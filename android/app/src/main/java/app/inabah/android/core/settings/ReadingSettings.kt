@@ -9,7 +9,8 @@ import kotlinx.coroutines.flow.asStateFlow
 /**
  * Кегль арабского текста (iOS `ReadingSettings`): 14…40, шаг 2, по умолчанию 21; «Сворачивать арабский
  * текст» на экране хадиса (решение пользователя 2026-10-11) — по умолчанию выключено. «Скрыть
- * транскрипцию» в «Учимся читать» (кнопка-глаз, решение пользователя 2026-10-15) — по умолчанию видна.
+ * транскрипцию» в «Учимся читать» (кнопка-глаз, решение пользователя 2026-10-15) — по умолчанию видна;
+ * «Открыть все шаги» (настройки «Махраджа», решение пользователя 2026-10-19) - по умолчанию выключено.
  */
 class ReadingSettings(private val storage: PreferencesStorage) {
     private val _arabicFontSize = MutableStateFlow(
@@ -42,6 +43,17 @@ class ReadingSettings(private val storage: PreferencesStorage) {
         storage.edit { it[TRANSLIT_KEY] = hidden }
     }
 
+    private val _allStepsOpen = MutableStateFlow(storage.snapshot[ALL_STEPS_OPEN_KEY] ?: false)
+
+    /** Включено - шаги «Учимся читать» без замков: начать можно с любого. Отметки считаются как обычно. */
+    val allStepsOpen: StateFlow<Boolean> = _allStepsOpen.asStateFlow()
+
+    fun setAllStepsOpen(open: Boolean) {
+        if (open == _allStepsOpen.value) return
+        _allStepsOpen.value = open
+        storage.edit { it[ALL_STEPS_OPEN_KEY] = open }
+    }
+
     fun increaseArabicFontSize() = setArabicFontSize(_arabicFontSize.value + STEP)
 
     fun decreaseArabicFontSize() = setArabicFontSize(_arabicFontSize.value - STEP)
@@ -68,5 +80,6 @@ class ReadingSettings(private val storage: PreferencesStorage) {
         private val KEY = doublePreferencesKey("reading.arabicFontSize")
         private val COLLAPSE_KEY = booleanPreferencesKey("reading.hadithArabicCollapsed")
         private val TRANSLIT_KEY = booleanPreferencesKey("reading.transliterationHidden")
+        private val ALL_STEPS_OPEN_KEY = booleanPreferencesKey("reading.allStepsOpen")
     }
 }

@@ -228,6 +228,20 @@ fun isUnlocked(course: ReadingCourse, completed: Set<Int>, step: ReadingStep): B
     course.steps.none { it.number < step.number && it.hasLesson && it.number !in completed }
 
 /**
+ * Есть что сбросить у шага (настройки «Махраджа», 2026-10-19): пройден урок, прочитано хоть одно слово
+ * или начат зикр итога.
+ */
+fun hasProgress(
+    step: ReadingStep,
+    lessonsDone: Set<Int>,
+    wordCounts: Map<Int, List<Int>>,
+    zikrs: Map<ZikrId, ZikrProgress>,
+): Boolean =
+    step.number in lessonsDone ||
+        wordCounts[step.number].orEmpty().any { it > 0 } ||
+        step.zikrs.any { block -> zikrs[block.zikr]?.let { it.isRead || it.words.isNotEmpty() } == true }
+
+/**
  * Случайные слоги для карточки урока («ъа · би · тӏы · ро», решение пользователя 2026-10-15): [count]
  * разных букв, у каждой - случайный знак из [marks]. Одинаковые при том же [seed] (экран хранит его).
  */

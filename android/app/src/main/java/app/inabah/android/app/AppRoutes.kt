@@ -77,6 +77,10 @@ sealed interface SettingsRoute {
     @Serializable
     data object Hadith : SettingsRoute
 
+    /** «Махрадж»: транскрипция, замки шагов и сброс прогресса «Учимся читать». */
+    @Serializable
+    data object Makharij : SettingsRoute
+
     /** Порядок сборников на главной хадисов (из настроек хадисов). */
     @Serializable
     data object HadithOrder : SettingsRoute

@@ -53,6 +53,15 @@ fun SettingsScreen(
                         )
                     }
                 },
+                {
+                    SettingsRow(onClick = { onOpen(SettingsRoute.Makharij) }, trailing = { SettingsChevron() }) {
+                        SettingsIcon(R.drawable.ic_ain, theme.gradients.makharijBackground, tint = theme.palette.tabMakharij)
+                        SettingsRowText(
+                            title = stringResource(R.string.settings_makharij_title),
+                            subtitle = stringResource(R.string.settings_makharij_subtitle),
+                        )
+                    }
+                },
             ),
         )
         // «Оформление» — порядок iOS: «Палитра», «Размер текста», «Иконка приложения».

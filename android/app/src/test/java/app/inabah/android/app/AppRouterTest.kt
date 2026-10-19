@@ -100,6 +100,7 @@ class AppRouterTest {
         val paths = listOf(
             listOf(SettingsRoute.Hadith),
             listOf(SettingsRoute.Hadith, SettingsRoute.HadithOrder),
+            listOf(SettingsRoute.Makharij),
             listOf(SettingsRoute.AppIcon),
             listOf(SettingsRoute.Palette),
         )

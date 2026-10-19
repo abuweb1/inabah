@@ -353,6 +353,23 @@ class ReadingLogicTest {
     }
 
     @Test
+    fun `Есть что сбросить - пройденный урок, прочитанное слово или начатый зикр итога`() = runTest {
+        val course = loadAssetCourse()
+        val step = requireNotNull(course.step(3))
+        val final = course.steps.last()
+        val zikr = final.zikrs.first().zikr
+
+        assertFalse(hasProgress(step, emptySet(), emptyMap(), emptyMap()))
+        assertFalse(hasProgress(step, emptySet(), mapOf(3 to listOf(0, 0)), emptyMap()), "слова без счёта")
+        assertTrue(hasProgress(step, setOf(3), emptyMap(), emptyMap()))
+        assertTrue(hasProgress(step, emptySet(), mapOf(3 to listOf(0, 1)), emptyMap()))
+        assertFalse(hasProgress(step, setOf(2), mapOf(2 to listOf(1)), mapOf(zikr to ZikrProgress(setOf(0)))), "чужой шаг")
+        assertFalse(hasProgress(final, emptySet(), emptyMap(), mapOf(zikr to ZikrProgress())))
+        assertTrue(hasProgress(final, emptySet(), emptyMap(), mapOf(zikr to ZikrProgress(setOf(0)))))
+        assertTrue(hasProgress(final, emptySet(), emptyMap(), mapOf(zikr to ZikrProgress(isRead = true))))
+    }
+
+    @Test
     fun `Экзамен шага 12 - 20 вопросов, форма буквы прошлого шага - варианты из её карточки`() = runTest {
         val course = loadAssetCourse()
         val step = requireNotNull(course.step(12))

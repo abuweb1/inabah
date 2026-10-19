@@ -3,6 +3,7 @@ package app.inabah.android.feature.makharij
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
@@ -219,7 +220,7 @@ class ReadingScreensTest {
         val zikr = final.zikrs.last()
         val audio = requireNotNull(zikr.audio)
         compose.setContent {
-            var playing by mutableStateOf<String?>(null)
+            var playing by remember { mutableStateOf<String?>(null) }
             InabahTheme {
                 ReadingZikrScreen(final.number, final.zikrs.lastIndex, store, progress, ReadingSettings(dataStore.storage),
                     onBack = {}, onOpenAzkar = {}, onOpenStep = {}, onOpenSteps = {}, contentPadding = PaddingValues(),
