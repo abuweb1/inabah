@@ -21,6 +21,8 @@ nonisolated enum SettingsRoute: Hashable, Codable, Sendable {
     case hadith
     /// Порядок сборников на главной хадисов (из настроек хадисов).
     case hadithOrder
+    /// «Махрадж»: транскрипция, «Открыть все шаги», сброс прогресса «Учимся читать».
+    case makharij
     /// Выбор иконки приложения.
     case appIcon
     /// Выбор палитры оформления.
