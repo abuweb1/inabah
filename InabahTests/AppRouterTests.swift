@@ -139,6 +139,28 @@ struct AppRouterTests {
         #expect(router.settingsPath == [.appIcon])
     }
 
+    @Test("Урок шага открывается поверх списка шагов «Махраджа»")
+    func openLesson() {
+        let router = AppRouter()
+
+        router.open(MakharijRoute.lesson(3))
+
+        #expect(router.selectedTab == .makharij)
+        #expect(router.makharijPath == [.steps, .lesson(3)])
+    }
+
+    @Test("Повторный выбор вкладки «Махрадж» возвращает к главной, другие вкладки не задеты")
+    func reselectMakharijPopsToRoot() {
+        let router = AppRouter()
+        router.hadithPath = [.favorites]
+        router.open(MakharijRoute.lesson(2))
+
+        router.select(.makharij)
+
+        #expect(router.makharijPath.isEmpty)
+        #expect(router.hadithPath == [.favorites])
+    }
+
     @Test("Повторный выбор вкладки «Хадисы» возвращает к главной хадисов")
     func reselectHadithPopsToRoot() {
         let router = AppRouter()

@@ -248,6 +248,59 @@ struct ReadingLogicTests {
         #expect(!ReadingLogic.isUnlocked(course: course, completed: [], step: step2), "шаг 2 - после шага 1")
     }
 
+    @Test("Состояние строки - пройден, текущий, закрыт, открыт; «Открыть все шаги» снимает замки")
+    func stepStates() async throws {
+        let course = try await ReadingCourseFixture.load()
+        let completed: Set = [1, 2]
+        let current = ReadingLogic.currentStep(course: course, completed: completed)
+        func state(_ number: Int, allOpen: Bool = false) throws -> ReadingStepState {
+            ReadingLogic.stepState(course: course, step: try course.requiredStep(number), completed: completed, current: current, allStepsOpen: allOpen)
+        }
+
+        #expect(try state(1) == .done)
+        #expect(try state(3) == .current)
+        #expect(try state(4) == .locked)
+        #expect(try state(13) == .locked, "итог - после всех шагов")
+        #expect(try state(4, allOpen: true) == .open)
+        #expect(try state(1, allOpen: true) == .done, "пройденный не становится открытым")
+    }
+
+    @Test("Последний открытый шаг и его «отщёлкивание» - один раз, не у закрытого")
+    func lastUnlocked() async throws {
+        let course = try await ReadingCourseFixture.load()
+        let step3 = try course.requiredStep(3)
+
+        #expect(ReadingLogic.lastUnlocked(course: course, completed: []) == 1)
+        #expect(ReadingLogic.lastUnlocked(course: course, completed: [1, 2]) == 3)
+        #expect(ReadingLogic.isJustUnlocked(step: step3, state: .current, unlockSeen: 2, lastUnlocked: 3))
+        #expect(!ReadingLogic.isJustUnlocked(step: step3, state: .current, unlockSeen: 3, lastUnlocked: 3), "уже видели")
+        #expect(!ReadingLogic.isJustUnlocked(step: step3, state: .locked, unlockSeen: 2, lastUnlocked: 3))
+        #expect(!ReadingLogic.isJustUnlocked(step: try course.requiredStep(2), state: .done, unlockSeen: 1, lastUnlocked: 3),
+                "только последний открытый")
+    }
+
+    @Test("Подпись карточки курса - текущий шаг, итог, всё пройдено")
+    func homeSummary() async throws {
+        let course = try await ReadingCourseFixture.load()
+        let all = Set(course.steps.map(\.number))
+        let final = try #require(course.steps.last)
+
+        #expect(ReadingLogic.homeSummary(course: course, completed: []) == .step(number: 1, total: 12, title: "Буквы"))
+        #expect(ReadingLogic.homeSummary(course: course, completed: all.subtracting([final.number])) == .final(title: final.title))
+        #expect(ReadingLogic.homeSummary(course: course, completed: all) == .allDone)
+    }
+
+    @Test("Подпись карточки - «пройдено N из M», если шаги с уроком пройдены, а есть шаги без урока")
+    func homeSummaryWithEmptySteps() {
+        let lesson: [ReadingBlock] = [.text(.init(text: "Урок"))]
+        let course = ReadingCourse(marks: [], letters: [], steps: [
+            ReadingStep(number: 1, markIds: [], example: nil, title: "Первый", subtitle: "", blocks: lesson, quiz: []),
+            ReadingStep(number: 2, markIds: [], example: nil, title: "Готовится", subtitle: "", blocks: [], quiz: []),
+        ])
+
+        #expect(ReadingLogic.homeSummary(course: course, completed: [1]) == .progress(done: 1, total: 2))
+    }
+
     @Test("Есть что сбросить - пройденный урок, прочитанное слово или начатый зикр итога")
     func hasProgress() async throws {
         let course = try await ReadingCourseFixture.load()
