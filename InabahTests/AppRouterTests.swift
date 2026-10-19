@@ -156,6 +156,7 @@ struct AppRouterTests {
         .letterForms(step: 2, letter: "ب"),
         .quiz(2),
         .words(2),
+        .zikr(step: 2, zikr: 1),
     ])
     func openLessonScreen(route: MakharijRoute) {
         let router = AppRouter()

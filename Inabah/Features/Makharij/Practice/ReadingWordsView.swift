@@ -298,7 +298,6 @@ private struct WordGrid: View {
                     ForEach(row.words, id: \.index) { item in
                         ReadableWordTile(
                             word: item.word,
-                            index: item.index,
                             count: counts.indices.contains(item.index) ? counts[item.index] : 0,
                             repeat: words.repeat,
                             showsTransliteration: showsTransliteration,
@@ -324,16 +323,16 @@ private struct WordGrid: View {
 }
 
 /// Плитка ленты: касание - прочитал, долгое нажатие - увеличение, на последнем прочтении - вспышка ✦.
-private struct ReadableWordTile: View {
+/// Общая с зикром итога (там без увеличения: `onZoom == nil`).
+struct ReadableWordTile: View {
     let word: ReadingWord
-    let index: Int
     let count: Int
     let `repeat`: Int
     let showsTransliteration: Bool
     let colors: ReadingColors
     let coordinateSpace: String
     let onRead: () -> Void
-    let onZoom: (CGRect) -> Void
+    var onZoom: ((CGRect) -> Void)?
 
     @Environment(\.theme) private var theme
     @State private var frame: CGRect = .zero
@@ -355,10 +354,13 @@ private struct ReadableWordTile: View {
             .contentShape(.rect(cornerRadius: Radius.box))
             .onGeometryChange(for: CGRect.self) { $0.frame(in: .named(coordinateSpace)) } action: { frame = $0 }
             .onTapGesture { if !isDone { onRead() } }
-            .onLongPressGesture {
-                zoomCount += 1
-                onZoom(frame)
-            }
+            .gesture(
+                LongPressGesture().onEnded { _ in
+                    zoomCount += 1
+                    onZoom?(frame)
+                },
+                isEnabled: onZoom != nil
+            )
             .sensoryFeedback(trigger: count) { old, new in new > old ? (new >= `repeat` ? .success : .selection) : nil }
             .sensoryFeedback(.impact(weight: .medium), trigger: zoomCount)
             .onAppear { if wasDone == nil { wasDone = isDone } }
@@ -371,7 +373,11 @@ private struct ReadableWordTile: View {
             .accessibilityValue(accessibilityValue)
             .accessibilityAction { if !isDone { onRead() } }
             .accessibilityAction(named: Text("makharij.words.readAction")) { if !isDone { onRead() } }
-            .accessibilityAction(named: Text("makharij.words.zoomAction")) { onZoom(frame) }
+            .accessibilityActions {
+                if let onZoom {
+                    Button("makharij.words.zoomAction") { onZoom(frame) }
+                }
+            }
     }
 
     private var accessibilityValue: Text {

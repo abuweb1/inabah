@@ -2603,6 +2603,129 @@
         }
       }
     },
+    "makharij.zikr.done" : {
+      "comment" : "Учимся читать: VoiceOver: зикр итога прочитан",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "прочитан"
+          }
+        }
+      }
+    },
+    "makharij.zikr.joins" : {
+      "comment" : "Учимся читать: зикр: слитное чтение",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Слитно"
+          }
+        }
+      }
+    },
+    "makharij.zikr.openAzkar" : {
+      "comment" : "Учимся читать: зикр: открыть раздел азкаров",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Открыть в азкарах"
+          }
+        }
+      }
+    },
+    "makharij.zikr.read" : {
+      "comment" : "Учимся читать: зикр: кнопка «прочитал целиком»",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Прочитал целиком"
+          }
+        }
+      }
+    },
+    "makharij.zikr.source %@ %lld" : {
+      "comment" : "Учимся читать: подзаголовок зикра: раздел азкаров и номер",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$lld"
+          }
+        }
+      }
+    },
+    "makharij.zikr.title %lld %lld" : {
+      "comment" : "Учимся читать: навбар зикра итога",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зикр %1$lld из %2$lld"
+          }
+        }
+      }
+    },
+    "makharij.zikr.whole" : {
+      "comment" : "Учимся читать: зикр: целиком",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Целиком"
+          }
+        }
+      }
+    },
+    "makharij.zikr.wordCount %lld" : {
+      "comment" : "Учимся читать: число слов зикра на карточке",
+      "localizations" : {
+        "ru" : {
+          "variations" : {
+            "plural" : {
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld слова"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld слов"
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld слово"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld слова"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "makharij.zikr.wordsProgress %lld %lld" : {
+      "comment" : "Учимся читать: зикр: прочитано слов",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "По словам · %1$lld из %2$lld"
+          }
+        }
+      }
+    },
     "navigation.back" : {
       "extractionState" : "manual",
       "localizations" : {
