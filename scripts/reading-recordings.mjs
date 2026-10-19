@@ -85,11 +85,11 @@ for (const { title, items } of sections) {
 }
 console.log(`\nВсего: ${done} из ${total} записей.`);
 
-// Записи букв - в data/reading.json (название, звук, слоги): приложение берёт их оттуда.
+// Записи букв - в data/reading.json (название, звук, слоги, танвин): приложение берёт их оттуда.
 if (args.has('--write')) {
   let changed = 0;
   for (const l of data.letters) {
-    for (const key of ['name', 'sound', ...VOWELS]) {
+    for (const key of ['name', 'sound', ...VOWELS, ...TANWIN]) {
       const file = `reading_${pad(l.id)}_${key}.m4a`;
       if (present.has(file) && l.audio?.[key] !== file) {
         l.audio = { ...l.audio, [key]: file };

@@ -61,6 +61,8 @@ class ReadingScreensTest {
     @Before
     fun enableChecks() {
         compose.enableAccessibilityChecks()
+        // Курс загружен заранее: первый разбор reading.json на эмуляторе бывает дольше ожидания.
+        runBlocking { store.load() }
     }
 
     @Test

@@ -29,10 +29,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -44,39 +47,57 @@ import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.inabah.android.R
+import app.inabah.android.core.audio.ClipPlayback
+import app.inabah.android.core.audio.playToEnd
 import app.inabah.android.core.content.model.ReadingCourse
 import app.inabah.android.core.content.model.ReadingLetter
 import app.inabah.android.core.designsystem.InabahTheme
 import app.inabah.android.core.designsystem.InabahType
 import app.inabah.android.core.designsystem.Motion
+import app.inabah.android.core.designsystem.PressFeedback
 import app.inabah.android.core.designsystem.Radius
 import app.inabah.android.core.designsystem.ShadowToken
 import app.inabah.android.core.designsystem.Size
 import app.inabah.android.core.designsystem.Spacing
 import app.inabah.android.core.designsystem.components.ArabicText
 import app.inabah.android.core.designsystem.components.BareIconButton
+import app.inabah.android.core.designsystem.components.IconButton
+import app.inabah.android.core.designsystem.components.IconButtonShape
+import app.inabah.android.core.designsystem.components.pressFeedback
 import app.inabah.android.core.designsystem.components.surface
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 /**
  * Лист буквы снизу (1A, решение пользователя 2026-10-15; набросок `docs/design/makharij-audio-themes.html`):
  * буква на пергаменте, название, номер, цепочка справа налево - звук → название → слоги; слог с ещё не
  * пройденным знаком - пунктиром. Закрывается смахиванием вниз, нажатием на затемнение, «×» и «Назад».
- * Записей пока нет - ▶ появятся вместе с ними (`LetterChainItem.audioFile`).
+ * Озвучка (набросок 1A): есть записи цепочки - справа в шапке круглая ▶ «Прослушать» цвета раздела;
+ * при открытии листа цепочка звучит сама, по очереди, звучащий элемент подсвечен, во время цепочки - ⏹;
+ * любой элемент с записью - отдельно по нажатию. Закрыли лист, ушли с экрана или в фон - звук остановлен.
+ * Записей нет - ни кнопки, ни нажатий: лист как без звука.
  */
 @Composable
 fun BoxScope.LetterSheet(
@@ -86,6 +107,7 @@ fun BoxScope.LetterSheet(
     transliterationHidden: Boolean,
     onDismiss: () -> Unit,
     contentPadding: PaddingValues,
+    clips: ClipPlayback = ClipPlayback.None,
 ) {
     // Пока лист уезжает, показывать последнюю букву, а не пустоту.
     var shown by remember { mutableStateOf(letter) }
@@ -108,9 +130,12 @@ fun BoxScope.LetterSheet(
         exit = slideOutVertically(Motion.collapse()) { it },
         modifier = Modifier.align(Alignment.BottomCenter),
     ) {
-        shown?.let { SheetPanel(course, it, stepNumber, transliterationHidden, onDismiss, contentPadding) }
+        shown?.let { SheetPanel(course, it, stepNumber, transliterationHidden, letter != null, clips, onDismiss, contentPadding) }
     }
 }
+
+/** Что играть: [files] `null` - вся цепочка (⏹ в шапке), иначе - нажатый элемент. Каждый запрос - новый объект. */
+private class ChainRequest(val files: List<String>?)
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -119,12 +144,42 @@ private fun SheetPanel(
     letter: ReadingLetter,
     stepNumber: Int,
     hidden: Boolean,
+    /** Лист открыт (не уезжает). */
+    active: Boolean,
+    clips: ClipPlayback,
     onDismiss: () -> Unit,
     contentPadding: PaddingValues,
 ) {
     val palette = InabahTheme.palette
     val colors = readingColors
     val chain = remember(course, letter, stepNumber) { letterChain(course, letter, stepNumber) }
+    val available by clips.available.collectAsStateWithLifecycle()
+    val playing by clips.playing.collectAsStateWithLifecycle()
+    val files = remember(chain, available) { chain.playableFiles(available) }
+    // Открыли лист - цепочка сразу (набросок 1A: «звук сразу начинается»).
+    var request by remember(letter, active) { mutableStateOf(if (active) ChainRequest(null) else null) }
+    LaunchedEffect(request, active, files) {
+        val queue = request?.files ?: files
+        if (!active || request == null || queue.isEmpty()) return@LaunchedEffect
+        for ((index, file) in queue.withIndex()) {
+            if (index > 0) delay(CHAIN_GAP_MILLIS)
+            // Пока молчали, зазвучало другое - не перебивать.
+            if (index > 0 && clips.playing.value != null) break
+            // Прервали (наушники, другой звук) или зазвучало другое - цепочку не продолжать.
+            if (!clips.playToEnd(file)) break
+        }
+        request = null
+    }
+    // Закрыли лист, ушли с экрана или в фон - не доигрывать.
+    val currentFiles by rememberUpdatedState(files)
+    val stopOwn = { if (clips.playing.value in currentFiles) clips.stop() }
+    LaunchedEffect(active) { if (!active) stopOwn() }
+    LifecycleEventEffect(Lifecycle.Event.ON_STOP) {
+        request = null
+        stopOwn()
+    }
+    DisposableEffect(clips) { onDispose { stopOwn() } }
+    val chainPlaying = active && request != null && request?.files == null && files.isNotEmpty()
     // Смахивание вниз: лист едет за пальцем, дальше порога - закрыть, иначе вернуть на место.
     val offset = remember(letter) { Animatable(0f) }
     val scope = rememberCoroutineScope()
@@ -173,6 +228,24 @@ private fun SheetPanel(
                     ArabicText(letter.arabicName, NAME_SIZE, palette.onAccentSecondary, maxLines = 1)
                 }
             }
+            if (files.isNotEmpty()) {
+                IconButton(
+                    onClick = {
+                        if (chainPlaying) {
+                            request = null
+                            stopOwn()
+                        } else {
+                            request = ChainRequest(null)
+                        }
+                    },
+                    icon = painterResource(if (chainPlaying) R.drawable.ic_stop else R.drawable.ic_play_arrow),
+                    contentDescription = stringResource(if (chainPlaying) R.string.makharij_letter_stop else R.string.makharij_letter_play),
+                    foreground = colors.onTint,
+                    background = colors.tint,
+                    shape = IconButtonShape.Circle,
+                    size = Size.visibleTapTarget,
+                )
+            }
             BareIconButton(
                 onClick = onDismiss,
                 icon = painterResource(R.drawable.ic_close),
@@ -196,8 +269,14 @@ private fun SheetPanel(
                 verticalArrangement = Arrangement.spacedBy(Spacing.l),
             ) {
                 for (item in chain) {
+                    val file = item.audioFile?.takeIf { it in available }
                     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-                        ChainChip(item, hidden)
+                        ChainChip(
+                            item = item,
+                            hidden = hidden,
+                            isPlaying = file != null && file == playing,
+                            onPlay = file?.let { { request = ChainRequest(listOf(it)) } },
+                        )
                     }
                 }
             }
@@ -205,11 +284,23 @@ private fun SheetPanel(
     }
 }
 
-/** Элемент цепочки: подпись сверху («звук», «название», знак), арабское и транскрипция. */
+/**
+ * Элемент цепочки: подпись сверху («звук», «название», знак), арабское и транскрипция. Звучит - подсвечен цветом
+ * раздела, как буква «Послушать алфавит»; [onPlay] - есть запись: нажатие проигрывает только его.
+ */
 @Composable
-private fun ChainChip(item: LetterChainItem, hidden: Boolean) {
+private fun ChainChip(item: LetterChainItem, hidden: Boolean, isPlaying: Boolean, onPlay: (() -> Unit)?) {
     val palette = InabahTheme.palette
     val colors = readingColors
+    val haptics = LocalHapticFeedback.current
+    val interaction = remember { MutableInteractionSource() }
+    val listen = stringResource(R.string.makharij_word_listen)
+    val play: (() -> Unit)? = onPlay?.let {
+        {
+            haptics.performHapticFeedback(HapticFeedbackType.ContextClick)
+            it()
+        }
+    }
     val label = when (item.kind) {
         LetterChainItem.Kind.Sound -> stringResource(R.string.makharij_chain_sound)
         LetterChainItem.Kind.Name -> stringResource(R.string.makharij_chain_name)
@@ -220,8 +311,26 @@ private fun ChainChip(item: LetterChainItem, hidden: Boolean) {
     } else {
         stringResource(R.string.makharij_chain_locked, label, item.transliteration)
     }
-    val border = colors.tileBorder
-    Box(Modifier.clearAndSetSemantics { contentDescription = description }) {
+    val border = if (isPlaying) colors.highlightBorder else colors.tileBorder
+    Box(
+        Modifier
+            .then(
+                if (play != null) {
+                    Modifier
+                        .clickable(interaction, indication = null, role = Role.Button, onClick = play)
+                        .pressFeedback(interaction, scale = PressFeedback.ICON_SCALE)
+                } else {
+                    Modifier
+                },
+            )
+            .clearAndSetSemantics {
+                contentDescription = description
+                if (play != null) {
+                    role = Role.Button
+                    onClick(listen) { play(); true }
+                }
+            },
+    ) {
         Column(
             Modifier
                 .padding(top = LABEL_OVERLAP)
@@ -229,7 +338,7 @@ private fun ChainChip(item: LetterChainItem, hidden: Boolean) {
                 .alpha(if (item.isLearned) 1f else LOCKED_ALPHA)
                 .then(
                     if (item.isLearned) {
-                        Modifier.surface(colors.tile, Radius.box, border = border, lineWidth = ReadingTileBorder)
+                        Modifier.surface(if (isPlaying) colors.highlight else colors.tile, Radius.box, border = border, lineWidth = ReadingTileBorder)
                     } else {
                         Modifier.dashedBorder(border, Radius.box)
                     },
@@ -268,6 +377,8 @@ private fun Modifier.dashedBorder(color: Color, radius: Dp): Modifier = drawBehi
     )
 }
 
+/** Пауза между элементами цепочки: слышно, где кончился один и начался другой. */
+private const val CHAIN_GAP_MILLIS = 400L
 private const val SCRIM_ALPHA = 0.45f
 private const val LOCKED_ALPHA = 0.45f
 private val DISMISS_DISTANCE = 96.dp

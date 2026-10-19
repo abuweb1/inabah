@@ -35,6 +35,21 @@ class ReadingLogicTest {
     }
 
     @Test
+    fun `Записи цепочки - по порядку, только есть в сборке и только у пройденных знаков`() = runTest {
+        val course = loadAssetCourse()
+        val lam = course.letters.first { it.letter == "ل" }.copy(
+            audio = mapOf("name" to "n.m4a", "fatha" to "f.m4a", "kasra" to "k.m4a", "damma" to "d.m4a"),
+        )
+        val all = setOf("n.m4a", "f.m4a", "k.m4a", "d.m4a")
+
+        assertEquals(listOf("n.m4a", "f.m4a", "k.m4a", "d.m4a"), letterChain(course, lam, stepNumber = 2).playableFiles(all))
+        assertEquals(listOf("n.m4a"), letterChain(course, lam, stepNumber = 1).playableFiles(all), "до огласовок - только название")
+        assertEquals(listOf("n.m4a", "d.m4a"), letterChain(course, lam, stepNumber = 2).playableFiles(setOf("n.m4a", "d.m4a")))
+        assertEquals("n.m4a", lam.nameAudio)
+        assertNull(course.letters.first().nameAudio, "записей в данных пока нет")
+    }
+
+    @Test
     fun `Варианты слога — тот же слог с пройденными знаками, по порядку`() = runTest {
         val course = loadAssetCourse()
         val question = course.step(2)!!.quiz.first() as ReadingQuestion.Syllable

@@ -35,6 +35,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.AbsoluteAlignment
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -60,8 +61,12 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.inabah.android.R
+import app.inabah.android.core.audio.ClipPlayback
+import app.inabah.android.core.audio.playToEnd
 import app.inabah.android.core.content.Loadable
 import app.inabah.android.core.content.model.LetterForm
 import app.inabah.android.core.content.model.ReadingBlock
@@ -115,9 +120,8 @@ fun ReadingLessonScreen(
     onOpenExtra: (Int?) -> Unit = {},
     /** Зикр итога «Читаем зикр» по номеру. */
     onOpenZikr: (Int) -> Unit = {},
-    /** Записи в сборке и их проигрывание (`ClipPlayer`): слова-примеры форм. */
-    clips: Set<String> = emptySet(),
-    onPlayClip: (String) -> Unit = {},
+    /** Записи (`ClipPlayer`): слова-примеры форм, лист буквы, «Послушать алфавит». */
+    clips: ClipPlayback = ClipPlayback.None,
 ) {
     val hidden by settings.transliterationHidden.collectAsStateWithLifecycle()
     val zikrs by progress.zikrs.collectAsStateWithLifecycle()
@@ -128,14 +132,39 @@ fun ReadingLessonScreen(
     // «Послушать алфавит» - только у шага с сеткой букв.
     val alphabet = step?.blocks?.filterIsInstance<ReadingBlock.Letters>()?.firstOrNull()?.letters
     val playback = rememberAlphabetPlayback()
-    // Записей пока нет: буква подсвечивается на время LETTER_MILLIS. С записями - по окончании звука.
+    val available by clips.available.collectAsStateWithLifecycle()
+    // Звучит название буквы (`reading_NN_name.m4a`), следующая - по окончании записи; записи нет - буква
+    // подсвечивается LETTER_MILLIS без звука.
     if (alphabet != null) {
         LaunchedEffect(playback.index, playback.isPaused) {
-            if (playback.isActive && !playback.isPaused) {
+            val letter = playback.index?.let(alphabet::getOrNull)
+            if (letter == null || playback.isPaused) return@LaunchedEffect
+            val file = letter.nameAudio?.takeIf { it in clips.available.value }
+            if (file == null) {
                 delay(LETTER_MILLIS)
-                playback.next(alphabet.size)
+            } else {
+                val completed = try {
+                    clips.playToEnd(file)
+                } finally {
+                    // Пауза, стоп, ⏮ ⏭, уход с экрана - буква не доигрывает. Открыли лист - его цепочка сама
+                    // заменит запись (может начаться с этого же названия - не обрывать).
+                    if (clips.playing.value == file && sheetLetter == null) clips.stop()
+                }
+                // Прервали (наушники, другой звук) или зазвучало другое - алфавит на паузе, не перебивать.
+                if (!completed) {
+                    playback.pause()
+                    return@LaunchedEffect
+                }
+                delay(ALPHABET_GAP_MILLIS)
+                if (clips.playing.value != null) {
+                    playback.pause()
+                    return@LaunchedEffect
+                }
             }
+            playback.next(alphabet.size)
         }
+        // В фоне алфавит не звучит: пауза, «Продолжить» - с той же буквы.
+        LifecycleEventEffect(Lifecycle.Event.ON_STOP) { playback.pause() }
     }
     ReadingScaffold(
         store = store,
@@ -169,15 +198,19 @@ fun ReadingLessonScreen(
                         playerBar = {
                             if (alphabet != null) AlphabetPlayerBar(playback, alphabet)
                         },
-                        onLetter = { sheetLetter = it.number },
+                        onLetter = {
+                            // Лист буквы звучит сам - алфавит уступает.
+                            playback.pause()
+                            sheetLetter = it.number
+                        },
                         onOpenWords = onOpenWords,
                         onOpenAlphabet = onOpenAlphabet,
                         onOpenLetterForms = onOpenLetterForms,
                         onOpenExtra = onOpenExtra,
                         zikrs = zikrs,
                         onOpenZikr = onOpenZikr,
-                        clips = clips,
-                        onPlayClip = onPlayClip,
+                        clips = available,
+                        onPlayClip = clips::play,
                         onFinish = {
                             if (current.quiz.isEmpty()) {
                                 progress.markLessonDone(current.number)
@@ -198,6 +231,7 @@ fun ReadingLessonScreen(
                 transliterationHidden = hidden,
                 onDismiss = { sheetLetter = null },
                 contentPadding = contentPadding,
+                clips = clips,
             )
         }
     }
@@ -240,7 +274,7 @@ private fun LessonContent(
                 // Нажатие на букву таблицы - экран буквы (вариант B), не лист: новичку нужна вся картина.
                 is ReadingBlock.Forms -> FormsTable(block, step.number, clips, onPlayClip) { onOpenLetterForms(it.letter) }
                     is ReadingBlock.Marks -> MarksBlock(block.marks, block.example)
-                    is ReadingBlock.Letters -> LettersGrid(block.letters, onLetter, playing = playing)
+                    is ReadingBlock.Letters -> LettersGrid(block.letters, onLetter, playing = playing, available = clips)
                     is ReadingBlock.Syllables -> if (block.sample != null) {
                         SampleSyllables(block, block.sample, hidden, onLetter, onOpenAlphabet)
                     } else {
@@ -613,6 +647,8 @@ private fun LettersGrid(
     onLetter: (ReadingLetter) -> Unit,
     columns: Int = LETTER_COLUMNS,
     playing: ReadingLetter? = null,
+    /** Записи в сборке: у буквы с записью - 🔈 в углу плитки (набросок 1A). */
+    available: Set<String> = emptySet(),
 ) {
     val palette = InabahTheme.palette
     val colors = readingColors
@@ -647,6 +683,17 @@ private fun LettersGrid(
                             contentAlignment = Alignment.Center,
                         ) {
                             ArabicText(letter.letter, LETTER_SIZE, palette.onAccent, maxLines = 1)
+                            if (letter.audio.values.any { it in available }) {
+                                Icon(
+                                    painterResource(R.drawable.ic_volume_up),
+                                    contentDescription = null,
+                                    tint = palette.onAccentTertiary,
+                                    modifier = Modifier
+                                        .align(AbsoluteAlignment.BottomLeft)
+                                        .padding(Spacing.xxs)
+                                        .size(SpeakerSize),
+                                )
+                            }
                             // Звучащая буква - название над ней в своей рамке (просьба пользователя 2026-10-15):
                             // сдвиг отрисовки вверх на свою высоту, раскладка ряда не меняется.
                             if (isPlaying) PlayingNameBubble(letter.name, Modifier.align(Alignment.TopCenter))
@@ -849,6 +896,9 @@ private const val HERO_STAGGER_MILLIS = 350
 private const val HERO_APPEAR_MILLIS = 500
 /** «Послушать алфавит» без записей - сколько подсвечена буква. */
 private const val LETTER_MILLIS = 2_000L
+
+/** «Послушать алфавит» с записями: пауза после названия буквы перед следующей. */
+private const val ALPHABET_GAP_MILLIS = 500L
 private const val PLAYING_SCALE = 1.2f
 private const val SYLLABLE_ROWS_PER_CARD = 4
 private const val WIDE_FORMULAS_PER_CARD = 3

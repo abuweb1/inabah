@@ -309,8 +309,7 @@ private fun TabScreens(tab: AppTab, services: AppServices, contentPadding: Paddi
                         onOpenExtra = { router.push(MakharijRoute.Extra(route.step, it)) },
                         onOpenLetterForms = { router.push(MakharijRoute.LetterForms(route.step, it)) },
                         onOpenZikr = { router.push(MakharijRoute.Zikr(route.step, it)) },
-                        clips = clips,
-                        onPlayClip = services.clipPlayer::play,
+                        clips = services.clipPlayer,
                         contentPadding = contentPadding.bottomOnly(),
                     )
                 }
@@ -344,6 +343,7 @@ private fun TabScreens(tab: AppTab, services: AppServices, contentPadding: Paddi
                         settings = services.readingSettings,
                         onBack = { router.pop(AppTab.Makharij) },
                         contentPadding = contentPadding.bottomOnly(),
+                        clips = services.clipPlayer,
                     )
                 }
                 entry<MakharijRoute.Extra> { route ->
@@ -354,6 +354,7 @@ private fun TabScreens(tab: AppTab, services: AppServices, contentPadding: Paddi
                         settings = services.readingSettings,
                         onBack = { router.pop(AppTab.Makharij) },
                         contentPadding = contentPadding.bottomOnly(),
+                        clips = services.clipPlayer,
                     )
                 }
                 entry<MakharijRoute.Zikr> { route ->

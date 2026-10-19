@@ -44,7 +44,7 @@ class AssetContentRepositoryTest {
 
     // Свои записи (2026-10-12, docs/process/audio.md): у каждого зикра — файл в assets/audio/.
     @Test
-    fun `Записи азкаров — у каждого зикра есть файл в ассетах, 20 файлов m4a`() = runTest {
+    fun `Записи азкаров - у каждого зикра есть файл в ассетах, 20 файлов азкаров, все m4a`() = runTest {
         val repository = repository(dispatcher = StandardTestDispatcher(testScheduler))
         val bundled = File(assetsDir, "audio").listFiles().orEmpty().map { it.name }.toSet()
         for (section in AzkarSection.entries) {
@@ -52,7 +52,9 @@ class AssetContentRepositoryTest {
                 assertTrue(zikr.audioFileName in bundled, "$section ${zikr.number}: нет файла ${zikr.audioFileName}")
             }
         }
-        assertEquals(20, bundled.size)
+        // Записи курса «Учимся читать» (reading_*) лежат рядом - считаются отдельно.
+        val azkar = bundled.filter { it.startsWith("morning_") || it.startsWith("evening_") }
+        assertEquals(20, azkar.size)
         assertTrue(bundled.all { it.endsWith(".m4a") }, "только .m4a: $bundled")
     }
 
