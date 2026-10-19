@@ -301,6 +301,36 @@ struct ReadingLogicTests {
         #expect(ReadingLogic.homeSummary(course: course, completed: [1]) == .progress(done: 1, total: 2))
     }
 
+    @Test("Следующий шаг после проверки - следующий с уроком, без замка; у последнего - нет")
+    func nextAfterQuiz() async throws {
+        let course = try await ReadingCourseFixture.load()
+
+        #expect(ReadingLogic.nextStepAfterQuiz(course: course, step: try course.requiredStep(1))?.number == 2)
+        #expect(ReadingLogic.nextStepAfterQuiz(course: course, step: try #require(course.steps.last)) == nil)
+    }
+
+    @Test("Следующий шаг после слов - только открытый, «Открыть все шаги» открывает")
+    func nextAfterWords() async throws {
+        let course = try await ReadingCourseFixture.load()
+        let step2 = try course.requiredStep(2)
+
+        #expect(ReadingLogic.nextStepAfterWords(course: course, step: step2, completed: [1, 2], allStepsOpen: false)?.number == 3)
+        #expect(ReadingLogic.nextStepAfterWords(course: course, step: step2, completed: [1], allStepsOpen: false) == nil,
+                "шаг 2 не пройден - шаг 3 закрыт")
+        #expect(ReadingLogic.nextStepAfterWords(course: course, step: step2, completed: [1], allStepsOpen: true)?.number == 3)
+    }
+
+    @Test("Плиток в ряду по ширине слова: 3, 2 или 1 - слово не шире 80 % места под текст")
+    func wordColumns() {
+        // Ряд 300: плитка по 3 - (300 - 16) / 3 = 94,7, под текст (94,7 - 12) × 0,8 = 66,1;
+        // по 2 - (300 - 8) / 2 = 146, под текст (146 - 12) × 0,8 = 107,2.
+        #expect(ReadingLogic.wordColumns(wordWidth: 60, rowWidth: 300) == 3)
+        #expect(ReadingLogic.wordColumns(wordWidth: 66, rowWidth: 300) == 3)
+        #expect(ReadingLogic.wordColumns(wordWidth: 67, rowWidth: 300) == 2)
+        #expect(ReadingLogic.wordColumns(wordWidth: 107, rowWidth: 300) == 2)
+        #expect(ReadingLogic.wordColumns(wordWidth: 108, rowWidth: 300) == 1)
+    }
+
     @Test("Есть что сбросить - пройденный урок, прочитанное слово или начатый зикр итога")
     func hasProgress() async throws {
         let course = try await ReadingCourseFixture.load()
