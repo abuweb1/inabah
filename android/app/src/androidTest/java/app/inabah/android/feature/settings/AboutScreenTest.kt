@@ -97,20 +97,34 @@ class AboutScreenTest {
     }
 
     @Test
-    fun aboutShowsVersionAndOpensLicense() {
-        var opened: LicenseDocument? = null
+    fun aboutShowsVersionAndOpensLicenses() {
+        var opened = false
         compose.setContent {
             InabahTheme(theme = ThemeStyle.Sections.theme) {
-                AboutScreen(onOpenLicense = { opened = it }, onOpenVersionHistory = {}, onBack = {}, contentPadding = PaddingValues())
+                AboutScreen(onOpenLicenses = { opened = true }, onOpenVersionHistory = {}, onBack = {}, contentPadding = PaddingValues())
             }
         }
         compose.onNodeWithText(context.getString(R.string.about_version, appVersion), substring = true).assertIsDisplayed()
         compose.onNodeWithText(context.getString(R.string.about_sources_azkar_text), substring = true).assertIsDisplayed()
-        compose.onNodeWithText(context.getString(R.string.about_link_issues), substring = true).performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText(context.getString(R.string.about_link_privacy)).performScrollTo().assertIsDisplayed()
+        // Лицензии - одной строкой, без отдельных шрифтов и значков на экране.
+        compose.onNodeWithText(context.getString(R.string.about_license_material_title)).assertDoesNotExist()
 
-        compose.onNodeWithText(context.getString(R.string.about_license_material_title), substring = true)
-            .performScrollTo()
-            .performClick()
+        compose.onNodeWithText(context.getString(R.string.about_licenses)).performScrollTo().performClick()
+        assertTrue(opened)
+    }
+
+    @Test
+    fun licensesListOpensLicense() {
+        var opened: LicenseDocument? = null
+        compose.setContent {
+            InabahTheme(theme = ThemeStyle.Sections.theme) {
+                LicensesScreen(onOpenLicense = { opened = it }, onBack = {}, contentPadding = PaddingValues())
+            }
+        }
+        compose.onNodeWithText(context.getString(R.string.about_license_scheherazade_title)).assertIsDisplayed()
+        compose.onNodeWithText(context.getString(R.string.about_license_inter_title)).assertIsDisplayed()
+        compose.onNodeWithText(context.getString(R.string.about_license_material_title)).performClick()
         assertEquals(LicenseDocument.MaterialSymbols, opened)
     }
 
@@ -119,7 +133,7 @@ class AboutScreenTest {
         var opened = false
         compose.setContent {
             InabahTheme(theme = ThemeStyle.Sections.theme) {
-                AboutScreen(onOpenLicense = {}, onOpenVersionHistory = { opened = true }, onBack = {}, contentPadding = PaddingValues())
+                AboutScreen(onOpenLicenses = {}, onOpenVersionHistory = { opened = true }, onBack = {}, contentPadding = PaddingValues())
             }
         }
         compose.onNodeWithText(context.getString(R.string.about_version_history)).performClick()

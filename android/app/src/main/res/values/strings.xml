@@ -11,10 +11,9 @@
     <string name="about_license_material_title">Material Symbols</string>
     <string name="about_license_scheherazade_subtitle">Арабский шрифт · SIL Global · SIL Open Font License 1.1</string>
     <string name="about_license_scheherazade_title">Scheherazade New</string>
+    <string name="about_licenses">Лицензии</string>
     <string name="about_licenses_header">Шрифт и значки</string>
-    <string name="about_link_issues">Вопросы и предложения</string>
     <string name="about_link_privacy">Политика конфиденциальности</string>
-    <string name="about_link_repository">Исходный код на GitHub</string>
     <string name="about_sources_azkar_text">Утренние и вечерние азкары из Сунны — арабский текст, транскрипция и перевод.</string>
     <string name="about_sources_azkar_title">Азкары</string>
     <string name="about_sources_audio_text">Читает автор приложения.</string>

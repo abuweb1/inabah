@@ -58,6 +58,7 @@ import app.inabah.android.feature.makharij.ReadingWordsScreen
 import app.inabah.android.feature.settings.AboutScreen
 import app.inabah.android.feature.settings.AppIconSettingsScreen
 import app.inabah.android.feature.settings.LicenseScreen
+import app.inabah.android.feature.settings.LicensesScreen
 import app.inabah.android.feature.settings.AzkarSettingsScreen
 import app.inabah.android.feature.settings.HadithOrderSettingsScreen
 import app.inabah.android.feature.settings.HadithSettingsScreen
@@ -449,8 +450,15 @@ private fun TabScreens(tab: AppTab, services: AppServices, contentPadding: Paddi
             }
             entry<SettingsRoute.About> {
                 AboutScreen(
-                    onOpenLicense = { router.push(SettingsRoute.License(it)) },
+                    onOpenLicenses = { router.push(SettingsRoute.Licenses) },
                     onOpenVersionHistory = { router.push(SettingsRoute.VersionHistory) },
+                    onBack = { router.pop(AppTab.Settings) },
+                    contentPadding = contentPadding.bottomOnly(),
+                )
+            }
+            entry<SettingsRoute.Licenses> {
+                LicensesScreen(
+                    onOpenLicense = { router.push(SettingsRoute.License(it)) },
                     onBack = { router.pop(AppTab.Settings) },
                     contentPadding = contentPadding.bottomOnly(),
                 )

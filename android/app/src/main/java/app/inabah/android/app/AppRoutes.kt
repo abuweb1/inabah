@@ -105,7 +105,11 @@ sealed interface SettingsRoute {
     @Serializable
     data object VersionHistory : SettingsRoute
 
-    /** Полный текст лицензии шрифта или значков (из «О приложении»). */
+    /** «Лицензии» - шрифты и значки одним списком (одна строка в «О приложении», 2026-10-19). */
+    @Serializable
+    data object Licenses : SettingsRoute
+
+    /** Полный текст лицензии шрифта или значков (из «Лицензий»). */
     @Serializable
     data class License(val document: LicenseDocument) : SettingsRoute
 }

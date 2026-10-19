@@ -61,22 +61,21 @@ private const val ARABIC_NAME = "إنابة"
 
 /** Внешние адреса экрана (iOS `AboutLinks`). */
 internal object AboutLinks {
-    const val REPOSITORY = "https://github.com/abuweb1/inabah"
     const val PRIVACY = "https://github.com/abuweb1/inabah/blob/main/PRIVACY.md"
-    const val ISSUES = "https://github.com/abuweb1/inabah/issues"
 }
 
 /** Версия как в iOS: «1.0.0 (1)» — versionName и versionCode. */
 internal val appVersion: String get() = "${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})"
 
 /**
- * «О приложении» (iOS `AboutView`): иконка, название и версия; откуда тексты (без ссылок на сайты); лицензии
- * шрифтов и значков ([onOpenLicense] — полный текст); политика конфиденциальности и репозиторий.
+ * «О приложении» (iOS `AboutView`): иконка, название и версия; откуда тексты (без ссылок на сайты); политика
+ * конфиденциальности (её требует Apple) и «Лицензии» ([onOpenLicenses] - шрифты и значки одной строкой,
+ * решение пользователя 2026-10-19: ссылок на исходный код и Issues нет - пользователям они ни к чему).
  * Под версией — «История версий» ([onOpenVersionHistory], Android-first 2026-10-10).
  */
 @Composable
 fun AboutScreen(
-    onOpenLicense: (LicenseDocument) -> Unit,
+    onOpenLicenses: () -> Unit,
     onOpenVersionHistory: () -> Unit,
     onBack: () -> Unit,
     contentPadding: PaddingValues,
@@ -110,6 +109,36 @@ fun AboutScreen(
             ),
         )
         SettingsGroup(
+            header = stringResource(R.string.about_app_header),
+            footer = stringResource(R.string.about_app_footer),
+            rows = listOf(
+                { AboutLinkRow(R.string.about_link_privacy) { uriHandler.openSafely(AboutLinks.PRIVACY) } },
+                {
+                    SettingsRow(onClick = onOpenLicenses, trailing = { SettingsChevron() }) {
+                        SettingsRowText(title = stringResource(R.string.about_licenses))
+                    }
+                },
+            ),
+        )
+    }
+}
+
+/** «Лицензии» (из «О приложении»): шрифты и значки, у каждого - полный текст ([onOpenLicense]). */
+@Composable
+fun LicensesScreen(
+    onOpenLicense: (LicenseDocument) -> Unit,
+    onBack: () -> Unit,
+    contentPadding: PaddingValues,
+    modifier: Modifier = Modifier,
+) {
+    val theme = LocalInabahTheme.current
+    SettingsScaffold(
+        background = theme.gradients.settingsBackground,
+        contentPadding = contentPadding,
+        modifier = modifier,
+        topBar = { InabahTopBar(title = stringResource(R.string.about_licenses), tint = theme.palette.tabSettings, onBack = onBack) },
+    ) {
+        SettingsGroup(
             header = stringResource(R.string.about_licenses_header),
             rows = LicenseDocument.entries.map { document ->
                 @Composable {
@@ -118,15 +147,6 @@ fun AboutScreen(
                     }
                 }
             },
-        )
-        SettingsGroup(
-            header = stringResource(R.string.about_app_header),
-            footer = stringResource(R.string.about_app_footer),
-            rows = listOf(
-                { AboutLinkRow(R.string.about_link_privacy) { uriHandler.openSafely(AboutLinks.PRIVACY) } },
-                { AboutLinkRow(R.string.about_link_repository) { uriHandler.openSafely(AboutLinks.REPOSITORY) } },
-                { AboutLinkRow(R.string.about_link_issues) { uriHandler.openSafely(AboutLinks.ISSUES) } },
-            ),
         )
     }
 }
