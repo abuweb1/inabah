@@ -343,6 +343,18 @@ struct ReadableWordTile: View {
 
     private var isDone: Bool { count >= `repeat` }
 
+    /// Касание - прочитал; с увеличением - один жест: удержание - увеличение, отпустили раньше - касание.
+    /// Отдельные касание и удержание спорили, и увеличение срабатывало только при отпускании пальца.
+    private var readOrZoom: AnyGesture<Void> {
+        let read = TapGesture().onEnded { if !isDone { onRead() } }
+        guard let onZoom else { return AnyGesture(read) }
+        let zoom = LongPressGesture(minimumDuration: PressFeedback.zoomHold).onEnded { _ in
+            zoomCount += 1
+            onZoom(frame)
+        }
+        return AnyGesture(zoom.exclusively(before: read).map { _ in })
+    }
+
     var body: some View {
         WordTile(word: word, count: count, repeat: `repeat`, showsTransliteration: showsTransliteration, isZoomed: false, colors: colors)
             .overlay {
@@ -353,14 +365,7 @@ struct ReadableWordTile: View {
             .popOnChange(of: count)
             .contentShape(.rect(cornerRadius: Radius.box))
             .onGeometryChange(for: CGRect.self) { $0.frame(in: .named(coordinateSpace)) } action: { frame = $0 }
-            .onTapGesture { if !isDone { onRead() } }
-            .gesture(
-                LongPressGesture().onEnded { _ in
-                    zoomCount += 1
-                    onZoom?(frame)
-                },
-                isEnabled: onZoom != nil
-            )
+            .gesture(readOrZoom)
             .sensoryFeedback(trigger: count) { old, new in new > old ? (new >= `repeat` ? .success : .selection) : nil }
             .sensoryFeedback(.impact(weight: .medium), trigger: zoomCount)
             .onAppear { if wasDone == nil { wasDone = isDone } }
