@@ -1822,17 +1822,6 @@
         }
       }
     },
-    "makharij.chain.sound" : {
-      "comment" : "Учимся читать: лист буквы: подпись звука буквы (с сукуном)",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "звук"
-          }
-        }
-      }
-    },
     "makharij.done.final %@" : {
       "comment" : "Учимся читать: окно завершения итога",
       "localizations" : {

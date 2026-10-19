@@ -36,6 +36,9 @@ extension ReadingStep {
     var formsBlocks: [ReadingBlock.Forms] { blocks.compactMap { if case .forms(let b) = $0 { b } else { nil } } }
     var formulasBlocks: [ReadingBlock.Formulas] { blocks.compactMap { if case .formulas(let b) = $0 { b } else { nil } } }
     var syllablesBlocks: [ReadingBlock.Syllables] { blocks.compactMap { if case .syllables(let b) = $0 { b } else { nil } } }
+    var closedSyllablesBlocks: [ReadingBlock.ClosedSyllables] {
+        blocks.compactMap { if case .closedSyllables(let b) = $0 { b } else { nil } }
+    }
     var marksBlocks: [ReadingBlock.Marks] { blocks.compactMap { if case .marks(let b) = $0 { b } else { nil } } }
     var ruleBlocks: [ReadingBlock.Rule] { blocks.compactMap { if case .rule(let b) = $0 { b } else { nil } } }
     var textBlocks: [ReadingBlock.Text] { blocks.compactMap { if case .text(let b) = $0 { b } else { nil } } }

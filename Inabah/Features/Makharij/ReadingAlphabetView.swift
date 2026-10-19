@@ -1,7 +1,8 @@
 import SwiftUI
 
 /// «Весь алфавит» шага (Android `ReadingAlphabetScreen.kt`): все слоги таблицы карточками по 4 буквы или
-/// все закрытые слоги (формулы с `sample`); слог открывает лист буквы.
+/// все закрытые слоги (`ReadingBlock.ClosedSyllables`); слог таблицы слогов открывает лист буквы, закрытый слог
+/// с записью звучит.
 struct ReadingAlphabetView: View {
     let stepNumber: Int
 
@@ -32,8 +33,8 @@ struct ReadingAlphabetView: View {
         let blocks = step?.blocks ?? []
         if let syllables = blocks.lazy.compactMap({ if case .syllables(let b) = $0 { b } else { nil } }).first {
             SyllablesTable(block: syllables, isTransliterationHidden: settings.transliterationHidden, colors: colors, onTap: openSheet.open)
-        } else if let formulas = blocks.lazy.compactMap({ if case .formulas(let b) = $0, b.sample != nil { b } else { nil } }).first {
-            FormulasCards(block: formulas, isTransliterationHidden: settings.transliterationHidden, colors: colors)
+        } else if let closed = blocks.lazy.compactMap({ if case .closedSyllables(let b) = $0 { b } else { nil } }).first {
+            ClosedSyllablesTable(block: closed, isTransliterationHidden: settings.transliterationHidden, colors: colors)
         }
     }
 }
