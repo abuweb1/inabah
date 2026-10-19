@@ -104,6 +104,7 @@
         "kasratan": "إ",
         "dammatan": "أ"
       },
+      "closedBase": "أ",
       "audio": {},
       "translations": {
         "ru": {
@@ -656,6 +657,10 @@
       "letter": "و",
       "name": "وَاو",
       "joinsNext": false,
+      "closedVowels": [
+        "fatha",
+        "kasra"
+      ],
       "audio": {},
       "translations": {
         "ru": {
@@ -677,6 +682,10 @@
       "id": 28,
       "letter": "ي",
       "name": "يَاء",
+      "closedVowels": [
+        "fatha",
+        "damma"
+      ],
       "audio": {},
       "translations": {
         "ru": {
@@ -700,6 +709,8 @@
       "name": "هَمْزَة",
       "joinsNext": false,
       "joinsPrevious": false,
+      "closedBase": "أ",
+      "audioLike": "ا",
       "audio": {},
       "translations": {
         "ru": {
@@ -5563,918 +5574,44 @@
           }
         },
         {
-          "type": "formulas",
-          "columns": 1,
-          "sample": 6,
-          "items": [
-            {
-              "parts": [
-                "أَ",
-                "بْ"
-              ],
-              "result": "أَبْ",
-              "translations": {
-                "ru": {
-                  "translit": "ъаб"
-                }
-              }
-            },
-            {
-              "parts": [
-                "إِ",
-                "بْ"
-              ],
-              "result": "إِبْ",
-              "translations": {
-                "ru": {
-                  "translit": "ъиб"
-                }
-              }
-            },
-            {
-              "parts": [
-                "أُ",
-                "بْ"
-              ],
-              "result": "أُبْ",
-              "translations": {
-                "ru": {
-                  "translit": "ъуб"
-                }
-              }
-            },
-            {
-              "parts": [
-                "أَ",
-                "تْ"
-              ],
-              "result": "أَتْ",
-              "translations": {
-                "ru": {
-                  "translit": "ъат"
-                }
-              }
-            },
-            {
-              "parts": [
-                "إِ",
-                "تْ"
-              ],
-              "result": "إِتْ",
-              "translations": {
-                "ru": {
-                  "translit": "ъит"
-                }
-              }
-            },
-            {
-              "parts": [
-                "أُ",
-                "تْ"
-              ],
-              "result": "أُتْ",
-              "translations": {
-                "ru": {
-                  "translit": "ъут"
-                }
-              }
-            },
-            {
-              "parts": [
-                "أَ",
-                "ثْ"
-              ],
-              "result": "أَثْ",
-              "translations": {
-                "ru": {
-                  "translit": "ъас"
-                }
-              }
-            },
-            {
-              "parts": [
-                "إِ",
-                "ثْ"
-              ],
-              "result": "إِثْ",
-              "translations": {
-                "ru": {
-                  "translit": "ъис"
-                }
-              }
-            },
-            {
-              "parts": [
-                "أُ",
-                "ثْ"
-              ],
-              "result": "أُثْ",
-              "translations": {
-                "ru": {
-                  "translit": "ъус"
-                }
-              }
-            },
-            {
-              "parts": [
-                "أَ",
-                "جْ"
-              ],
-              "result": "أَجْ",
-              "translations": {
-                "ru": {
-                  "translit": "ъадж"
-                }
-              }
-            },
-            {
-              "parts": [
-                "إِ",
-                "جْ"
-              ],
-              "result": "إِجْ",
-              "translations": {
-                "ru": {
-                  "translit": "ъидж"
-                }
-              }
-            },
-            {
-              "parts": [
-                "أُ",
-                "جْ"
-              ],
-              "result": "أُجْ",
-              "translations": {
-                "ru": {
-                  "translit": "ъудж"
-                }
-              }
-            },
-            {
-              "parts": [
-                "أَ",
-                "حْ"
-              ],
-              "result": "أَحْ",
-              "translations": {
-                "ru": {
-                  "translit": "ъахь"
-                }
-              }
-            },
-            {
-              "parts": [
-                "إِ",
-                "حْ"
-              ],
-              "result": "إِحْ",
-              "translations": {
-                "ru": {
-                  "translit": "ъихь"
-                }
-              }
-            },
-            {
-              "parts": [
-                "أُ",
-                "حْ"
-              ],
-              "result": "أُحْ",
-              "translations": {
-                "ru": {
-                  "translit": "ъухь"
-                }
-              }
-            },
-            {
-              "parts": [
-                "أَ",
-                "خْ"
-              ],
-              "result": "أَخْ",
-              "translations": {
-                "ru": {
-                  "translit": "ъах"
-                }
-              }
-            },
-            {
-              "parts": [
-                "إِ",
-                "خْ"
-              ],
-              "result": "إِخْ",
-              "translations": {
-                "ru": {
-                  "translit": "ъих"
-                }
-              }
-            },
-            {
-              "parts": [
-                "أُ",
-                "خْ"
-              ],
-              "result": "أُخْ",
-              "translations": {
-                "ru": {
-                  "translit": "ъух"
-                }
-              }
-            },
-            {
-              "parts": [
-                "أَ",
-                "دْ"
-              ],
-              "result": "أَدْ",
-              "translations": {
-                "ru": {
-                  "translit": "ъад"
-                }
-              }
-            },
-            {
-              "parts": [
-                "إِ",
-                "دْ"
-              ],
-              "result": "إِدْ",
-              "translations": {
-                "ru": {
-                  "translit": "ъид"
-                }
-              }
-            },
-            {
-              "parts": [
-                "أُ",
-                "دْ"
-              ],
-              "result": "أُدْ",
-              "translations": {
-                "ru": {
-                  "translit": "ъуд"
-                }
-              }
-            },
-            {
-              "parts": [
-                "أَ",
-                "ذْ"
-              ],
-              "result": "أَذْ",
-              "translations": {
-                "ru": {
-                  "translit": "ъаз"
-                }
-              }
-            },
-            {
-              "parts": [
-                "إِ",
-                "ذْ"
-              ],
-              "result": "إِذْ",
-              "translations": {
-                "ru": {
-                  "translit": "ъиз"
-                }
-              }
-            },
-            {
-              "parts": [
-                "أُ",
-                "ذْ"
-              ],
-              "result": "أُذْ",
-              "translations": {
-                "ru": {
-                  "translit": "ъуз"
-                }
-              }
-            },
-            {
-              "parts": [
-                "أَ",
-                "رْ"
-              ],
-              "result": "أَرْ",
-              "translations": {
-                "ru": {
-                  "translit": "ъар"
-                }
-              }
-            },
-            {
-              "parts": [
-                "إِ",
-                "رْ"
-              ],
-              "result": "إِرْ",
-              "translations": {
-                "ru": {
-                  "translit": "ъир"
-                }
-              }
-            },
-            {
-              "parts": [
-                "أُ",
-                "رْ"
-              ],
-              "result": "أُرْ",
-              "translations": {
-                "ru": {
-                  "translit": "ъур"
-                }
-              }
-            },
-            {
-              "parts": [
-                "أَ",
-                "زْ"
-              ],
-              "result": "أَزْ",
-              "translations": {
-                "ru": {
-                  "translit": "ъаз"
-                }
-              }
-            },
-            {
-              "parts": [
-                "إِ",
-                "زْ"
-              ],
-              "result": "إِزْ",
-              "translations": {
-                "ru": {
-                  "translit": "ъиз"
-                }
-              }
-            },
-            {
-              "parts": [
-                "أُ",
-                "زْ"
-              ],
-              "result": "أُزْ",
-              "translations": {
-                "ru": {
-                  "translit": "ъуз"
-                }
-              }
-            },
-            {
-              "parts": [
-                "أَ",
-                "سْ"
-              ],
-              "result": "أَسْ",
-              "translations": {
-                "ru": {
-                  "translit": "ъас"
-                }
-              }
-            },
-            {
-              "parts": [
-                "إِ",
-                "سْ"
-              ],
-              "result": "إِسْ",
-              "translations": {
-                "ru": {
-                  "translit": "ъис"
-                }
-              }
-            },
-            {
-              "parts": [
-                "أُ",
-                "سْ"
-              ],
-              "result": "أُسْ",
-              "translations": {
-                "ru": {
-                  "translit": "ъус"
-                }
-              }
-            },
-            {
-              "parts": [
-                "أَ",
-                "شْ"
-              ],
-              "result": "أَشْ",
-              "translations": {
-                "ru": {
-                  "translit": "ъаш"
-                }
-              }
-            },
-            {
-              "parts": [
-                "إِ",
-                "شْ"
-              ],
-              "result": "إِشْ",
-              "translations": {
-                "ru": {
-                  "translit": "ъиш"
-                }
-              }
-            },
-            {
-              "parts": [
-                "أُ",
-                "شْ"
-              ],
-              "result": "أُشْ",
-              "translations": {
-                "ru": {
-                  "translit": "ъуш"
-                }
-              }
-            },
-            {
-              "parts": [
-                "أَ",
-                "صْ"
-              ],
-              "result": "أَصْ",
-              "translations": {
-                "ru": {
-                  "translit": "ъас"
-                }
-              }
-            },
-            {
-              "parts": [
-                "إِ",
-                "صْ"
-              ],
-              "result": "إِصْ",
-              "translations": {
-                "ru": {
-                  "translit": "ъис"
-                }
-              }
-            },
-            {
-              "parts": [
-                "أُ",
-                "صْ"
-              ],
-              "result": "أُصْ",
-              "translations": {
-                "ru": {
-                  "translit": "ъус"
-                }
-              }
-            },
-            {
-              "parts": [
-                "أَ",
-                "ضْ"
-              ],
-              "result": "أَضْ",
-              "translations": {
-                "ru": {
-                  "translit": "ъад"
-                }
-              }
-            },
-            {
-              "parts": [
-                "إِ",
-                "ضْ"
-              ],
-              "result": "إِضْ",
-              "translations": {
-                "ru": {
-                  "translit": "ъид"
-                }
-              }
-            },
-            {
-              "parts": [
-                "أُ",
-                "ضْ"
-              ],
-              "result": "أُضْ",
-              "translations": {
-                "ru": {
-                  "translit": "ъуд"
-                }
-              }
-            },
-            {
-              "parts": [
-                "أَ",
-                "طْ"
-              ],
-              "result": "أَطْ",
-              "translations": {
-                "ru": {
-                  "translit": "ъатӏ"
-                }
-              }
-            },
-            {
-              "parts": [
-                "إِ",
-                "طْ"
-              ],
-              "result": "إِطْ",
-              "translations": {
-                "ru": {
-                  "translit": "ъитӏ"
-                }
-              }
-            },
-            {
-              "parts": [
-                "أُ",
-                "طْ"
-              ],
-              "result": "أُطْ",
-              "translations": {
-                "ru": {
-                  "translit": "ъутӏ"
-                }
-              }
-            },
-            {
-              "parts": [
-                "أَ",
-                "ظْ"
-              ],
-              "result": "أَظْ",
-              "translations": {
-                "ru": {
-                  "translit": "ъаз"
-                }
-              }
-            },
-            {
-              "parts": [
-                "إِ",
-                "ظْ"
-              ],
-              "result": "إِظْ",
-              "translations": {
-                "ru": {
-                  "translit": "ъиз"
-                }
-              }
-            },
-            {
-              "parts": [
-                "أُ",
-                "ظْ"
-              ],
-              "result": "أُظْ",
-              "translations": {
-                "ru": {
-                  "translit": "ъуз"
-                }
-              }
-            },
-            {
-              "parts": [
-                "أَ",
-                "عْ"
-              ],
-              "result": "أَعْ",
-              "translations": {
-                "ru": {
-                  "translit": "ъаӏ"
-                }
-              }
-            },
-            {
-              "parts": [
-                "إِ",
-                "عْ"
-              ],
-              "result": "إِعْ",
-              "translations": {
-                "ru": {
-                  "translit": "ъиӏ"
-                }
-              }
-            },
-            {
-              "parts": [
-                "أُ",
-                "عْ"
-              ],
-              "result": "أُعْ",
-              "translations": {
-                "ru": {
-                  "translit": "ъуӏ"
-                }
-              }
-            },
-            {
-              "parts": [
-                "أَ",
-                "غْ"
-              ],
-              "result": "أَغْ",
-              "translations": {
-                "ru": {
-                  "translit": "ъагӏ"
-                }
-              }
-            },
-            {
-              "parts": [
-                "إِ",
-                "غْ"
-              ],
-              "result": "إِغْ",
-              "translations": {
-                "ru": {
-                  "translit": "ъигӏ"
-                }
-              }
-            },
-            {
-              "parts": [
-                "أُ",
-                "غْ"
-              ],
-              "result": "أُغْ",
-              "translations": {
-                "ru": {
-                  "translit": "ъугӏ"
-                }
-              }
-            },
-            {
-              "parts": [
-                "أَ",
-                "فْ"
-              ],
-              "result": "أَفْ",
-              "translations": {
-                "ru": {
-                  "translit": "ъаф"
-                }
-              }
-            },
-            {
-              "parts": [
-                "إِ",
-                "فْ"
-              ],
-              "result": "إِفْ",
-              "translations": {
-                "ru": {
-                  "translit": "ъиф"
-                }
-              }
-            },
-            {
-              "parts": [
-                "أُ",
-                "فْ"
-              ],
-              "result": "أُفْ",
-              "translations": {
-                "ru": {
-                  "translit": "ъуф"
-                }
-              }
-            },
-            {
-              "parts": [
-                "أَ",
-                "قْ"
-              ],
-              "result": "أَقْ",
-              "translations": {
-                "ru": {
-                  "translit": "ъакъ"
-                }
-              }
-            },
-            {
-              "parts": [
-                "إِ",
-                "قْ"
-              ],
-              "result": "إِقْ",
-              "translations": {
-                "ru": {
-                  "translit": "ъикъ"
-                }
-              }
-            },
-            {
-              "parts": [
-                "أُ",
-                "قْ"
-              ],
-              "result": "أُقْ",
-              "translations": {
-                "ru": {
-                  "translit": "ъукъ"
-                }
-              }
-            },
-            {
-              "parts": [
-                "أَ",
-                "كْ"
-              ],
-              "result": "أَكْ",
-              "translations": {
-                "ru": {
-                  "translit": "ъак"
-                }
-              }
-            },
-            {
-              "parts": [
-                "إِ",
-                "كْ"
-              ],
-              "result": "إِكْ",
-              "translations": {
-                "ru": {
-                  "translit": "ъик"
-                }
-              }
-            },
-            {
-              "parts": [
-                "أُ",
-                "كْ"
-              ],
-              "result": "أُكْ",
-              "translations": {
-                "ru": {
-                  "translit": "ъук"
-                }
-              }
-            },
-            {
-              "parts": [
-                "أَ",
-                "لْ"
-              ],
-              "result": "أَلْ",
-              "translations": {
-                "ru": {
-                  "translit": "ъаль"
-                }
-              }
-            },
-            {
-              "parts": [
-                "إِ",
-                "لْ"
-              ],
-              "result": "إِلْ",
-              "translations": {
-                "ru": {
-                  "translit": "ъиль"
-                }
-              }
-            },
-            {
-              "parts": [
-                "أُ",
-                "لْ"
-              ],
-              "result": "أُلْ",
-              "translations": {
-                "ru": {
-                  "translit": "ъуль"
-                }
-              }
-            },
-            {
-              "parts": [
-                "أَ",
-                "مْ"
-              ],
-              "result": "أَمْ",
-              "translations": {
-                "ru": {
-                  "translit": "ъам"
-                }
-              }
-            },
-            {
-              "parts": [
-                "إِ",
-                "مْ"
-              ],
-              "result": "إِمْ",
-              "translations": {
-                "ru": {
-                  "translit": "ъим"
-                }
-              }
-            },
-            {
-              "parts": [
-                "أُ",
-                "مْ"
-              ],
-              "result": "أُمْ",
-              "translations": {
-                "ru": {
-                  "translit": "ъум"
-                }
-              }
-            },
-            {
-              "parts": [
-                "أَ",
-                "نْ"
-              ],
-              "result": "أَنْ",
-              "translations": {
-                "ru": {
-                  "translit": "ъан"
-                }
-              }
-            },
-            {
-              "parts": [
-                "إِ",
-                "نْ"
-              ],
-              "result": "إِنْ",
-              "translations": {
-                "ru": {
-                  "translit": "ъин"
-                }
-              }
-            },
-            {
-              "parts": [
-                "أُ",
-                "نْ"
-              ],
-              "result": "أُنْ",
-              "translations": {
-                "ru": {
-                  "translit": "ъун"
-                }
-              }
-            },
-            {
-              "parts": [
-                "أَ",
-                "هْ"
-              ],
-              "result": "أَهْ",
-              "translations": {
-                "ru": {
-                  "translit": "ъахӏ"
-                }
-              }
-            },
-            {
-              "parts": [
-                "إِ",
-                "هْ"
-              ],
-              "result": "إِهْ",
-              "translations": {
-                "ru": {
-                  "translit": "ъихӏ"
-                }
-              }
-            },
-            {
-              "parts": [
-                "أُ",
-                "هْ"
-              ],
-              "result": "أُهْ",
-              "translations": {
-                "ru": {
-                  "translit": "ъухӏ"
-                }
-              }
-            }
-          ]
+          "type": "closedSyllables",
+          "letters": [
+            "ب",
+            "ت",
+            "ث",
+            "ج",
+            "ح",
+            "خ",
+            "د",
+            "ذ",
+            "ر",
+            "ز",
+            "س",
+            "ش",
+            "ص",
+            "ض",
+            "ط",
+            "ظ",
+            "ع",
+            "غ",
+            "ف",
+            "ق",
+            "ك",
+            "ل",
+            "م",
+            "ن",
+            "ه",
+            "و",
+            "ي",
+            "ء"
+          ],
+          "sample": 6
         },
         {
           "type": "text",
           "translations": {
             "ru": {
-              "text": "و и ي с сукуном после фатхьи читаются «в» и «й»: «ав», «ай».",
-              "info": "Так в словах «льайта», «савфа». А و после доммы и ي после касры без знака - это буквы мадда: они тянут звук, а не закрывают слог."
+              "text": "و с сукуном после доммы и ي с сукуном после касры слог не закрывают: они превращаются в мад و и мад ي."
             }
           }
         },
@@ -6484,25 +5621,25 @@
           "items": [
             {
               "parts": [
-                "أَ",
+                "أُ",
                 "وْ"
               ],
-              "result": "أَوْ",
+              "result": "أُو",
               "translations": {
                 "ru": {
-                  "translit": "ъав"
+                  "translit": "ъуу"
                 }
               }
             },
             {
               "parts": [
-                "أَ",
+                "إِ",
                 "يْ"
               ],
-              "result": "أَيْ",
+              "result": "إِي",
               "translations": {
                 "ru": {
-                  "translit": "ъай"
+                  "translit": "ъии"
                 }
               }
             }
@@ -6897,18 +6034,8 @@
         },
         {
           "type": "closedSyllable",
-          "letter": "و",
-          "mark": "damma"
-        },
-        {
-          "type": "closedSyllable",
           "letter": "ي",
           "mark": "fatha"
-        },
-        {
-          "type": "closedSyllable",
-          "letter": "ي",
-          "mark": "kasra"
         },
         {
           "type": "closedSyllable",

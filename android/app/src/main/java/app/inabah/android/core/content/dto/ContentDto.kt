@@ -107,7 +107,11 @@ data class ReadingLetterDto(
     val joinsPrevious: Boolean = true,
     /** Подставка слога по знакам: у алифа - хамза на алифе (`kasra` → `إ`); нет знака - сама буква. */
     val syllableBases: Map<String, String> = emptyMap(),
-    /** `{ sound, name, <знак> }` → имя файла или `null`; пустой объект - записей нет. */
+    /** Буква с сукуном в закрытом слоге, если не сама буква: у алифа и хамзы - `أ` (`إِأْ`). */
+    val closedBase: String? = null,
+    /** После каких огласовок у буквы бывает закрытый слог (у و ي - только `fatha`: أُوْ, إِيْ - мадд); нет - после всех. */
+    val closedVowels: List<String>? = null,
+    /** `{ name, <знак>, closedFatha, closedKasra, closedDamma }` → имя файла или `null`; пустой объект - записей нет. */
     val audio: Map<String, String?> = emptyMap(),
     val translations: Map<String, ReadingLetterTranslationDto>,
 )

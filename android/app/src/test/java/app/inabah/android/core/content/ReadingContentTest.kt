@@ -32,7 +32,7 @@ class ReadingContentTest {
     }
 
     @Test
-    fun `Слоги и звук строятся из буквы и знака — у алифа хамза на подставке`() = runTest {
+    fun `Слоги и закрытые слоги строятся из буквы и знака — у алифа хамза на подставке`() = runTest {
         val course = loadAssetCourse()
         val fatha = course.marks.first { it.id == "fatha" }
         val sukun = requireNotNull(course.sukun)
@@ -42,15 +42,20 @@ class ReadingContentTest {
         assertEquals("لَ", lam.syllable(fatha))
         assertEquals("льа", lam.transliteration(fatha))
         assertEquals("ль", lam.transliteration(sukun), "с сукуном — звук буквы")
-        assertEquals("ـلْ", lam.soundArabic(sukun))
+        assertEquals("أَلْ", lam.closedSyllable(alif, fatha, sukun), "закрытый слог - алиф-хамза с огласовкой и буква с сукуном")
+        assertEquals("ъаль", lam.closedTransliteration(alif, "fatha"))
         val kasra = course.marks.first { it.id == "kasra" }
         val hamza = course.letters.last()
         assertEquals("أَ", alif.syllable(fatha))
         assertEquals("إِ", alif.syllable(kasra))
-        assertEquals("أْ", alif.soundArabic(sukun))
         assertTrue(alif.note != null, "у алифа - пояснение")
         assertEquals("ءَ", hamza.syllable(fatha))
-        assertEquals("ءْ", hamza.soundArabic(sukun), "хамза ни с чем не соединяется - без татвиля")
+        assertEquals("إِأْ", hamza.closedSyllable(alif, kasra, sukun), "хамза с сукуном - на алифе при любой огласовке")
+        assertEquals("إِأْ", alif.closedSyllable(alif, kasra, sukun), "у алифа - те же закрытые слоги, что у хамзы")
+        assertEquals("ъиъ", hamza.closedTransliteration(alif, "kasra"))
+        val waw = course.letters.first { it.letter == "و" }
+        assertEquals(listOf("fatha", "kasra"), waw.closedVowels, "у вав - «ъав», «ъив»: أُوْ - мадд")
+        assertEquals(listOf("fatha", "kasra", "damma"), lam.closedVowels)
         val fathatan = course.marks.first { it.id == "fathatan" }
         assertEquals("لًا", lam.syllable(fathatan), "после танвина фатхьи - алиф, он не читается")
         assertEquals("أً", alif.syllable(fathatan), "у алифа второго алифа нет")
@@ -162,18 +167,27 @@ class ReadingContentTest {
     }
 
     @Test
-    fun `Шаг 7 - сукун, закрытые слоги формулами, вопросы со звуком буквы, 60 слов`() = runTest {
+    fun `Шаг 7 - сукун, формулы только в примере, закрытые слоги таблицей, мадд у вав и йа, 60 слов`() = runTest {
         val step = requireNotNull(loadAssetCourse().step(7))
 
         assertEquals(listOf("sukun"), step.markIds)
-        val (pair, table, diphthongs) = step.blocks.filterIsInstance<ReadingBlock.Formulas>()
-        assertEquals(listOf("заз", "мин", "къуль"), pair.items.map { it.transliteration })
-        assertEquals(75, table.items.size, "25 букв (без ا ء و ي) × фатхьа, касра, домма")
+        val (pair, madd) = step.blocks.filterIsInstance<ReadingBlock.Formulas>()
+        assertEquals(listOf("заз", "мин", "къуль"), pair.items.map { it.transliteration }, "формула - только в первой карточке")
+        assertEquals(listOf("ъуу", "ъии"), madd.items.map { it.transliteration }, "أُوْ и إِيْ - мадд, не закрытый слог")
+        assertEquals(listOf("أُو", "إِي"), madd.items.map { it.result }, "после «=» буква мадда - без знака, как в шаге 6")
+        val table = step.blocks.filterIsInstance<ReadingBlock.ClosedSyllables>().single()
+        assertEquals(28, table.rows.size, "все буквы, кроме алифа")
+        assertEquals(82, table.all.size, "26 букв × 3, у вав и йа - по 2")
+        assertEquals(listOf("ъав", "ъив", null), table.rows.first { it.firstNotNullOf { c -> c }.letter.letter == "و" }.map { it?.transliteration })
+        assertEquals(listOf("ъай", null, "ъуй"), table.rows.first { it.firstNotNullOf { c -> c }.letter.letter == "ي" }.map { it?.transliteration })
+        assertEquals("أُأْ", table.all.last().arabic)
         assertEquals(6, table.sample, "на уроке - 6 случайных, весь алфавит - по кнопке")
-        assertEquals("ъаб", table.items.first().transliteration)
-        assertEquals(listOf("ъав", "ъай"), diphthongs.items.map { it.transliteration })
+        assertEquals("أَبْ", table.all.first().arabic)
+        assertEquals("ъаб", table.all.first().transliteration)
         val closed = step.quiz.filterIsInstance<ReadingQuestion.ClosedSyllable>()
         assertEquals(step.quiz.size, closed.size, "проверка - закрытые слоги, как в «Весь алфавит»")
+        assertTrue(closed.all { it.vowel.id in it.letter.closedVowels }, "мадд (أُوْ, إِيْ) - не закрытый слог")
+        assertTrue(closed.any { it.letter.letter == "و" && it.vowel.id == "kasra" }, "«ъив» - закрытый слог")
         val bi = closed.first { it.letter.letter == "ب" && it.vowel.id == "kasra" }
         assertEquals("إِبْ", bi.arabic)
         assertEquals("ъиб", bi.transliteration("kasra"))

@@ -20,7 +20,7 @@ import org.junit.Test
 /** «Учимся читать»: цепочка листа буквы, варианты ответа, текущий шаг. */
 class ReadingLogicTest {
     @Test
-    fun `Цепочка — название и слоги, звук только с шага «Сукун», до шага 2 огласовки не пройдены`() = runTest {
+    fun `Цепочка — название и слоги, закрытые слоги только с шага «Сукун», до шага 2 огласовки не пройдены`() = runTest {
         val course = loadAssetCourse()
         val lam = course.letters.first { it.letter == "ل" }
         val sukunStep = course.steps.first { "sukun" in it.markIds }.number
@@ -31,7 +31,17 @@ class ReadingLogicTest {
         assertEquals(listOf("льаам", "льа", "ли", "льу"), chain.map { it.transliteration })
         assertEquals(listOf(true, false, false, false), chain.map { it.isLearned })
         assertEquals(List(4) { true }, letterChain(course, lam, stepNumber = 2).map { it.isLearned })
-        assertEquals(LetterChainItem.Kind.Sound, letterChain(course, lam, sukunStep).first().kind, "с шага «Сукун» - звук первым")
+        val closed = letterChain(course, lam, sukunStep).filter { it.kind == LetterChainItem.Kind.Closed }
+        assertEquals(listOf("أَلْ", "إِلْ", "أُلْ"), closed.map { it.arabic }, "с шага «Сукун» - закрытые слоги")
+        assertEquals(listOf("ъаль", "ъиль", "ъуль"), closed.map { it.transliteration })
+        assertEquals(LetterChainItem.Kind.Closed, letterChain(course, lam, sukunStep).last().kind, "закрытые слоги - в конце")
+        assertTrue(letterChain(course, lam, sukunStep - 1).none { it.kind == LetterChainItem.Kind.Closed })
+        fun closedOf(char: String) = letterChain(course, course.letters.first { it.letter == char }, sukunStep)
+            .filter { it.kind == LetterChainItem.Kind.Closed }.map { it.transliteration }
+        assertEquals(listOf("ъаъ", "ъиъ", "ъуъ"), closedOf("ا"), "у алифа - закрытые слоги хамзы на алифе")
+        assertEquals(listOf("ъав", "ъив"), closedOf("و"), "у вав - без мадда (أُوْ)")
+        assertEquals(listOf("ъай", "ъуй"), closedOf("ي"), "у йа - без мадда (إِيْ)")
+        assertEquals(listOf("ъаъ", "ъиъ", "ъуъ"), closedOf("ء"))
     }
 
     @Test
@@ -46,6 +56,9 @@ class ReadingLogicTest {
         assertEquals(listOf("n.m4a"), letterChain(course, lam, stepNumber = 1).playableFiles(all), "до огласовок - только название")
         assertEquals(listOf("n.m4a", "d.m4a"), letterChain(course, lam, stepNumber = 2).playableFiles(setOf("n.m4a", "d.m4a")))
         assertEquals("n.m4a", lam.nameAudio)
+        val sukunStep = course.steps.first { "sukun" in it.markIds }.number
+        val closed = lam.copy(audio = lam.audio + ("closedKasra" to "ck.m4a"))
+        assertEquals("ck.m4a", letterChain(course, closed, sukunStep).playableFiles(all + "ck.m4a").last(), "закрытый слог - последним")
         assertNull(course.letters.first().nameAudio, "записей в данных пока нет")
     }
 
@@ -214,15 +227,15 @@ class ReadingLogicTest {
     }
 
     @Test
-    fun `Случайные формулы - разные, в порядке таблицы, те же при том же зерне`() = runTest {
+    fun `Случайные закрытые слоги - разные, в порядке таблицы, те же при том же зерне`() = runTest {
         val items = requireNotNull(loadAssetCourse().step(7)).blocks
-            .filterIsInstance<ReadingBlock.Formulas>().first { it.sample != null }.items
-        val sample = sampleFormulas(items, 6, seed = 7)
+            .filterIsInstance<ReadingBlock.ClosedSyllables>().single().all
+        val sample = sampleClosedSyllables(items, 6, seed = 7)
 
         assertEquals(6, sample.toSet().size)
         assertEquals(sample, sample.sortedBy { items.indexOf(it) })
-        assertEquals(sample, sampleFormulas(items, 6, seed = 7))
-        assertEquals(items, sampleFormulas(items, 100, seed = 1), "больше, чем есть - все")
+        assertEquals(sample, sampleClosedSyllables(items, 6, seed = 7))
+        assertEquals(items, sampleClosedSyllables(items, 100, seed = 1), "больше, чем есть - все")
     }
 
     @Test
@@ -237,7 +250,7 @@ class ReadingLogicTest {
         assertEquals(listOf("бан", "бин", "бун"), options.map { it.text })
         assertEquals(listOf("бин"), options.filter { it.isCorrect }.map { it.text })
         // Лист буквы: танвин - только с его шага, и сразу не пунктиром.
-        assertEquals(listOf("бан", "бин", "бун"), letterChain(course, ba, step.number).takeLast(3).map { it.transliteration })
+        assertEquals(listOf("бан", "бин", "бун"), letterChain(course, ba, step.number).filter { it.kind == LetterChainItem.Kind.Syllable }.takeLast(3).map { it.transliteration })
         assertTrue(letterChain(course, ba, step.number).takeLast(3).all { it.isLearned })
         assertTrue(letterChain(course, ba, step.number - 1).none { it.transliteration == "бан" })
     }

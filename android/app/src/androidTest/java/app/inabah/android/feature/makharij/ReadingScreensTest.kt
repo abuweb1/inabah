@@ -1,33 +1,41 @@
 package app.inabah.android.feature.makharij
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.assertHasClickAction
+import androidx.compose.ui.test.assertHasNoClickAction
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.accessibility.enableAccessibilityChecks
 import androidx.compose.ui.test.junit4.createComposeRule
-import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.longClick
 import androidx.compose.ui.test.onAllNodesWithContentDescription
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTouchInput
-import androidx.compose.ui.test.longClick
 import androidx.compose.ui.test.swipeLeft
 import androidx.test.espresso.Espresso
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import app.inabah.android.core.content.AssetContentRepository
-import app.inabah.android.core.content.Loadable
 import app.inabah.android.core.content.ContentLanguage
 import app.inabah.android.core.content.ContentLanguagePriority
+import app.inabah.android.core.content.Loadable
+import app.inabah.android.core.content.model.ReadingBlock
+import app.inabah.android.core.content.model.ReadingLetter
+import app.inabah.android.core.content.model.closedSyllables
 import app.inabah.android.core.designsystem.InabahTheme
 import app.inabah.android.core.settings.ReadingProgress
 import app.inabah.android.core.settings.ReadingSettings
@@ -271,6 +279,41 @@ class ReadingScreensTest {
         compose.onNodeWithText("Прочитал целиком").performScrollTo().performClick()
         compose.waitUntil(TIMEOUT_MILLIS) { compose.onAllNodesWithContentDescription("Машаа Аллах!").fetchSemanticsNodes().isNotEmpty() }
         assertTrue(final.number in progress.lessonsDone.value)
+    }
+
+    @Test
+    fun letterSheetShowsClosedSyllablesFromSukunStep() {
+        val course = (store.course.value as Loadable.Loaded).value
+        val ba = course.letters.first { it.letter == "ب" }
+        compose.setContent {
+            InabahTheme {
+                Box(Modifier.fillMaxSize()) {
+                    LetterSheet(course, ba, stepNumber = 7, transliterationHidden = false, onDismiss = {}, contentPadding = PaddingValues())
+                }
+            }
+        }
+        waitForText("2-я буква")
+        // Согласная с сукуном одна не произносится - закрытые слоги, а не «звук б».
+        for (closed in listOf("ъаб", "ъиб", "ъуб")) compose.onNodeWithContentDescription("сукун, $closed").assertExists()
+    }
+
+    @Test
+    fun closedSyllableWithRecordingPlaysOnTap() {
+        val course = (store.course.value as Loadable.Loaded).value
+        val file = "reading_02_closed_fatha.m4a"
+        val ba = course.letters.first { it.letter == "ب" }.copy(audio = mapOf("closedFatha" to file))
+        val vowels = course.marks.filter { it.id in ReadingLetter.CLOSED_VOWELS }
+        val row = closedSyllables(ba, requireNotNull(course.alif), vowels, requireNotNull(course.sukun))
+        val played = mutableListOf<String>()
+        compose.setContent {
+            InabahTheme {
+                ClosedSyllablesTable(ReadingBlock.ClosedSyllables(vowels, listOf(row)), hidden = false, clips = setOf(file), onPlay = { played += it })
+            }
+        }
+        // Слог - без формулы, просто «أَبْ»; с записью нажимается, без записи - нет.
+        compose.onNodeWithContentDescription("Ба, ъаб").assertHasClickAction().performClick()
+        compose.onNodeWithContentDescription("Ба, ъиб").assertHasNoClickAction()
+        assertEquals(listOf(file), played)
     }
 
     private fun hasStateDescriptionPrefix(prefix: String) = SemanticsMatcher("StateDescription начинается с «$prefix»") {

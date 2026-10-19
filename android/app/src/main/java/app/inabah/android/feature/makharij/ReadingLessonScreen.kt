@@ -41,7 +41,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
@@ -49,6 +51,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.AnnotatedString
@@ -70,6 +73,7 @@ import app.inabah.android.core.audio.playToEnd
 import app.inabah.android.core.content.Loadable
 import app.inabah.android.core.content.model.LetterForm
 import app.inabah.android.core.content.model.ReadingBlock
+import app.inabah.android.core.content.model.ReadingClosedSyllable
 import app.inabah.android.core.content.model.ReadingFormula
 import app.inabah.android.core.content.model.ReadingLetter
 import app.inabah.android.core.content.model.ReadingMark
@@ -286,10 +290,11 @@ private fun LessonContent(
                         val index = step.zikrs.indexOf(block)
                         ZikrCard(block, index, zikrs[block.zikr]) { onOpenZikr(index) }
                     }
-                    is ReadingBlock.Formulas -> if (block.sample != null) {
-                        SampleFormulas(block, block.sample, hidden, onOpenAlphabet)
+                    is ReadingBlock.Formulas -> FormulasBlock(block.items, block.columns, hidden)
+                    is ReadingBlock.ClosedSyllables -> if (block.sample != null) {
+                        SampleClosedSyllables(block, block.sample, hidden, clips, onPlayClip, onOpenAlphabet)
                     } else {
-                        FormulasBlock(block.items, block.columns, hidden)
+                        ClosedSyllablesTable(block, hidden, clips, onPlayClip)
                     }
                 }
             }
@@ -814,30 +819,135 @@ internal fun FormulasBlock(items: List<ReadingFormula>, columns: Int, hidden: Bo
 }
 
 /**
- * Карточка случайных формул (закрытые слоги сукуна) и под ней «Прочтите весь алфавит» - все формулы
- * отдельным экраном (решение пользователя 2026-10-16, как слоги шага «Огласовки»). Набор - при каждом
- * открытии урока свой, переживает поворот.
+ * Карточка случайных закрытых слогов (решение пользователя 2026-10-16, как слоги шага «Огласовки»; с 2026-10-19 -
+ * без формул, просто слог: «ъахь · ъиб · ъук») и под ней «Прочтите весь алфавит» - вся таблица отдельным экраном.
+ * Набор - при каждом открытии урока свой, переживает поворот.
  */
 @Composable
-private fun SampleFormulas(block: ReadingBlock.Formulas, count: Int, hidden: Boolean, onOpenAlphabet: () -> Unit) {
+private fun SampleClosedSyllables(
+    block: ReadingBlock.ClosedSyllables,
+    count: Int,
+    hidden: Boolean,
+    clips: Set<String>,
+    onPlay: (String) -> Unit,
+    onOpenAlphabet: () -> Unit,
+) {
     val seed = rememberSaveable { Random.nextInt() }
-    val sample = remember(block, count, seed) { sampleFormulas(block.items, count, seed) }
+    val sample = remember(block, count, seed) { sampleClosedSyllables(block.all, count, seed) }
     Column(verticalArrangement = Arrangement.spacedBy(Spacing.m)) {
-        FormulasBlock(sample, block.columns, hidden)
+        ParchmentPanel(topCornerRadius = Radius.card, bottomCornerRadius = Radius.card) {
+            CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+                Column(verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
+                    for (row in sample.chunked(SAMPLE_COLUMNS)) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
+                            for (cell in row) ClosedSyllableCell(cell, hidden, clips, onPlay, Modifier.weight(1f))
+                            repeat(SAMPLE_COLUMNS - row.size) { Spacer(Modifier.weight(1f)) }
+                        }
+                    }
+                }
+            }
+        }
         ReadingOutlineButton(stringResource(R.string.makharij_alphabet_formulas_open), onClick = onOpenAlphabet)
     }
 }
 
 /**
- * Все формулы («Весь алфавит» сукуна): по [SYLLABLE_ROWS_PER_CARD] ряда на карточку, как таблица слогов;
- * формулы во всю ширину (по одной в строку, решение пользователя 2026-10-17) - по [WIDE_FORMULAS_PER_CARD]:
- * буква с тремя огласовками.
+ * Все закрытые слоги («Весь алфавит» сукуна): по [SYLLABLE_ROWS_PER_CARD] буквы на карточку, как таблица слогов;
+ * ряд - буква, столбцы - фатхьа, касра, домма справа налево; нет слога (мадд у و ي) - пустое место.
  */
 @Composable
-internal fun FormulasCards(items: List<ReadingFormula>, columns: Int, hidden: Boolean) {
-    val perCard = if (columns == 1) WIDE_FORMULAS_PER_CARD else columns * SYLLABLE_ROWS_PER_CARD
+internal fun ClosedSyllablesTable(
+    block: ReadingBlock.ClosedSyllables,
+    hidden: Boolean,
+    clips: Set<String>,
+    onPlay: (String) -> Unit,
+) {
     Column(verticalArrangement = Arrangement.spacedBy(Spacing.m)) {
-        for (chunk in items.chunked(perCard)) FormulasBlock(chunk, columns, hidden)
+        for (chunk in block.rows.chunked(SYLLABLE_ROWS_PER_CARD)) {
+            ParchmentPanel(topCornerRadius = Radius.card, bottomCornerRadius = Radius.card) {
+                CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+                    Column(verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
+                        for (row in chunk) {
+                            Row(horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
+                                for (cell in row) {
+                                    if (cell != null) ClosedSyllableCell(cell, hidden, clips, onPlay, Modifier.weight(1f))
+                                    else Spacer(Modifier.weight(1f))
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Ячейка закрытого слога на пергаменте: слог и транскрипция под ним. Есть запись ([ReadingClosedSyllable.audio]
+ * в [clips]) - 🔊 в углу, нажатие проигрывает её (как слова-примеры форм); нет - не нажимается.
+ */
+@Composable
+private fun ClosedSyllableCell(
+    cell: ReadingClosedSyllable,
+    hidden: Boolean,
+    clips: Set<String>,
+    onPlay: (String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val palette = InabahTheme.palette
+    val colors = readingColors
+    val haptics = LocalHapticFeedback.current
+    val listen = stringResource(R.string.makharij_word_listen)
+    val interaction = remember { MutableInteractionSource() }
+    val play = cell.audio?.takeIf { it in clips }?.let { file ->
+        {
+            haptics.performHapticFeedback(HapticFeedbackType.ContextClick)
+            onPlay(file)
+        }
+    }
+    Box(
+        modifier
+            .then(
+                if (play != null) {
+                    Modifier
+                        .clickable(interaction, indication = null, role = Role.Button, onClick = play)
+                        .pressFeedback(interaction, scale = PressFeedback.ICON_SCALE)
+                } else {
+                    Modifier
+                },
+            )
+            .surface(colors.parchmentCell, Radius.box, border = colors.parchmentCellBorder)
+            .clearAndSetSemantics {
+                contentDescription = "${cell.letter.name}, ${cell.transliteration}"
+                if (play != null) onClick(listen) { play(); true }
+            },
+    ) {
+        Column(
+            Modifier
+                .fillMaxWidth()
+                // Сверху - место под знак над хамзой на алифе (أُ касалась края ячейки).
+                .padding(vertical = Spacing.xs),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            ArabicText(cell.arabic, SYLLABLE_SIZE, palette.parchmentText, bold = true)
+            Text(
+                cell.transliteration,
+                color = colors.parchmentCaption,
+                style = InabahType.caption,
+                modifier = Modifier.padding(top = Spacing.xs).alpha(transliterationAlpha(hidden)),
+            )
+        }
+        if (play != null) {
+            Icon(
+                painterResource(R.drawable.ic_volume_up),
+                contentDescription = null,
+                tint = colors.parchmentCaption,
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .padding(Spacing.xxs)
+                    .size(SpeakerSize),
+            )
+        }
     }
 }
 
@@ -901,7 +1011,6 @@ private const val LETTER_MILLIS = 2_000L
 private const val ALPHABET_GAP_MILLIS = 500L
 private const val PLAYING_SCALE = 1.2f
 private const val SYLLABLE_ROWS_PER_CARD = 4
-private const val WIDE_FORMULAS_PER_CARD = 3
 private const val SAMPLE_COLUMNS = 3
 private const val FORMULA_SIZE = 32f
 private const val FORMULA_PARTS_SIZE = 22f

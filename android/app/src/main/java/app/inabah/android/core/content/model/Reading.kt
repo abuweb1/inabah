@@ -19,6 +19,9 @@ data class ReadingCourse(
 
     /** Звук буквы - она же с сукуном; сукуна в данных нет - `null`. */
     val sukun: ReadingMark? get() = marks.firstOrNull { it.id == ReadingMark.SUKUN }
+
+    /** Алиф - подставка огласовки в закрытых слогах (`أَبْ`); нет в данных - `null`. */
+    val alif: ReadingLetter? get() = letters.firstOrNull { it.letter == ReadingLetter.ALIF }
 }
 
 /** Знак огласовки; [id] - слово латиницей (`fatha`), по нему ссылаются шаги и слоги. */
@@ -62,10 +65,20 @@ data class ReadingLetter(
     val sound: String,
     /** Транскрипция слогов по знакам: `fatha` → «льа». */
     val syllables: Map<String, String>,
-    /** Записи: `sound`, `name`, `<знак>` → имя файла; записи нет - ключа нет. */
+    /** Записи: `name`, `<знак>`, `closedFatha` / `closedKasra` / `closedDamma` → имя файла; записи нет - ключа нет. */
     val audio: Map<String, String>,
     /** Пояснение в листе буквы (алиф не бывает сам по себе); нет - `null`. */
     val note: String? = null,
+    /**
+     * Буква с сукуном в закрытом слоге, если не сама буква: у алифа и хамзы - хамза на алифе `أ` при любой огласовке
+     * (`أَأْ إِأْ أُأْ`, решение пользователя 2026-10-19); `null` - сама буква.
+     */
+    val closedBase: String? = null,
+    /**
+     * Огласовки алифа, после которых у буквы бывает закрытый слог (решение пользователя 2026-10-19): у و ي - только
+     * фатхьа («ъав», «ъай»), أُوْ и إِيْ - мадд, إِوْ и أُيْ не бывает.
+     */
+    val closedVowels: List<String> = CLOSED_VOWELS,
 ) {
     private fun base(mark: ReadingMark): String = syllableBases[mark.id] ?: letter
 
@@ -99,17 +112,23 @@ data class ReadingLetter(
         if (mark.id == ReadingMark.SUKUN) sound else syllables[mark.id]
 
     /**
-     * Звук буквы на письме: с сукуном и татвилем перед ней (`ـلْ`, как в конце слова); без татвиля -
-     * у подставки (алиф → `أْ`) и у буквы, которая ни с чем не соединяется (хамза → `ءْ`).
+     * Закрытый слог (решение пользователя 2026-10-19: согласная с сукуном одна не произносится): алиф-хамза [alif]
+     * с огласовкой [vowel] и эта буква с сукуном - `أَبْ`; у алифа и хамзы - хамза на алифе ([closedBase], `إِأْ`).
      */
-    fun soundArabic(sukun: ReadingMark): String {
-        val base = base(sukun)
-        return if (base == letter && joinsPrevious) TATWEEL + letter + sukun.sign else base + sukun.sign
-    }
+    fun closedSyllable(alif: ReadingLetter, vowel: ReadingMark, sukun: ReadingMark): String =
+        alif.syllable(vowel) + (closedBase ?: letter) + sukun.sign
+
+    /** Транскрипция закрытого слога с огласовкой алифа [vowelId]: «ъиб». */
+    fun closedTransliteration(alif: ReadingLetter, vowelId: String): String = alif.syllables[vowelId].orEmpty() + sound
 
     companion object {
         const val TATWEEL = "ـ"
-        private const val ALIF = "ا"
+        const val ALIF = "ا"
+        val CLOSED_VOWELS = listOf("fatha", "kasra", "damma")
+        private val CLOSED_AUDIO_KEYS = mapOf("fatha" to "closedFatha", "kasra" to "closedKasra", "damma" to "closedDamma")
+
+        /** Ключ записи закрытого слога с огласовкой [vowelId] в [audio]; не огласовка закрытого слога - `null`. */
+        fun closedAudioKey(vowelId: String): String? = CLOSED_AUDIO_KEYS[vowelId]
         private const val SEAT_ALIF = "أ"
     }
 }
@@ -230,6 +249,33 @@ data class ReadingJoin(val arabic: String, val transliteration: String, val note
 /** Формула блока [ReadingBlock.Formulas]: части, итог и его транскрипция (`null` - без подписи). */
 data class ReadingFormula(val parts: List<String>, val result: String, val transliteration: String?)
 
+/**
+ * Закрытый слог (решение пользователя 2026-10-19: согласная с сукуном одна не произносится): буква [letter],
+ * огласовка алифа перед ней [vowel], как пишется (`أَبْ`) и читается («ъаб»), запись (`null` - нет).
+ */
+data class ReadingClosedSyllable(
+    val letter: ReadingLetter,
+    val vowel: ReadingMark,
+    val arabic: String,
+    val transliteration: String,
+    val audio: String?,
+)
+
+/**
+ * Закрытые слоги [letter] по огласовкам [vowels] (фатхьа, касра, домма), после которых они у неё бывают
+ * ([ReadingLetter.closedVowels]): алиф-хамза [alif] с огласовкой и буква с сукуном [sukun].
+ */
+fun closedSyllables(letter: ReadingLetter, alif: ReadingLetter, vowels: List<ReadingMark>, sukun: ReadingMark): List<ReadingClosedSyllable> =
+    vowels.filter { it.id in letter.closedVowels }.map { vowel ->
+        ReadingClosedSyllable(
+            letter = letter,
+            vowel = vowel,
+            arabic = letter.closedSyllable(alif, vowel, sukun),
+            transliteration = letter.closedTransliteration(alif, vowel.id),
+            audio = ReadingLetter.closedAudioKey(vowel.id)?.let(letter.audio::get),
+        )
+    }
+
 /** Блок урока; неизвестные типы данных сюда не попадают. */
 sealed interface ReadingBlock {
     /** Короткий текст; [info] - полный, во всплывающем окне по ⓘ. */
@@ -264,10 +310,23 @@ sealed interface ReadingBlock {
     /**
      * Формулы на пергаменте (мадд, 2026-10-15): части через «+» и итог после «=», справа налево -
      * «بَ + ا = بَا»; одна часть - равенство («تَشَٰبَهَ = تَشَابَهَ»). [columns] - формул в ряду.
-     * [sample] - на уроке столько случайных формул и «Прочтите весь алфавит», все - отдельным экраном
-     * (закрытые слоги сукуна, решение пользователя 2026-10-16); `null` - все на уроке.
      */
-    data class Formulas(val columns: Int, val items: List<ReadingFormula>, val sample: Int? = null) : ReadingBlock
+    data class Formulas(val columns: Int, val items: List<ReadingFormula>) : ReadingBlock
+
+    /**
+     * Закрытые слоги шага «Сукун» (решение пользователя 2026-10-19: без формул, просто слог - «ъахь», «ъиб»):
+     * ряд на букву, столбцы - [vowels] (фатхьа, касра, домма); `null` - после этой огласовки у буквы закрытого
+     * слога нет (у و - после доммы, у ي - после касры: мадд). [sample] - на уроке столько случайных и
+     * «Прочтите весь алфавит», все - отдельным экраном; `null` - вся таблица на уроке.
+     */
+    data class ClosedSyllables(
+        val vowels: List<ReadingMark>,
+        val rows: List<List<ReadingClosedSyllable?>>,
+        val sample: Int? = null,
+    ) : ReadingBlock {
+        /** Все слоги таблицы по порядку. */
+        val all: List<ReadingClosedSyllable> get() = rows.flatMap { it.filterNotNull() }
+    }
 
     /**
      * Тема урока (шаг «Особые случаи», решение пользователя 2026-10-17): карточка с названием, кратким
@@ -316,14 +375,14 @@ sealed interface ReadingQuestion {
         val alif: ReadingLetter,
         val sukun: ReadingMark,
     ) : ReadingQuestion {
-        val arabic: String get() = alif.syllable(vowel) + letter.letter + sukun.sign
+        val arabic: String get() = letter.closedSyllable(alif, vowel, sukun)
 
         /** Транскрипция слога с огласовкой [vowelId]: «ъиб». */
-        fun transliteration(vowelId: String): String = alif.syllables[vowelId].orEmpty() + letter.sound
+        fun transliteration(vowelId: String): String = letter.closedTransliteration(alif, vowelId)
 
         companion object {
             /** Огласовки алифа в вариантах ответа, по порядку. */
-            val VOWELS = listOf("fatha", "kasra", "damma")
+            val VOWELS = ReadingLetter.CLOSED_VOWELS
         }
     }
 

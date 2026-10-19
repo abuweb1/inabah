@@ -156,7 +156,6 @@
     <string name="makharij_alphabet_table_title">Весь алфавит</string>
     <string name="makharij_chain_locked">%1$s, %2$s, ещё не пройдено</string>
     <string name="makharij_chain_name">название</string>
-    <string name="makharij_chain_sound">звук</string>
     <string name="makharij_done_step">Шаг %1$d «%2$s» пройден</string>
     <string name="makharij_done_final">Итог «%1$s» пройден</string>
     <string name="makharij_final_title">Итог · %1$s</string>
