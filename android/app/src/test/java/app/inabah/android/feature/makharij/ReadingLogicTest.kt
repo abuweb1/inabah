@@ -52,7 +52,7 @@ class ReadingLogicTest {
     @Test
     fun `Варианты слога — тот же слог с пройденными знаками, по порядку`() = runTest {
         val course = loadAssetCourse()
-        val question = course.step(2)!!.quiz.first() as ReadingQuestion.Syllable
+        val question = course.step(2)!!.quiz.filterIsInstance<ReadingQuestion.Syllable>().first { it.letter.letter == "ب" && it.mark.id == "damma" }
 
         val options = quizOptions(course, question, stepNumber = 2)
 
@@ -146,7 +146,7 @@ class ReadingLogicTest {
         val course = loadAssetCourse()
         val step = requireNotNull(course.step(7))
         val questions = step.quiz.filterIsInstance<ReadingQuestion.ClosedSyllable>()
-        val ba = questions.first { it.letter.letter == "ب" }
+        val ba = questions.first { it.letter.letter == "ب" && it.vowel.id == "kasra" }
 
         assertEquals(listOf("ъаб", "ъиб", "ъуб"), quizOptions(course, ba, step.number).map { it.text })
         assertEquals(listOf("ъиб"), quizOptions(course, ba, step.number).filter { it.isCorrect }.map { it.text })
@@ -382,6 +382,44 @@ class ReadingLogicTest {
         assertFalse(hasProgress(final, emptySet(), emptyMap(), mapOf(zikr to ZikrProgress())))
         assertTrue(hasProgress(final, emptySet(), emptyMap(), mapOf(zikr to ZikrProgress(setOf(0)))))
         assertTrue(hasProgress(final, emptySet(), emptyMap(), mapOf(zikr to ZikrProgress(isRead = true))))
+    }
+
+    @Test
+    fun `Заход в проверку - 16 разных вопросов из запаса, варианты перемешаны, верный один`() = runTest {
+        val course = loadAssetCourse()
+        val step = requireNotNull(course.step(2))
+
+        val round = quizRound(course, step, seed = 1)
+
+        assertEquals(16, round.size)
+        assertEquals(16, round.map { it.question }.toSet().size, "без повторов")
+        assertTrue(round.all { it.question in step.quiz })
+        for ((question, options) in round) {
+            assertEquals(quizOptions(course, question, step.number).toSet(), options.toSet(), "те же варианты")
+            assertEquals(1, options.count { it.isCorrect })
+        }
+        val places = (1L..20L).flatMap { seed -> quizRound(course, step, seed).map { item -> item.options.indexOfFirst { it.isCorrect } } }
+        assertEquals(setOf(0, 1, 2), places.toSet(), "верный - на любом месте")
+    }
+
+    @Test
+    fun `Заход в проверку - тот же для одного зерна, другие зерна - другие вопросы`() = runTest {
+        val course = loadAssetCourse()
+        val step = requireNotNull(course.step(9))
+
+        assertEquals(quizRound(course, step, seed = 7), quizRound(course, step, seed = 7), "поворот экрана - тот же заход")
+        val rounds = (1L..5L).map { seed -> quizRound(course, step, seed).map { it.question }.toSet() }
+        assertTrue(rounds.toSet().size > 1, "каждый заход - свои вопросы")
+    }
+
+    @Test
+    fun `Заход в экзамен - все 20 вопросов, только в другом порядке`() = runTest {
+        val course = loadAssetCourse()
+        val step = requireNotNull(course.step(12))
+
+        val round = quizRound(course, step, seed = 3)
+
+        assertEquals(step.quiz.toSet(), round.map { it.question }.toSet())
     }
 
     @Test

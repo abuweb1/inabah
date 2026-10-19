@@ -80,7 +80,7 @@ private const val OPTION_COUNT = 3
 data class QuizOption(val text: String, val isCorrect: Boolean)
 
 /**
- * Варианты ответа по порядку (без случайности - одинаково при каждом открытии):
+ * Варианты ответа в постоянном порядке (на экране они перемешаны - [quizRound]):
  * - слог - тот же слог с другими знаками, пройденными к шагу [stepNumber] (у которых у буквы есть
  *   транскрипция), по порядку знаков: «ба · би · бу»; верный - всегда среди них; у танвина варианты -
  *   танвины: «бан · бин · бун»;
@@ -124,6 +124,21 @@ fun quizOptions(course: ReadingCourse, question: ReadingQuestion, stepNumber: In
             letters.drop(start).take(OPTION_COUNT).map { QuizOption(it.name, it == question.letter) }
         }
     }
+
+/** Вопрос захода в проверку и его варианты в том порядке, в каком они на экране. */
+data class QuizItem(val question: ReadingQuestion, val options: List<QuizOption>)
+
+/**
+ * Заход в проверку (просьба пользователя 2026-10-19: каждый раз другие вопросы): [ReadingStep.quizCount]
+ * случайных вопросов из запаса шага (меньше в запасе - все) в случайном порядке, варианты каждого перемешаны.
+ * [seed] - одно на заход: тот же заход (поворот экрана) - те же вопросы и варианты.
+ */
+fun quizRound(course: ReadingCourse, step: ReadingStep, seed: Long): List<QuizItem> {
+    val random = Random(seed)
+    return step.quiz.shuffled(random).take(step.quizCount).map { question ->
+        QuizItem(question, quizOptions(course, question, step.number).shuffled(random))
+    }
+}
 
 /**
  * Текущий шаг - первый с уроком, ещё не пройденный; все пройдены - `null`. Шаги без урока

@@ -56,7 +56,11 @@ import app.inabah.android.core.designsystem.components.ArabicText
 import app.inabah.android.core.designsystem.components.ParchmentPanel
 import app.inabah.android.core.designsystem.components.pressFeedback
 import app.inabah.android.core.designsystem.components.surface
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.geometry.Rect
 
 /**
  * Карточка буквы (вариант B, просьба пользователя 2026-10-15: новичку одной таблицы мало): буква крупно,
@@ -81,6 +85,16 @@ fun ReadingLetterFormsScreen(
     val start = letters.indexOfFirst { it.letter == letter }.coerceAtLeast(0)
     val pager = rememberPagerState(start) { letters.size }
     val scope = rememberCoroutineScope()
+    // Подсказка (просьба пользователя 2026-10-19): транскрипция слов-примеров на миг, как в «Читаем слова».
+    var peek by remember { mutableStateOf(false) }
+    var peekRequest by remember { mutableIntStateOf(0) }
+    LaunchedEffect(peekRequest) {
+        if (peekRequest == 0) return@LaunchedEffect
+        delay(TRANSLITERATION_HINT_MILLIS)
+        peek = false
+    }
+    // Увеличенное слово-пример (долгое нажатие, как в «Читаем слова»).
+    var zoom by remember { mutableStateOf<ExampleZoom?>(null) }
     // Курс мог загрузиться позже первого показа (тогда страница - 0): один раз встать на нажатую букву.
     var positioned by rememberSaveable { mutableStateOf(false) }
     LaunchedEffect(letters.size) {
@@ -95,28 +109,69 @@ fun ReadingLetterFormsScreen(
         subtitle = if (letters.isNotEmpty()) stringResource(R.string.makharij_forms_position, pager.currentPage + 1, letters.size) else null,
         onBack = onBack,
         modifier = modifier,
+        actions = {
+            if (forms?.examples?.values?.any { it.transliterations.isNotEmpty() } == true) {
+                TransliterationHint {
+                    peek = true
+                    peekRequest++
+                }
+            }
+        },
     ) { _ ->
         if (forms == null || letters.isEmpty()) return@ReadingScaffold
-        Column(Modifier.fillMaxSize()) {
-            GroupStrip(letters, pager.currentPage) { scope.launch { pager.animateScrollToPage(it) } }
-            // Листать - в ту же сторону, что стоят буквы в ряду сверху: справа налево.
-            CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
-                HorizontalPager(state = pager, modifier = Modifier.weight(1f), verticalAlignment = Alignment.Top) { page ->
-                    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-                        LetterFormsPage(
-                            stepNumber = stepNumber,
-                            letter = letters[page],
-                            examples = forms.examples[letters[page]],
-                            clips = clips,
-                            onPlayClip = onPlayClip,
-                            contentPadding = contentPadding,
-                        )
+        Box(Modifier.fillMaxSize()) {
+            Column(Modifier.fillMaxSize()) {
+                GroupStrip(letters, pager.currentPage) { scope.launch { pager.animateScrollToPage(it) } }
+                // Листать - в ту же сторону, что стоят буквы в ряду сверху: справа налево.
+                CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+                    HorizontalPager(state = pager, modifier = Modifier.weight(1f), verticalAlignment = Alignment.Top) { page ->
+                        CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                            LetterFormsPage(
+                                stepNumber = stepNumber,
+                                letter = letters[page],
+                                examples = forms.examples[letters[page]],
+                                clips = clips,
+                                onPlayClip = onPlayClip,
+                                showTransliteration = peek,
+                                zoomed = zoom?.takeIf { it.letter == letters[page] }?.form,
+                                onZoom = { form, bounds -> zoom = ExampleZoom(letters[page], form, bounds) },
+                                contentPadding = contentPadding,
+                            )
+                        }
                     }
+                }
+            }
+            zoom?.let { current ->
+                val examples = forms.examples[current.letter] ?: return@let
+                TileZoomOverlay(
+                    key = current,
+                    from = current.from,
+                    fromTextSize = EXAMPLE_WORD,
+                    textSize = ZOOM_EXAMPLE_WORD,
+                    onDismiss = { zoom = null },
+                ) { scale, tileModifier ->
+                    ExampleWordCell(
+                        word = examples.word(current.form).orEmpty(),
+                        letter = current.letter,
+                        form = current.form,
+                        audioFile = formExampleAudio(stepNumber, current.letter, current.form),
+                        clips = clips,
+                        onPlay = onPlayClip,
+                        size = ZOOM_EXAMPLE_WORD,
+                        transliteration = examples.transliteration(current.form),
+                        showTransliteration = peek,
+                        zoomed = true,
+                        contentScale = scale,
+                        modifier = tileModifier,
+                    )
                 }
             }
         }
     }
 }
+
+/** Увеличенное слово-пример: буква, место слова и где стояла ячейка (в координатах корня). */
+private data class ExampleZoom(val letter: ReadingLetter, val form: LetterForm, val from: Rect)
 
 /** Ряд букв группы справа налево; текущая выделена, нажатие - перейти. */
 @Composable
@@ -160,7 +215,7 @@ private fun GroupStrip(letters: List<ReadingLetter>, current: Int, onSelect: (In
     }
 }
 
-/** Страница буквы: крупно, три формы с подписями, слова-примеры. */
+/** Страница буквы: крупно, три формы с подписями, слова-примеры (долгое нажатие - увеличить). */
 @Composable
 private fun LetterFormsPage(
     stepNumber: Int,
@@ -168,6 +223,10 @@ private fun LetterFormsPage(
     examples: FormExamples?,
     clips: Set<String>,
     onPlayClip: (String) -> Unit,
+    showTransliteration: Boolean,
+    /** Место слова, увеличенного сейчас: его ячейка на месте не видна (она «вылетела» в центр). */
+    zoomed: LetterForm?,
+    onZoom: (LetterForm, Rect) -> Unit,
     contentPadding: PaddingValues,
 ) {
     val palette = InabahTheme.palette
@@ -196,16 +255,22 @@ private fun LetterFormsPage(
                     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
                         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Spacing.xs)) {
                             for (form in placed) {
-                                ExampleWordCell(
-                                    word = examples.word(form).orEmpty(),
-                                    letter = letter,
-                                    form = form,
-                                    audioFile = formExampleAudio(stepNumber, letter, form),
-                                    clips = clips,
-                                    onPlay = onPlayClip,
-                                    size = EXAMPLE_WORD,
-                                    modifier = Modifier.weight(1f),
-                                )
+                                // Ячейка - слева направо, как увеличенная (значок 🔊 - в том же углу при полёте).
+                                CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                                    ExampleWordCell(
+                                        word = examples.word(form).orEmpty(),
+                                        letter = letter,
+                                        form = form,
+                                        audioFile = formExampleAudio(stepNumber, letter, form),
+                                        clips = clips,
+                                        onPlay = onPlayClip,
+                                        size = EXAMPLE_WORD,
+                                        transliteration = examples.transliteration(form),
+                                        showTransliteration = showTransliteration,
+                                        onZoom = { bounds -> onZoom(form, bounds) },
+                                        modifier = Modifier.weight(1f).alpha(if (form == zoomed) 0f else 1f),
+                                    )
+                                }
                             }
                         }
                     }
@@ -246,3 +311,5 @@ private const val STRIP_LETTER = 20f
 private const val BIG_LETTER = 84f
 private const val FORM_LETTER = 34f
 private const val EXAMPLE_WORD = 26f
+/** Увеличенное слово-пример - как слово в «Читаем слова». */
+private const val ZOOM_EXAMPLE_WORD = 60f

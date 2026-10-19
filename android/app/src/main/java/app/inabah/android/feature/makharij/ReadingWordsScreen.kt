@@ -16,7 +16,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.material3.Icon
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -74,19 +73,13 @@ import app.inabah.android.core.settings.ReadingProgress
 import app.inabah.android.core.settings.ReadingSettings
 import kotlinx.coroutines.launch
 import kotlin.random.Random
-import androidx.compose.ui.util.lerp
 import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.boundsInRoot
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.geometry.Rect
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.background
-import androidx.compose.animation.core.Animatable
 import androidx.activity.compose.BackHandler
 import app.inabah.android.core.designsystem.components.FeaturedVerseBox
 import app.inabah.android.core.designsystem.components.FeaturedVerse
@@ -136,7 +129,7 @@ fun ReadingWordsScreen(
     var hintRequest by remember { mutableIntStateOf(0) }
     LaunchedEffect(hintRequest) {
         if (hintRequest == 0) return@LaunchedEffect
-        delay(HINT_MILLIS)
+        delay(TRANSLITERATION_HINT_MILLIS)
         hintPage = null
     }
     ReadingScaffold(
@@ -388,7 +381,7 @@ internal fun WordTile(
     /** Долгое нажатие - увеличить: где плитка на экране (в координатах корня); нет - не увеличивается. */
     onZoom: ((Rect) -> Unit)? = null,
     wordSize: Float = WORD_SIZE,
-    /** Слово и транскрипция - по центру плитки по вертикали (увеличенная плитка), иначе - сверху. */
+    /** Увеличенная плитка: слово и транскрипция - по центру по вертикали и крупнее, иначе - сверху. */
     centered: Boolean = false,
     /**
      * Масштаб содержимого (слово, счёт) поверх масштаба плитки: в полёте плитка растягивается по ширине
@@ -496,11 +489,11 @@ internal fun WordTile(
                 // Длинное словосочетание (предложение) - до 2 строк, не обрезается.
                 ArabicText(word.arabic, wordSize, palette.parchmentText, bold = true, maxLines = if (word.isPhrase) PHRASE_LINES else 1, textAlign = TextAlign.Center)
                 if (transliteration != null) {
-                    Text(
+                    TileTransliteration(
                         transliteration,
-                        color = colors.parchmentCaption,
-                        style = InabahType.caption,
-                        modifier = Modifier.alpha(transliterationAlpha),
+                        transliterationAlpha,
+                        zoomed = centered,
+                        maxLines = if (word.isPhrase) PHRASE_LINES else 1,
                     )
                 }
             }
@@ -513,11 +506,7 @@ internal fun WordTile(
 /** Увеличенное слово: номер в шаге, где стояла плитка (в координатах корня), страница (для транскрипции). */
 private data class WordZoom(val index: Int, val from: Rect, val page: Int)
 
-/**
- * Увеличенная плитка (просьба пользователя 2026-10-17): долгое нажатие - плитка вылетает из своего места в
- * центр и растёт, вокруг - затемнение; касание по ней - «прочитал ещё раз», по затемнению или «Назад» -
- * плитка возвращается на место. Полёт - только трансформации отрисовки (`graphicsLayer`), без перевёрстки.
- */
+/** Увеличенная плитка «Читаем слова»: касание по ней - «прочитал ещё раз» ([TileZoomOverlay]). */
 @Composable
 private fun WordZoomOverlay(
     zoom: WordZoom,
@@ -528,38 +517,9 @@ private fun WordZoomOverlay(
     onRead: () -> Unit,
     onDismiss: () -> Unit,
 ) {
-    val palette = InabahTheme.palette
-    val gradients = InabahTheme.gradients
-    val scope = rememberCoroutineScope()
-    val progress = remember(zoom.index) { Animatable(0f) }
     // Словосочетание (предложение) - мельче: до 2 строк во всю ширину.
     val zoomSize = if (word.isPhrase) ZOOM_PHRASE_SIZE else ZOOM_WORD_SIZE
-    // Где окажется увеличенная плитка - от неё считается полёт из [WordZoom.from]. Пока не измерена, плитка
-    // не видна и полёт не начинается: иначе первый кадр рисовался сразу в центре в полный размер.
-    var target by remember { mutableStateOf(Rect.Zero) }
-    val measured = target.width > 0f && target.height > 0f
-    var closing by remember { mutableStateOf(false) }
-    LaunchedEffect(zoom.index, measured) {
-        if (measured && !closing) progress.animateTo(1f, Motion.zoom())
-    }
-    val dismiss: () -> Unit = {
-        if (!closing) {
-            closing = true
-            scope.launch {
-                progress.animateTo(0f, Motion.zoom())
-                onDismiss()
-            }
-        }
-    }
-    BackHandler(onBack = dismiss)
-    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Box(
-            Modifier
-                .fillMaxSize()
-                .graphicsLayer { alpha = progress.value }
-                .background(palette.shadow.copy(alpha = ZOOM_SCRIM_ALPHA))
-                .pointerInput(Unit) { detectTapGestures { dismiss() } },
-        )
+    TileZoomOverlay(key = zoom.index, from = zoom.from, fromTextSize = WORD_SIZE, textSize = zoomSize, onDismiss = onDismiss) { scale, modifier ->
         WordTile(
             word = word,
             count = count,
@@ -569,57 +529,11 @@ private fun WordZoomOverlay(
             onRead = onRead,
             wordSize = zoomSize,
             centered = true,
-            // Слово в полёте растёт одинаково по ширине и высоте: от кегля исходной плитки до крупного.
-            contentScale = {
-                val p = progress.value
-                val uniform = lerp(WORD_SIZE / zoomSize, 1f, p)
-                val (sx, sy) = tileScale(target, zoom.from, p)
-                Offset(uniform / sx, uniform / sy)
-            },
-            modifier = Modifier
-                .padding(horizontal = Spacing.xl)
-                .fillMaxWidth()
-                .height(ZoomTileHeight)
-                .onGloballyPositioned { coordinates ->
-                    val bounds = coordinates.boundsInRoot()
-                    if (bounds != target) target = bounds
-                }
-                .graphicsLayer {
-                    val to = target
-                    val from = zoom.from
-                    alpha = if (measured) 1f else 0f
-                    if (measured && from.width > 0f) {
-                        val p = progress.value
-                        val (sx, sy) = tileScale(to, from, p)
-                        transformOrigin = TransformOrigin(0f, 0f)
-                        scaleX = sx
-                        scaleY = sy
-                        translationX = lerp(from.left - to.left, 0f, p)
-                        translationY = lerp(from.top - to.top, 0f, p)
-                    }
-                }
-                // Фон плитки полупрозрачный (рассчитан на пергамент) - под увеличенной подложен пергамент.
-                .background(gradients.parchment, RoundedCornerShape(Radius.box)),
+            contentScale = scale,
+            modifier = modifier,
         )
     }
 }
-
-/** Масштаб плитки в полёте по ширине и высоте: из [from] (исходная плитка) в [to] (увеличенная). */
-private fun tileScale(to: Rect, from: Rect, progress: Float): Pair<Float, Float> =
-    if (to.width > 0f && to.height > 0f && from.width > 0f) {
-        lerp(from.width / to.width, 1f, progress) to lerp(from.height / to.height, 1f, progress)
-    } else {
-        1f to 1f
-    }
-
-/** Поправка масштаба содержимого плитки ([scale] - по ширине и высоте), вокруг [origin]; нет - без неё. */
-private fun Modifier.contentScale(scale: (() -> Offset)?, origin: TransformOrigin): Modifier =
-    if (scale == null) this else graphicsLayer {
-        val (x, y) = scale()
-        transformOrigin = origin
-        scaleX = x
-        scaleY = y
-    }
 
 /**
  * Мотивация над словами (просьба пользователя 2026-10-16: читать нужно много, и только вслух): «Читайте
@@ -699,8 +613,6 @@ private const val WORD_SIZE = 28f
 /** Увеличенная плитка: кегль слова, высота, затемнение вокруг. */
 private const val ZOOM_WORD_SIZE = 60f
 private const val ZOOM_PHRASE_SIZE = 44f
-private val ZoomTileHeight = 240.dp
-private const val ZOOM_SCRIM_ALPHA = 0.6f
 private const val PAIR_PHRASE_WEIGHT = 2f
 private const val PHRASE_LINES = 2
 // Арабский контент - не переводится (Муслим, 798).
@@ -709,8 +621,6 @@ private const val HADITH_ARABIC = "الْمَاهِرُ بِالْقُرْآنِ
 private val TileTextPadding = Spacing.xs
 /** Слово «влезает» в плитку, если занимает не больше этой доли её ширины: впритык читать тесно. */
 private const val WORD_FIT = 0.8f
-/** Сколько видна транскрипция по подсказке. */
-private const val HINT_MILLIS = 700L
 private const val DONE_FILL_ALPHA = 0.22f
 private const val WORD_FILL_ALPHA = 0.5f
 private val DoneIconSize = 14.dp

@@ -19,10 +19,13 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.longClick
 import androidx.compose.ui.test.swipeLeft
+import androidx.test.espresso.Espresso
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import app.inabah.android.core.content.AssetContentRepository
+import app.inabah.android.core.content.Loadable
 import app.inabah.android.core.content.ContentLanguage
 import app.inabah.android.core.content.ContentLanguagePriority
 import app.inabah.android.core.designsystem.InabahTheme
@@ -40,6 +43,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 private const val TIMEOUT_MILLIS = 5_000L
+private const val QUIZ_SEED = 42L
 
 /** «Учимся читать»: главная, урок с листом буквы и «глазом», проверка (настоящий reading.json из ассетов). */
 @RunWith(AndroidJUnit4::class)
@@ -127,17 +131,20 @@ class ReadingScreensTest {
         compose.setContent {
             InabahTheme {
                 ReadingQuizScreen(2, store, progress, onBack = {}, onOpenStep = {}, onOpenSteps = {}, onOpenWords = {},
-                    contentPadding = PaddingValues())
+                    contentPadding = PaddingValues(), seed = QUIZ_SEED)
             }
         }
-        waitForText("вопрос 1 из 10")
-        // Неверный ответ — «Неверно», «Дальше» нет, верный не подсвечивается сам.
-        compose.onNode(hasClickAction() and hasText("ба")).performClick()
+        // Заход - 16 случайных вопросов из запаса шага; с тем же зерном - те же, что у quizRound.
+        val course = (store.course.value as Loadable.Loaded).value
+        val round = quizRound(course, requireNotNull(course.step(2)), QUIZ_SEED)
+        waitForText("вопрос 1 из ${round.size}")
+        // Неверный ответ - «Неверно», «Дальше» нет, верный не подсвечивается сам.
+        compose.onNode(hasClickAction() and hasText(round[0].options.first { !it.isCorrect }.text)).performClick()
         waitForText("Неверно, попробуйте ещё раз")
         assertTrue(compose.onAllNodesWithText("Дальше").fetchSemanticsNodes().isEmpty())
-        repeat(10) { i ->
-            compose.onNode(hasClickAction() and hasText(correctOption(i))).performClick()
-            compose.onNodeWithText(if (i == 9) "Завершить" else "Дальше").performScrollTo().performClick()
+        round.forEachIndexed { i, item ->
+            compose.onNode(hasClickAction() and hasText(item.options.single { it.isCorrect }.text)).performClick()
+            compose.onNodeWithText(if (i == round.lastIndex) "Завершить" else "Дальше").performScrollTo().performClick()
         }
         waitForText("Шаг пройден")
         assertEquals(setOf(2), progress.lessonsDone.value)
@@ -186,8 +193,28 @@ class ReadingScreensTest {
         waitForText("буква 8 из 8")
     }
 
-    // Верные ответы шага 2: ب domma, م fatha, ن kasra, ل domma, ب kasra, م domma, ص kasra, ق fatha, ر kasra, ر fatha.
-    private fun correctOption(question: Int) = listOf("бу", "ма", "ни", "льу", "би", "му", "сы", "къо", "ри", "ро")[question]
+    @Test
+    fun letterCardHintShowsTransliterationAndLongPressZoomsWord() {
+        compose.setContent {
+            InabahTheme {
+                ReadingLetterFormsScreen(3, "ب", store, onBack = {}, contentPadding = PaddingValues())
+            }
+        }
+        waitForText("буква 1 из 8")
+        // Транскрипция слов-примеров скрыта, лампочка показывает её на миг.
+        compose.onNodeWithContentDescription("بَكُمَ").assertExists()
+        compose.onNodeWithContentDescription("Подсказка: показать транскрипцию").performClick()
+        compose.onNodeWithContentDescription("بَكُمَ, бакума").assertExists()
+        compose.waitUntil(TIMEOUT_MILLIS) { compose.onAllNodesWithContentDescription("بَكُمَ").fetchSemanticsNodes().isNotEmpty() }
+
+        // Долгое нажатие - слово увеличено поверх (на месте ячейка прозрачна), «Назад» - на место.
+        compose.onNodeWithContentDescription("بَكُمَ").performTouchInput { longClick() }
+        compose.waitUntil(TIMEOUT_MILLIS) { compose.onAllNodesWithContentDescription("بَكُمَ").fetchSemanticsNodes().size == 2 }
+        Espresso.pressBack()
+        compose.waitUntil(TIMEOUT_MILLIS) { compose.onAllNodesWithContentDescription("بَكُمَ").fetchSemanticsNodes().size == 1 }
+        waitForText("буква 1 из 8")
+    }
+
 
     @Test
     fun finalLessonListsZikrsWithoutDoneButton() {

@@ -127,14 +127,24 @@ enum class LetterForm(val id: String) {
     }
 }
 
-/** Слова-примеры буквы: она в начале, в середине и в конце слова. */
-data class FormExamples(val initial: String, val medial: String, val final: String) {
+/**
+ * Слова-примеры буквы: она в начале, в середине и в конце слова; [transliterations] - их транскрипция
+ * (на карточке буквы - «подсмотреть», 2026-10-19), нет - пусто.
+ */
+data class FormExamples(
+    val initial: String,
+    val medial: String,
+    val final: String,
+    val transliterations: Map<LetterForm, String> = emptyMap(),
+) {
     fun word(form: LetterForm): String? = when (form) {
         LetterForm.Initial -> initial
         LetterForm.Medial -> medial
         LetterForm.Final -> final
         LetterForm.Isolated -> null
     }
+
+    fun transliteration(form: LetterForm): String? = transliterations[form]
 }
 
 data class ReadingStep(
@@ -147,6 +157,7 @@ data class ReadingStep(
     val title: String,
     val subtitle: String,
     val blocks: List<ReadingBlock>,
+    /** Запас вопросов проверки: в каждый заход берутся [quizCount] случайных (`quizRound`). */
     val quiz: List<ReadingQuestion>,
     /** «Читаем слова»; `null` - у шага слов нет. */
     val words: ReadingWords? = null,
@@ -157,6 +168,8 @@ data class ReadingStep(
     val isFinal: Boolean = false,
     /** Справка к уроку отдельным экраном (кнопка под уроком); нет - `null`. */
     val extra: ReadingExtra? = null,
+    /** Вопросов в одном заходе в проверку (просьба пользователя 2026-10-19); запас меньше - все. */
+    val quizCount: Int = QUIZ_ROUND,
 ) {
     /** Пустые шаги - «Урок готовится». */
     val hasLesson: Boolean get() = blocks.isNotEmpty()
@@ -169,6 +182,11 @@ data class ReadingStep(
 
     /** Справка: [topic] - тема урока по номеру, `null` - справка шага ([extra]). */
     fun extra(topic: Int?): ReadingExtra? = if (topic == null) extra else topics.getOrNull(topic)?.extra
+
+    companion object {
+        /** Вопросов в заходе, если у шага не указано иное. */
+        const val QUIZ_ROUND = 16
+    }
 }
 
 /**

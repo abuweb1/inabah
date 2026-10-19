@@ -28,6 +28,9 @@ import app.inabah.android.core.content.model.ZikrId
 
 private const val EXAMPLE_LETTER = "ب"
 private const val FORM_EXAMPLES = 3
+
+/** Места слов-примеров по порядку `examples`. */
+private val PLACED_FORMS = listOf(LetterForm.Initial, LetterForm.Medial, LetterForm.Final)
 private const val MAX_FORMULA_COLUMNS = 3
 
 internal fun ReadingFileDto.toReadingCourse(priority: ContentLanguagePriority): ReadingCourse {
@@ -85,6 +88,7 @@ internal fun ReadingFileDto.toReadingCourse(priority: ContentLanguagePriority): 
                 // Варианты «буквы по форме» - буквы её карточки в таблице форм этого или прошлого шага.
                 quiz.toQuestion(priority, ::mark, ::letter) { char -> learnedFormGroups.firstOrNull { char in it }.orEmpty().map(::letter) }
             },
+            quizCount = dto.quizCount ?: ReadingStep.QUIZ_ROUND,
             words = dto.words?.let { words ->
                 ReadingWords(
                     groupSize = words.groupSize,
@@ -120,7 +124,12 @@ private fun ReadingBlockDto.toBlock(
         groups = groups.orEmpty().map { group -> group.map(letter) },
         examples = examples.mapNotNull { (char, words) ->
             if (words.size != FORM_EXAMPLES) return@mapNotNull null
-            letter(char) to FormExamples(words[0], words[1], words[2])
+            // Транскрипция - необязательна: нет перевода или не 3 строки - слова без подписи.
+            val transliteration = priority.select(translations.keyedByLanguage())?.translation?.examples?.get(char)
+                ?.takeIf { it.size == FORM_EXAMPLES }
+                ?.let { PLACED_FORMS.zip(it.map(String::trim)).filter { (_, text) -> text.isNotEmpty() }.toMap() }
+                .orEmpty()
+            letter(char) to FormExamples(words[0], words[1], words[2], transliteration)
         }.toMap(),
         exampleCard = exampleCard.map(letter),
     )

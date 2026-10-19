@@ -745,7 +745,19 @@
       "quiz": [
         {
           "type": "letterName",
+          "letter": "ا"
+        },
+        {
+          "type": "letterName",
           "letter": "ب"
+        },
+        {
+          "type": "letterName",
+          "letter": "ت"
+        },
+        {
+          "type": "letterName",
+          "letter": "ث"
         },
         {
           "type": "letterName",
@@ -753,7 +765,63 @@
         },
         {
           "type": "letterName",
+          "letter": "ح"
+        },
+        {
+          "type": "letterName",
+          "letter": "خ"
+        },
+        {
+          "type": "letterName",
+          "letter": "د"
+        },
+        {
+          "type": "letterName",
+          "letter": "ذ"
+        },
+        {
+          "type": "letterName",
+          "letter": "ر"
+        },
+        {
+          "type": "letterName",
+          "letter": "ز"
+        },
+        {
+          "type": "letterName",
+          "letter": "س"
+        },
+        {
+          "type": "letterName",
+          "letter": "ش"
+        },
+        {
+          "type": "letterName",
+          "letter": "ص"
+        },
+        {
+          "type": "letterName",
+          "letter": "ض"
+        },
+        {
+          "type": "letterName",
+          "letter": "ط"
+        },
+        {
+          "type": "letterName",
+          "letter": "ظ"
+        },
+        {
+          "type": "letterName",
           "letter": "ع"
+        },
+        {
+          "type": "letterName",
+          "letter": "غ"
+        },
+        {
+          "type": "letterName",
+          "letter": "ف"
         },
         {
           "type": "letterName",
@@ -761,7 +829,35 @@
         },
         {
           "type": "letterName",
+          "letter": "ك"
+        },
+        {
+          "type": "letterName",
+          "letter": "ل"
+        },
+        {
+          "type": "letterName",
+          "letter": "م"
+        },
+        {
+          "type": "letterName",
+          "letter": "ن"
+        },
+        {
+          "type": "letterName",
           "letter": "ه"
+        },
+        {
+          "type": "letterName",
+          "letter": "و"
+        },
+        {
+          "type": "letterName",
+          "letter": "ي"
+        },
+        {
+          "type": "letterName",
+          "letter": "ء"
         }
       ]
     },
@@ -874,17 +970,342 @@
       "quiz": [
         {
           "type": "syllable",
+          "letter": "ا",
+          "mark": "fatha"
+        },
+        {
+          "type": "syllable",
+          "letter": "ا",
+          "mark": "kasra"
+        },
+        {
+          "type": "syllable",
+          "letter": "ا",
+          "mark": "damma"
+        },
+        {
+          "type": "syllable",
+          "letter": "ب",
+          "mark": "fatha"
+        },
+        {
+          "type": "syllable",
+          "letter": "ب",
+          "mark": "kasra"
+        },
+        {
+          "type": "syllable",
           "letter": "ب",
           "mark": "damma"
         },
         {
           "type": "syllable",
-          "letter": "م",
+          "letter": "ت",
           "mark": "fatha"
         },
         {
           "type": "syllable",
-          "letter": "ن",
+          "letter": "ت",
+          "mark": "kasra"
+        },
+        {
+          "type": "syllable",
+          "letter": "ت",
+          "mark": "damma"
+        },
+        {
+          "type": "syllable",
+          "letter": "ث",
+          "mark": "fatha"
+        },
+        {
+          "type": "syllable",
+          "letter": "ث",
+          "mark": "kasra"
+        },
+        {
+          "type": "syllable",
+          "letter": "ث",
+          "mark": "damma"
+        },
+        {
+          "type": "syllable",
+          "letter": "ج",
+          "mark": "fatha"
+        },
+        {
+          "type": "syllable",
+          "letter": "ج",
+          "mark": "kasra"
+        },
+        {
+          "type": "syllable",
+          "letter": "ج",
+          "mark": "damma"
+        },
+        {
+          "type": "syllable",
+          "letter": "ح",
+          "mark": "fatha"
+        },
+        {
+          "type": "syllable",
+          "letter": "ح",
+          "mark": "kasra"
+        },
+        {
+          "type": "syllable",
+          "letter": "ح",
+          "mark": "damma"
+        },
+        {
+          "type": "syllable",
+          "letter": "خ",
+          "mark": "fatha"
+        },
+        {
+          "type": "syllable",
+          "letter": "خ",
+          "mark": "kasra"
+        },
+        {
+          "type": "syllable",
+          "letter": "خ",
+          "mark": "damma"
+        },
+        {
+          "type": "syllable",
+          "letter": "د",
+          "mark": "fatha"
+        },
+        {
+          "type": "syllable",
+          "letter": "د",
+          "mark": "kasra"
+        },
+        {
+          "type": "syllable",
+          "letter": "د",
+          "mark": "damma"
+        },
+        {
+          "type": "syllable",
+          "letter": "ذ",
+          "mark": "fatha"
+        },
+        {
+          "type": "syllable",
+          "letter": "ذ",
+          "mark": "kasra"
+        },
+        {
+          "type": "syllable",
+          "letter": "ذ",
+          "mark": "damma"
+        },
+        {
+          "type": "syllable",
+          "letter": "ر",
+          "mark": "fatha"
+        },
+        {
+          "type": "syllable",
+          "letter": "ر",
+          "mark": "kasra"
+        },
+        {
+          "type": "syllable",
+          "letter": "ر",
+          "mark": "damma"
+        },
+        {
+          "type": "syllable",
+          "letter": "ز",
+          "mark": "fatha"
+        },
+        {
+          "type": "syllable",
+          "letter": "ز",
+          "mark": "kasra"
+        },
+        {
+          "type": "syllable",
+          "letter": "ز",
+          "mark": "damma"
+        },
+        {
+          "type": "syllable",
+          "letter": "س",
+          "mark": "fatha"
+        },
+        {
+          "type": "syllable",
+          "letter": "س",
+          "mark": "kasra"
+        },
+        {
+          "type": "syllable",
+          "letter": "س",
+          "mark": "damma"
+        },
+        {
+          "type": "syllable",
+          "letter": "ش",
+          "mark": "fatha"
+        },
+        {
+          "type": "syllable",
+          "letter": "ش",
+          "mark": "kasra"
+        },
+        {
+          "type": "syllable",
+          "letter": "ش",
+          "mark": "damma"
+        },
+        {
+          "type": "syllable",
+          "letter": "ص",
+          "mark": "fatha"
+        },
+        {
+          "type": "syllable",
+          "letter": "ص",
+          "mark": "kasra"
+        },
+        {
+          "type": "syllable",
+          "letter": "ص",
+          "mark": "damma"
+        },
+        {
+          "type": "syllable",
+          "letter": "ض",
+          "mark": "fatha"
+        },
+        {
+          "type": "syllable",
+          "letter": "ض",
+          "mark": "kasra"
+        },
+        {
+          "type": "syllable",
+          "letter": "ض",
+          "mark": "damma"
+        },
+        {
+          "type": "syllable",
+          "letter": "ط",
+          "mark": "fatha"
+        },
+        {
+          "type": "syllable",
+          "letter": "ط",
+          "mark": "kasra"
+        },
+        {
+          "type": "syllable",
+          "letter": "ط",
+          "mark": "damma"
+        },
+        {
+          "type": "syllable",
+          "letter": "ظ",
+          "mark": "fatha"
+        },
+        {
+          "type": "syllable",
+          "letter": "ظ",
+          "mark": "kasra"
+        },
+        {
+          "type": "syllable",
+          "letter": "ظ",
+          "mark": "damma"
+        },
+        {
+          "type": "syllable",
+          "letter": "ع",
+          "mark": "fatha"
+        },
+        {
+          "type": "syllable",
+          "letter": "ع",
+          "mark": "kasra"
+        },
+        {
+          "type": "syllable",
+          "letter": "ع",
+          "mark": "damma"
+        },
+        {
+          "type": "syllable",
+          "letter": "غ",
+          "mark": "fatha"
+        },
+        {
+          "type": "syllable",
+          "letter": "غ",
+          "mark": "kasra"
+        },
+        {
+          "type": "syllable",
+          "letter": "غ",
+          "mark": "damma"
+        },
+        {
+          "type": "syllable",
+          "letter": "ف",
+          "mark": "fatha"
+        },
+        {
+          "type": "syllable",
+          "letter": "ف",
+          "mark": "kasra"
+        },
+        {
+          "type": "syllable",
+          "letter": "ف",
+          "mark": "damma"
+        },
+        {
+          "type": "syllable",
+          "letter": "ق",
+          "mark": "fatha"
+        },
+        {
+          "type": "syllable",
+          "letter": "ق",
+          "mark": "kasra"
+        },
+        {
+          "type": "syllable",
+          "letter": "ق",
+          "mark": "damma"
+        },
+        {
+          "type": "syllable",
+          "letter": "ك",
+          "mark": "fatha"
+        },
+        {
+          "type": "syllable",
+          "letter": "ك",
+          "mark": "kasra"
+        },
+        {
+          "type": "syllable",
+          "letter": "ك",
+          "mark": "damma"
+        },
+        {
+          "type": "syllable",
+          "letter": "ل",
+          "mark": "fatha"
+        },
+        {
+          "type": "syllable",
+          "letter": "ل",
           "mark": "kasra"
         },
         {
@@ -894,7 +1315,12 @@
         },
         {
           "type": "syllable",
-          "letter": "ب",
+          "letter": "م",
+          "mark": "fatha"
+        },
+        {
+          "type": "syllable",
+          "letter": "م",
           "mark": "kasra"
         },
         {
@@ -904,23 +1330,78 @@
         },
         {
           "type": "syllable",
-          "letter": "ص",
-          "mark": "kasra"
-        },
-        {
-          "type": "syllable",
-          "letter": "ق",
+          "letter": "ن",
           "mark": "fatha"
         },
         {
           "type": "syllable",
-          "letter": "ر",
+          "letter": "ن",
           "mark": "kasra"
         },
         {
           "type": "syllable",
-          "letter": "ر",
+          "letter": "ن",
+          "mark": "damma"
+        },
+        {
+          "type": "syllable",
+          "letter": "ه",
           "mark": "fatha"
+        },
+        {
+          "type": "syllable",
+          "letter": "ه",
+          "mark": "kasra"
+        },
+        {
+          "type": "syllable",
+          "letter": "ه",
+          "mark": "damma"
+        },
+        {
+          "type": "syllable",
+          "letter": "و",
+          "mark": "fatha"
+        },
+        {
+          "type": "syllable",
+          "letter": "و",
+          "mark": "kasra"
+        },
+        {
+          "type": "syllable",
+          "letter": "و",
+          "mark": "damma"
+        },
+        {
+          "type": "syllable",
+          "letter": "ي",
+          "mark": "fatha"
+        },
+        {
+          "type": "syllable",
+          "letter": "ي",
+          "mark": "kasra"
+        },
+        {
+          "type": "syllable",
+          "letter": "ي",
+          "mark": "damma"
+        },
+        {
+          "type": "syllable",
+          "letter": "ء",
+          "mark": "fatha"
+        },
+        {
+          "type": "syllable",
+          "letter": "ء",
+          "mark": "kasra"
+        },
+        {
+          "type": "syllable",
+          "letter": "ء",
+          "mark": "damma"
         }
       ],
       "words": {
@@ -1492,28 +1973,79 @@
             "ب",
             "ن",
             "ج"
-          ]
+          ],
+          "translations": {
+            "ru": {
+              "examples": {
+                "ب": [
+                  "бакума",
+                  "набаджа",
+                  "вазоба"
+                ],
+                "ت": [
+                  "талифа",
+                  "хотана",
+                  "бугӏита"
+                ],
+                "ث": [
+                  "сакъофа",
+                  "касуро",
+                  "ӏабиса"
+                ],
+                "ن": [
+                  "наджуба",
+                  "суниӏа",
+                  "тӏохьана"
+                ],
+                "ي": [
+                  "йанаӏа",
+                  "хьайийа",
+                  "хошийа"
+                ],
+                "ج": [
+                  "джамульа",
+                  "хьуджина",
+                  "сонаджа"
+                ],
+                "ح": [
+                  "хьальама",
+                  "джахьана",
+                  "вадыхьа"
+                ],
+                "خ": [
+                  "хобатӏо",
+                  "нахоба",
+                  "васихо"
+                ]
+              }
+            }
+          }
         }
       ],
       "quiz": [
         {
           "type": "letterForm",
-          "letter": "ث",
-          "form": "medial"
-        },
-        {
-          "type": "letterForm",
-          "letter": "خ",
+          "letter": "ب",
           "form": "initial"
         },
         {
           "type": "letterForm",
-          "letter": "ن",
+          "letter": "ب",
+          "form": "medial"
+        },
+        {
+          "type": "letterForm",
+          "letter": "ب",
           "form": "final"
         },
         {
           "type": "letterForm",
-          "letter": "ي",
+          "letter": "ت",
+          "form": "initial"
+        },
+        {
+          "type": "letterForm",
+          "letter": "ت",
           "form": "medial"
         },
         {
@@ -1523,17 +2055,92 @@
         },
         {
           "type": "letterForm",
-          "letter": "ح",
+          "letter": "ث",
+          "form": "initial"
+        },
+        {
+          "type": "letterForm",
+          "letter": "ث",
           "form": "medial"
         },
         {
           "type": "letterForm",
-          "letter": "ب",
+          "letter": "ث",
+          "form": "final"
+        },
+        {
+          "type": "letterForm",
+          "letter": "ن",
+          "form": "initial"
+        },
+        {
+          "type": "letterForm",
+          "letter": "ن",
+          "form": "medial"
+        },
+        {
+          "type": "letterForm",
+          "letter": "ن",
+          "form": "final"
+        },
+        {
+          "type": "letterForm",
+          "letter": "ي",
+          "form": "initial"
+        },
+        {
+          "type": "letterForm",
+          "letter": "ي",
+          "form": "medial"
+        },
+        {
+          "type": "letterForm",
+          "letter": "ي",
+          "form": "final"
+        },
+        {
+          "type": "letterForm",
+          "letter": "ج",
           "form": "initial"
         },
         {
           "type": "letterForm",
           "letter": "ج",
+          "form": "medial"
+        },
+        {
+          "type": "letterForm",
+          "letter": "ج",
+          "form": "final"
+        },
+        {
+          "type": "letterForm",
+          "letter": "ح",
+          "form": "initial"
+        },
+        {
+          "type": "letterForm",
+          "letter": "ح",
+          "form": "medial"
+        },
+        {
+          "type": "letterForm",
+          "letter": "ح",
+          "form": "final"
+        },
+        {
+          "type": "letterForm",
+          "letter": "خ",
+          "form": "initial"
+        },
+        {
+          "type": "letterForm",
+          "letter": "خ",
+          "form": "medial"
+        },
+        {
+          "type": "letterForm",
+          "letter": "خ",
           "form": "final"
         }
       ],
@@ -2106,28 +2713,64 @@
             "س",
             "ص",
             "ع"
-          ]
+          ],
+          "translations": {
+            "ru": {
+              "examples": {
+                "س": [
+                  "сахотӏо",
+                  "нусиджа",
+                  "дахоса"
+                ],
+                "ش": [
+                  "шаӏиса",
+                  "нашатӏо",
+                  "наӏаша"
+                ],
+                "ص": [
+                  "сохьиба",
+                  "гӏособа",
+                  "шахосо"
+                ],
+                "ض": [
+                  "дугӏитӏо",
+                  "гӏодыба",
+                  "къобадо"
+                ],
+                "ط": [
+                  "тӏубиӏа",
+                  "батӏохьа",
+                  "хьанатӏо"
+                ],
+                "ظ": [
+                  "зольама",
+                  "ӏазума",
+                  "хьафизо"
+                ],
+                "ع": [
+                  "ӏатӏыша",
+                  "фаӏума",
+                  "льакуӏа"
+                ],
+                "غ": [
+                  "гӏотӏоса",
+                  "шагӏольа",
+                  "субигӏо"
+                ]
+              }
+            }
+          }
         }
       ],
       "quiz": [
         {
           "type": "letterForm",
-          "letter": "ش",
-          "form": "medial"
-        },
-        {
-          "type": "letterForm",
-          "letter": "ع",
-          "form": "final"
-        },
-        {
-          "type": "letterForm",
-          "letter": "ص",
+          "letter": "س",
           "form": "initial"
         },
         {
           "type": "letterForm",
-          "letter": "غ",
+          "letter": "س",
           "form": "medial"
         },
         {
@@ -2137,7 +2780,37 @@
         },
         {
           "type": "letterForm",
-          "letter": "ظ",
+          "letter": "ش",
+          "form": "initial"
+        },
+        {
+          "type": "letterForm",
+          "letter": "ش",
+          "form": "medial"
+        },
+        {
+          "type": "letterForm",
+          "letter": "ش",
+          "form": "final"
+        },
+        {
+          "type": "letterForm",
+          "letter": "ص",
+          "form": "initial"
+        },
+        {
+          "type": "letterForm",
+          "letter": "ص",
+          "form": "medial"
+        },
+        {
+          "type": "letterForm",
+          "letter": "ص",
+          "form": "final"
+        },
+        {
+          "type": "letterForm",
+          "letter": "ض",
           "form": "initial"
         },
         {
@@ -2147,8 +2820,68 @@
         },
         {
           "type": "letterForm",
+          "letter": "ض",
+          "form": "final"
+        },
+        {
+          "type": "letterForm",
+          "letter": "ط",
+          "form": "initial"
+        },
+        {
+          "type": "letterForm",
+          "letter": "ط",
+          "form": "medial"
+        },
+        {
+          "type": "letterForm",
+          "letter": "ط",
+          "form": "final"
+        },
+        {
+          "type": "letterForm",
+          "letter": "ظ",
+          "form": "initial"
+        },
+        {
+          "type": "letterForm",
+          "letter": "ظ",
+          "form": "medial"
+        },
+        {
+          "type": "letterForm",
+          "letter": "ظ",
+          "form": "final"
+        },
+        {
+          "type": "letterForm",
           "letter": "ع",
           "form": "initial"
+        },
+        {
+          "type": "letterForm",
+          "letter": "ع",
+          "form": "medial"
+        },
+        {
+          "type": "letterForm",
+          "letter": "ع",
+          "form": "final"
+        },
+        {
+          "type": "letterForm",
+          "letter": "غ",
+          "form": "initial"
+        },
+        {
+          "type": "letterForm",
+          "letter": "غ",
+          "form": "medial"
+        },
+        {
+          "type": "letterForm",
+          "letter": "غ",
+          "form": "final"
         }
       ],
       "words": {
@@ -2708,10 +3441,51 @@
             "ف",
             "ك",
             "ه"
-          ]
+          ],
+          "translations": {
+            "ru": {
+              "examples": {
+                "ف": [
+                  "фуӏильа",
+                  "гӏофальа",
+                  "льакъифа"
+                ],
+                "ق": [
+                  "къомаӏа",
+                  "ӏакъольа",
+                  "хьамикъо"
+                ],
+                "ك": [
+                  "кахӏульа",
+                  "макаса",
+                  "дохьика"
+                ],
+                "ل": [
+                  "льакама",
+                  "хольакъо",
+                  "хомальа"
+                ],
+                "م": [
+                  "мальака",
+                  "къомильа",
+                  "салима"
+                ],
+                "ه": [
+                  "хӏамака",
+                  "къохӏаро",
+                  "факихӏа"
+                ]
+              }
+            }
+          }
         }
       ],
       "quiz": [
+        {
+          "type": "letterForm",
+          "letter": "ف",
+          "form": "initial"
+        },
         {
           "type": "letterForm",
           "letter": "ف",
@@ -2719,13 +3493,18 @@
         },
         {
           "type": "letterForm",
-          "letter": "ه",
-          "form": "medial"
+          "letter": "ف",
+          "form": "final"
         },
         {
           "type": "letterForm",
-          "letter": "ك",
+          "letter": "ق",
           "form": "initial"
+        },
+        {
+          "type": "letterForm",
+          "letter": "ق",
+          "form": "medial"
         },
         {
           "type": "letterForm",
@@ -2734,7 +3513,22 @@
         },
         {
           "type": "letterForm",
-          "letter": "م",
+          "letter": "ك",
+          "form": "initial"
+        },
+        {
+          "type": "letterForm",
+          "letter": "ك",
+          "form": "medial"
+        },
+        {
+          "type": "letterForm",
+          "letter": "ك",
+          "form": "final"
+        },
+        {
+          "type": "letterForm",
+          "letter": "ل",
           "form": "initial"
         },
         {
@@ -2744,12 +3538,37 @@
         },
         {
           "type": "letterForm",
+          "letter": "ل",
+          "form": "final"
+        },
+        {
+          "type": "letterForm",
+          "letter": "م",
+          "form": "initial"
+        },
+        {
+          "type": "letterForm",
+          "letter": "م",
+          "form": "medial"
+        },
+        {
+          "type": "letterForm",
+          "letter": "م",
+          "form": "final"
+        },
+        {
+          "type": "letterForm",
           "letter": "ه",
           "form": "initial"
         },
         {
           "type": "letterForm",
-          "letter": "ك",
+          "letter": "ه",
+          "form": "medial"
+        },
+        {
+          "type": "letterForm",
+          "letter": "ه",
           "form": "final"
         }
       ],
@@ -3404,10 +4223,322 @@
             "د",
             "ر",
             "و"
-          ]
+          ],
+          "translations": {
+            "ru": {
+              "examples": {
+                "د": [
+                  "дароӏа",
+                  "джиидихӏаа",
+                  "сыыда"
+                ],
+                "ذ": [
+                  "забахьа",
+                  "йазуукъу",
+                  "ъахоза"
+                ],
+                "ر": [
+                  "робатӏо",
+                  "тӏориба",
+                  "батӏоро"
+                ],
+                "ز": [
+                  "забана",
+                  "йазууру",
+                  "ӏаджаза"
+                ],
+                "و": [
+                  "ваджаба",
+                  "хӏууду",
+                  "хӏува"
+                ]
+              }
+            }
+          }
         }
       ],
-      "quiz": [],
+      "quiz": [
+        {
+          "type": "letterForm",
+          "letter": "د",
+          "form": "initial"
+        },
+        {
+          "type": "letterForm",
+          "letter": "د",
+          "form": "final"
+        },
+        {
+          "type": "letterForm",
+          "letter": "ذ",
+          "form": "initial"
+        },
+        {
+          "type": "letterForm",
+          "letter": "ذ",
+          "form": "final"
+        },
+        {
+          "type": "letterForm",
+          "letter": "ر",
+          "form": "initial"
+        },
+        {
+          "type": "letterForm",
+          "letter": "ر",
+          "form": "final"
+        },
+        {
+          "type": "letterForm",
+          "letter": "ز",
+          "form": "initial"
+        },
+        {
+          "type": "letterForm",
+          "letter": "ز",
+          "form": "final"
+        },
+        {
+          "type": "word",
+          "arabic": "دَاوَمَ",
+          "answer": 0,
+          "translations": {
+            "ru": {
+              "options": [
+                "даавама",
+                "давама",
+                "даваама"
+              ],
+              "explain": "Мад алиф тянет звук вдвое: «даа»."
+            }
+          }
+        },
+        {
+          "type": "word",
+          "arabic": "خِيفَ",
+          "answer": 0,
+          "translations": {
+            "ru": {
+              "options": [
+                "хиифа",
+                "хифа",
+                "хифаа"
+              ],
+              "explain": "Мад йа тянет звук вдвое: «хии»."
+            }
+          }
+        },
+        {
+          "type": "word",
+          "arabic": "عِيبَ",
+          "answer": 0,
+          "translations": {
+            "ru": {
+              "options": [
+                "ӏииба",
+                "ӏиба",
+                "ӏибаа"
+              ],
+              "explain": "Мад йа тянет звук вдвое: «ӏии»."
+            }
+          }
+        },
+        {
+          "type": "word",
+          "arabic": "هُودُ",
+          "answer": 0,
+          "translations": {
+            "ru": {
+              "options": [
+                "хӏууду",
+                "хӏуду",
+                "хӏудуу"
+              ],
+              "explain": "Мад вав тянет звук вдвое: «хӏуу»."
+            }
+          }
+        },
+        {
+          "type": "word",
+          "arabic": "قِيلَ",
+          "answer": 0,
+          "translations": {
+            "ru": {
+              "options": [
+                "къиильа",
+                "къильа",
+                "къильаа"
+              ],
+              "explain": "Мад йа тянет звук вдвое: «къии»."
+            }
+          }
+        },
+        {
+          "type": "word",
+          "arabic": "يَمُوتُونَ",
+          "answer": 0,
+          "translations": {
+            "ru": {
+              "options": [
+                "йамуутууна",
+                "йамутуна",
+                "йамуутуна"
+              ],
+              "explain": "Мад вав тянет звук вдвое: «муу», «туу»."
+            }
+          }
+        },
+        {
+          "type": "word",
+          "arabic": "هَاجَرَ",
+          "answer": 0,
+          "translations": {
+            "ru": {
+              "options": [
+                "хӏааджаро",
+                "хӏаджаро",
+                "хӏаджааро"
+              ],
+              "explain": "Мад алиф тянет звук вдвое: «хӏаа»."
+            }
+          }
+        },
+        {
+          "type": "word",
+          "arabic": "يَقُولُونَ",
+          "answer": 0,
+          "translations": {
+            "ru": {
+              "options": [
+                "йакъуульууна",
+                "йакъульуна",
+                "йакъуульуна"
+              ],
+              "explain": "Мад вав тянет звук вдвое: «къуу», «льуу»."
+            }
+          }
+        },
+        {
+          "type": "word",
+          "arabic": "حِينَ",
+          "answer": 0,
+          "translations": {
+            "ru": {
+              "options": [
+                "хьиина",
+                "хьина",
+                "хьинаа"
+              ],
+              "explain": "Мад йа тянет звук вдвое: «хьии»."
+            }
+          }
+        },
+        {
+          "type": "word",
+          "arabic": "نُودِيَ",
+          "answer": 0,
+          "translations": {
+            "ru": {
+              "options": [
+                "нуудийа",
+                "нудийа",
+                "нудиийа"
+              ],
+              "explain": "Мад вав тянет звук вдвое: «нуу»."
+            }
+          }
+        },
+        {
+          "type": "word",
+          "arabic": "يَاسِرُ",
+          "answer": 0,
+          "translations": {
+            "ru": {
+              "options": [
+                "йаасиру",
+                "йасиру",
+                "йасииру"
+              ],
+              "explain": "Мад алиф тянет звук вдвое: «йаа»."
+            }
+          }
+        },
+        {
+          "type": "word",
+          "arabic": "فِيهَا",
+          "answer": 0,
+          "translations": {
+            "ru": {
+              "options": [
+                "фиихӏаа",
+                "фихӏа",
+                "фиихӏа"
+              ],
+              "explain": "Мад йа и мад алиф тянут звук вдвое: «фии», «хӏаа»."
+            }
+          }
+        },
+        {
+          "type": "word",
+          "arabic": "كُونِي",
+          "answer": 0,
+          "translations": {
+            "ru": {
+              "options": [
+                "куунии",
+                "куни",
+                "кууни"
+              ],
+              "explain": "Мад вав и мад йа тянут звук вдвое: «куу», «нии»."
+            }
+          }
+        },
+        {
+          "type": "word",
+          "arabic": "يُوسُفُ",
+          "answer": 0,
+          "translations": {
+            "ru": {
+              "options": [
+                "йуусуфу",
+                "йусуфу",
+                "йусуфуу"
+              ],
+              "explain": "Мад вав тянет звук вдвое: «йуу»."
+            }
+          }
+        },
+        {
+          "type": "word",
+          "arabic": "جَاوَزَ",
+          "answer": 0,
+          "translations": {
+            "ru": {
+              "options": [
+                "джааваза",
+                "джаваза",
+                "джавааза"
+              ],
+              "explain": "Мад алиф тянет звук вдвое: «джаа»."
+            }
+          }
+        },
+        {
+          "type": "word",
+          "arabic": "طُولِبَ",
+          "answer": 0,
+          "translations": {
+            "ru": {
+              "options": [
+                "тӏуулиба",
+                "тӏулиба",
+                "тӏулииба"
+              ],
+              "explain": "Мад вав тянет звук вдвое: «тӏуу»."
+            }
+          }
+        }
+      ],
       "words": {
         "groupSize": 15,
         "repeat": 3,
@@ -5382,7 +6513,92 @@
         {
           "type": "closedSyllable",
           "letter": "ب",
+          "mark": "fatha"
+        },
+        {
+          "type": "closedSyllable",
+          "letter": "ب",
           "mark": "kasra"
+        },
+        {
+          "type": "closedSyllable",
+          "letter": "ب",
+          "mark": "damma"
+        },
+        {
+          "type": "closedSyllable",
+          "letter": "ت",
+          "mark": "fatha"
+        },
+        {
+          "type": "closedSyllable",
+          "letter": "ت",
+          "mark": "kasra"
+        },
+        {
+          "type": "closedSyllable",
+          "letter": "ت",
+          "mark": "damma"
+        },
+        {
+          "type": "closedSyllable",
+          "letter": "ث",
+          "mark": "fatha"
+        },
+        {
+          "type": "closedSyllable",
+          "letter": "ث",
+          "mark": "kasra"
+        },
+        {
+          "type": "closedSyllable",
+          "letter": "ث",
+          "mark": "damma"
+        },
+        {
+          "type": "closedSyllable",
+          "letter": "ج",
+          "mark": "fatha"
+        },
+        {
+          "type": "closedSyllable",
+          "letter": "ج",
+          "mark": "kasra"
+        },
+        {
+          "type": "closedSyllable",
+          "letter": "ج",
+          "mark": "damma"
+        },
+        {
+          "type": "closedSyllable",
+          "letter": "ح",
+          "mark": "fatha"
+        },
+        {
+          "type": "closedSyllable",
+          "letter": "ح",
+          "mark": "kasra"
+        },
+        {
+          "type": "closedSyllable",
+          "letter": "ح",
+          "mark": "damma"
+        },
+        {
+          "type": "closedSyllable",
+          "letter": "خ",
+          "mark": "fatha"
+        },
+        {
+          "type": "closedSyllable",
+          "letter": "خ",
+          "mark": "kasra"
+        },
+        {
+          "type": "closedSyllable",
+          "letter": "خ",
+          "mark": "damma"
         },
         {
           "type": "closedSyllable",
@@ -5391,22 +6607,147 @@
         },
         {
           "type": "closedSyllable",
-          "letter": "ق",
-          "mark": "damma"
-        },
-        {
-          "type": "closedSyllable",
-          "letter": "ل",
-          "mark": "fatha"
-        },
-        {
-          "type": "closedSyllable",
-          "letter": "م",
+          "letter": "د",
           "mark": "kasra"
         },
         {
           "type": "closedSyllable",
-          "letter": "ن",
+          "letter": "د",
+          "mark": "damma"
+        },
+        {
+          "type": "closedSyllable",
+          "letter": "ذ",
+          "mark": "fatha"
+        },
+        {
+          "type": "closedSyllable",
+          "letter": "ذ",
+          "mark": "kasra"
+        },
+        {
+          "type": "closedSyllable",
+          "letter": "ذ",
+          "mark": "damma"
+        },
+        {
+          "type": "closedSyllable",
+          "letter": "ر",
+          "mark": "fatha"
+        },
+        {
+          "type": "closedSyllable",
+          "letter": "ر",
+          "mark": "kasra"
+        },
+        {
+          "type": "closedSyllable",
+          "letter": "ر",
+          "mark": "damma"
+        },
+        {
+          "type": "closedSyllable",
+          "letter": "ز",
+          "mark": "fatha"
+        },
+        {
+          "type": "closedSyllable",
+          "letter": "ز",
+          "mark": "kasra"
+        },
+        {
+          "type": "closedSyllable",
+          "letter": "ز",
+          "mark": "damma"
+        },
+        {
+          "type": "closedSyllable",
+          "letter": "س",
+          "mark": "fatha"
+        },
+        {
+          "type": "closedSyllable",
+          "letter": "س",
+          "mark": "kasra"
+        },
+        {
+          "type": "closedSyllable",
+          "letter": "س",
+          "mark": "damma"
+        },
+        {
+          "type": "closedSyllable",
+          "letter": "ش",
+          "mark": "fatha"
+        },
+        {
+          "type": "closedSyllable",
+          "letter": "ش",
+          "mark": "kasra"
+        },
+        {
+          "type": "closedSyllable",
+          "letter": "ش",
+          "mark": "damma"
+        },
+        {
+          "type": "closedSyllable",
+          "letter": "ص",
+          "mark": "fatha"
+        },
+        {
+          "type": "closedSyllable",
+          "letter": "ص",
+          "mark": "kasra"
+        },
+        {
+          "type": "closedSyllable",
+          "letter": "ص",
+          "mark": "damma"
+        },
+        {
+          "type": "closedSyllable",
+          "letter": "ض",
+          "mark": "fatha"
+        },
+        {
+          "type": "closedSyllable",
+          "letter": "ض",
+          "mark": "kasra"
+        },
+        {
+          "type": "closedSyllable",
+          "letter": "ض",
+          "mark": "damma"
+        },
+        {
+          "type": "closedSyllable",
+          "letter": "ط",
+          "mark": "fatha"
+        },
+        {
+          "type": "closedSyllable",
+          "letter": "ط",
+          "mark": "kasra"
+        },
+        {
+          "type": "closedSyllable",
+          "letter": "ط",
+          "mark": "damma"
+        },
+        {
+          "type": "closedSyllable",
+          "letter": "ظ",
+          "mark": "fatha"
+        },
+        {
+          "type": "closedSyllable",
+          "letter": "ظ",
+          "mark": "kasra"
+        },
+        {
+          "type": "closedSyllable",
+          "letter": "ظ",
           "mark": "damma"
         },
         {
@@ -5416,8 +6757,163 @@
         },
         {
           "type": "closedSyllable",
+          "letter": "ع",
+          "mark": "kasra"
+        },
+        {
+          "type": "closedSyllable",
+          "letter": "ع",
+          "mark": "damma"
+        },
+        {
+          "type": "closedSyllable",
+          "letter": "غ",
+          "mark": "fatha"
+        },
+        {
+          "type": "closedSyllable",
+          "letter": "غ",
+          "mark": "kasra"
+        },
+        {
+          "type": "closedSyllable",
+          "letter": "غ",
+          "mark": "damma"
+        },
+        {
+          "type": "closedSyllable",
+          "letter": "ف",
+          "mark": "fatha"
+        },
+        {
+          "type": "closedSyllable",
           "letter": "ف",
           "mark": "kasra"
+        },
+        {
+          "type": "closedSyllable",
+          "letter": "ف",
+          "mark": "damma"
+        },
+        {
+          "type": "closedSyllable",
+          "letter": "ق",
+          "mark": "fatha"
+        },
+        {
+          "type": "closedSyllable",
+          "letter": "ق",
+          "mark": "kasra"
+        },
+        {
+          "type": "closedSyllable",
+          "letter": "ق",
+          "mark": "damma"
+        },
+        {
+          "type": "closedSyllable",
+          "letter": "ك",
+          "mark": "fatha"
+        },
+        {
+          "type": "closedSyllable",
+          "letter": "ك",
+          "mark": "kasra"
+        },
+        {
+          "type": "closedSyllable",
+          "letter": "ك",
+          "mark": "damma"
+        },
+        {
+          "type": "closedSyllable",
+          "letter": "ل",
+          "mark": "fatha"
+        },
+        {
+          "type": "closedSyllable",
+          "letter": "ل",
+          "mark": "kasra"
+        },
+        {
+          "type": "closedSyllable",
+          "letter": "ل",
+          "mark": "damma"
+        },
+        {
+          "type": "closedSyllable",
+          "letter": "م",
+          "mark": "fatha"
+        },
+        {
+          "type": "closedSyllable",
+          "letter": "م",
+          "mark": "kasra"
+        },
+        {
+          "type": "closedSyllable",
+          "letter": "م",
+          "mark": "damma"
+        },
+        {
+          "type": "closedSyllable",
+          "letter": "ن",
+          "mark": "fatha"
+        },
+        {
+          "type": "closedSyllable",
+          "letter": "ن",
+          "mark": "kasra"
+        },
+        {
+          "type": "closedSyllable",
+          "letter": "ن",
+          "mark": "damma"
+        },
+        {
+          "type": "closedSyllable",
+          "letter": "ه",
+          "mark": "fatha"
+        },
+        {
+          "type": "closedSyllable",
+          "letter": "ه",
+          "mark": "kasra"
+        },
+        {
+          "type": "closedSyllable",
+          "letter": "ه",
+          "mark": "damma"
+        },
+        {
+          "type": "closedSyllable",
+          "letter": "و",
+          "mark": "fatha"
+        },
+        {
+          "type": "closedSyllable",
+          "letter": "و",
+          "mark": "kasra"
+        },
+        {
+          "type": "closedSyllable",
+          "letter": "و",
+          "mark": "damma"
+        },
+        {
+          "type": "closedSyllable",
+          "letter": "ي",
+          "mark": "fatha"
+        },
+        {
+          "type": "closedSyllable",
+          "letter": "ي",
+          "mark": "kasra"
+        },
+        {
+          "type": "closedSyllable",
+          "letter": "ي",
+          "mark": "damma"
         }
       ],
       "words": {
@@ -6030,12 +7526,357 @@
       "quiz": [
         {
           "type": "syllable",
+          "letter": "ا",
+          "mark": "fathatan"
+        },
+        {
+          "type": "syllable",
+          "letter": "ا",
+          "mark": "kasratan"
+        },
+        {
+          "type": "syllable",
+          "letter": "ا",
+          "mark": "dammatan"
+        },
+        {
+          "type": "syllable",
           "letter": "ب",
           "mark": "fathatan"
         },
         {
           "type": "syllable",
+          "letter": "ب",
+          "mark": "kasratan"
+        },
+        {
+          "type": "syllable",
+          "letter": "ب",
+          "mark": "dammatan"
+        },
+        {
+          "type": "syllable",
+          "letter": "ت",
+          "mark": "fathatan"
+        },
+        {
+          "type": "syllable",
+          "letter": "ت",
+          "mark": "kasratan"
+        },
+        {
+          "type": "syllable",
+          "letter": "ت",
+          "mark": "dammatan"
+        },
+        {
+          "type": "syllable",
+          "letter": "ث",
+          "mark": "fathatan"
+        },
+        {
+          "type": "syllable",
+          "letter": "ث",
+          "mark": "kasratan"
+        },
+        {
+          "type": "syllable",
+          "letter": "ث",
+          "mark": "dammatan"
+        },
+        {
+          "type": "syllable",
+          "letter": "ج",
+          "mark": "fathatan"
+        },
+        {
+          "type": "syllable",
+          "letter": "ج",
+          "mark": "kasratan"
+        },
+        {
+          "type": "syllable",
+          "letter": "ج",
+          "mark": "dammatan"
+        },
+        {
+          "type": "syllable",
+          "letter": "ح",
+          "mark": "fathatan"
+        },
+        {
+          "type": "syllable",
+          "letter": "ح",
+          "mark": "kasratan"
+        },
+        {
+          "type": "syllable",
+          "letter": "ح",
+          "mark": "dammatan"
+        },
+        {
+          "type": "syllable",
+          "letter": "خ",
+          "mark": "fathatan"
+        },
+        {
+          "type": "syllable",
+          "letter": "خ",
+          "mark": "kasratan"
+        },
+        {
+          "type": "syllable",
+          "letter": "خ",
+          "mark": "dammatan"
+        },
+        {
+          "type": "syllable",
+          "letter": "د",
+          "mark": "fathatan"
+        },
+        {
+          "type": "syllable",
+          "letter": "د",
+          "mark": "kasratan"
+        },
+        {
+          "type": "syllable",
+          "letter": "د",
+          "mark": "dammatan"
+        },
+        {
+          "type": "syllable",
+          "letter": "ذ",
+          "mark": "fathatan"
+        },
+        {
+          "type": "syllable",
+          "letter": "ذ",
+          "mark": "kasratan"
+        },
+        {
+          "type": "syllable",
+          "letter": "ذ",
+          "mark": "dammatan"
+        },
+        {
+          "type": "syllable",
+          "letter": "ر",
+          "mark": "fathatan"
+        },
+        {
+          "type": "syllable",
+          "letter": "ر",
+          "mark": "kasratan"
+        },
+        {
+          "type": "syllable",
+          "letter": "ر",
+          "mark": "dammatan"
+        },
+        {
+          "type": "syllable",
+          "letter": "ز",
+          "mark": "fathatan"
+        },
+        {
+          "type": "syllable",
+          "letter": "ز",
+          "mark": "kasratan"
+        },
+        {
+          "type": "syllable",
+          "letter": "ز",
+          "mark": "dammatan"
+        },
+        {
+          "type": "syllable",
+          "letter": "س",
+          "mark": "fathatan"
+        },
+        {
+          "type": "syllable",
+          "letter": "س",
+          "mark": "kasratan"
+        },
+        {
+          "type": "syllable",
+          "letter": "س",
+          "mark": "dammatan"
+        },
+        {
+          "type": "syllable",
+          "letter": "ش",
+          "mark": "fathatan"
+        },
+        {
+          "type": "syllable",
+          "letter": "ش",
+          "mark": "kasratan"
+        },
+        {
+          "type": "syllable",
+          "letter": "ش",
+          "mark": "dammatan"
+        },
+        {
+          "type": "syllable",
+          "letter": "ص",
+          "mark": "fathatan"
+        },
+        {
+          "type": "syllable",
+          "letter": "ص",
+          "mark": "kasratan"
+        },
+        {
+          "type": "syllable",
+          "letter": "ص",
+          "mark": "dammatan"
+        },
+        {
+          "type": "syllable",
+          "letter": "ض",
+          "mark": "fathatan"
+        },
+        {
+          "type": "syllable",
+          "letter": "ض",
+          "mark": "kasratan"
+        },
+        {
+          "type": "syllable",
+          "letter": "ض",
+          "mark": "dammatan"
+        },
+        {
+          "type": "syllable",
+          "letter": "ط",
+          "mark": "fathatan"
+        },
+        {
+          "type": "syllable",
+          "letter": "ط",
+          "mark": "kasratan"
+        },
+        {
+          "type": "syllable",
+          "letter": "ط",
+          "mark": "dammatan"
+        },
+        {
+          "type": "syllable",
+          "letter": "ظ",
+          "mark": "fathatan"
+        },
+        {
+          "type": "syllable",
+          "letter": "ظ",
+          "mark": "kasratan"
+        },
+        {
+          "type": "syllable",
+          "letter": "ظ",
+          "mark": "dammatan"
+        },
+        {
+          "type": "syllable",
+          "letter": "ع",
+          "mark": "fathatan"
+        },
+        {
+          "type": "syllable",
+          "letter": "ع",
+          "mark": "kasratan"
+        },
+        {
+          "type": "syllable",
+          "letter": "ع",
+          "mark": "dammatan"
+        },
+        {
+          "type": "syllable",
+          "letter": "غ",
+          "mark": "fathatan"
+        },
+        {
+          "type": "syllable",
+          "letter": "غ",
+          "mark": "kasratan"
+        },
+        {
+          "type": "syllable",
+          "letter": "غ",
+          "mark": "dammatan"
+        },
+        {
+          "type": "syllable",
+          "letter": "ف",
+          "mark": "fathatan"
+        },
+        {
+          "type": "syllable",
+          "letter": "ف",
+          "mark": "kasratan"
+        },
+        {
+          "type": "syllable",
+          "letter": "ف",
+          "mark": "dammatan"
+        },
+        {
+          "type": "syllable",
+          "letter": "ق",
+          "mark": "fathatan"
+        },
+        {
+          "type": "syllable",
+          "letter": "ق",
+          "mark": "kasratan"
+        },
+        {
+          "type": "syllable",
+          "letter": "ق",
+          "mark": "dammatan"
+        },
+        {
+          "type": "syllable",
+          "letter": "ك",
+          "mark": "fathatan"
+        },
+        {
+          "type": "syllable",
+          "letter": "ك",
+          "mark": "kasratan"
+        },
+        {
+          "type": "syllable",
+          "letter": "ك",
+          "mark": "dammatan"
+        },
+        {
+          "type": "syllable",
           "letter": "ل",
+          "mark": "fathatan"
+        },
+        {
+          "type": "syllable",
+          "letter": "ل",
+          "mark": "kasratan"
+        },
+        {
+          "type": "syllable",
+          "letter": "ل",
+          "mark": "dammatan"
+        },
+        {
+          "type": "syllable",
+          "letter": "م",
+          "mark": "fathatan"
+        },
+        {
+          "type": "syllable",
+          "letter": "م",
           "mark": "kasratan"
         },
         {
@@ -6046,26 +7887,76 @@
         {
           "type": "syllable",
           "letter": "ن",
+          "mark": "fathatan"
+        },
+        {
+          "type": "syllable",
+          "letter": "ن",
           "mark": "kasratan"
         },
         {
           "type": "syllable",
-          "letter": "د",
-          "mark": "fathatan"
-        },
-        {
-          "type": "syllable",
-          "letter": "ر",
+          "letter": "ن",
           "mark": "dammatan"
         },
         {
           "type": "syllable",
-          "letter": "ك",
+          "letter": "ه",
           "mark": "fathatan"
         },
         {
           "type": "syllable",
-          "letter": "ع",
+          "letter": "ه",
+          "mark": "kasratan"
+        },
+        {
+          "type": "syllable",
+          "letter": "ه",
+          "mark": "dammatan"
+        },
+        {
+          "type": "syllable",
+          "letter": "و",
+          "mark": "fathatan"
+        },
+        {
+          "type": "syllable",
+          "letter": "و",
+          "mark": "kasratan"
+        },
+        {
+          "type": "syllable",
+          "letter": "و",
+          "mark": "dammatan"
+        },
+        {
+          "type": "syllable",
+          "letter": "ي",
+          "mark": "fathatan"
+        },
+        {
+          "type": "syllable",
+          "letter": "ي",
+          "mark": "kasratan"
+        },
+        {
+          "type": "syllable",
+          "letter": "ي",
+          "mark": "dammatan"
+        },
+        {
+          "type": "syllable",
+          "letter": "ء",
+          "mark": "fathatan"
+        },
+        {
+          "type": "syllable",
+          "letter": "ء",
+          "mark": "kasratan"
+        },
+        {
+          "type": "syllable",
+          "letter": "ء",
           "mark": "dammatan"
         }
       ],
@@ -6812,6 +8703,246 @@
               "explain": "Буква с шаддой звучит дважды: «н» с сукуном, потом «ну»."
             }
           }
+        },
+        {
+          "type": "word",
+          "arabic": "بَتَّ",
+          "answer": 0,
+          "translations": {
+            "ru": {
+              "options": [
+                "батта",
+                "бата",
+                "батти"
+              ],
+              "explain": "Буква с шаддой звучит дважды: «т» с сукуном, потом «та»."
+            }
+          }
+        },
+        {
+          "type": "word",
+          "arabic": "صُنِّفَ",
+          "answer": 0,
+          "translations": {
+            "ru": {
+              "options": [
+                "суннифа",
+                "сунифа",
+                "суннафа"
+              ],
+              "explain": "Буква с шаддой звучит дважды: «н» с сукуном, потом «ни»."
+            }
+          }
+        },
+        {
+          "type": "word",
+          "arabic": "كَذَّبَ",
+          "answer": 0,
+          "translations": {
+            "ru": {
+              "options": [
+                "каззаба",
+                "казаба",
+                "каззиба"
+              ],
+              "explain": "Буква с шаддой звучит дважды: «з» с сукуном, потом «за»."
+            }
+          }
+        },
+        {
+          "type": "word",
+          "arabic": "حَجَّ",
+          "answer": 0,
+          "translations": {
+            "ru": {
+              "options": [
+                "хьаджджа",
+                "хьаджа",
+                "хьаджджи"
+              ],
+              "explain": "Буква с шаддой звучит дважды: «дж» с сукуном, потом «джа»."
+            }
+          }
+        },
+        {
+          "type": "word",
+          "arabic": "سِرُّ",
+          "answer": 0,
+          "translations": {
+            "ru": {
+              "options": [
+                "сирру",
+                "сиру",
+                "сирри"
+              ],
+              "explain": "Буква с шаддой звучит дважды: «р» с сукуном, потом «ру»."
+            }
+          }
+        },
+        {
+          "type": "word",
+          "arabic": "ظَنَّ",
+          "answer": 0,
+          "translations": {
+            "ru": {
+              "options": [
+                "зонна",
+                "зона",
+                "зонни"
+              ],
+              "explain": "Буква с шаддой звучит дважды: «н» с сукуном, потом «на»."
+            }
+          }
+        },
+        {
+          "type": "word",
+          "arabic": "أُمُّ",
+          "answer": 0,
+          "translations": {
+            "ru": {
+              "options": [
+                "ъумму",
+                "ъуму",
+                "ъумма"
+              ],
+              "explain": "Буква с шаддой звучит дважды: «м» с сукуном, потом «му»."
+            }
+          }
+        },
+        {
+          "type": "word",
+          "arabic": "نَزَّلَ",
+          "answer": 0,
+          "translations": {
+            "ru": {
+              "options": [
+                "наззальа",
+                "назальа",
+                "наззильа"
+              ],
+              "explain": "Буква с шаддой звучит дважды: «з» с сукуном, потом «за»."
+            }
+          }
+        },
+        {
+          "type": "word",
+          "arabic": "إِنَّ",
+          "answer": 0,
+          "translations": {
+            "ru": {
+              "options": [
+                "ъинна",
+                "ъина",
+                "ъинни"
+              ],
+              "explain": "Буква с шаддой звучит дважды: «н» с сукуном, потом «на»."
+            }
+          }
+        },
+        {
+          "type": "word",
+          "arabic": "رَبِّكَ",
+          "answer": 0,
+          "translations": {
+            "ru": {
+              "options": [
+                "роббика",
+                "робика",
+                "роббака"
+              ],
+              "explain": "Буква с шаддой звучит дважды: «б» с сукуном, потом «би»."
+            }
+          }
+        },
+        {
+          "type": "word",
+          "arabic": "كُلِّ",
+          "answer": 0,
+          "translations": {
+            "ru": {
+              "options": [
+                "кульли",
+                "кули",
+                "кульльу"
+              ],
+              "explain": "Буква с шаддой звучит дважды: «ль» с сукуном, потом «ли»."
+            }
+          }
+        },
+        {
+          "type": "word",
+          "arabic": "ثُمَّ",
+          "answer": 0,
+          "translations": {
+            "ru": {
+              "options": [
+                "сумма",
+                "сума",
+                "сумми"
+              ],
+              "explain": "Буква с шаддой звучит дважды: «м» с сукуном, потом «ма»."
+            }
+          }
+        },
+        {
+          "type": "word",
+          "arabic": "حَقُّ",
+          "answer": 0,
+          "translations": {
+            "ru": {
+              "options": [
+                "хьакъкъу",
+                "хьакъу",
+                "хьакъкъа"
+              ],
+              "explain": "Буква с шаддой звучит дважды: «къ» с сукуном, потом «къу»."
+            }
+          }
+        },
+        {
+          "type": "word",
+          "arabic": "نَعَّمَ",
+          "answer": 0,
+          "translations": {
+            "ru": {
+              "options": [
+                "наӏӏама",
+                "наӏама",
+                "наӏӏима"
+              ],
+              "explain": "Буква с шаддой звучит дважды: «ӏ» с сукуном, потом «ӏа»."
+            }
+          }
+        },
+        {
+          "type": "word",
+          "arabic": "قَدَّرَ",
+          "answer": 0,
+          "translations": {
+            "ru": {
+              "options": [
+                "къоддаро",
+                "къодаро",
+                "къоддиро"
+              ],
+              "explain": "Буква с шаддой звучит дважды: «д» с сукуном, потом «да»."
+            }
+          }
+        },
+        {
+          "type": "word",
+          "arabic": "يُسَبِّحُ",
+          "answer": 0,
+          "translations": {
+            "ru": {
+              "options": [
+                "йусаббихьу",
+                "йусабихьу",
+                "йусаббахьу"
+              ],
+              "explain": "Буква с шаддой звучит дважды: «б» с сукуном, потом «би»."
+            }
+          }
         }
       ],
       "words": {
@@ -7530,6 +9661,246 @@
                 "биробби-льнааси"
               ],
               "explain": "В середине не читают ни хӏамзату-львасли, ни льам без знака - звучит буква с шаддой."
+            }
+          }
+        },
+        {
+          "type": "word",
+          "arabic": "ٱلنُّورُ",
+          "answer": 0,
+          "translations": {
+            "ru": {
+              "options": [
+                "ъаннууру",
+                "ъальнууру",
+                "ннууру"
+              ],
+              "explain": "В начале хӏамзату-львасли читают с фатхьой, а льам без знака не читают - буква после него с шаддой."
+            }
+          }
+        },
+        {
+          "type": "word",
+          "arabic": "ٱلْجِبَالُ",
+          "answer": 0,
+          "translations": {
+            "ru": {
+              "options": [
+                "ъальджибаальу",
+                "ъаджджибаальу",
+                "льджибаальу"
+              ],
+              "explain": "В начале хӏамзату-львасли читают с фатхьой, льам с сукуном тоже читают."
+            }
+          }
+        },
+        {
+          "type": "word",
+          "arabic": "ٱلتِّينِ",
+          "answer": 0,
+          "translations": {
+            "ru": {
+              "options": [
+                "ъаттиини",
+                "ъальтиини",
+                "ттиини"
+              ],
+              "explain": "В начале хӏамзату-львасли читают с фатхьой, а льам без знака не читают - буква после него с шаддой."
+            }
+          }
+        },
+        {
+          "type": "word",
+          "arabic": "ٱلْمُسْتَقِيمَ",
+          "answer": 0,
+          "translations": {
+            "ru": {
+              "options": [
+                "ъальмустакъиима",
+                "ъаммустакъиима",
+                "льмустакъиима"
+              ],
+              "explain": "В начале хӏамзату-львасли читают с фатхьой, льам с сукуном тоже читают."
+            }
+          }
+        },
+        {
+          "type": "word",
+          "arabic": "ٱلطَّارِقِ",
+          "answer": 0,
+          "translations": {
+            "ru": {
+              "options": [
+                "ъатӏтӏоорикъи",
+                "ъальтӏоорикъи",
+                "тӏтӏоорикъи"
+              ],
+              "explain": "В начале хӏамзату-львасли читают с фатхьой, а льам без знака не читают - буква после него с шаддой."
+            }
+          }
+        },
+        {
+          "type": "word",
+          "arabic": "ٱلْفَجْرِ",
+          "answer": 0,
+          "translations": {
+            "ru": {
+              "options": [
+                "ъальфаджри",
+                "ъаффаджри",
+                "льфаджри"
+              ],
+              "explain": "В начале хӏамзату-львасли читают с фатхьой, льам с сукуном тоже читают."
+            }
+          }
+        },
+        {
+          "type": "word",
+          "arabic": "ٱلزَّيْتُونِ",
+          "answer": 0,
+          "translations": {
+            "ru": {
+              "options": [
+                "ъаззайтууни",
+                "ъальзайтууни",
+                "ззайтууни"
+              ],
+              "explain": "В начале хӏамзату-львасли читают с фатхьой, а льам без знака не читают - буква после него с шаддой."
+            }
+          }
+        },
+        {
+          "type": "word",
+          "arabic": "ٱلْحَمْدُ",
+          "answer": 0,
+          "translations": {
+            "ru": {
+              "options": [
+                "ъальхьамду",
+                "ъахьхьамду",
+                "льхьамду"
+              ],
+              "explain": "В начале хӏамзату-львасли читают с фатхьой, льам с сукуном тоже читают."
+            }
+          }
+        },
+        {
+          "type": "word",
+          "arabic": "ٱلدُّنْيَا",
+          "answer": 0,
+          "translations": {
+            "ru": {
+              "options": [
+                "ъаддунйаа",
+                "ъальдунйаа",
+                "ддунйаа"
+              ],
+              "explain": "В начале хӏамзату-львасли читают с фатхьой, а льам без знака не читают - буква после него с шаддой."
+            }
+          }
+        },
+        {
+          "type": "word",
+          "arabic": "ٱلْبُرُوجِ",
+          "answer": 0,
+          "translations": {
+            "ru": {
+              "options": [
+                "ъальбурууджи",
+                "ъаббурууджи",
+                "льбурууджи"
+              ],
+              "explain": "В начале хӏамзату-львасли читают с фатхьой, льам с сукуном тоже читают."
+            }
+          }
+        },
+        {
+          "type": "word",
+          "arabic": "خَلَقَ ٱلذَّكَرَ",
+          "answer": 0,
+          "translations": {
+            "ru": {
+              "options": [
+                "хольакъо-ззакаро",
+                "хольакъо-ъаззакаро",
+                "хольакъо-льзакаро"
+              ],
+              "explain": "В середине не читают ни хӏамзату-львасли, ни льам без знака - звучит буква с шаддой."
+            }
+          }
+        },
+        {
+          "type": "word",
+          "arabic": "عَيْنَ ٱلْيَقِينِ",
+          "answer": 0,
+          "translations": {
+            "ru": {
+              "options": [
+                "ӏайна-льйакъиини",
+                "ӏайна-ъальйакъиини",
+                "ӏайна-ййакъиини"
+              ],
+              "explain": "В середине хӏамзату-львасли не читают, а льам с сукуном читают."
+            }
+          }
+        },
+        {
+          "type": "word",
+          "arabic": "لَهُ ٱلدِّينُ",
+          "answer": 0,
+          "translations": {
+            "ru": {
+              "options": [
+                "льахӏу-ддиину",
+                "льахӏу-ъаддиину",
+                "льахӏу-льдиину"
+              ],
+              "explain": "В середине не читают ни хӏамзату-львасли, ни льам без знака - звучит буква с шаддой."
+            }
+          }
+        },
+        {
+          "type": "word",
+          "arabic": "مَعَ ٱلْعُسْرِ",
+          "answer": 0,
+          "translations": {
+            "ru": {
+              "options": [
+                "маӏа-льӏусри",
+                "маӏа-ъальӏусри",
+                "маӏа-ӏӏусри"
+              ],
+              "explain": "В середине хӏамзату-львасли не читают, а льам с сукуном читают."
+            }
+          }
+        },
+        {
+          "type": "word",
+          "arabic": "نِعْمَ ٱلثَّوَابُ",
+          "answer": 0,
+          "translations": {
+            "ru": {
+              "options": [
+                "ниӏма-ссаваабу",
+                "ниӏма-ъассаваабу",
+                "ниӏма-льсаваабу"
+              ],
+              "explain": "В середине не читают ни хӏамзату-львасли, ни льам без знака - звучит буква с шаддой."
+            }
+          }
+        },
+        {
+          "type": "word",
+          "arabic": "يَوْمَ ٱلْفَصْلِ",
+          "answer": 0,
+          "translations": {
+            "ru": {
+              "options": [
+                "йавма-льфасли",
+                "йавма-ъальфасли",
+                "йавма-ффасли"
+              ],
+              "explain": "В середине хӏамзату-львасли не читают, а льам с сукуном читают."
             }
           }
         }
@@ -8284,6 +10655,246 @@
                 "фаъаммаа-льйатиима",
                 "фаъамма-льйатиима",
                 "фаъамма-ъальйатиима"
+              ],
+              "explain": "Перед артиклем буква мадда не читается, хӏамзату-львасли в середине - тоже: звучит короткая огласовка и сразу артикль."
+            }
+          }
+        },
+        {
+          "type": "word",
+          "arabic": "فَعَقَرُو ٱلنَّاقَةَ",
+          "answer": 0,
+          "translations": {
+            "ru": {
+              "options": [
+                "фаӏакъору-ннаакъота",
+                "фаӏакъоруу-ннаакъота",
+                "фаӏакъору-ъаннаакъота"
+              ],
+              "explain": "Перед артиклем буква мадда не читается, хӏамзату-львасли в середине - тоже: звучит короткая огласовка и сразу артикль."
+            }
+          }
+        },
+        {
+          "type": "word",
+          "arabic": "وَعَمِلُو ٱلصَّـٰلِحَـٰتِ",
+          "answer": 0,
+          "translations": {
+            "ru": {
+              "options": [
+                "ваӏамильу-ссоолихьаати",
+                "ваӏамильуу-ссоолихьаати",
+                "ваӏамильу-ъассоолихьаати"
+              ],
+              "explain": "Перед артиклем буква мадда не читается, хӏамзату-львасли в середине - тоже: звучит короткая огласовка и сразу артикль."
+            }
+          }
+        },
+        {
+          "type": "word",
+          "arabic": "جَعَلْنَا ٱلْبَيْتَ",
+          "answer": 0,
+          "translations": {
+            "ru": {
+              "options": [
+                "джаӏальна-льбайта",
+                "джаӏальнаа-льбайта",
+                "джаӏальна-ъальбайта"
+              ],
+              "explain": "Перед артиклем буква мадда не читается, хӏамзату-львасли в середине - тоже: звучит короткая огласовка и сразу артикль."
+            }
+          }
+        },
+        {
+          "type": "word",
+          "arabic": "أَنْزَلْنَا ٱلتَّوْرَاةَ",
+          "answer": 0,
+          "translations": {
+            "ru": {
+              "options": [
+                "ъанзальна-ттавроота",
+                "ъанзальнаа-ттавроота",
+                "ъанзальна-ъаттавроота"
+              ],
+              "explain": "Перед артиклем буква мадда не читается, хӏамзату-львасли в середине - тоже: звучит короткая огласовка и сразу артикль."
+            }
+          }
+        },
+        {
+          "type": "word",
+          "arabic": "حَاضِرِي ٱلْمَسْجِدِ",
+          "answer": 0,
+          "translations": {
+            "ru": {
+              "options": [
+                "хьаадыри-льмасджиди",
+                "хьаадырии-льмасджиди",
+                "хьаадыри-ъальмасджиди"
+              ],
+              "explain": "Перед артиклем буква мадда не читается, хӏамзату-львасли в середине - тоже: звучит короткая огласовка и сразу артикль."
+            }
+          }
+        },
+        {
+          "type": "word",
+          "arabic": "يَجْزِي ٱلْمُتَصَدِّقِينَ",
+          "answer": 0,
+          "translations": {
+            "ru": {
+              "options": [
+                "йаджзи-льмутасоддикъиина",
+                "йаджзии-льмутасоддикъиина",
+                "йаджзи-ъальмутасоддикъиина"
+              ],
+              "explain": "Перед артиклем буква мадда не читается, хӏамзату-львасли в середине - тоже: звучит короткая огласовка и сразу артикль."
+            }
+          }
+        },
+        {
+          "type": "word",
+          "arabic": "تَأْتِي ٱلسَّمَاءُ",
+          "answer": 0,
+          "translations": {
+            "ru": {
+              "options": [
+                "таъти-ссамааъу",
+                "таътии-ссамааъу",
+                "таъти-ъассамааъу"
+              ],
+              "explain": "Перед артиклем буква мадда не читается, хӏамзату-львасли в середине - тоже: звучит короткая огласовка и сразу артикль."
+            }
+          }
+        },
+        {
+          "type": "word",
+          "arabic": "ذُو ٱلرَّحْمَةِ",
+          "answer": 0,
+          "translations": {
+            "ru": {
+              "options": [
+                "зу-ррохьмати",
+                "зуу-ррохьмати",
+                "зу-ъаррохьмати"
+              ],
+              "explain": "Перед артиклем буква мадда не читается, хӏамзату-львасли в середине - тоже: звучит короткая огласовка и сразу артикль."
+            }
+          }
+        },
+        {
+          "type": "word",
+          "arabic": "فَٱتَّقُو ٱلنَّارَ",
+          "answer": 0,
+          "translations": {
+            "ru": {
+              "options": [
+                "фаттакъу-ннааро",
+                "фаттакъуу-ннааро",
+                "фаттакъу-ъаннааро"
+              ],
+              "explain": "Перед артиклем буква мадда не читается, хӏамзату-львасли в середине - тоже: звучит короткая огласовка и сразу артикль."
+            }
+          }
+        },
+        {
+          "type": "word",
+          "arabic": "فَتَنُو ٱلْمُؤْمِنِينَ",
+          "answer": 0,
+          "translations": {
+            "ru": {
+              "options": [
+                "фатану-льмуъминиина",
+                "фатануу-льмуъминиина",
+                "фатану-ъальмуъминиина"
+              ],
+              "explain": "Перед артиклем буква мадда не читается, хӏамзату-львасли в середине - тоже: звучит короткая огласовка и сразу артикль."
+            }
+          }
+        },
+        {
+          "type": "word",
+          "arabic": "مَا ٱلْقَارِعَةُ",
+          "answer": 0,
+          "translations": {
+            "ru": {
+              "options": [
+                "ма-лькъоориӏату",
+                "маа-лькъоориӏату",
+                "ма-ъалькъоориӏату"
+              ],
+              "explain": "Перед артиклем буква мадда не читается, хӏамзату-львасли в середине - тоже: звучит короткая огласовка и сразу артикль."
+            }
+          }
+        },
+        {
+          "type": "word",
+          "arabic": "وَإِذَا ٱلصُّحُفُ نُشِرَتْ",
+          "answer": 0,
+          "translations": {
+            "ru": {
+              "options": [
+                "ваъиза-ссухьуфу нуширот",
+                "ваъизаа-ссухьуфу нуширот",
+                "ваъиза-ъассухьуфу нуширот"
+              ],
+              "explain": "Перед артиклем буква мадда не читается, хӏамзату-львасли в середине - тоже: звучит короткая огласовка и сразу артикль."
+            }
+          }
+        },
+        {
+          "type": "word",
+          "arabic": "وَسَنَجْزِي ٱلشَّاكِرِينَ",
+          "answer": 0,
+          "translations": {
+            "ru": {
+              "options": [
+                "васанаджзи-шшаакириина",
+                "васанаджзии-шшаакириина",
+                "васанаджзи-ъашшаакириина"
+              ],
+              "explain": "Перед артиклем буква мадда не читается, хӏамзату-львасли в середине - тоже: звучит короткая огласовка и сразу артикль."
+            }
+          }
+        },
+        {
+          "type": "word",
+          "arabic": "إِذَا ٱلشَّمْسُ كُوِّرَتْ",
+          "answer": 0,
+          "translations": {
+            "ru": {
+              "options": [
+                "ъиза-шшамсу куввирот",
+                "ъизаа-шшамсу куввирот",
+                "ъиза-ъашшамсу куввирот"
+              ],
+              "explain": "Перед артиклем буква мадда не читается, хӏамзату-львасли в середине - тоже: звучит короткая огласовка и сразу артикль."
+            }
+          }
+        },
+        {
+          "type": "word",
+          "arabic": "وَإِذَا ٱلْجِبَالُ سُيِّرَتْ",
+          "answer": 0,
+          "translations": {
+            "ru": {
+              "options": [
+                "ваъиза-льджибаальу суййирот",
+                "ваъизаа-льджибаальу суййирот",
+                "ваъиза-ъальджибаальу суййирот"
+              ],
+              "explain": "Перед артиклем буква мадда не читается, хӏамзату-львасли в середине - тоже: звучит короткая огласовка и сразу артикль."
+            }
+          }
+        },
+        {
+          "type": "word",
+          "arabic": "وَمَا أَنْتَ بِهَادِي ٱلْعُمْيِ",
+          "answer": 0,
+          "translations": {
+            "ru": {
+              "options": [
+                "вамаа ъанта бихӏаади-льӏумйи",
+                "вамаа ъанта бихӏаадии-льӏумйи",
+                "вамаа ъанта бихӏаади-ъальӏумйи"
               ],
               "explain": "Перед артиклем буква мадда не читается, хӏамзату-львасли в середине - тоже: звучит короткая огласовка и сразу артикль."
             }
@@ -9418,7 +12029,8 @@
             }
           }
         }
-      ]
+      ],
+      "quizCount": 20
     },
     {
       "id": 13,
