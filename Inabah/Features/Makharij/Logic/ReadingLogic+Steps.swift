@@ -53,6 +53,32 @@ nonisolated extension ReadingLogic {
         step.number > unlockSeen && step.number == lastUnlocked && state != .locked
     }
 
+    /// «Следующий шаг» после проверки: первый следующий шаг с уроком (как Android - без замка: шаг без
+    /// слов проверкой уже пройден, следующий открыт).
+    static func nextStepAfterQuiz(course: ReadingCourse, step: ReadingStep) -> ReadingStep? {
+        course.steps.first { $0.number > step.number && $0.hasLesson }
+    }
+
+    /// «Следующий шаг» после слов: первый следующий шаг с уроком, который уже открыт.
+    static func nextStepAfterWords(course: ReadingCourse, step: ReadingStep, completed: Set<Int>, allStepsOpen: Bool) -> ReadingStep? {
+        course.steps.first {
+            $0.number > step.number && $0.hasLesson && (allStepsOpen || isUnlocked(course: course, completed: completed, step: $0))
+        }
+    }
+
+    /// Сколько плиток «Читаем слова» с этим словом влезает в ряд (3, 2 или 1): ширина слова - не больше
+    /// 80 % места под текст в плитке (Android `rememberWordColumns`). `rowWidth` - ширина ряда плиток.
+    static func wordColumns(wordWidth: Double, rowWidth: Double) -> Int {
+        let gap = 8.0
+        let tilePadding = 12.0
+        let fit = 0.8
+        for columns in [3, 2] {
+            let tile = (rowWidth - gap * Double(columns - 1)) / Double(columns)
+            if wordWidth <= (tile - tilePadding) * fit { return columns }
+        }
+        return 1
+    }
+
     /// Подпись карточки курса: текущий итог → текущий шаг → курс пройден → «пройдено N из M».
     static func homeSummary(course: ReadingCourse, completed: Set<Int>) -> ReadingHomeSummary {
         let total = numberedStepCount(course: course)

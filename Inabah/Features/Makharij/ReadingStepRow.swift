@@ -77,7 +77,7 @@ struct ReadingStepRow: View {
             }
         }
         .frame(width: badgeSize, height: badgeSize)
-        .modifier(Breathing(isActive: state == .current))
+        .breathing(isActive: state == .current)
     }
 
     @ViewBuilder
@@ -112,27 +112,6 @@ private struct ExampleText: View {
             .foregroundStyle(theme.palette.parchmentLight)
             .lineLimit(1)
             .environment(\.layoutDirection, .rightToLeft)
-    }
-}
-
-/// «Дыхание» текущего шага: ×1,08 и обратно, пока шаг текущий. Только масштаб отрисовки, без вёрстки.
-private struct Breathing: ViewModifier {
-    let isActive: Bool
-
-    @State private var expanded = false
-
-    private static let scale: CGFloat = 1.08
-
-    func body(content: Content) -> some View {
-        content
-            .scaleEffect(expanded ? Self.scale : 1)
-            .onChange(of: isActive, initial: true) { _, active in
-                if active {
-                    withAnimation(Motion.breathe) { expanded = true }
-                } else {
-                    withAnimation(Motion.press) { expanded = false }
-                }
-            }
     }
 }
 

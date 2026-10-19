@@ -1756,6 +1756,61 @@
         }
       }
     },
+    "makharij.done.final %@" : {
+      "comment" : "Учимся читать: окно завершения итога",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Итог «%@» пройден"
+          }
+        }
+      }
+    },
+    "makharij.done.step %lld %@" : {
+      "comment" : "Учимся читать: окно завершения шага",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Шаг %1$lld «%2$@» пройден"
+          }
+        }
+      }
+    },
+    "makharij.done.verse.reference" : {
+      "comment" : "Учимся читать: окно завершения: источник аята",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Къуран · Тӏа Хӏа 20:114"
+          }
+        }
+      }
+    },
+    "makharij.done.verse.translation" : {
+      "comment" : "Учимся читать: окно завершения: перевод аята 20:114",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "«И скажи: „Господи, прибавь мне знания“»"
+          }
+        }
+      }
+    },
+    "makharij.done.words %lld %@" : {
+      "comment" : "Учимся читать: окно завершения: слова (последнее - «6 раз»)",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Прочитано слов: %1$lld, каждое - %2$@"
+          }
+        }
+      }
+    },
     "makharij.final.title %@" : {
       "comment" : "Учимся читать: итог курса вместо номера шага",
       "localizations" : {
@@ -1998,6 +2053,226 @@
         }
       }
     },
+    "makharij.quiz.correct" : {
+      "comment" : "Учимся читать: проверка: верный ответ",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Верно!"
+          }
+        }
+      }
+    },
+    "makharij.quiz.counter %lld %lld" : {
+      "comment" : "Учимся читать: проверка: номер вопроса",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "вопрос %1$lld из %2$lld"
+          }
+        }
+      }
+    },
+    "makharij.quiz.done.title" : {
+      "comment" : "Учимся читать: проверка окончена",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Шаг пройден"
+          }
+        }
+      }
+    },
+    "makharij.quiz.done.words" : {
+      "comment" : "Учимся читать: проверка окончена, слова не прочитаны",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ответы на все вопросы даны. Осталось прочитать слова - тогда шаг будет пройден и откроется следующий."
+          }
+        }
+      }
+    },
+    "makharij.quiz.explain.closed %@ %@" : {
+      "comment" : "Учимся читать: проверка: объяснение закрытого слога",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Над буквой %1$@ - сукун: слог закрыт, «%2$@»."
+          }
+        }
+      }
+    },
+    "makharij.quiz.explain.form %@ %@" : {
+      "comment" : "Учимся читать: проверка: объяснение буквы по форме",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Это %1$@, %2$@."
+          }
+        }
+      }
+    },
+    "makharij.quiz.explain.letter %@ %@" : {
+      "comment" : "Учимся читать: проверка: объяснение буквы",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Это %1$@, звук «%2$@»."
+          }
+        }
+      }
+    },
+    "makharij.quiz.explain.syllable %@ %@ %@" : {
+      "comment" : "Учимся читать: проверка: объяснение слога (где знак, название, звук)",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ - %2$@, она даёт звук «%3$@»."
+          }
+        }
+      }
+    },
+    "makharij.quiz.explain.word %@" : {
+      "comment" : "Учимся читать: проверка: объяснение слова без своего",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Читается «%@»."
+          }
+        }
+      }
+    },
+    "makharij.quiz.finish" : {
+      "comment" : "Учимся читать: проверка: последний вопрос",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Завершить"
+          }
+        }
+      }
+    },
+    "makharij.quiz.letter" : {
+      "comment" : "Учимся читать: проверка: вопрос с буквой",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Какая это буква?"
+          }
+        }
+      }
+    },
+    "makharij.quiz.next" : {
+      "comment" : "Учимся читать: проверка: к следующему вопросу",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Дальше"
+          }
+        }
+      }
+    },
+    "makharij.quiz.nextStep %@" : {
+      "comment" : "Учимся читать: кнопка следующего шага",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Следующий шаг: %@"
+          }
+        }
+      }
+    },
+    "makharij.quiz.option.correct" : {
+      "comment" : "Учимся читать: проверка: VoiceOver выбранного верного варианта",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "верный ответ"
+          }
+        }
+      }
+    },
+    "makharij.quiz.option.wrong" : {
+      "comment" : "Учимся читать: проверка: VoiceOver выбранного неверного варианта",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "неверный ответ"
+          }
+        }
+      }
+    },
+    "makharij.quiz.syllable" : {
+      "comment" : "Учимся читать: проверка: вопрос со слогом",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Как читается этот слог?"
+          }
+        }
+      }
+    },
+    "makharij.quiz.title" : {
+      "comment" : "Учимся читать: навбар проверки",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Проверка"
+          }
+        }
+      }
+    },
+    "makharij.quiz.toSteps" : {
+      "comment" : "Учимся читать: кнопка к списку шагов",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "К списку шагов"
+          }
+        }
+      }
+    },
+    "makharij.quiz.word" : {
+      "comment" : "Учимся читать: проверка: вопрос со словом",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Как читается это слово?"
+          }
+        }
+      }
+    },
+    "makharij.quiz.wrong" : {
+      "comment" : "Учимся читать: проверка: неверный ответ",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Неверно, попробуйте ещё раз"
+          }
+        }
+      }
+    },
     "makharij.reading.allDone" : {
       "comment" : "Карточка «Учимся читать»: курс пройден вместе с итогом",
       "localizations" : {
@@ -2119,6 +2394,83 @@
         }
       }
     },
+    "makharij.words.count %lld %lld" : {
+      "comment" : "Учимся читать: «Читаем слова»: счёт прочтений слова",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld/%2$lld"
+          }
+        }
+      }
+    },
+    "makharij.words.done.message" : {
+      "comment" : "Учимся читать: «Читаем слова»: шаг пройден",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Шаг пройден - следующий открыт."
+          }
+        }
+      }
+    },
+    "makharij.words.done.quiz" : {
+      "comment" : "Учимся читать: «Читаем слова»: осталась проверка",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Осталось ответить на вопросы урока - тогда шаг будет пройден."
+          }
+        }
+      }
+    },
+    "makharij.words.done.title" : {
+      "comment" : "Учимся читать: «Читаем слова»: всё прочитано",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Все слова прочитаны"
+          }
+        }
+      }
+    },
+    "makharij.words.group %lld %lld" : {
+      "comment" : "Учимся читать: «Читаем слова»: номер страницы",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "группа %1$lld из %2$lld"
+          }
+        }
+      }
+    },
+    "makharij.words.hadith.reference" : {
+      "comment" : "Учимся читать: «Читаем слова»: источник хадиса",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Хадис · Муслим, 798"
+          }
+        }
+      }
+    },
+    "makharij.words.hadith.translation" : {
+      "comment" : "Учимся читать: «Читаем слова»: перевод хадиса в ⓘ",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "«Искусный в чтении Къурана - вместе с благородными и праведными писцами, а тому, кто читает Къуран, запинаясь, и ему это трудно, - двойная награда»"
+          }
+        }
+      }
+    },
     "makharij.words.hint" : {
       "comment" : "Учимся читать: кнопка-лампочка: транскрипция на 0,7 с",
       "localizations" : {
@@ -2130,8 +2482,107 @@
         }
       }
     },
+    "makharij.words.next" : {
+      "comment" : "Учимся читать: «Читаем слова»: следующая группа",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Дальше ›"
+          }
+        }
+      }
+    },
     "makharij.words.open" : {
       "comment" : "Учимся читать: кнопка «Читаем слова» под уроком",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Читаем слова"
+          }
+        }
+      }
+    },
+    "makharij.words.previous" : {
+      "comment" : "Учимся читать: «Читаем слова»: предыдущая группа",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "‹ Назад"
+          }
+        }
+      }
+    },
+    "makharij.words.progress %lld %lld %@" : {
+      "comment" : "Учимся читать: «Читаем слова»: прогресс (последнее - «6 раз»)",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "прочитано %1$lld из %2$lld · каждое слово - %3$@"
+          }
+        }
+      }
+    },
+    "makharij.words.readAction" : {
+      "comment" : "Учимся читать: «Читаем слова»: VoiceOver-действие плитки",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "прочитал ещё раз"
+          }
+        }
+      }
+    },
+    "makharij.words.readAloud" : {
+      "comment" : "Учимся читать: «Читаем слова»: совет",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Читайте каждое слово вслух: глазами читать не научиться - навык даёт только чтение вслух."
+          }
+        }
+      }
+    },
+    "makharij.words.tileRead" : {
+      "comment" : "Учимся читать: «Читаем слова»: VoiceOver прочитанной плитки",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "прочитано"
+          }
+        }
+      }
+    },
+    "makharij.words.tileState %lld %lld" : {
+      "comment" : "Учимся читать: «Читаем слова»: VoiceOver счёт плитки",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "прочитано %1$lld из %2$lld"
+          }
+        }
+      }
+    },
+    "makharij.words.tileUnread" : {
+      "comment" : "Учимся читать: «Читаем слова»: VoiceOver непрочитанной плитки",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "не прочитано"
+          }
+        }
+      }
+    },
+    "makharij.words.title" : {
+      "comment" : "Учимся читать: навбар «Читаем слова»",
       "localizations" : {
         "ru" : {
           "stringUnit" : {

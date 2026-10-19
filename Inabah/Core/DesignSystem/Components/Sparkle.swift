@@ -26,11 +26,14 @@ nonisolated struct SparkleShape: Shape {
 struct SparkleBurst: View {
     let color: Color
     var count = Layout.count
+    /// Длительность вспышки в секундах; повтор - новым экземпляром (`.id`).
+    var duration = Layout.duration
 
     @State private var progress = 0.0
 
     fileprivate enum Layout {
         static let count = 8
+        static let duration = 0.7
         /// Звёздочка в начале вспышки; к концу - вдвое меньше.
         static let starSize: CGFloat = 10
         static let waist: CGFloat = 0.22
@@ -45,7 +48,7 @@ struct SparkleBurst: View {
             .allowsHitTesting(false)
             .accessibilityHidden(true)
             .onAppear {
-                withAnimation(Motion.sparkleBurst) { progress = 1 }
+                withAnimation(Motion.sparkleBurst(duration: duration)) { progress = 1 }
             }
     }
 }

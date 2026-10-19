@@ -10,6 +10,8 @@ struct TileZoomOverlay<Tile: View>: View {
     let sourceTextSize: Double
     let zoomedTextSize: Double
     let onDismissed: () -> Void
+    /// Касание по увеличенной плитке («Читаем слова» - прочитал); `nil` - касание закрывает, как затемнение.
+    var onTileTap: (() -> Void)?
     @ViewBuilder let tile: Tile
 
     @Environment(\.theme) private var theme
@@ -38,8 +40,17 @@ struct TileZoomOverlay<Tile: View>: View {
                 ) {
                     tile
                 }
-                // Касание по плитке без звука - как по затемнению: закрыть.
+                // Касание по плитке без действия - как по затемнению: закрыть.
                 .allowsHitTesting(false)
+                if let onTileTap {
+                    // Место плитки в конце полёта ловит касание сама (плитка - только отрисовка).
+                    Color.clear
+                        .contentShape(.rect)
+                        .frame(width: target.width, height: target.height)
+                        .offset(x: target.minX, y: target.minY)
+                        .onTapGesture(perform: onTileTap)
+                        .accessibilityHidden(true)
+                }
             }
         }
         // Касание в любом месте слоя - закрыть (вид затемнения меняется с анимацией и сам касания не ловит).

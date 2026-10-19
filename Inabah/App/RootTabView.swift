@@ -74,8 +74,8 @@ struct RootTabView: View {
                                 case .alphabet(let number): ReadingAlphabetView(stepNumber: number)
                                 case .extra(let number, let topic): ReadingExtraView(stepNumber: number, topic: topic)
                                 case .letterForms(let number, let letter): ReadingLetterFormsView(stepNumber: number, letter: letter)
-                                // Проверка и «Читаем слова» - следующий этап переноса (docs/ios-port.md).
-                                case .quiz(let number), .words(let number): ReadingComingSoonView(stepNumber: number)
+                                case .quiz(let number): ReadingQuizView(stepNumber: number)
+                                case .words(let number): ReadingWordsView(stepNumber: number)
                                 }
                             }
                             .interfaceTextSize()

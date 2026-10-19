@@ -86,13 +86,17 @@ private struct LessonInfoAnchorKey: PreferenceKey {
     }
 }
 
-private struct LessonInfoPopover: ViewModifier {
+/// Ширина карточки ⓘ (Android `InfoMaxWidth`).
+private enum LessonInfoMetrics {
+    static let width: CGFloat = 300
+}
+
+private struct LessonInfoPopover<Card: View>: ViewModifier {
     @Binding var info: LessonInfo?
     let colors: ReadingColors
+    @ViewBuilder let card: (LessonInfo) -> Card
 
     @State private var cardHeight: CGFloat = 0
-
-    private static let width: CGFloat = 300
 
     func body(content: Content) -> some View {
         content
@@ -101,13 +105,13 @@ private struct LessonInfoPopover: ViewModifier {
                     AnchoredPopover(
                         anchor: info.flatMap { anchors[$0.id] }.map { proxy[$0] },
                         containerWidth: proxy.size.width,
-                        width: Self.width,
+                        width: LessonInfoMetrics.width,
                         tint: colors.tint,
                         belowEnd: .init(containerHeight: proxy.size.height, cardHeight: cardHeight),
                         onDismiss: { withAnimation(Motion.popoverClose) { info = nil } }
                     ) {
                         if let info {
-                            InfoCard(text: info.text)
+                            card(info)
                                 .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { cardHeight = $0 }
                         }
                     }
@@ -136,7 +140,12 @@ extension View {
 
     /// Всплывающая карточка полного текста ⓘ - под кнопкой, правым краем к ней (Android `BelowEnd`).
     func lessonInfoPopover(_ info: Binding<LessonInfo?>, colors: ReadingColors) -> some View {
-        modifier(LessonInfoPopover(info: info, colors: colors))
+        modifier(LessonInfoPopover(info: info, colors: colors) { InfoCard(text: $0.text) })
+    }
+
+    /// То же со своим содержимым карточки (хадис в «Читаем слова»).
+    func lessonInfoPopover(_ info: Binding<LessonInfo?>, colors: ReadingColors, @ViewBuilder card: @escaping (LessonInfo) -> some View) -> some View {
+        modifier(LessonInfoPopover(info: info, colors: colors, card: card))
     }
 }
 

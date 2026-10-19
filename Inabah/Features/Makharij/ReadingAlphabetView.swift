@@ -84,18 +84,3 @@ struct ReadingExtraView: View {
         )
     }
 }
-
-/// Заготовка проверки и «Читаем слова» до следующего этапа переноса: заголовок шага и «Урок готовится».
-struct ReadingComingSoonView: View {
-    let stepNumber: Int
-
-    var body: some View {
-        ReadingScreen(
-            stepNumber: stepNumber,
-            title: { course in course?.step(stepNumber).map { Text($0.displayTitle) } ?? Text("makharij.reading.title") },
-            showsTransliterationToggle: false,
-            actions: { EmptyView() },
-            content: { _, _, _ in ReadingLessonSoon() }
-        )
-    }
-}
