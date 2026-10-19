@@ -16,6 +16,8 @@ struct AppEnvironment {
     let hadithProgress: HadithProgress
     let hadithFavorites: HadithFavorites
     let hadithCollectionOrder: HadithCollectionOrder
+    /// «Учимся читать» (раздел «Махрадж»): пройденные уроки, счёт слов, зикры итога.
+    let readingProgress: ReadingProgress
     let appIconSettings: AppIconSettings
     let audioPlayer: AudioPlayerController
     /// Палитра оформления — тема в окружении берётся из неё (`themed()`).
@@ -62,6 +64,7 @@ struct AppEnvironment {
         hadithProgress = HadithProgress(defaults: defaults)
         hadithFavorites = HadithFavorites(defaults: defaults)
         hadithCollectionOrder = HadithCollectionOrder(defaults: defaults)
+        readingProgress = ReadingProgress(defaults: defaults)
         appIconSettings = AppIconSettings(switcher: appIconSwitcher ?? SystemAppIconSwitcher())
         self.audioPlayer = audioPlayer ?? AudioPlayerController(
             engine: AVAudioEngineAdapter(),
@@ -149,6 +152,7 @@ extension View {
             .environment(environment.azkarStore)
             .environment(environment.hadithStore)
             .environment(environment.hadithProgress)
+            .environment(environment.readingProgress)
             .environment(environment.hadithFavorites)
             .environment(environment.hadithCollectionOrder)
             .environment(environment.appIconSettings)

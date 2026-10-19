@@ -121,7 +121,7 @@ private nonisolated extension ReminderText {
     }
 }
 
-private nonisolated extension Dictionary where Key == String {
+nonisolated extension Dictionary where Key == String {
     var keyedByLanguage: [ContentLanguage: Value] {
         Dictionary<ContentLanguage, Value>(
             map { (ContentLanguage(rawValue: $0.key), $0.value) },
@@ -130,7 +130,7 @@ private nonisolated extension Dictionary where Key == String {
     }
 }
 
-private nonisolated extension Optional where Wrapped == String {
+nonisolated extension Optional where Wrapped == String {
     /// Пустые строки в данных означают «не заполнено» (например, `source` ждёт уточнения).
     var nonEmpty: String? {
         guard let trimmed = self?.trimmingCharacters(in: .whitespacesAndNewlines), !trimmed.isEmpty else {
