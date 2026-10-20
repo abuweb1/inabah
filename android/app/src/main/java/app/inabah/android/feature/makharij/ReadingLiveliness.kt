@@ -81,7 +81,7 @@ internal class TapHint(val target: Rect, val text: String)
 
 /**
  * Волна, подсказка и «зов» одного экрана. Ячейки сообщают о себе через [tapCell] (где стоят, какую подсказку дать);
- * экран оборачивает содержимое в [TapIntroHost]. [seen] - подсказку этого экрана уже показывали: волны нет.
+ * экран оборачивает содержимое в [TapIntroHost]. [seen] - подсказку этого экрана уже показывали: волна и «зов» идут, надписи нет.
  */
 @Stable
 class TapIntro internal constructor(
@@ -203,18 +203,20 @@ internal fun rememberTapIntro(key: String, settings: ReadingSettings, zoomable: 
     }
     // Всё - в одном эффекте: состояние читается в корутине, композиция экрана от касаний не перерисовывается.
     LaunchedEffect(intro) {
-        if (!intro.seen) {
-            delay(FIRST_DELAY_MILLIS)
-            intro.runWave()
-            val first = intro.firstCell(onlyZoomable = zoomable)
-            if (first != null && !intro.tapped) {
-                val (id, cell) = first
+        // Волна и «зов» - при каждом открытии экрана, подсказка-надпись - один раз (решение пользователя 2026-10-20).
+        delay(FIRST_DELAY_MILLIS)
+        intro.runWave()
+        val first = intro.firstCell(onlyZoomable = zoomable)
+        if (first != null && !intro.tapped) {
+            val (id, cell) = first
+            val call = if (zoomable) launch { intro.call(id) } else null
+            if (!intro.seen) {
                 intro.hint = TapHint(cell.bounds, cell.hint)
-                if (zoomable) launch { intro.call(id) }
                 delay(HINT_MILLIS)
                 intro.hint = null
                 settings.markIntroSeen(key)
             }
+            call?.join()
         }
         if (!zoomable) return@LaunchedEffect
         // Тишина: каждое касание экрана начинает отсчёт заново (и прерывает идущий «зов»).

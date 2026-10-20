@@ -51,6 +51,8 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 private const val TIMEOUT_MILLIS = 5_000L
+/** Вступление экрана целиком: 0,5 с до волны, волна, «зов» 0,9 с - с запасом, но короче тишины 6 с. */
+private const val INTRO_MILLIS = 4_000L
 private const val QUIZ_SEED = 42L
 
 /** «Учимся читать»: главная, урок с листом буквы и «глазом», проверка (настоящий reading.json из ассетов). */
@@ -225,7 +227,8 @@ class ReadingScreensTest {
     @Test
     fun letterCardHintShowsTransliterationAndLongPressZoomsWord() {
         val settings = ReadingSettings(dataStore.storage)
-        // Волна и «зов» первого открытия - свои тесты; здесь их анимации торопили бы часы теста мимо подсказки 0,7 с.
+        // Надпись-подсказка первого открытия - свой тест; волна и «зов» идут при каждом открытии -
+        // ждём их конца, иначе их анимации торопили бы часы теста мимо подсказки 0,7 с.
         settings.markIntroSeen("letterCard")
         compose.setContent {
             InabahTheme {
@@ -233,6 +236,8 @@ class ReadingScreensTest {
             }
         }
         waitForText("буква 1 из 8")
+        compose.mainClock.advanceTimeBy(INTRO_MILLIS)
+        compose.waitForIdle()
         // Транскрипция слов-примеров скрыта, лампочка показывает её на миг.
         compose.onNodeWithContentDescription("بَكُمَ").assertExists()
         compose.onNodeWithContentDescription("Подсказка: показать транскрипцию").performClick()

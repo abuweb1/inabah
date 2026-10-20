@@ -327,7 +327,7 @@
     <string name="settings_makharij_all_steps">Открыть все шаги</string>
     <string name="settings_makharij_all_steps_subtitle">Без замков: начать можно с любого шага. Пройденные отмечаются как обычно</string>
     <string name="settings_makharij_hints_reset">Показать подсказки снова</string>
-    <string name="settings_makharij_hints_reset_subtitle">Волна и подсказки при первом открытии уроков и «Читаем слова»</string>
+    <string name="settings_makharij_hints_reset_subtitle">Надписи-подсказки при первом открытии уроков и «Читаем слова»</string>
     <string name="settings_makharij_progress_header">Прогресс</string>
     <string name="settings_makharij_progress_empty">Здесь появятся начатые и пройденные шаги - любой можно сбросить и пройти заново.</string>
     <string name="settings_makharij_step_done">пройден</string>
