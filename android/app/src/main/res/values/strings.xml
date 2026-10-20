@@ -373,7 +373,7 @@
     <string name="settings_reminders_streak_subtitle">за час до конца времени, пока день не полный</string>
     <string name="settings_reminders_unfinished">Если ещё не прочитаны</string>
     <string name="settings_reminders_unfinished_subtitle">за 2 часа до конца времени</string>
-    <string name="settings_reset_now_footer">Счётчики раздела обнулятся сразу, не дожидаясь конца времени азкаров.</string>
+    <string name="settings_reset_now_footer">Счётчики раздела обнулятся сразу, не дожидаясь начала времени азкаров.</string>
     <string name="settings_reset_now_header">Сбросить сейчас</string>
     <string name="settings_reset_time_picker_title">Время азкаров</string>
     <string name="settings_reset_time_day_period">До или после полудня</string>
@@ -404,7 +404,7 @@
     <string name="share_hadith_header">%1$s · Хадис %2$d</string>
     <string name="settings_window_evening_end">Конец вечерних азкаров</string>
     <string name="settings_window_evening_start">Начало вечерних азкаров</string>
-    <string name="settings_window_footer">Прогресс и отметка на главной — только в это время. В конце времени счётчики обнуляются; вне его азкары можно читать, но в прогресс это не идёт.</string>
+    <string name="settings_window_footer">Прогресс и отметка на главной - только в это время. Счётчики обнуляются в начале времени, прочитанное видно до следующего. Вне времени азкары можно читать, но в прогресс это не идёт.</string>
     <string name="settings_window_from">с</string>
     <string name="settings_window_header">Время азкаров</string>
     <string name="settings_window_morning_end">Конец утренних азкаров</string>

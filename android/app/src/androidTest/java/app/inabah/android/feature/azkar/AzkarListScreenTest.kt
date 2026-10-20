@@ -57,6 +57,7 @@ import app.inabah.android.core.content.model.Zikr
 import app.inabah.android.core.content.model.ZikrId
 import app.inabah.android.core.designsystem.InabahTheme
 import app.inabah.android.core.settings.AzkarHistory
+import app.inabah.android.core.settings.AzkarWindow
 import app.inabah.android.core.settings.AzkarWindowSettings
 import app.inabah.android.core.settings.DayTime
 import app.inabah.android.core.settings.PreferencesStorage
@@ -79,6 +80,9 @@ private val FIXED_NOW: Instant = Instant.parse("2026-10-03T06:00:00Z")
 
 /** День серии в [FIXED_NOW]: до вечерних 3-го — 3 октября. */
 private val FIXED_DAY: LocalDate = LocalDate.of(2026, 10, 3)
+
+/** Утренние 5:00–12:00 — на них рассчитаны времена тестов (умолчание с 2026-10-20 — 6:00–11:30). */
+private val MORNING_WINDOW = AzkarWindow(DayTime.of(5, 0), DayTime.of(12, 0))
 
 /** 13:00 в Берлине — после утреннего окна 5:00–12:00. */
 private val OUTSIDE_WINDOW: Instant = Instant.parse("2026-10-03T11:00:00Z")
@@ -129,7 +133,7 @@ class AzkarListScreenTest {
      */
     private var audioFile: String? = "test-tone-1.wav"
 
-    private val windowSettings by lazy { AzkarWindowSettings(storage) }
+    private val windowSettings by lazy { AzkarWindowSettings(storage).also { it.set(MORNING_WINDOW, AzkarSection.Morning) } }
     private val defaultReading by lazy { ReadingSettings(storage) }
     private val playlistSettings by lazy { PlaylistSettings(storage) }
     private val defaultPlayer by lazy { AudioPlayerController(TestAudioEngine()) }
@@ -474,7 +478,7 @@ class AzkarListScreenTest {
         compose.onNodeWithText(notice).assertExists()
 
         shown = false
-        compose.runOnIdle { check(windowSettings.window(AzkarSection.Morning) == AzkarWindowSettings.defaultWindow(AzkarSection.Morning)) }
+        compose.runOnIdle { check(windowSettings.window(AzkarSection.Morning) == MORNING_WINDOW) }
     }
 
     @Test

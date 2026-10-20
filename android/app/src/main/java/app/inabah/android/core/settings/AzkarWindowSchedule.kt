@@ -36,7 +36,8 @@ data class AzkarWindow(val start: DayTime, val end: DayTime) {
 
 /**
  * Отрезок, к которому относится прогресс раздела (iOS `AzkarPeriod`): само время азкаров или
- * промежуток до него. На каждой границе счётчики обнуляются.
+ * промежуток до него. Счётчики обнуляются только в начале окна ([continuesProgress]): прочитанное
+ * в окне видно и после его конца, до начала следующего (решение 2026-10-20).
  *
  * Отрезок узнаётся по виду и дате, а не по мгновениям: после перелёта в другой часовой пояс
  * то же окно — то же самое, и прочитанное не теряется.
@@ -44,8 +45,15 @@ data class AzkarWindow(val start: DayTime, val end: DayTime) {
  * @property day дата начала окна: своего — у окна, следующего — у промежутка. Вечерние 17:00–02:00,
  *   прочитанные в 00:30, относятся к дате 17:00.
  * @property validUntil граница: конец окна или начало следующего.
+ * @property startedOn дата последнего начала окна: у окна — [day], у промежутка — дата окна, которое
+ *   только что кончилось. `null` — сохранение до 2026-10-20, где этой даты нет.
  */
-data class AzkarPeriod(val kind: Kind, val day: LocalDate, val validUntil: Instant) {
+data class AzkarPeriod(
+    val kind: Kind,
+    val day: LocalDate,
+    val validUntil: Instant,
+    val startedOn: LocalDate? = if (kind == Kind.Window) day else null,
+) {
     enum class Kind(val key: String) {
         /** Время азкаров: прогресс идёт в отметку на главной и в историю. */
         Window("window"),
@@ -61,8 +69,17 @@ data class AzkarPeriod(val kind: Kind, val day: LocalDate, val validUntil: Insta
 
     val isWindow: Boolean get() = kind == Kind.Window
 
-    /** Тот же отрезок — счёт сохраняется, даже если граница сдвинулась (новое время в настройках, другой пояс). */
-    fun isSameSpan(other: AzkarPeriod): Boolean = kind == other.kind && day == other.day
+    /**
+     * Счёт продолжается: с начала того же окна оно ещё не начиналось заново (тот же отрезок или промежуток
+     * после этого окна). Граница могла сдвинуться (новое время в настройках, другой пояс) — счёт остаётся.
+     * Без [startedOn] у одной из сторон (сохранение до 2026-10-20) — прежнее правило: тот же вид и дата.
+     */
+    fun continuesProgress(other: AzkarPeriod): Boolean =
+        if (startedOn != null && other.startedOn != null) {
+            startedOn == other.startedOn
+        } else {
+            kind == other.kind && day == other.day
+        }
 }
 
 /**
@@ -78,9 +95,10 @@ class AzkarWindowSchedule(val window: AzkarWindow, val zone: ZoneId) {
     fun period(now: Instant): AzkarPeriod {
         val start = window.start.lastOccurrence(notAfter = now, zone)
         val end = windowEnd(start)
-        if (now.isBefore(end)) return AzkarPeriod(AzkarPeriod.Kind.Window, localDate(start), validUntil = end)
+        val startedOn = localDate(start)
+        if (now.isBefore(end)) return AzkarPeriod(AzkarPeriod.Kind.Window, startedOn, validUntil = end)
         val nextStart = nextStart(after = now)
-        return AzkarPeriod(AzkarPeriod.Kind.Gap, localDate(nextStart), validUntil = nextStart)
+        return AzkarPeriod(AzkarPeriod.Kind.Gap, localDate(nextStart), validUntil = nextStart, startedOn = startedOn)
     }
 
     /** Ближайшее начало окна строго после [after] (напоминание «в начале времени»). */
