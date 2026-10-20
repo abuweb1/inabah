@@ -205,7 +205,7 @@ fun ReadingLessonScreen(
                         hidden = hidden,
                         playing = alphabet?.let { letters -> playback.index?.let(letters::getOrNull) },
                         playerBar = {
-                            if (alphabet != null) AlphabetPlayerBar(playback, alphabet)
+                            if (alphabet != null) AlphabetPlayerHost(playback, alphabet)
                         },
                         onLetter = {
                             // Лист буквы звучит сам - алфавит уступает.
@@ -269,8 +269,7 @@ private fun LessonContent(
     onFinish: () -> Unit,
     contentPadding: PaddingValues,
 ) {
-    Column(Modifier.fillMaxSize()) {
-        Box(Modifier.padding(horizontal = Spacing.xl)) { playerBar() }
+    Box(Modifier.fillMaxSize()) {
         Column(
             Modifier
                 .fillMaxSize()
@@ -321,6 +320,8 @@ private fun LessonContent(
                 ReadingOutlineButton(stringResource(R.string.makharij_words_open), onClick = onOpenWords)
             }
         }
+        // Плеер алфавита - поверх урока, сверху (выезжает и уезжает сам, содержимое не сдвигает).
+        Box(Modifier.padding(horizontal = Spacing.xl)) { playerBar() }
     }
 }
 
@@ -694,30 +695,36 @@ private fun LettersGrid(
                                     scaleX = scale
                                     scaleY = scale
                                 }
-                                .height(tileHeight)
-                                .liveCell(intro, cellId, hint, colors.highlightBorder)
-                                .clickable(interaction, indication = cellRipple(), role = Role.Button) { onLetter(letter) }
-                                .pressFeedback(interaction, scale = PressFeedback.ICON_SCALE)
-                                .surface(
-                                    if (letter == playing) colors.highlight else colors.tile,
-                                    Radius.box,
-                                    border = if (letter == playing) colors.highlightBorder else colors.tileBorder,
-                                    lineWidth = ReadingTileBorder,
-                                )
-                                .clearAndSetSemantics { contentDescription = letter.name },
-                            contentAlignment = Alignment.Center,
+                                .height(tileHeight),
                         ) {
-                            ArabicText(letter.letter, LETTER_SIZE, palette.onAccent, maxLines = 1)
-                            if (letter.audio.values.any { it in available }) {
-                                Icon(
-                                    painterResource(R.drawable.ic_volume_up),
-                                    contentDescription = null,
-                                    tint = palette.onAccentTertiary,
-                                    modifier = Modifier
-                                        .align(AbsoluteAlignment.BottomLeft)
-                                        .padding(Spacing.xxs)
-                                        .size(SpeakerSize),
-                                )
+                            // Плитка обрезана по своей форме (вспышка), надпись над ней - снаружи обрезки.
+                            Box(
+                                Modifier
+                                    .fillMaxSize()
+                                    .liveCell(intro, cellId, hint, colors.highlightBorder)
+                                    .clickable(interaction, indication = cellRipple(), role = Role.Button) { onLetter(letter) }
+                                    .pressFeedback(interaction, scale = PressFeedback.ICON_SCALE)
+                                    .surface(
+                                        if (letter == playing) colors.highlight else colors.tile,
+                                        Radius.box,
+                                        border = if (letter == playing) colors.highlightBorder else colors.tileBorder,
+                                        lineWidth = ReadingTileBorder,
+                                    )
+                                    .clearAndSetSemantics { contentDescription = letter.name },
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                ArabicText(letter.letter, LETTER_SIZE, palette.onAccent, maxLines = 1)
+                                if (letter.audio.values.any { it in available }) {
+                                    Icon(
+                                        painterResource(R.drawable.ic_volume_up),
+                                        contentDescription = null,
+                                        tint = palette.onAccentTertiary,
+                                        modifier = Modifier
+                                            .align(AbsoluteAlignment.BottomLeft)
+                                            .padding(Spacing.xxs)
+                                            .size(SpeakerSize),
+                                    )
+                                }
                             }
                             // Звучащая буква - название над ней в своей рамке (просьба пользователя 2026-10-15):
                             // сдвиг отрисовки вверх на свою высоту, раскладка ряда не меняется.

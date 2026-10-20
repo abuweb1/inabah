@@ -1,5 +1,10 @@
 package app.inabah.android.feature.makharij
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -10,11 +15,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
@@ -25,7 +33,9 @@ import app.inabah.android.R
 import app.inabah.android.core.content.model.ReadingLetter
 import app.inabah.android.core.designsystem.InabahTheme
 import app.inabah.android.core.designsystem.InabahType
+import app.inabah.android.core.designsystem.Motion
 import app.inabah.android.core.designsystem.Radius
+import app.inabah.android.core.designsystem.ShadowToken
 import app.inabah.android.core.designsystem.Size
 import app.inabah.android.core.designsystem.Spacing
 import app.inabah.android.core.designsystem.components.GlassIconButton
@@ -101,17 +111,38 @@ fun AlphabetPlayButton(playback: AlphabetPlayback) {
     }
 }
 
-/** Панель под шапкой: какая буква звучит и «⏮ ⏸ ⏹ ⏭». */
+/**
+ * Панель под шапкой поверх урока: выезжает сверху и уезжает обратно (как мини-плеер азкаров), содержимое
+ * урока не сдвигает (просьба пользователя 2026-10-20: появлялась резко и толкала элементы вниз).
+ */
 @Composable
-fun AlphabetPlayerBar(playback: AlphabetPlayback, letters: List<ReadingLetter>, modifier: Modifier = Modifier) {
-    val index = playback.index ?: return
+fun AlphabetPlayerHost(playback: AlphabetPlayback, letters: List<ReadingLetter>, modifier: Modifier = Modifier) {
+    // Остановили - номера уже нет, а панель ещё уезжает: показывать последнюю букву.
+    var shown by remember { mutableStateOf(playback.index) }
+    playback.index?.let { shown = it }
+    AnimatedVisibility(
+        visible = playback.index != null,
+        // Выезжает из-под шапки: выше своего верха не рисуется (тень снизу и по бокам - остаётся).
+        modifier = modifier.drawWithContent {
+            clipRect(left = -size.width, right = size.width * 2, bottom = size.height * 2) { this@drawWithContent.drawContent() }
+        },
+        enter = slideInVertically(Motion.collapse()) { -it } + fadeIn(Motion.collapse()),
+        exit = slideOutVertically(Motion.collapse()) { -it } + fadeOut(Motion.collapse()),
+    ) {
+        shown?.let { AlphabetPlayerBar(playback, letters, it) }
+    }
+}
+
+/** Сама панель: какая буква звучит ([index] - от [AlphabetPlayerHost]) и «⏮ ⏸ ⏹ ⏭». */
+@Composable
+private fun AlphabetPlayerBar(playback: AlphabetPlayback, letters: List<ReadingLetter>, index: Int) {
     val letter = letters.getOrNull(index) ?: return
     val palette = InabahTheme.palette
     val colors = readingColors
     Row(
-        modifier
+        Modifier
             .fillMaxWidth()
-            .surface(colors.sheet, Radius.box, border = colors.tileBorder)
+            .surface(colors.sheet, Radius.box, border = colors.tileBorder, shadow = ShadowToken.floating(palette))
             .padding(horizontal = Spacing.m, vertical = Spacing.s),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(Spacing.s),
