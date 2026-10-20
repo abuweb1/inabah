@@ -148,6 +148,7 @@ struct RootTabView: View {
             if phase == .active || phase == .background { reminderScheduler.reschedule() }
         }
         .background { ReminderCompletionWatcher() }
+        .background { ReadingReminderWatcher() }
     }
 
     /// Выбор вкладки проходит через роутер — повторный тап по активной вкладке возвращает к её корню.
@@ -171,6 +172,20 @@ private struct ReminderCompletionWatcher: View {
             .onChange(of: AzkarSection.allCases.map { ReminderPlan.isCompleted(azkarStore.progress(of: $0)) }) {
                 reminderScheduler.reschedule()
             }
+    }
+}
+
+/// «Пора на урок»: шаг пройден (сегодняшние снимаются, шаг в тексте - следующий), уроки сброшены или пройдены -
+/// план пересобирается. Не следит за прочитанными словами: они меняются на каждое касание, а шаг со словами
+/// пройден - это и есть новый день пройденного шага.
+private struct ReadingReminderWatcher: View {
+    @Environment(ReadingProgress.self) private var readingProgress
+    @Environment(ReminderScheduler.self) private var reminderScheduler
+
+    var body: some View {
+        Color.clear
+            .onChange(of: readingProgress.stepFinishedDay) { reminderScheduler.reschedule() }
+            .onChange(of: readingProgress.lessonsDone) { reminderScheduler.reschedule() }
     }
 }
 

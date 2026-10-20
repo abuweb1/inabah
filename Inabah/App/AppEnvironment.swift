@@ -69,7 +69,7 @@ struct AppEnvironment {
         hadithFavorites = HadithFavorites(defaults: defaults)
         hadithCollectionOrder = HadithCollectionOrder(defaults: defaults)
         readingStore = ReadingStore(repository: repository)
-        readingProgress = ReadingProgress(defaults: defaults)
+        readingProgress = ReadingProgress(defaults: defaults, calendar: azkarStore.calendar)
         appIconSettings = AppIconSettings(switcher: appIconSwitcher ?? SystemAppIconSwitcher())
         self.audioPlayer = audioPlayer ?? AudioPlayerController(
             engine: AVAudioEngineAdapter(),
@@ -93,6 +93,7 @@ struct AppEnvironment {
             hadithStore: hadithStore,
             progress: hadithProgress,
             order: hadithCollectionOrder,
+            readingProgress: readingProgress,
             repository: repository,
             calendar: azkarStore.calendar
         )
@@ -139,6 +140,7 @@ private final class InertNotificationCenter: NotificationCentering {
     func pendingIdentifiers() async -> [String] { [] }
     func removePending(_ identifiers: [String]) {}
     func add(_ request: UNNotificationRequest) async throws {}
+    func removeDelivered(thread: String) async {}
 }
 
 /// Смена иконки для превью: выбор только запоминается, иконка процесса не меняется.

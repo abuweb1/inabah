@@ -3769,6 +3769,83 @@
         }
       }
     },
+    "settings.makharij.reminder.day" : {
+      "comment" : "Настройки «Махрадж»: напоминание «Пора на урок» днём",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Днём"
+          }
+        }
+      }
+    },
+    "settings.makharij.reminder.evening" : {
+      "comment" : "Настройки «Махрадж»: напоминание «Пора на урок» вечером",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вечером"
+          }
+        }
+      }
+    },
+    "settings.makharij.reminder.morning" : {
+      "comment" : "Настройки «Махрадж»: напоминание «Пора на урок» утром",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Утром"
+          }
+        }
+      }
+    },
+    "settings.makharij.reminder.time" : {
+      "comment" : "Настройки «Махрадж»: строка времени напоминания",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Время"
+          }
+        }
+      }
+    },
+    "settings.makharij.reminder.timeDescription %@" : {
+      "comment" : "Настройки «Махрадж»: VoiceOver поля времени, %@ - «Утром» / «Днём» / «Вечером»",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Время напоминания «%@»"
+          }
+        }
+      }
+    },
+    "settings.makharij.reminders.footer" : {
+      "comment" : "Настройки «Махрадж»: подпись группы «Напоминания»",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "«Пора на урок» - пока сегодня не пройден ни один шаг."
+          }
+        }
+      }
+    },
+    "settings.makharij.reminders.footerDone" : {
+      "comment" : "Настройки «Махрадж»: подпись группы «Напоминания», курс пройден",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Курс пройден - напоминания не приходят."
+          }
+        }
+      }
+    },
     "settings.makharij.reset.confirm.action" : {
       "comment" : "Действие подтверждения сброса",
       "localizations" : {
@@ -3874,7 +3951,7 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Учимся читать: шаги и сброс прогресса"
+            "value" : "Учимся читать: шаги, напоминания и сброс прогресса"
           }
         }
       }

@@ -134,6 +134,7 @@ private struct WordsContent: View {
             guard done, wasDone == false else { return }
             zoom = nil
             isCelebrating = true
+            progress.markStepFinished()
         }
     }
 

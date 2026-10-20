@@ -18,6 +18,8 @@ protocol NotificationCentering: AnyObject {
     func pendingIdentifiers() async -> [String]
     func removePending(_ identifiers: [String])
     func add(_ request: UNNotificationRequest) async throws
+    /// Убрать из Центра уведомлений доставленные со стопкой `thread` (`threadIdentifier`).
+    func removeDelivered(thread: String) async
 }
 
 final class SystemNotificationCenter: NotificationCentering {
@@ -50,6 +52,13 @@ final class SystemNotificationCenter: NotificationCentering {
     func add(_ request: UNNotificationRequest) async throws {
         try await center.add(request)
     }
+
+    func removeDelivered(thread: String) async {
+        let identifiers = await center.deliveredNotifications()
+            .filter { $0.request.content.threadIdentifier == thread }
+            .map(\.request.identifier)
+        if !identifiers.isEmpty { center.removeDeliveredNotifications(withIdentifiers: identifiers) }
+    }
 }
 
 /// Ставит напоминания в центр уведомлений (docs/07-screen-settings.md «Напоминания»). Приложение не
@@ -66,6 +75,8 @@ final class ReminderScheduler {
     @ObservationIgnored private let hadithStore: HadithStore
     @ObservationIgnored private let progress: HadithProgress
     @ObservationIgnored private let order: HadithCollectionOrder
+    /// Прогресс «Учимся читать» - для «Пора на урок»; `nil` - без напоминаний чтения.
+    @ObservationIgnored private let readingProgress: ReadingProgress?
     @ObservationIgnored private let repository: any ContentRepository
     @ObservationIgnored private let calendar: Calendar
     @ObservationIgnored private let now: () -> Date
@@ -81,6 +92,7 @@ final class ReminderScheduler {
         hadithStore: HadithStore,
         progress: HadithProgress,
         order: HadithCollectionOrder,
+        readingProgress: ReadingProgress? = nil,
         repository: any ContentRepository,
         calendar: Calendar = .autoupdatingCurrent,
         now: @escaping () -> Date = Date.init
@@ -92,6 +104,7 @@ final class ReminderScheduler {
         self.hadithStore = hadithStore
         self.progress = progress
         self.order = order
+        self.readingProgress = readingProgress
         self.repository = repository
         self.calendar = calendar
         self.now = now
@@ -153,12 +166,18 @@ final class ReminderScheduler {
         let moment = now()
         let preferences = settings.preferences
         let windows = Dictionary(uniqueKeysWithValues: AzkarSection.allCases.map { ($0, windowSettings.window(for: $0)) })
+        let reading = await readingLesson(now: moment, preferences: preferences)
+        guard !Task.isCancelled else { return }
+        // Сегодня звать больше не к чему (шаг пройден, курс пройден) - пришедшие «Пора на урок» убираются: на Android
+        // уведомление одно и заменяется, здесь доставленное иначе висело бы до вечера.
+        if reading.map(\.input.finishedToday) ?? true { await center.removeDelivered(thread: ReminderPlan.readingThread) }
         let planned = ReminderPlan.plan(
             preferences: preferences,
             windows: windows,
             now: moment,
             calendar: calendar,
-            history: history.days
+            history: history.days,
+            reading: reading?.input
         ) { section, day in
             ReminderPlan.isCompleted(history.record(of: section, on: day))
         }
@@ -168,7 +187,8 @@ final class ReminderScheduler {
         var added = Set<String>()
         for reminder in planned {
             guard !Task.isCancelled else { return }
-            guard let content = content(for: reminder, texts: texts, hadith: hadiths[reminder.at]) else { continue }
+            guard let content = content(for: reminder, texts: texts, hadith: hadiths[reminder.at], stepTitle: reading?.title)
+            else { continue }
             // Компоненты — в календаре и поясе расписания, явно (А9): триггер читает их тем же календарём.
             var components = calendar.dateComponents([.year, .month, .day, .hour, .minute, .second], from: reminder.at)
             components.calendar = calendar
@@ -209,9 +229,31 @@ final class ReminderScheduler {
         return byMoment
     }
 
-    private func content(for reminder: PlannedReminder, texts: ReminderTexts, hadith: Hadith?) -> UNNotificationContent? {
+    /// «Пора на урок» на момент планирования: первый непройденный шаг (`ReadingLogic.currentStep`, «Открыть все
+    /// шаги» не влияет) и его заголовок «Шаг 7 · Сукун»; пройден ли шаг сегодня. Слоты выключены, курс пройден или
+    /// не прочитан - `nil`.
+    private func readingLesson(now moment: Date, preferences: ReminderPreferences) async -> (input: ReadingReminderInput, title: String)? {
+        guard !preferences.readingSlots.isEmpty, let readingProgress else { return nil }
+        let course: ReadingCourse
+        do {
+            course = try await repository.readingCourse()
+        } catch {
+            logger.error("Не прочитан курс для «Пора на урок»: \(String(describing: error), privacy: .public)")
+            return nil
+        }
+        let completed = ReadingLogic.completedSteps(
+            course: course, lessonsDone: readingProgress.lessonsDone, wordCounts: readingProgress.wordCounts
+        )
+        guard let step = ReadingLogic.currentStep(course: course, completed: completed) else { return nil }
+        let today = ReadingProgress.dayKey(of: moment, in: calendar)
+        let input = ReadingReminderInput(step: step.number, finishedToday: readingProgress.stepFinishedDay == today)
+        return (input, String(localized: step.displayTitle))
+    }
+
+    private func content(for reminder: PlannedReminder, texts: ReminderTexts, hadith: Hadith?, stepTitle: String?) -> UNNotificationContent? {
         let text: ReminderText?
         var userInfo = ReminderPayload.userInfo(kind: reminder.kind)
+        var thread: String?
         switch reminder.kind {
         case .hadithOfDay:
             guard let hadith, let template = texts.hadithOfDay else { return nil }
@@ -230,6 +272,11 @@ final class ReminderScheduler {
             text = reminder.kind.section
                 .flatMap { texts.streakAtRisk[$0] }?
                 .filled([.streak: String(localized: AzkarStreak.daysText(streak))])
+        case .readingMorning, .readingDay, .readingEvening:
+            guard let step = reminder.step, let stepTitle else { return nil }
+            text = texts.readingLesson?.filled([.step: stepTitle])
+            userInfo = ReminderPayload.userInfo(kind: reminder.kind, step: step)
+            thread = ReminderPlan.readingThread
         }
         // Пустой заголовок и тело после подстановок — уведомления нет (аудит Android, К6).
         guard let text, !(text.title.isEmpty && text.body.isEmpty) else { return nil }
@@ -238,6 +285,7 @@ final class ReminderScheduler {
         content.body = text.body
         content.sound = .default
         content.userInfo = userInfo
+        if let thread { content.threadIdentifier = thread }
         content.interruptionLevel = .active
         return content
     }
@@ -273,6 +321,15 @@ final class ReminderNotificationDelegate: NSObject, UNUserNotificationCenterDele
         let target = ReminderPayload.target(from: response.notification.request.content.userInfo)
         MainActor.assumeIsolated {
             if let target { router.open(target) }
+        }
+        // «Пора на урок» - одно на все слоты: открыли одно - остальные из стопки не нужны.
+        if case .readingLesson = target {
+            center.getDeliveredNotifications { delivered in
+                let identifiers = delivered
+                    .filter { $0.request.content.threadIdentifier == ReminderPlan.readingThread }
+                    .map(\.request.identifier)
+                UNUserNotificationCenter.current().removeDeliveredNotifications(withIdentifiers: identifiers)
+            }
         }
         completionHandler()
     }

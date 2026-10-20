@@ -77,7 +77,8 @@ nonisolated extension ReminderTexts {
             azkarStart: bySection(t.azkarStart),
             azkarUnfinished: bySection(t.azkarUnfinished),
             hadithOfDay: t.hadithOfDay.flatMap(ReminderText.init(dto:)),
-            streakAtRisk: bySection(t.streakAtRisk)
+            streakAtRisk: bySection(t.streakAtRisk),
+            readingLesson: t.readingLesson.flatMap(ReminderText.init(dto:))
         )
     }
 }

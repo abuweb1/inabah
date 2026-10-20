@@ -150,6 +150,8 @@ final class AppRouter {
             open(AzkarRoute.list(section))
         case .hadith(let id):
             open(HadithRoute.detail(id))
+        case .readingLesson(let step):
+            open(MakharijRoute.lesson(step))
         }
     }
 }

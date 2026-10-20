@@ -1,12 +1,22 @@
 import SwiftUI
 
 /// Настройки «Махраджа» (Android `MakharijSettingsScreen`, docs/android/06-screens.md 6.8): транскрипция и
-/// «Открыть все шаги» «Учимся читать»; «Пройдено N из M», начатые шаги со сбросом и сброс всего прогресса.
+/// «Открыть все шаги» «Учимся читать»; напоминания «Пора на урок»; «Пройдено N из M», начатые шаги со сбросом и
+/// сброс всего прогресса.
 struct MakharijSettingsView: View {
     @Environment(ReadingStore.self) private var store
     @Environment(ReadingProgress.self) private var progress
     @Environment(ReadingSettings.self) private var settings
+    @Environment(ReminderSettings.self) private var reminders
+    @Environment(ReminderScheduler.self) private var scheduler
+    @Environment(AzkarStore.self) private var azkarStore
+    @Environment(\.scenePhase) private var scenePhase
     @Environment(\.theme) private var theme
+
+    /// Время слотов «Пора на урок» правится черновиком и сохраняется при уходе с экрана или в фон (как «Хадис дня»).
+    @State private var readingTimeDrafts: [ReadingReminderSlot: DayTime] = [:]
+    /// Уведомления запрещены при попытке включить - показать «Открыть настройки».
+    @State private var permissionDenied = false
 
     /// Шаг, сброс которого ждёт подтверждения.
     @State private var pendingStep: Int?
@@ -19,6 +29,7 @@ struct MakharijSettingsView: View {
         let tint = theme.palette.tabMakharij
         SettingsForm {
             lessonsSection
+            remindersSection
             if let course = store.course.value {
                 progressSection(course)
             }
@@ -46,7 +57,79 @@ struct MakharijSettingsView: View {
             perform: { _ in progress.reset() }
         )
         .task { await store.load() }
+        .onDisappear(perform: commitReadingTimes)
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .background { commitReadingTimes() }
+        }
         .audioPlayerInset()
+    }
+
+    /// «Напоминания» (Android `ReadingReminderGroup`, 2026-10-20): «Утром», «Днём», «Вечером», у включённого - время.
+    @ViewBuilder
+    private var remindersSection: some View {
+        let tint = theme.palette.tabMakharij
+        let anyOn = !reminders.preferences.readingSlots.isEmpty
+        // Сохранённое значение - и при запрете уведомлений (как у азкаров).
+        let blocked = !scheduler.isAllowed && (permissionDenied || anyOn)
+        let toggle = ReminderToggleAction(scheduler: scheduler) { permissionDenied = true }
+        SettingsGroup {
+            ForEach(ReadingReminderSlot.allCases, id: \.self) { slot in
+                let isOn = reminders.isReadingEnabled(slot)
+                ReminderToggleRow(title: slot.title, subtitle: nil, isOn: isOn, tint: tint) { newValue in
+                    toggle(newValue) { reminders.setReading($0, for: slot) }
+                }
+                if isOn {
+                    HStack(spacing: Spacing.m) {
+                        Text("settings.makharij.reminder.time")
+                            .accessibilityHidden(true)
+                        Spacer(minLength: 0)
+                        TimeField(
+                            label: "settings.makharij.reminder.timeDescription \(String(localized: slot.title))",
+                            selection: readingTime(slot),
+                            calendar: azkarStore.calendar,
+                            tint: tint
+                        )
+                    }
+                }
+            }
+            if blocked {
+                ReminderOpenSettingsRow()
+            }
+        } header: {
+            Text("settings.reminders.header")
+        } footer: {
+            VStack(alignment: .leading, spacing: Spacing.xs) {
+                if blocked {
+                    Text("settings.reminders.blocked")
+                        .foregroundStyle(theme.palette.onAccent)
+                }
+                Text(isCourseDone ? "settings.makharij.reminders.footerDone" : "settings.makharij.reminders.footer")
+                    .foregroundStyle(theme.palette.onAccentSecondary)
+            }
+        }
+    }
+
+    /// Курс пройден (`currentStep == nil`) - напоминания не приходят; до загрузки курса - нет.
+    private var isCourseDone: Bool {
+        guard let course = store.course.value else { return false }
+        let completed = ReadingLogic.completedSteps(course: course, lessonsDone: progress.lessonsDone, wordCounts: progress.wordCounts)
+        return ReadingLogic.currentStep(course: course, completed: completed) == nil
+    }
+
+    /// Время слота как дата опорного дня - для `TimeField`; в черновик идут только часы и минуты.
+    private func readingTime(_ slot: ReadingReminderSlot) -> Binding<Date> {
+        Binding {
+            (readingTimeDrafts[slot] ?? reminders.preferences.readingTime(slot)).date(in: azkarStore.calendar)
+        } set: { date in
+            readingTimeDrafts[slot] = DayTime(date, in: azkarStore.calendar)
+        }
+    }
+
+    private func commitReadingTimes() {
+        guard !readingTimeDrafts.isEmpty else { return }
+        for (slot, time) in readingTimeDrafts { reminders.setReadingTime(time, for: slot) }
+        readingTimeDrafts = [:]
+        scheduler.reschedule()
     }
 
     /// «Уроки»: подписи - под названием, как «Сворачивать арабский текст».
@@ -132,6 +215,18 @@ struct MakharijSettingsView: View {
     private func resetStep(_ number: Int) {
         guard let step = store.course.value?.step(number) else { return }
         progress.resetStep(number, zikrs: step.zikrs.map(\.zikr))
+        // Шаг в «Пора на урок» мог смениться (сброс уроков пересобирает план и сам - `ReadingReminderWatcher`).
+        scheduler.reschedule()
+    }
+}
+
+private extension ReadingReminderSlot {
+    var title: LocalizedStringResource {
+        switch self {
+        case .morning: "settings.makharij.reminder.morning"
+        case .day: "settings.makharij.reminder.day"
+        case .evening: "settings.makharij.reminder.evening"
+        }
     }
 }
 
