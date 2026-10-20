@@ -26,6 +26,7 @@ struct ReadingLetterFormsView: View {
                 return Text("makharij.forms.position \(index + 1) \(letters.count)")
             },
             showsTransliterationToggle: false,
+            intro: .letterCard,
             actions: {
                 if hasTransliterations {
                     ReadingHeaderButton(symbol: "lightbulb", label: "makharij.words.hint") { hintRequest += 1 }
@@ -76,6 +77,7 @@ private struct LetterFormsContent: View {
     @Binding var current: String?
 
     @Environment(ClipPlayer.self) private var clips
+    @Environment(ReadingSettings.self) private var settings
     @State private var zoom: ExampleZoom?
 
     private static let space = "letterForms"
@@ -98,6 +100,7 @@ private struct LetterFormsContent: View {
                                 coordinateSpace: Self.space,
                                 audio: { audio(letter, $0) }
                             ) { form, frame in
+                                settings.markZoomLearned()
                                 zoom = ExampleZoom(letter: letter, form: form, source: frame)
                             }
                             .environment(\.layoutDirection, .leftToRight)
@@ -134,7 +137,8 @@ private struct LetterFormsContent: View {
                     ExampleWordCell(
                         word: word, letter: zoom.letter, form: zoom.form,
                         transliteration: examples.transliteration(zoom.form),
-                        isHintShown: isHintShown, isZoomed: true, colors: colors, hasAudio: audio != nil
+                        isHintShown: isHintShown, isZoomed: true, colors: colors, hasAudio: audio != nil,
+                        isPlaying: audio != nil && clips.playing == audio
                     )
                 }
             }
@@ -286,26 +290,40 @@ private struct ZoomableExampleWord: View {
     let onZoom: (CGRect) -> Void
 
     @Environment(ClipPlayer.self) private var clips
+    @Environment(\.tapIntro) private var intro
     @State private var frame: CGRect = .zero
     @State private var zoomCount = 0
     @State private var playCount = 0
+    @State private var flash: TapFlash?
+    /// Палец держит слово - идёт кольцо удержания.
+    @GestureState private var holding = false
 
     var body: some View {
         ExampleWordCell(
             word: word, letter: letter, form: form, transliteration: transliteration,
-            isHintShown: isHintShown, isZoomed: false, colors: colors, hasAudio: audio != nil
+            isHintShown: isHintShown, isZoomed: false, colors: colors, hasAudio: audio != nil,
+            isPlaying: audio != nil && clips.playing == audio
         )
+        .tapFlash(flash, tint: colors.tint)
+        .holdRing(pressing: holding, tint: colors.tint)
+        .liveCell(hint: "makharij.hint.zoom", tint: colors.tint, zoomable: true, observesTaps: false)
         .onGeometryChange(for: CGRect.self) { $0.frame(in: .named(coordinateSpace)) } action: { frame = $0 }
         .contentShape(.rect(cornerRadius: Radius.box))
         // Один жест: удержание - увеличение, отпустили раньше - касание (отдельные спорили, и увеличение
         // срабатывало только при отпускании пальца).
         .gesture(
             LongPressGesture(minimumDuration: PressFeedback.zoomHold)
+                .updating($holding) { _, state, _ in state = true }
                 .onEnded { _ in
                     zoomCount += 1
+                    intro?.tappedCell()
                     onZoom(frame)
                 }
-                .exclusively(before: TapGesture().onEnded(play))
+                .exclusively(before: SpatialTapGesture().onEnded { tap in
+                    flash = flash?.next(at: tap.location) ?? .first(at: tap.location)
+                    intro?.tappedCell()
+                    play()
+                })
         )
         .sensoryFeedback(.impact(weight: .medium), trigger: zoomCount)
         .sensoryFeedback(.selection, trigger: playCount)
@@ -350,6 +368,8 @@ struct ExampleWordCell: View {
     let colors: ReadingColors
     /// Есть запись слова - 🔈 в углу.
     var hasAudio = false
+    /// Звучит запись слова - подсветка цветом раздела.
+    var isPlaying = false
 
     @Environment(\.theme) private var theme
 
@@ -381,7 +401,7 @@ struct ExampleWordCell: View {
                 RoundedRectangle(cornerRadius: Radius.box).fill(theme.gradients.parchment.linear)
             }
         }
-        .parchmentCell(colors)
+        .parchmentCell(colors, isHighlighted: isPlaying)
         .overlay(alignment: .topLeading) {
             if hasAudio { ExampleWordSpeaker(colors: colors) }
         }

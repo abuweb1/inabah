@@ -130,6 +130,8 @@ enum Motion {
     static let unlock = Animation.timingCurve(0.4, 0, 0.2, 1, duration: 0.8).delay(0.4)
     /// Увеличение плитки долгим нажатием и обратно (Android `Motion.zoom`).
     static let zoom = Animation.timingCurve(0.4, 0, 0.2, 1, duration: 0.3)
+    /// Вспышка касания ячейки курса: круг от точки касания растёт и гаснет (своя замена ripple Android).
+    static let tapFlash = Animation.easeOut(duration: 0.5)
     /// Название над звучащей буквой «Послушать алфавит» появляется.
     static let nameBubble = Animation.easeOut(duration: 0.25)
     /// Подсказка транскрипции по лампочке.

@@ -12,6 +12,8 @@ struct MakharijSettingsView: View {
     @State private var pendingStep: Int?
     /// Сброс всего прогресса ждёт подтверждения (`true`; `nil` - диалога нет).
     @State private var pendingResetAll: Bool?
+    /// «Показать подсказки снова» нажата - отклик.
+    @State private var hintsResetCount = 0
 
     var body: some View {
         let tint = theme.palette.tabMakharij
@@ -61,6 +63,23 @@ struct MakharijSettingsView: View {
                 subtitle: "settings.makharij.allSteps.subtitle",
                 isOn: Binding(get: { settings.allStepsOpen }, set: settings.setAllStepsOpen)
             )
+            // Без подтверждения: ничего не теряется, подсказки просто покажутся снова.
+            Button {
+                settings.resetIntros()
+                hintsResetCount += 1
+            } label: {
+                VStack(alignment: .leading, spacing: Spacing.xxxs) {
+                    Text("settings.makharij.hintsReset")
+                        .font(.body)
+                        .foregroundStyle(theme.palette.onAccent)
+                    Text("settings.makharij.hintsReset.subtitle")
+                        .font(.caption)
+                        .foregroundStyle(theme.palette.onAccentSecondary)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .contentShape(.rect)
+            }
+            .sensoryFeedback(.success, trigger: hintsResetCount)
         } header: {
             Text("settings.makharij.lessons.header")
         }

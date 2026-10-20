@@ -18,6 +18,7 @@ struct ReadingWordsView: View {
             title: { _ in Text("makharij.words.title") },
             subtitle: { _ in pageCount.map { Text("makharij.words.group \((page ?? 0) + 1) \($0)") } },
             showsTransliterationToggle: (page ?? 0) == 0,
+            intro: .words,
             actions: {
                 if (page ?? 0) > 0 {
                     ReadingHeaderButton(symbol: "lightbulb", label: "makharij.words.hint") {
@@ -151,7 +152,10 @@ private struct WordsContent: View {
                                 colors: colors,
                                 coordinateSpace: Self.space,
                                 onRead: read,
-                                onZoom: { index, frame in zoom = WordZoom(index: index, page: number, source: frame) }
+                                onZoom: { index, frame in
+                                    settings.markZoomLearned()
+                                    zoom = WordZoom(index: index, page: number, source: frame)
+                                }
                             )
                         }
                         .padding(.horizontal, Spacing.xl)
@@ -335,28 +339,47 @@ struct ReadableWordTile: View {
     var onZoom: ((CGRect) -> Void)?
 
     @Environment(\.theme) private var theme
+    @Environment(\.tapIntro) private var intro
     @State private var frame: CGRect = .zero
     @State private var zoomCount = 0
     /// Прочитано ли слово, когда плитка появилась: вспышка - только если дочитали сейчас.
     @State private var wasDone: Bool?
     @State private var burst = 0
+    @State private var flash: TapFlash?
+    /// Палец держит увеличиваемую плитку - идёт кольцо удержания.
+    @GestureState private var holding = false
 
     private var isDone: Bool { count >= `repeat` }
 
     /// Касание - прочитал; с увеличением - один жест: удержание - увеличение, отпустили раньше - касание.
     /// Отдельные касание и удержание спорили, и увеличение срабатывало только при отпускании пальца.
     private var readOrZoom: AnyGesture<Void> {
-        let read = TapGesture().onEnded { if !isDone { onRead() } }
-        guard let onZoom else { return AnyGesture(read) }
-        let zoom = LongPressGesture(minimumDuration: PressFeedback.zoomHold).onEnded { _ in
-            zoomCount += 1
-            onZoom(frame)
+        let read = SpatialTapGesture().onEnded { tap in
+            flash = flash?.next(at: tap.location) ?? .first(at: tap.location)
+            intro?.tappedCell()
+            if !isDone { onRead() }
         }
+        guard let onZoom else { return AnyGesture(read.map { _ in }) }
+        let zoom = LongPressGesture(minimumDuration: PressFeedback.zoomHold)
+            .updating($holding) { _, state, _ in state = true }
+            .onEnded { _ in
+                zoomCount += 1
+                intro?.tappedCell()
+                onZoom(frame)
+            }
         return AnyGesture(zoom.exclusively(before: read).map { _ in })
     }
 
     var body: some View {
         WordTile(word: word, count: count, repeat: `repeat`, showsTransliteration: showsTransliteration, isZoomed: false, colors: colors)
+            .tapFlash(flash, tint: colors.tint)
+            .holdRing(pressing: holding, tint: colors.tint)
+            .liveCell(
+                hint: onZoom == nil ? "makharij.hint.zikrWord" : "makharij.hint.zoom",
+                tint: colors.tint,
+                zoomable: onZoom != nil,
+                observesTaps: false
+            )
             .overlay {
                 if burst > 0 {
                     SparkleBurst(color: theme.palette.gold).id(burst)
