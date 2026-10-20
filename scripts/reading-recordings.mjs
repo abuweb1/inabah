@@ -3,7 +3,7 @@
 //
 //   node scripts/reading-recordings.mjs           список: ✓ есть, · нет (по разделам)
 //   node scripts/reading-recordings.mjs --missing только недостающие
-//   node scripts/reading-recordings.mjs --write   вписать найденные записи букв в data/reading.json (поле audio)
+//   node scripts/reading-recordings.mjs --write   вписать найденные записи букв и формул в data/reading.json (поле audio)
 //
 // Имена - docs/process/audio.md, раздел 5:
 //   reading_<NN буквы>_name.m4a          название буквы (лист буквы, «Послушать алфавит»)
@@ -13,6 +13,7 @@
 //                                        только название: остальное - записи алифа (audioLike)
 //   reading_<NN буквы>_<знак>.m4a        слог с фатхьой / касрой / доммой (лист буквы, таблица слогов)
 //   reading_s<NN шага>_<NN буквы>_<initial|medial|final>.m4a   слово-пример формы буквы (формы букв)
+//   reading_s<NN шага>_<NN формулы>.m4a  итог формулы с полем audio (примеры шадды, шаг 9, 2026-10-20)
 
 import { readFileSync, writeFileSync, existsSync, readdirSync } from 'node:fs';
 import { join, dirname } from 'node:path';
@@ -89,6 +90,19 @@ for (const step of data.steps) {
   }
 }
 
+// Формулы с полем audio (`null` - ещё не записана): записывается итог, как читается (шадда, решение пользователя 2026-10-20).
+const formulaFile = (step, n) => `reading_s${pad(step.id)}_${pad(n + 1)}.m4a`;
+const recordedFormulas = step => (step.blocks ?? []).filter(b => b.type === 'formulas')
+  .flatMap(b => b.items ?? []).filter(item => 'audio' in item);
+for (const step of data.steps) {
+  const items = recordedFormulas(step);
+  if (!items.length) continue;
+  sections.push({
+    title: `Шаг ${step.id}: примеры (итог формулы)`,
+    items: items.map((item, n) => ({ file: formulaFile(step, n), what: `${item.result} - «${ru(item).translit ?? ''}»` })),
+  });
+}
+
 let total = 0;
 let done = 0;
 for (const { title, items } of sections) {
@@ -118,6 +132,15 @@ if (args.has('--write')) {
     put(l, 'name', `reading_${pad(l.id)}_name.m4a`);
     for (const key of [...VOWELS, ...TANWIN]) put(l, key, `reading_${pad(owner(l).id)}_${key}.m4a`);
     for (const v of closedVowels(l)) put(l, CLOSED[v], closedFile(owner(l), v));
+  }
+  for (const step of data.steps) {
+    recordedFormulas(step).forEach((item, n) => {
+      const file = formulaFile(step, n);
+      if (present.has(file) && item.audio !== file) {
+        item.audio = file;
+        changed++;
+      }
+    });
   }
   if (changed) writeFileSync(DATA, JSON.stringify(data, null, 2) + (raw.endsWith('\n') ? '\n' : ''));
   console.log(`--write: в reading.json вписано записей: ${changed}`);

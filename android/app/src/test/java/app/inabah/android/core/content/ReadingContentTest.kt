@@ -92,6 +92,16 @@ class ReadingContentTest {
     }
 
     @Test
+    fun `Запись формулы - имя файла без пробелов, пустая строка или нет поля - без записи`() = runTest {
+        val formulas = """[{"type":"formulas","items":[
+            {"parts":["أَبْبَ"],"result":"أَبَّ","audio":" reading_s09_01.m4a "},
+            {"parts":["أَبْبِ"],"result":"أَبِّ","audio":""},
+            {"parts":["أَكْكُ"],"result":"أَكُّ"}]}]"""
+        val block = repository(minimalJson(blocks = formulas)).reading().steps.single().blocks.single() as ReadingBlock.Formulas
+        assertEquals(listOf("reading_s09_01.m4a", null, null), block.items.map { it.audio })
+    }
+
+    @Test
     fun `«Форма буквы» без карточки в таблицах форм - DecodingFailed, не вопрос с одним вариантом`() = runTest {
         val broken = repository(minimalJson(quiz = "[{\"type\":\"letterForm\",\"letter\":\"ب\",\"form\":\"initial\"}]"))
         val error = assertFailsWith<ContentError.DecodingFailed> { broken.reading() }
@@ -225,6 +235,8 @@ class ReadingContentTest {
         val equal = step.blocks.filterIsInstance<ReadingBlock.Formulas>().single()
         assertEquals(9, equal.items.size)
         assertEquals(listOf("ъабба", "джиддан", "роббун"), listOf(0, 6, 8).map { equal.items[it].transliteration })
+        // Записи примеров (решение пользователя 2026-10-20) - пока не записаны: место под них есть, файла нет.
+        assertTrue(equal.items.all { it.audio == null })
         val words = step.quiz.filterIsInstance<ReadingQuestion.Word>()
         assertEquals(step.quiz.size, words.size)
         assertEquals("شَكُّ", words.first().arabic)

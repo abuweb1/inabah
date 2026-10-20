@@ -328,26 +328,64 @@ class ReadingScreensTest {
     }
 
     @Test
-    fun closedSyllableWithRecordingPlaysOnTap() {
+    fun closedSyllableOpensLetterLikeSyllable() {
         val course = (store.course.value as Loadable.Loaded).value
-        val file = "reading_02_closed_fatha.m4a"
-        val ba = course.letters.first { it.letter == "ب" }.copy(audio = mapOf("closedFatha" to file))
+        val ba = course.letters.first { it.letter == "ب" }
         val vowels = course.marks.filter { it.id in ReadingLetter.CLOSED_VOWELS }
         val row = closedSyllables(ba, requireNotNull(course.alif), vowels, requireNotNull(course.sukun))
-        val played = mutableListOf<String>()
+        val opened = mutableListOf<ReadingLetter>()
         compose.setContent {
             InabahTheme {
-                ClosedSyllablesTable(ReadingBlock.ClosedSyllables(vowels, listOf(row)), hidden = false, clips = setOf(file), playingClip = null, onPlay = { played += it })
+                ClosedSyllablesTable(ReadingBlock.ClosedSyllables(vowels, listOf(row)), hidden = false, onLetter = { opened += it })
             }
         }
-        // Слог - без формулы, просто «أَبْ»; с записью нажимается, без записи - нет.
-        compose.onNodeWithContentDescription("Ба, ъаб").assertHasClickAction().performClick()
-        compose.onNodeWithContentDescription("Ба, ъиб").assertHasNoClickAction()
-        assertEquals(listOf(file), played)
+        // Как слог «Огласовок» (решение пользователя 2026-10-20): нажимается всегда - лист буквы, звук - в нём.
+        compose.onNodeWithContentDescription("Ба, ъиб").assertHasClickAction().performClick()
+        assertEquals(listOf(ba), opened)
+    }
+
+    @Test
+    fun sukunLessonOpensWholeAlphabetWithSameButton() {
+        var opened = false
+        compose.setContent {
+            InabahTheme {
+                ReadingLessonScreen(7, store, ReadingProgress(dataStore.storage), ReadingSettings(dataStore.storage),
+                    onBack = {}, onOpenQuiz = {}, onOpenWords = {}, onOpenAlphabet = { opened = true }, onOpenLetterForms = {},
+                    contentPadding = PaddingValues())
+            }
+        }
+        waitForText("Шаг 7 · Сукун")
+        // Одна надпись на всех шагах (2026-10-20): «Посмотреть весь алфавит», не «Прочтите…».
+        compose.onNodeWithText("Посмотреть весь алфавит").performScrollTo().performClick()
+        assertTrue(opened)
+    }
+
+    @Test
+    fun wholeAlphabetOfSukunPlaysSyllablesAndStops() {
+        compose.setContent {
+            InabahTheme {
+                ReadingAlphabetScreen(7, store, ReadingSettings(dataStore.storage), onBack = {}, contentPadding = PaddingValues())
+            }
+        }
+        waitForText("Весь алфавит")
+        compose.onNodeWithContentDescription("Послушать алфавит").performClick()
+        // Сразу пауза: без записей слог звучит 2 с, часы теста проматывают их мгновенно.
+        compose.onNodeWithContentDescription("Пауза").performClick()
+        // Ряд за рядом справа налево: 82 закрытых слога (без мадда أُوْ, إِيْ), подпись - буква и знак.
+        waitForSubstring("из 82")
+        compose.onNode(hasText(" · ", substring = true)).assertExists()
+        compose.onNodeWithContentDescription("Продолжить").assertExists()
+        compose.onNodeWithContentDescription("Следующий слог").performClick()
+        compose.onAllNodesWithContentDescription("Стоп")[0].performClick()
+        compose.onNodeWithContentDescription("Послушать алфавит").assertExists()
     }
 
     private fun hasStateDescriptionPrefix(prefix: String) = SemanticsMatcher("StateDescription начинается с «$prefix»") {
         it.config.getOrNull(SemanticsProperties.StateDescription)?.startsWith(prefix) == true
+    }
+
+    private fun waitForSubstring(text: String) {
+        compose.waitUntil(TIMEOUT_MILLIS) { compose.onAllNodes(hasText(text, substring = true)).fetchSemanticsNodes().isNotEmpty() }
     }
 
     private fun waitForText(text: String) {

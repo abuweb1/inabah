@@ -86,6 +86,20 @@ private fun closedChain(course: ReadingCourse, letter: ReadingLetter, learned: S
 /** Запись названия буквы (`reading_NN_name.m4a`) - она звучит и в «Послушать алфавит»; нет - `null`. */
 val ReadingLetter.nameAudio: String? get() = audio[KEY_NAME]
 
+/** Слог таблицы «Весь алфавит» в «Послушать алфавит»: буква ряда, знак столбца и запись (`null` - подсветка без звука). */
+data class TableSyllable(val letter: ReadingLetter, val mark: ReadingMark, val audio: String?)
+
+/**
+ * «Послушать алфавит» таблицы слогов (шаги «Огласовки», «Танвин»; решение пользователя 2026-10-20):
+ * ряд за рядом, в ряду - знаки по порядку столбцов (справа налево).
+ */
+fun syllablesPlayOrder(block: ReadingBlock.Syllables): List<TableSyllable> =
+    block.letters.flatMap { letter -> block.marks.map { mark -> TableSyllable(letter, mark, letter.audio[mark.id]) } }
+
+/** То же для закрытых слогов (шаг «Сукун»): пустые места мадда (أُوْ, إِيْ) пропускаются. */
+fun closedSyllablesPlayOrder(block: ReadingBlock.ClosedSyllables): List<TableSyllable> =
+    block.all.map { TableSyllable(it.letter, it.vowel, it.audio) }
+
 /** Записи цепочки листа буквы по порядку (название → слоги → закрытые слоги) из тех, что есть в сборке [available]. */
 fun List<LetterChainItem>.playableFiles(available: Set<String>): List<String> =
     mapNotNull { item -> item.audioFile?.takeIf { it in available } }

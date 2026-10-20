@@ -807,7 +807,9 @@ function checkReading(file) {
         const items = Array.isArray(block.items) && block.items.length ? block.items : (error(where, 'items - непустой массив'), []);
         for (const [n, item] of items.entries()) {
           const iat = `${where} item ${n + 1}`;
-          for (const k of Object.keys(item ?? {})) if (!['parts', 'result', 'translations'].includes(k)) error(iat, `неизвестное поле «${k}»`);
+          for (const k of Object.keys(item ?? {})) if (!['parts', 'result', 'translations', 'audio'].includes(k)) error(iat, `неизвестное поле «${k}»`);
+          // Запись итога (примеры шадды, 2026-10-20): `null` - ещё не записана, имя - заполняет reading-recordings --write.
+          if (item && 'audio' in item) checkAudio(iat, item.audio);
           // Пустые части - просто слово с транскрипцией (льам твёрдый / мягкий).
           if (!Array.isArray(item?.parts)) error(iat, 'parts - массив');
           for (const p of item?.parts ?? []) if (typeof p !== 'string' || !p) error(iat, 'parts - строки'); else checkArabic(iat, p);

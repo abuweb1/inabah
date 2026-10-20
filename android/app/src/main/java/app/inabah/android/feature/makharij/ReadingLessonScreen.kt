@@ -64,12 +64,9 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.inabah.android.R
 import app.inabah.android.core.audio.ClipPlayback
-import app.inabah.android.core.audio.playToEnd
 import app.inabah.android.core.content.Loadable
 import app.inabah.android.core.content.model.LetterForm
 import app.inabah.android.core.content.model.ReadingBlock
@@ -84,6 +81,7 @@ import app.inabah.android.core.designsystem.InabahType
 import app.inabah.android.core.designsystem.Motion
 import app.inabah.android.core.designsystem.PressFeedback
 import app.inabah.android.core.designsystem.Radius
+import app.inabah.android.core.designsystem.Size
 import app.inabah.android.core.designsystem.Spacing
 import app.inabah.android.core.designsystem.components.AnchoredPopover
 import app.inabah.android.core.designsystem.components.ArabicText
@@ -139,38 +137,9 @@ fun ReadingLessonScreen(
     val available by clips.available.collectAsStateWithLifecycle()
     val playingClip by clips.playing.collectAsStateWithLifecycle()
     // Звучит название буквы (`reading_NN_name.m4a`), следующая - по окончании записи; записи нет - буква
-    // подсвечивается LETTER_MILLIS без звука.
-    if (alphabet != null) {
-        LaunchedEffect(playback.index, playback.isPaused) {
-            val letter = playback.index?.let(alphabet::getOrNull)
-            if (letter == null || playback.isPaused) return@LaunchedEffect
-            val file = letter.nameAudio?.takeIf { it in clips.available.value }
-            if (file == null) {
-                delay(LETTER_MILLIS)
-            } else {
-                val completed = try {
-                    clips.playToEnd(file)
-                } finally {
-                    // Пауза, стоп, ⏮ ⏭, уход с экрана - буква не доигрывает. Открыли лист - его цепочка сама
-                    // заменит запись (может начаться с этого же названия - не обрывать).
-                    if (clips.playing.value == file && sheetLetter == null) clips.stop()
-                }
-                // Прервали (наушники, другой звук) или зазвучало другое - алфавит на паузе, не перебивать.
-                if (!completed) {
-                    playback.pause()
-                    return@LaunchedEffect
-                }
-                delay(ALPHABET_GAP_MILLIS)
-                if (clips.playing.value != null) {
-                    playback.pause()
-                    return@LaunchedEffect
-                }
-            }
-            playback.next(alphabet.size)
-        }
-        // В фоне алфавит не звучит: пауза, «Продолжить» - с той же буквы.
-        LifecycleEventEffect(Lifecycle.Event.ON_STOP) { playback.pause() }
-    }
+    // подсвечивается без звука.
+    val alphabetItems = remember(alphabet) { alphabet?.map { AlphabetItem(it.name, it.nameAudio) } }
+    if (alphabetItems != null) AlphabetPlaybackEffect(playback, alphabetItems, clips, sheetOpen = sheetLetter != null)
     ReadingScaffold(
         store = store,
         title = step?.let { stepTitle(it) }
@@ -205,7 +174,7 @@ fun ReadingLessonScreen(
                         hidden = hidden,
                         playing = alphabet?.let { letters -> playback.index?.let(letters::getOrNull) },
                         playerBar = {
-                            if (alphabet != null) AlphabetPlayerHost(playback, alphabet)
+                            if (alphabetItems != null) AlphabetPlayerHost(playback, alphabetItems)
                         },
                         onLetter = {
                             // Лист буквы звучит сам - алфавит уступает.
@@ -297,11 +266,11 @@ private fun LessonContent(
                         val index = step.zikrs.indexOf(block)
                         ZikrCard(block, index, zikrs[block.zikr]) { onOpenZikr(index) }
                     }
-                    is ReadingBlock.Formulas -> FormulasBlock(block.items, block.columns, hidden)
+                    is ReadingBlock.Formulas -> FormulasBlock(block.items, block.columns, hidden, clips, playingClip, onPlayClip)
                     is ReadingBlock.ClosedSyllables -> if (block.sample != null) {
-                        SampleClosedSyllables(block, block.sample, hidden, clips, playingClip, onPlayClip, onOpenAlphabet)
+                        SampleClosedSyllables(block, block.sample, hidden, onLetter, onOpenAlphabet)
                     } else {
-                        ClosedSyllablesTable(block, hidden, clips, playingClip, onPlayClip)
+                        ClosedSyllablesTable(block, hidden, onLetter = onLetter)
                     }
                 }
             }
@@ -777,11 +746,24 @@ private fun SampleSyllables(
  * Формулы (мадд, 2026-10-15): одна карточка пергамента, ячейки по [ReadingBlock.Formulas.columns] в ряд
  * справа налево; в ячейке «بَ + ا = بَا» - добавленные части выделены (буква мадда), под ней транскрипция
  * итога (прячется «глазом»). Одна часть - равенство «تَشَٰبَهَ = تَشَابَهَ», без выделения.
+ * Есть запись итога ([ReadingFormula.audio] в [clips], примеры шадды, 2026-10-20) - 🔊 в углу, нажатие
+ * проигрывает её, пока звучит ([playingClip]) - подсвечена; нет - ячейка не нажимается.
  */
 @Composable
-internal fun FormulasBlock(items: List<ReadingFormula>, columns: Int, hidden: Boolean) {
+internal fun FormulasBlock(
+    items: List<ReadingFormula>,
+    columns: Int,
+    hidden: Boolean,
+    clips: Set<String> = emptySet(),
+    playingClip: String? = null,
+    onPlay: (String) -> Unit = {},
+) {
     val palette = InabahTheme.palette
     val colors = readingColors
+    val haptics = LocalHapticFeedback.current
+    val listen = stringResource(R.string.makharij_word_listen)
+    val hint = stringResource(R.string.makharij_hint_listen)
+    val intro = LocalTapIntro.current
 
     ParchmentPanel(topCornerRadius = Radius.card, bottomCornerRadius = Radius.card) {
         CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
@@ -802,15 +784,39 @@ internal fun FormulasBlock(items: List<ReadingFormula>, columns: Int, hidden: Bo
                             // Без частей - просто слово с транскрипцией (примеры «льам твёрдый / мягкий»).
                             val result = if (formula.parts.isEmpty()) formula.result else "= ${formula.result}"
                             val text = parts + AnnotatedString(" $result")
-                            Column(
+                            val isPlaying = formula.audio != null && formula.audio == playingClip
+                            val play = formula.audio?.takeIf { it in clips }?.let { file ->
+                                {
+                                    haptics.performHapticFeedback(HapticFeedbackType.ContextClick)
+                                    onPlay(file)
+                                }
+                            }
+                            val interaction = remember { MutableInteractionSource() }
+                            val cellId = rememberTapCellId()
+                            Box(
                                 Modifier
                                     .weight(1f)
                                     .fillMaxHeight()
-                                    .surface(colors.parchmentCell, Radius.box, border = colors.parchmentCellBorder)
-                                    .padding(horizontal = Spacing.xxs, vertical = Spacing.xs)
+                                    .then(
+                                        if (play != null) {
+                                            Modifier
+                                                .liveCell(intro, cellId, hint, colors.highlightBorder)
+                                                .clickable(interaction, indication = cellRipple(), role = Role.Button, onClick = play)
+                                                .pressFeedback(interaction, scale = PressFeedback.ICON_SCALE)
+                                        } else {
+                                            Modifier
+                                        },
+                                    )
+                                    .parchmentCellSurface(colors, isPlaying)
                                     .clearAndSetSemantics {
                                         contentDescription = listOfNotNull(text.text, formula.transliteration).joinToString(", ")
+                                        if (play != null) onClick(listen) { play(); true }
                                     },
+                            ) {
+                            Column(
+                                Modifier
+                                    .fillMaxSize()
+                                    .padding(horizontal = Spacing.xxs, vertical = Spacing.xs),
                                 horizontalAlignment = Alignment.CenterHorizontally,
                                 verticalArrangement = Arrangement.Center,
                             ) {
@@ -834,6 +840,18 @@ internal fun FormulasBlock(items: List<ReadingFormula>, columns: Int, hidden: Bo
                                     )
                                 }
                             }
+                            if (play != null) {
+                                Icon(
+                                    painterResource(R.drawable.ic_volume_up),
+                                    contentDescription = null,
+                                    tint = colors.parchmentCaption,
+                                    modifier = Modifier
+                                        .align(Alignment.TopStart)
+                                        .padding(Spacing.xxs)
+                                        .size(SpeakerSize),
+                                )
+                            }
+                            }
                         }
                         // Неполный последний ряд формул - с пустыми местами, ряд слов (8 исключений: 3, 3, 2) -
                         // во всю ширину, как плитки «Читаем слова».
@@ -847,7 +865,8 @@ internal fun FormulasBlock(items: List<ReadingFormula>, columns: Int, hidden: Bo
 
 /**
  * Карточка случайных закрытых слогов (решение пользователя 2026-10-16, как слоги шага «Огласовки»; с 2026-10-19 -
- * без формул, просто слог: «ъахь · ъиб · ъук») и под ней «Прочтите весь алфавит» - вся таблица отдельным экраном.
+ * без формул, просто слог: «ъахь · ъиб · ъук») и под ней «Посмотреть весь алфавит» - вся таблица отдельным экраном
+ * (одна надпись на всех шагах, решение пользователя 2026-10-20).
  * Набор - при каждом открытии урока свой, переживает поворот.
  */
 @Composable
@@ -855,9 +874,7 @@ private fun SampleClosedSyllables(
     block: ReadingBlock.ClosedSyllables,
     count: Int,
     hidden: Boolean,
-    clips: Set<String>,
-    playingClip: String?,
-    onPlay: (String) -> Unit,
+    onLetter: (ReadingLetter) -> Unit,
     onOpenAlphabet: () -> Unit,
 ) {
     val seed = rememberSaveable { Random.nextInt() }
@@ -868,28 +885,28 @@ private fun SampleClosedSyllables(
                 Column(verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
                     for (row in sample.chunked(SAMPLE_COLUMNS)) {
                         Row(horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
-                            for (cell in row) ClosedSyllableCell(cell, hidden, clips, playingClip, onPlay, Modifier.weight(1f))
+                            for (cell in row) ClosedSyllableCell(cell, hidden, isPlaying = false, onLetter, Modifier.weight(1f))
                             repeat(SAMPLE_COLUMNS - row.size) { Spacer(Modifier.weight(1f)) }
                         }
                     }
                 }
             }
         }
-        ReadingOutlineButton(stringResource(R.string.makharij_alphabet_formulas_open), onClick = onOpenAlphabet)
+        ReadingOutlineButton(stringResource(R.string.makharij_alphabet_table_open), onClick = onOpenAlphabet)
     }
 }
 
 /**
  * Все закрытые слоги («Весь алфавит» сукуна): по [SYLLABLE_ROWS_PER_CARD] буквы на карточку, как таблица слогов;
  * ряд - буква, столбцы - фатхьа, касра, домма справа налево; нет слога (мадд у و ي) - пустое место.
+ * [playing] - слог, звучащий в «Послушать алфавит» таблицы (подсвечен, прокрутка к нему).
  */
 @Composable
 internal fun ClosedSyllablesTable(
     block: ReadingBlock.ClosedSyllables,
     hidden: Boolean,
-    clips: Set<String>,
-    playingClip: String?,
-    onPlay: (String) -> Unit,
+    playing: TableSyllable? = null,
+    onLetter: (ReadingLetter) -> Unit,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(Spacing.m)) {
         for (chunk in block.rows.chunked(SYLLABLE_ROWS_PER_CARD)) {
@@ -899,8 +916,12 @@ internal fun ClosedSyllablesTable(
                         for (row in chunk) {
                             Row(horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
                                 for (cell in row) {
-                                    if (cell != null) ClosedSyllableCell(cell, hidden, clips, playingClip, onPlay, Modifier.weight(1f))
-                                    else Spacer(Modifier.weight(1f))
+                                    if (cell != null) {
+                                        val isPlaying = playing != null && playing.letter == cell.letter && playing.mark == cell.vowel
+                                        ClosedSyllableCell(cell, hidden, isPlaying, onLetter, Modifier.weight(1f))
+                                    } else {
+                                        Spacer(Modifier.weight(1f))
+                                    }
                                 }
                             }
                         }
@@ -912,83 +933,41 @@ internal fun ClosedSyllablesTable(
 }
 
 /**
- * Ячейка закрытого слога на пергаменте: слог и транскрипция под ним. Есть запись ([ReadingClosedSyllable.audio]
- * в [clips]) - 🔊 в углу, нажатие проигрывает её (как слова-примеры форм), пока звучит ([playingClip]) - подсвечена;
- * нет - не нажимается и в волну не попадает.
+ * Ячейка закрытого слога на пергаменте: слог и транскрипция под ним; нажатие - лист буквы, как у слога
+ * (решение пользователя 2026-10-20: на шаге «Сукун» слоги без записей не нажимались; звук - в цепочке листа).
+ * [isPlaying] - звучит в «Послушать алфавит» таблицы: подсвечена, прокрутка к ней.
  */
 @Composable
 private fun ClosedSyllableCell(
     cell: ReadingClosedSyllable,
     hidden: Boolean,
-    clips: Set<String>,
-    playingClip: String?,
-    onPlay: (String) -> Unit,
+    isPlaying: Boolean,
+    onLetter: (ReadingLetter) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val palette = InabahTheme.palette
     val colors = readingColors
-    val haptics = LocalHapticFeedback.current
-    val listen = stringResource(R.string.makharij_word_listen)
     val interaction = remember { MutableInteractionSource() }
     val cellId = rememberTapCellId()
-    val hint = stringResource(R.string.makharij_hint_listen)
-    val intro = LocalTapIntro.current
-    val isPlaying = cell.audio != null && cell.audio == playingClip
-    val play = cell.audio?.takeIf { it in clips }?.let { file ->
-        {
-            haptics.performHapticFeedback(HapticFeedbackType.ContextClick)
-            onPlay(file)
-        }
-    }
-    Box(
+    Column(
         modifier
-            .then(
-                if (play != null) {
-                    Modifier
-                        .liveCell(intro, cellId, hint, colors.highlightBorder)
-                        .clickable(interaction, indication = cellRipple(), role = Role.Button, onClick = play)
-                        .pressFeedback(interaction, scale = PressFeedback.ICON_SCALE)
-                } else {
-                    Modifier
-                },
-            )
-            // Звучит - подсветка цвета раздела, как у элементов листа буквы.
-            .surface(
-                if (isPlaying) colors.highlight else colors.parchmentCell,
-                Radius.box,
-                border = if (isPlaying) colors.highlightBorder else colors.parchmentCellBorder,
-            )
-            .clearAndSetSemantics {
-                contentDescription = "${cell.letter.name}, ${cell.transliteration}"
-                if (play != null) onClick(listen) { play(); true }
-            },
+            .keepInViewWhen(isPlaying)
+            .liveCell(LocalTapIntro.current, cellId, stringResource(R.string.makharij_hint_syllable), colors.highlightBorder)
+            .clickable(interaction, indication = cellRipple(), role = Role.Button) { onLetter(cell.letter) }
+            .pressFeedback(interaction, scale = PressFeedback.ICON_SCALE)
+            .parchmentCellSurface(colors, isPlaying)
+            // Сверху - место под знак над хамзой на алифе (أُ касалась края ячейки).
+            .padding(vertical = Spacing.xs)
+            .clearAndSetSemantics { contentDescription = "${cell.letter.name}, ${cell.transliteration}" },
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Column(
-            Modifier
-                .fillMaxWidth()
-                // Сверху - место под знак над хамзой на алифе (أُ касалась края ячейки).
-                .padding(vertical = Spacing.xs),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            ArabicText(cell.arabic, SYLLABLE_SIZE, palette.parchmentText, bold = true)
-            Text(
-                cell.transliteration,
-                color = colors.parchmentCaption,
-                style = InabahType.caption,
-                modifier = Modifier.padding(top = Spacing.xs).alpha(transliterationAlpha(hidden)),
-            )
-        }
-        if (play != null) {
-            Icon(
-                painterResource(R.drawable.ic_volume_up),
-                contentDescription = null,
-                tint = colors.parchmentCaption,
-                modifier = Modifier
-                    .align(Alignment.TopStart)
-                    .padding(Spacing.xxs)
-                    .size(SpeakerSize),
-            )
-        }
+        ArabicText(cell.arabic, SYLLABLE_SIZE, palette.parchmentText, bold = true)
+        Text(
+            cell.transliteration,
+            color = colors.parchmentCaption,
+            style = InabahType.caption,
+            modifier = Modifier.padding(top = Spacing.xs).alpha(transliterationAlpha(hidden)),
+        )
     }
 }
 
@@ -1003,11 +982,13 @@ internal fun SyllablesTable(
     marks: List<ReadingMark>,
     hidden: Boolean,
     onLetter: (ReadingLetter) -> Unit,
+    /** Слог, звучащий в «Послушать алфавит» таблицы (подсвечен, прокрутка к нему); `null` - не звучит. */
+    playing: TableSyllable? = null,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(Spacing.m)) {
         for (chunk in letters.chunked(SYLLABLE_ROWS_PER_CARD)) {
             ParchmentPanel(topCornerRadius = Radius.card, bottomCornerRadius = Radius.card) {
-                SyllableRows(chunk, marks, hidden, onLetter)
+                SyllableRows(chunk, marks, hidden, onLetter, playing)
             }
         }
     }
@@ -1019,13 +1000,14 @@ private fun SyllableRows(
     marks: List<ReadingMark>,
     hidden: Boolean,
     onLetter: (ReadingLetter) -> Unit,
+    playing: TableSyllable?,
 ) {
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
         Column(verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
             for (letter in letters) {
                 Row(horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
                     for (mark in marks) {
-                        SyllableCell(letter, mark, hidden, onLetter, Modifier.weight(1f))
+                        SyllableCell(letter, mark, hidden, onLetter, Modifier.weight(1f), isPlaying = playing?.letter == letter && playing.mark == mark)
                     }
                 }
             }
@@ -1045,11 +1027,6 @@ private const val SINGLE_LETTER_TILE = 64f
 private const val HERO_SIZE = 46f
 private const val HERO_STAGGER_MILLIS = 350
 private const val HERO_APPEAR_MILLIS = 500
-/** «Послушать алфавит» без записей - сколько подсвечена буква. */
-private const val LETTER_MILLIS = 2_000L
-
-/** «Послушать алфавит» с записями: пауза после названия буквы перед следующей. */
-private const val ALPHABET_GAP_MILLIS = 500L
 private const val PLAYING_SCALE = 1.2f
 private const val SYLLABLE_ROWS_PER_CARD = 4
 private const val SAMPLE_COLUMNS = 3
@@ -1070,7 +1047,10 @@ private const val LETTER_SIZE = 30f
 private const val MARK_SYLLABLE_SIZE = 36f
 private const val SYLLABLE_SIZE = 32f
 
-/** Ячейка слога на пергаменте: слог и транскрипция под ним; нажатие - лист буквы. */
+/**
+ * Ячейка слога на пергаменте: слог и транскрипция под ним; нажатие - лист буквы. [isPlaying] - звучит в
+ * «Послушать алфавит» таблицы: подсвечена, прокрутка к ней.
+ */
 @Composable
 private fun SyllableCell(
     letter: ReadingLetter,
@@ -1078,6 +1058,7 @@ private fun SyllableCell(
     hidden: Boolean,
     onLetter: (ReadingLetter) -> Unit,
     modifier: Modifier = Modifier,
+    isPlaying: Boolean = false,
 ) {
     val palette = InabahTheme.palette
     val colors = readingColors
@@ -1086,10 +1067,11 @@ private fun SyllableCell(
     val cellId = rememberTapCellId()
     Column(
         modifier
+            .keepInViewWhen(isPlaying)
             .liveCell(LocalTapIntro.current, cellId, stringResource(R.string.makharij_hint_syllable), colors.highlightBorder)
             .clickable(interaction, indication = cellRipple(), role = Role.Button) { onLetter(letter) }
             .pressFeedback(interaction, scale = PressFeedback.ICON_SCALE)
-            .surface(colors.parchmentCell, Radius.box, border = colors.parchmentCellBorder)
+            .parchmentCellSurface(colors, isPlaying)
             // Сверху - место под знак над хамзой на алифе (أُ касалась края ячейки).
             .padding(top = Spacing.xs, bottom = Spacing.xs)
             .clearAndSetSemantics { contentDescription = "${letter.name}, $transliteration" },
@@ -1177,3 +1159,10 @@ private fun PlayingNameBubble(name: String, modifier: Modifier = Modifier) {
 
 private const val BUBBLE_APPEAR_MILLIS = 250
 
+/** Ячейка на пергаменте (слог, формула): звучит - заливка и рамка выделения пергамента, рамка толще. */
+private fun Modifier.parchmentCellSurface(colors: ReadingColors, isPlaying: Boolean): Modifier = surface(
+    if (isPlaying) colors.parchmentPlaying else colors.parchmentCell,
+    Radius.box,
+    border = if (isPlaying) colors.parchmentPlayingBorder else colors.parchmentCellBorder,
+    lineWidth = if (isPlaying) ReadingTileBorder else Size.hairline,
+)

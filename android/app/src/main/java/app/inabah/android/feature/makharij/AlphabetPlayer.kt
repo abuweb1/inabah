@@ -1,5 +1,6 @@
 package app.inabah.android.feature.makharij
 
+import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -10,27 +11,41 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.drawscope.clipRect
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import app.inabah.android.R
-import app.inabah.android.core.content.model.ReadingLetter
+import app.inabah.android.core.audio.ClipPlayback
+import app.inabah.android.core.audio.playToEnd
 import app.inabah.android.core.designsystem.InabahTheme
 import app.inabah.android.core.designsystem.InabahType
 import app.inabah.android.core.designsystem.Motion
@@ -42,6 +57,7 @@ import app.inabah.android.core.designsystem.components.GlassIconButton
 import app.inabah.android.core.designsystem.components.IconButton
 import app.inabah.android.core.designsystem.components.IconButtonShape
 import app.inabah.android.core.designsystem.components.surface
+import kotlinx.coroutines.delay
 
 /**
  * «Послушать алфавит» (вариант B, решение пользователя 2026-10-15): ▶ в шапке урока; нажали - на её
@@ -112,12 +128,64 @@ fun AlphabetPlayButton(playback: AlphabetPlayback) {
 }
 
 /**
- * Панель под шапкой поверх урока: выезжает сверху и уезжает обратно (как мини-плеер азкаров), содержимое
- * урока не сдвигает (просьба пользователя 2026-10-20: появлялась резко и толкала элементы вниз).
+ * Элемент «Послушать алфавит»: подпись на панели (название буквы; в таблице - «Ба · фатхьа») и запись
+ * (`null` - подсвечен [SILENT_ITEM_MILLIS] без звука).
+ */
+@Immutable
+data class AlphabetItem(val title: String, val audio: String?)
+
+/**
+ * Проигрывание [items] по [playback]: запись до конца, пауза [ITEM_GAP_MILLIS] - следующий; на последнем - стоп.
+ * Звук прервали или зазвучало другое - пауза. [sheetOpen] - открыт лист буквы: его цепочка сама заменит
+ * запись (может начаться с этой же), не обрывать. В фоне - пауза, «Продолжить» - с того же элемента.
+ * Общее для урока (буквы) и «Весь алфавит» (слоги, 2026-10-20).
  */
 @Composable
-fun AlphabetPlayerHost(playback: AlphabetPlayback, letters: List<ReadingLetter>, modifier: Modifier = Modifier) {
-    // Остановили - номера уже нет, а панель ещё уезжает: показывать последнюю букву.
+fun AlphabetPlaybackEffect(playback: AlphabetPlayback, items: List<AlphabetItem>, clips: ClipPlayback, sheetOpen: Boolean) {
+    val isSheetOpen by rememberUpdatedState(sheetOpen)
+    LaunchedEffect(playback.index, playback.isPaused, items) {
+        val item = playback.index?.let(items::getOrNull)
+        if (item == null || playback.isPaused) return@LaunchedEffect
+        val file = item.audio?.takeIf { it in clips.available.value }
+        if (file == null) {
+            delay(SILENT_ITEM_MILLIS)
+        } else {
+            val completed = try {
+                clips.playToEnd(file)
+            } finally {
+                // Пауза, стоп, ⏮ ⏭, уход с экрана - элемент не доигрывает.
+                if (clips.playing.value == file && !isSheetOpen) clips.stop()
+            }
+            // Прервали (наушники, другой звук) или зазвучало другое - на паузе, не перебивать.
+            if (!completed) {
+                playback.pause()
+                return@LaunchedEffect
+            }
+            delay(ITEM_GAP_MILLIS)
+            if (clips.playing.value != null) {
+                playback.pause()
+                return@LaunchedEffect
+            }
+        }
+        playback.next(items.size)
+    }
+    LifecycleEventEffect(Lifecycle.Event.ON_STOP) { playback.pause() }
+}
+
+/**
+ * Панель под шапкой поверх содержимого: выезжает сверху и уезжает обратно (как мини-плеер азкаров), содержимое
+ * не сдвигает (просьба пользователя 2026-10-20: появлялась резко и толкала элементы вниз). [previousLabel] и
+ * [nextLabel] - подписи ⏮ ⏭ («Предыдущая буква» в уроке, «Предыдущий слог» в таблице).
+ */
+@Composable
+fun AlphabetPlayerHost(
+    playback: AlphabetPlayback,
+    items: List<AlphabetItem>,
+    modifier: Modifier = Modifier,
+    @StringRes previousLabel: Int = R.string.makharij_alphabet_previous,
+    @StringRes nextLabel: Int = R.string.makharij_alphabet_next,
+) {
+    // Остановили - номера уже нет, а панель ещё уезжает: показывать последний элемент.
     var shown by remember { mutableStateOf(playback.index) }
     playback.index?.let { shown = it }
     AnimatedVisibility(
@@ -129,14 +197,20 @@ fun AlphabetPlayerHost(playback: AlphabetPlayback, letters: List<ReadingLetter>,
         enter = slideInVertically(Motion.collapse()) { -it } + fadeIn(Motion.collapse()),
         exit = slideOutVertically(Motion.collapse()) { -it } + fadeOut(Motion.collapse()),
     ) {
-        shown?.let { AlphabetPlayerBar(playback, letters, it) }
+        shown?.let { AlphabetPlayerBar(playback, items, it, previousLabel, nextLabel) }
     }
 }
 
-/** Сама панель: какая буква звучит ([index] - от [AlphabetPlayerHost]) и «⏮ ⏸ ⏹ ⏭». */
+/** Сама панель: что звучит ([index] - от [AlphabetPlayerHost]) и «⏮ ⏸ ⏹ ⏭». */
 @Composable
-private fun AlphabetPlayerBar(playback: AlphabetPlayback, letters: List<ReadingLetter>, index: Int) {
-    val letter = letters.getOrNull(index) ?: return
+private fun AlphabetPlayerBar(
+    playback: AlphabetPlayback,
+    items: List<AlphabetItem>,
+    index: Int,
+    @StringRes previousLabel: Int,
+    @StringRes nextLabel: Int,
+) {
+    val item = items.getOrNull(index) ?: return
     val palette = InabahTheme.palette
     val colors = readingColors
     Row(
@@ -148,15 +222,20 @@ private fun AlphabetPlayerBar(playback: AlphabetPlayback, letters: List<ReadingL
         horizontalArrangement = Arrangement.spacedBy(Spacing.s),
     ) {
         Column(Modifier.weight(1f).semantics { liveRegion = LiveRegionMode.Polite }) {
-            Text(letter.name, color = palette.onAccent, style = InabahType.subheadline.copy(fontWeight = FontWeight.SemiBold))
             Text(
-                stringResource(R.string.makharij_alphabet_position, index + 1, letters.size),
+                item.title,
+                color = palette.onAccent,
+                style = InabahType.subheadline.copy(fontWeight = FontWeight.SemiBold),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+                stringResource(R.string.makharij_alphabet_position, index + 1, items.size),
                 color = palette.onAccentSecondary,
                 style = InabahType.caption,
             )
         }
-        BarButton(R.drawable.ic_skip_previous, stringResource(R.string.makharij_alphabet_previous), playback::previous,
-            enabled = index > 0)
+        BarButton(R.drawable.ic_skip_previous, stringResource(previousLabel), playback::previous, enabled = index > 0)
         BarButton(
             if (playback.isPaused) R.drawable.ic_play_arrow else R.drawable.ic_pause,
             stringResource(if (playback.isPaused) R.string.makharij_alphabet_resume else R.string.makharij_alphabet_pause),
@@ -164,9 +243,24 @@ private fun AlphabetPlayerBar(playback: AlphabetPlayback, letters: List<ReadingL
             prominent = true,
         )
         BarButton(R.drawable.ic_stop, stringResource(R.string.makharij_alphabet_stop), playback::stop)
-        BarButton(R.drawable.ic_skip_next, stringResource(R.string.makharij_alphabet_next), { playback.next(letters.size) },
-            enabled = index < letters.lastIndex)
+        BarButton(R.drawable.ic_skip_next, stringResource(nextLabel), { playback.next(items.size) },
+            enabled = index < items.lastIndex)
     }
+}
+
+/**
+ * Звучащая ячейка таблицы всегда видна: прокрутка к ней с запасом [PLAYING_VIEW_MARGIN] сверху (панель плеера)
+ * и снизу (панель вкладок поверх прокрутки).
+ */
+@Composable
+internal fun Modifier.keepInViewWhen(active: Boolean): Modifier {
+    val requester = remember { BringIntoViewRequester() }
+    val margin = with(LocalDensity.current) { PLAYING_VIEW_MARGIN.toPx() }
+    var size by remember { mutableStateOf(IntSize.Zero) }
+    LaunchedEffect(active) {
+        if (active) requester.bringIntoView(Rect(0f, -margin, size.width.toFloat(), size.height + margin))
+    }
+    return onSizeChanged { size = it }.bringIntoViewRequester(requester)
 }
 
 @Composable
@@ -191,3 +285,12 @@ private fun BarButton(
         enabled = enabled,
     )
 }
+
+/** Без записи - сколько подсвечен элемент. */
+private const val SILENT_ITEM_MILLIS = 2_000L
+
+/** С записью: пауза после неё перед следующим элементом. */
+private const val ITEM_GAP_MILLIS = 500L
+
+/** Запас вокруг звучащей ячейки при прокрутке: высота панели плеера с отступом, панель вкладок. */
+private val PLAYING_VIEW_MARGIN = 112.dp
