@@ -110,7 +110,7 @@ class MakharijSettingsTest {
         compose.mainClock.autoAdvance = false
         compose.setContent {
             InabahTheme {
-                ReadingStepsScreen(store, ReadingProgress(dataStore.storage), settings, onBack = {},
+                ReadingStepsScreen(store, ReadingProgress(dataStore.storage), settings, ReminderSettings(dataStore.storage), onBack = {},
                     onOpenStep = { opened = it }, contentPadding = PaddingValues())
             }
         }

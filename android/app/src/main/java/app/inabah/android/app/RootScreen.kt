@@ -291,6 +291,7 @@ private fun TabScreens(tab: AppTab, services: AppServices, contentPadding: Paddi
                         store = services.readingStore,
                         progress = services.readingProgress,
                         settings = services.readingSettings,
+                        reminderSettings = services.reminderSettings,
                         onBack = { router.pop(AppTab.Makharij) },
                         onOpenStep = { router.push(MakharijRoute.Lesson(it)) },
                         contentPadding = contentPadding.bottomOnly(),

@@ -210,6 +210,8 @@
     <string name="makharij_reading_all_done">Все шаги пройдены</string>
     <string name="makharij_reading_card_progress">Пройдено %1$d из %2$d</string>
     <string name="makharij_reading_card_step">Шаг %1$d из %2$d · %3$s</string>
+    <string name="makharij_reminder_offer_title">Напоминать о занятиях?</string>
+    <string name="makharij_reminder_offer_message">Утром, днём и вечером - пока за день не пройден шаг. Время можно поменять в настройках «Махраджа».</string>
     <string name="makharij_reading_title">Учимся читать</string>
     <string name="makharij_step_state_current">текущий</string>
     <string name="makharij_step_state_done">пройден</string>

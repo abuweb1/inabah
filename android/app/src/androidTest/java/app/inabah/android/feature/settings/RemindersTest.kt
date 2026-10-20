@@ -8,6 +8,7 @@ import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertIsOn
+import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.accessibility.enableAccessibilityChecks
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -18,6 +19,9 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
+import app.inabah.android.core.content.AssetContentRepository
+import app.inabah.android.core.content.ContentLanguage
+import app.inabah.android.core.content.ContentLanguagePriority
 import app.inabah.android.core.content.ContentRepository
 import app.inabah.android.core.content.model.AzkarSection
 import app.inabah.android.core.content.model.CollectionInfo
@@ -39,9 +43,11 @@ import app.inabah.android.core.settings.TestDataStoreRule
 import app.inabah.android.feature.azkar.AzkarHomeScreen
 import app.inabah.android.feature.azkar.AzkarStore
 import app.inabah.android.feature.hadith.HadithStore
+import app.inabah.android.feature.makharij.ReadingStepsScreen
 import app.inabah.android.feature.makharij.ReadingStore
 import java.time.ZoneId
 import java.time.ZonedDateTime
+import kotlinx.coroutines.Dispatchers
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -179,8 +185,64 @@ class RemindersTest {
         compose.runOnIdle { check(reminders.preferences.value.readingSlots.isEmpty()) }
     }
 
+    private fun showSteps(progress: ReadingProgress) {
+        val store = ReadingStore(
+            AssetContentRepository(
+                InstrumentationRegistry.getInstrumentation().targetContext.assets::open,
+                ContentLanguagePriority(listOf(ContentLanguage.Base)),
+                Dispatchers.IO,
+            ),
+        )
+        // Текущий шаг «дышит» без конца - Compose не бывает idle: кадры двигаем сами.
+        compose.mainClock.autoAdvance = false
+        compose.setContent {
+            InabahTheme {
+                ReadingStepsScreen(store, progress, ReadingSettings(storage), reminders, onBack = {}, onOpenStep = {}, contentPadding = PaddingValues())
+            }
+        }
+        waitFor { compose.onAllNodes(hasContentDescription("Шаг 1 · ", substring = true)).fetchSemanticsNodes().isNotEmpty() }
+    }
+
+    private fun waitFor(condition: () -> Boolean) = compose.waitUntil(TIMEOUT_MILLIS) {
+        compose.mainClock.advanceTimeByFrame()
+        condition()
+    }
+
+    private fun offerShown() = compose.onAllNodesWithText("Напоминать о занятиях?").fetchSemanticsNodes().isNotEmpty()
+
+    @Test
+    fun readingOfferAppearsAfterFirstStepAndEnablesAllSlots() {
+        val progress = ReadingProgress(storage)
+        showSteps(progress)
+        check(!offerShown()) { "до первого пройденного шага предложения нет" }
+
+        compose.runOnUiThread { progress.markLessonDone(1) }
+        waitFor(::offerShown)
+        compose.onNodeWithText("Включить").performScrollTo().performClick()
+
+        waitFor { !offerShown() }
+        check(reminders.preferences.value.readingSlots == ReadingReminderSlot.entries.toSet())
+        check(reminders.readingOfferAnswered.value)
+        check(!reminders.offerAnswered.value) { "предложение азкаров остаётся" }
+    }
+
+    @Test
+    fun readingOfferLaterHidesWithoutEnabling() {
+        val progress = ReadingProgress(storage)
+        progress.markLessonDone(1)
+        showSteps(progress)
+        waitFor(::offerShown)
+
+        compose.onNodeWithText("Не сейчас").performScrollTo().performClick()
+
+        waitFor { !offerShown() }
+        check(reminders.preferences.value.readingSlots.isEmpty())
+        check(reminders.readingOfferAnswered.value)
+    }
+
     private companion object {
         val BERLIN: ZoneId = ZoneId.of("Europe/Berlin")
+        const val TIMEOUT_MILLIS = 5_000L
     }
 }
 
