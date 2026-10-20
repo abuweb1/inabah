@@ -68,8 +68,6 @@ private struct LessonContent: View {
     @Environment(AppRouter.self) private var router
     @Environment(ReadingProgress.self) private var progress
     @Environment(ReadingSettings.self) private var settings
-    @Environment(ClipPlayer.self) private var clips
-    @Environment(\.scenePhase) private var scenePhase
 
     @State private var info: LessonInfo?
     /// Зерно случайных слогов и формул: тот же набор при перерисовке, новый - при новом заходе в урок.
@@ -115,57 +113,15 @@ private struct LessonContent: View {
             .padding(.top, Spacing.s)
             .padding(.bottom, Spacing.xl)
         }
-        .safeAreaInset(edge: .top, spacing: 0) {
-            if let playback, let letter = playingLetter {
-                AlphabetPlayerBar(letter: letter, playback: playback, colors: colors) { command in
-                    switch command {
-                    case .previous: self.playback?.previous()
-                    case .togglePause: self.playback?.togglePause()
-                    case .stop: self.playback = nil
-                    case .next: self.playback?.next()
-                    }
-                }
-                .padding(.horizontal, Spacing.xl)
-                .padding(.vertical, Spacing.s)
-                .transition(.move(edge: .top).combined(with: .opacity))
-            }
-        }
-        .animation(Motion.collapse, value: playback == nil)
+        // Панель - поверх урока, урок не сдвигается.
+        .alphabetPlayer($playback, items: (step.alphabetLetters ?? []).map(AlphabetItem.letter), colors: colors)
         .lessonInfoPopover($info, colors: colors)
-        .task(id: playback?.key) { await playAlphabet() }
-        .onChange(of: scenePhase) { _, phase in
-            if phase != .active { playback?.pause() }
-        }
     }
 
     /// Буква, на которой стоит «Послушать алфавит».
     private var playingLetter: ReadingLetter? {
         guard let playback, let letters = step.alphabetLetters, letters.indices.contains(playback.index) else { return nil }
         return letters[playback.index]
-    }
-
-    /// Звучит название буквы; доиграло - пауза и следующая. Без записи - подсветка `silentLetter`. Прервали
-    /// или зазвучало другое - пауза. Сменилась буква, пауза, стоп, ушли с экрана - задача отменяется, и
-    /// название замолкает (`playToEnd`).
-    private func playAlphabet() async {
-        guard let playback, !playback.isPaused, let letter = playingLetter else { return }
-        if let file = letter.nameAudio, clips.available.contains(file) {
-            let finished = await clips.playToEnd(file)
-            guard !Task.isCancelled else { return }
-            guard finished else {
-                self.playback?.pause()
-                return
-            }
-            try? await Task.sleep(for: AlphabetPlayback.gap)
-        } else {
-            try? await Task.sleep(for: AlphabetPlayback.silentLetter)
-        }
-        guard !Task.isCancelled else { return }
-        if clips.playing != nil {
-            self.playback?.pause()
-        } else if self.playback?.advance() == false {
-            self.playback = nil
-        }
     }
 
     @ViewBuilder
@@ -228,10 +184,10 @@ struct LessonBlockView: View {
             if let sample = closed.sample {
                 LessonSampleClosedSyllables(
                     samples: ReadingLogic.sampleClosedSyllables(items: closed.all, count: sample, seed: seed),
-                    isTransliterationHidden: isTransliterationHidden, colors: colors, onOpenAlphabet: actions.openAlphabet
+                    isTransliterationHidden: isTransliterationHidden, colors: colors, actions: actions
                 )
             } else {
-                ClosedSyllablesTable(block: closed, isTransliterationHidden: isTransliterationHidden, colors: colors)
+                ClosedSyllablesTable(block: closed, isTransliterationHidden: isTransliterationHidden, colors: colors, onTap: actions.openSheet.open)
             }
         case .topic(let topic):
             LessonTopicCard(topic: topic, colors: colors) {

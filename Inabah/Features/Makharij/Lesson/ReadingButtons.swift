@@ -50,19 +50,28 @@ struct ReadingTile: ViewModifier {
     }
 }
 
-/// Ячейка на пергаменте: слог, форма, слово-пример, формула. `isHighlighted` - звучит её запись.
+/// Ячейка на пергаменте: слог, форма, слово-пример, формула. `isHighlighted` - звучит запись слова-примера
+/// (цвет раздела); `isPlaying` - звучит слог «Послушать алфавит» или формула (`parchmentMark`, рамка 1,5 pt).
 struct ParchmentCell: ViewModifier {
     let colors: ReadingColors
     var isHighlighted = false
+    var isPlaying = false
 
     func body(content: Content) -> some View {
         content
-            .surface(
-                isHighlighted ? colors.highlight : colors.parchmentCell,
-                cornerRadius: Radius.box,
-                border: isHighlighted ? colors.highlightBorder : colors.parchmentCellBorder
-            )
+            .surface(fill, cornerRadius: Radius.box, border: border, lineWidth: isPlaying ? ReadingMetrics.tileBorder : Size.hairline)
             .animation(Motion.highlight, value: isHighlighted)
+            .animation(Motion.highlight, value: isPlaying)
+    }
+
+    private var fill: Color {
+        if isPlaying { return colors.parchmentPlaying }
+        return isHighlighted ? colors.highlight : colors.parchmentCell
+    }
+
+    private var border: Color {
+        if isPlaying { return colors.parchmentPlayingBorder }
+        return isHighlighted ? colors.highlightBorder : colors.parchmentCellBorder
     }
 }
 
@@ -71,8 +80,8 @@ extension View {
         modifier(ReadingTile(colors: colors, cornerRadius: cornerRadius, lineWidth: lineWidth, isHighlighted: isHighlighted))
     }
 
-    func parchmentCell(_ colors: ReadingColors, isHighlighted: Bool = false) -> some View {
-        modifier(ParchmentCell(colors: colors, isHighlighted: isHighlighted))
+    func parchmentCell(_ colors: ReadingColors, isHighlighted: Bool = false, isPlaying: Bool = false) -> some View {
+        modifier(ParchmentCell(colors: colors, isHighlighted: isHighlighted, isPlaying: isPlaying))
     }
 }
 

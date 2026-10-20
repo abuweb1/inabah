@@ -294,57 +294,89 @@ private struct LiveCell: ViewModifier {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var id = UUID()
     @State private var flash: TapFlash?
-
-    private static let glowWidth: CGFloat = 2
+    /// Доля своего «вдоха» в волне и «зова» (0...1). Не `keyframeAnimator`: на iOS 18 он задерживал смену
+    /// содержимого ячейки (подсветка звучащего слога отставала на элемент) - здесь анимируемые модификаторы.
+    @State private var breath = 0.0
+    @State private var wiggle = 0.0
 
     func body(content: Content) -> some View {
-        let rank = intro?.waveOrder[id]
-        // Кадры анимации собираются вне главного актора - в них только готовые значения.
-        let tint = tint
-        let still = reduceMotion
-        let radius = Radius.box
-        let glowWidth = Self.glowWidth
-        return content
+        content
             .tapFlash(flash, tint: tint)
             .simultaneousGesture(SpatialTapGesture().onEnded { tap in
                 guard observesTaps else { return }
                 flash = flash?.next(at: tap.location) ?? .first(at: tap.location)
                 intro?.tappedCell()
             }, including: observesTaps ? .all : .subviews)
-            .keyframeAnimator(initialValue: 0.0, trigger: WaveTrigger(wave: intro?.wave ?? 0, rank: rank)) { view, progress in
-                let bump: CGFloat = still ? 0 : ReadingLiveliness.waveBump(progress)
-                view
-                    .overlay { RoundedRectangle(cornerRadius: radius).stroke(tint.opacity(bump), lineWidth: glowWidth) }
-                    .scaleEffect(1 + (ReadingLiveliness.waveScale - 1) * bump)
-            } keyframes: { _ in
-                // Сначала - скачком в покой: прошлая волна кончилась на 1, плавный спуск дал бы лишний «вдох».
-                // Ячейка вне волны (`rank == nil`) так и стоит в покое.
-                KeyframeTrack {
-                    MoveKeyframe(0)
-                    LinearKeyframe(0, duration: Double(rank ?? 0) * ReadingLiveliness.waveStagger)
-                    LinearKeyframe(rank == nil ? 0 : 1, duration: ReadingLiveliness.waveBreath)
-                }
-            }
-            .keyframeAnimator(initialValue: 0.0, trigger: intro?.calls[id] ?? 0) { view, progress in
-                let phase = still ? 0 : progress
-                view
-                    .rotationEffect(.degrees(ReadingLiveliness.wiggleRotation(phase)))
-                    .scaleEffect(CGFloat(ReadingLiveliness.wiggleScale(phase)))
-            } keyframes: { _ in
-                KeyframeTrack {
-                    MoveKeyframe(0)
-                    LinearKeyframe(1, duration: ReadingLiveliness.wiggleDuration)
-                }
-            }
+            .modifier(WaveBreath(progress: breath, tint: tint))
+            .modifier(Wiggle(progress: wiggle))
+            .onChange(of: intro?.wave ?? 0) { startBreath() }
+            .onChange(of: intro?.calls[id] ?? 0) { startWiggle() }
             .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { frame in
                 intro?.register(id, frame: frame, hint: hint, zoomable: zoomable)
             }
             .onDisappear { intro?.unregister(id) }
     }
 
-    private struct WaveTrigger: Equatable {
-        let wave: Int
-        let rank: Int?
+    /// Новая волна: ячейка в ней (есть место) «вдыхает» в свой черёд. Сначала - скачком в покой: прошлый
+    /// «вдох» кончился на 1, плавный спуск дал бы лишний.
+    private func startBreath() {
+        withoutAnimation { breath = 0 }
+        guard !reduceMotion, let rank = intro?.waveOrder[id] else { return }
+        withAnimation(.linear(duration: ReadingLiveliness.waveBreath).delay(Double(rank) * ReadingLiveliness.waveStagger)) {
+            breath = 1
+        }
+    }
+
+    private func startWiggle() {
+        withoutAnimation { wiggle = 0 }
+        guard !reduceMotion else { return }
+        withAnimation(.linear(duration: ReadingLiveliness.wiggleDuration)) { wiggle = 1 }
+    }
+
+    private func withoutAnimation(_ change: () -> Void) {
+        var transaction = Transaction()
+        transaction.disablesAnimations = true
+        withTransaction(transaction, change)
+    }
+}
+
+/// «Вдох» волны на доле `progress`: 1 → 1,06 → 1 по `sin` и рамка цвета раздела с той же прозрачностью.
+private struct WaveBreath: ViewModifier, Animatable {
+    var progress: Double
+    let tint: Color
+
+    var animatableData: Double {
+        get { progress }
+        set { progress = newValue }
+    }
+
+    private static let glowWidth: CGFloat = 2
+
+    func body(content: Content) -> some View {
+        let bump = ReadingLiveliness.waveBump(progress)
+        content
+            .overlay {
+                if bump > 0 {
+                    RoundedRectangle(cornerRadius: Radius.box).stroke(tint.opacity(bump), lineWidth: Self.glowWidth)
+                }
+            }
+            .scaleEffect(1 + (ReadingLiveliness.waveScale - 1) * bump)
+    }
+}
+
+/// «Зов» на доле `progress`: покачивание с наклоном по ключевым точкам `ReadingLiveliness`.
+private struct Wiggle: ViewModifier, Animatable {
+    var progress: Double
+
+    var animatableData: Double {
+        get { progress }
+        set { progress = newValue }
+    }
+
+    func body(content: Content) -> some View {
+        content
+            .rotationEffect(.degrees(ReadingLiveliness.wiggleRotation(progress)))
+            .scaleEffect(CGFloat(ReadingLiveliness.wiggleScale(progress)))
     }
 }
 

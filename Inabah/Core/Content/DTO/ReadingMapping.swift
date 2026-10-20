@@ -170,7 +170,7 @@ nonisolated extension ReadingCourse {
                 return .formulas(.init(
                     columns: Swift.min(Swift.max(block.columns, 1), ReadingCourse.maxFormulaColumns),
                     items: block.items.map {
-                        ReadingFormula(parts: $0.parts, result: $0.result, transliteration: transliteration($0.translations))
+                        ReadingFormula(parts: $0.parts, result: $0.result, transliteration: transliteration($0.translations), audio: $0.audio)
                     }
                 ))
             case "closedSyllables":

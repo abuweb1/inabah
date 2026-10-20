@@ -13,6 +13,18 @@ nonisolated enum LessonPrimaryAction: Hashable, Sendable {
     case none
 }
 
+/// Слог таблицы «Весь алфавит» по порядку «Послушать алфавит»: буква, знак (у закрытого - огласовка) и запись.
+nonisolated struct TableSyllable: Hashable, Sendable, Identifiable {
+    let letter: ReadingLetter
+    let mark: ReadingMark
+    let audio: String?
+
+    /// Место в таблице: буква и знак.
+    var id: String { Self.id(letter: letter, mark: mark) }
+
+    static func id(letter: ReadingLetter, mark: ReadingMark) -> String { "\(letter.number).\(mark.id)" }
+}
+
 /// Кусок русского текста: арабская вставка или обычный текст.
 nonisolated struct TextRun: Hashable, Sendable {
     let text: String
@@ -28,6 +40,19 @@ nonisolated extension ReadingLogic {
     /// Части «лица» урока: пример шага, разделённый обычными пробелами (неразрывный держит словосочетание).
     static func heroParts(_ example: String) -> [String] {
         example.split(separator: " ").map(String.init)
+    }
+
+    /// Порядок «Послушать алфавит» в таблице слогов: ряд за рядом (буква), в ряду знаки по порядку `marks` -
+    /// на экране справа налево (Android `syllablesPlayOrder`).
+    static func syllablesPlayOrder(_ block: ReadingBlock.Syllables) -> [TableSyllable] {
+        block.letters.flatMap { letter in
+            block.marks.map { TableSyllable(letter: letter, mark: $0, audio: letter.audio[$0.id]) }
+        }
+    }
+
+    /// То же для закрытых слогов (шаг «Сукун»): пустые места мадда (أُوْ, إِيْ) пропускаются.
+    static func closedSyllablesPlayOrder(_ block: ReadingBlock.ClosedSyllables) -> [TableSyllable] {
+        block.all.map { TableSyllable(letter: $0.letter, mark: $0.vowel, audio: $0.audio) }
     }
 
     /// Ряды сетки по `columns` с пустыми местами в неполном последнем ряду - ширина ячеек одинаковая.

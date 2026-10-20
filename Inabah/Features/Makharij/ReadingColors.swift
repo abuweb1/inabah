@@ -15,6 +15,7 @@ nonisolated struct ReadingColors: Hashable, Sendable {
         static let parchmentCell = 0.06
         static let parchmentCellBorder = 0.18
         static let parchmentCaption = 0.75
+        static let parchmentPlaying = 0.22
     }
 
     /// Номера, рамка текущего шага, звучащий элемент, заливка кнопок.
@@ -37,6 +38,10 @@ nonisolated struct ReadingColors: Hashable, Sendable {
     let parchmentCell: Color
     let parchmentCellBorder: Color
     let parchmentCaption: Color
+    /// Звучащий слог или формула на пергаменте («Послушать алфавит», запись): цвет выделения буквы
+    /// `parchmentMark` - цвет раздела на пергаменте не виден.
+    let parchmentPlaying: Color
+    let parchmentPlayingBorder: Color
 
     init(palette: Palette) {
         let tint = palette.tabMakharij
@@ -61,5 +66,7 @@ nonisolated struct ReadingColors: Hashable, Sendable {
         parchmentCell = palette.parchmentText.opacity(Share.parchmentCell)
         parchmentCellBorder = palette.parchmentText.opacity(Share.parchmentCellBorder)
         parchmentCaption = palette.parchmentText.opacity(Share.parchmentCaption)
+        parchmentPlaying = palette.parchmentMark.opacity(Share.parchmentPlaying)
+        parchmentPlayingBorder = palette.parchmentMark
     }
 }

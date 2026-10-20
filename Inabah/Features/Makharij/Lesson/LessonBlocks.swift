@@ -296,23 +296,52 @@ private struct PlayingNameBubble: View {
 
 // MARK: - Слоги
 
-/// Ячейка слога на пергаменте: слог и транскрипция (место под ней остаётся и при скрытом глазе).
+/// Ячейка слога на пергаменте: слог и транскрипция (место под ней остаётся и при скрытом глазе). Нажатие -
+/// лист буквы; закрытый слог (шаг «Сукун») - такая же ячейка, его запись звучит в цепочке листа.
+/// `isPlaying` - слог звучит в «Послушать алфавит».
 struct SyllableCell: View {
     let letter: ReadingLetter
-    let mark: ReadingMark
+    let arabic: String
+    let transliteration: String
     let isTransliterationHidden: Bool
     let colors: ReadingColors
+    var isPlaying = false
     let onTap: (ReadingLetter) -> Void
 
     @Environment(\.theme) private var theme
 
     private static let syllableSize: Double = 32
 
+    init(
+        letter: ReadingLetter, mark: ReadingMark, isTransliterationHidden: Bool, colors: ReadingColors,
+        isPlaying: Bool = false, onTap: @escaping (ReadingLetter) -> Void
+    ) {
+        self.letter = letter
+        arabic = letter.syllable(mark)
+        transliteration = letter.transliteration(mark) ?? ""
+        self.isTransliterationHidden = isTransliterationHidden
+        self.colors = colors
+        self.isPlaying = isPlaying
+        self.onTap = onTap
+    }
+
+    init(
+        closed cell: ReadingClosedSyllable, isTransliterationHidden: Bool, colors: ReadingColors,
+        isPlaying: Bool = false, onTap: @escaping (ReadingLetter) -> Void
+    ) {
+        letter = cell.letter
+        arabic = cell.arabic
+        transliteration = cell.transliteration
+        self.isTransliterationHidden = isTransliterationHidden
+        self.colors = colors
+        self.isPlaying = isPlaying
+        self.onTap = onTap
+    }
+
     var body: some View {
-        let transliteration = letter.transliteration(mark) ?? ""
         Button { onTap(letter) } label: {
             VStack(spacing: 0) {
-                Text(verbatim: letter.syllable(mark))
+                Text(verbatim: arabic)
                     .font(.arabic(size: Self.syllableSize, bold: true))
                     .foregroundStyle(theme.palette.parchmentText)
                     .fixedSize()
@@ -324,7 +353,7 @@ struct SyllableCell: View {
             }
             .padding(.vertical, Spacing.xs)
             .frame(maxWidth: .infinity)
-            .parchmentCell(colors)
+            .parchmentCell(colors, isPlaying: isPlaying)
             .contentShape(.rect(cornerRadius: Radius.box))
         }
         .buttonStyle(PressScaleButtonStyle(pressedScale: PressFeedback.iconScale))
@@ -374,6 +403,10 @@ struct SyllablesTable: View {
     let block: ReadingBlock.Syllables
     let isTransliterationHidden: Bool
     let colors: ReadingColors
+    /// Звучащий слог «Послушать алфавит» (`TableSyllable.id`).
+    var playingID: String? = nil
+    /// Куда сообщать места ячеек - прокрутка к звучащей («Весь алфавит»).
+    var cellFrames: TableCellFrames? = nil
     let onTap: (ReadingLetter) -> Void
 
     private static let lettersPerCard = 4
@@ -386,10 +419,13 @@ struct SyllablesTable: View {
                         ForEach(block.letters[start..<min(start + Self.lettersPerCard, block.letters.count)], id: \.number) { letter in
                             WeightedRow(spacing: Spacing.s) {
                                 ForEach(block.marks, id: \.id) { mark in
+                                    let id = TableSyllable.id(letter: letter, mark: mark)
                                     SyllableCell(
                                         letter: letter, mark: mark,
-                                        isTransliterationHidden: isTransliterationHidden, colors: colors, onTap: onTap
+                                        isTransliterationHidden: isTransliterationHidden, colors: colors,
+                                        isPlaying: id == playingID, onTap: onTap
                                     )
+                                    .tableCell(id, frames: cellFrames)
                                 }
                             }
                         }
@@ -400,15 +436,38 @@ struct SyllablesTable: View {
     }
 }
 
+/// Места ячеек таблицы в окне прокрутки и высота окна: «Послушать алфавит» прокручивает к звучащей, только
+/// если она у края. Не наблюдается - прокрутка не перерисовывает таблицу.
+final class TableCellFrames {
+    /// Пространство координат окна прокрутки таблицы.
+    nonisolated static let space = "alphabetTable"
+
+    var viewport: CGFloat = 0
+    var frames: [String: CGRect] = [:]
+}
+
+extension View {
+    /// Ячейка таблицы: `id` для прокрутки и её место в окне (`frames`, если таблица его ведёт).
+    @ViewBuilder
+    func tableCell(_ id: String, frames: TableCellFrames?) -> some View {
+        if let frames {
+            self.id(id)
+                .onGeometryChange(for: CGRect.self) { $0.frame(in: .named(TableCellFrames.space)) } action: { frames.frames[id] = $0 }
+        } else {
+            self
+        }
+    }
+}
+
 // MARK: - Закрытые слоги
 
 /// Случайные закрытые слоги урока (шаг «Сукун», без формул - просто слог): пергамент по 3 в ряд и
-/// «Прочтите весь алфавит».
+/// «Посмотреть весь алфавит», как слоги «Огласовок».
 struct LessonSampleClosedSyllables: View {
     let samples: [ReadingClosedSyllable]
     let isTransliterationHidden: Bool
     let colors: ReadingColors
-    let onOpenAlphabet: () -> Void
+    let actions: LessonActions
 
     private static let columns = 3
 
@@ -417,22 +476,29 @@ struct LessonSampleClosedSyllables: View {
             ParchmentPanel(bottomCornerRadius: Radius.card) {
                 VStack(spacing: Spacing.s) {
                     ForEach(Array(ReadingLogic.paddedRows(samples, columns: Self.columns).enumerated()), id: \.offset) { _, row in
-                        ClosedSyllablesRow(cells: row, isTransliterationHidden: isTransliterationHidden, colors: colors)
+                        ClosedSyllablesRow(
+                            cells: row, isTransliterationHidden: isTransliterationHidden, colors: colors,
+                            onTap: actions.openSheet.open
+                        )
                     }
                 }
             }
-            Button("makharij.alphabet.formulas.open", action: onOpenAlphabet)
+            Button("makharij.alphabet.table.open", action: actions.openAlphabet)
                 .buttonStyle(ReadingButtonStyle(colors: colors, isProminent: false))
         }
     }
 }
 
 /// Все закрытые слоги («Весь алфавит» шага «Сукун»): карточки по 4 буквы, ряд - буква, столбцы - фатхьа,
-/// касра, домма справа налево; нет слога (мадд у و ي) - пустое место.
+/// касра, домма справа налево; нет слога (мадд у و ي) - пустое место. Нажатие - лист буквы.
 struct ClosedSyllablesTable: View {
     let block: ReadingBlock.ClosedSyllables
     let isTransliterationHidden: Bool
     let colors: ReadingColors
+    /// Звучащий слог «Послушать алфавит» (`TableSyllable.id`).
+    var playingID: String? = nil
+    var cellFrames: TableCellFrames? = nil
+    let onTap: (ReadingLetter) -> Void
 
     private static let lettersPerCard = 4
 
@@ -442,7 +508,10 @@ struct ClosedSyllablesTable: View {
                 ParchmentPanel(bottomCornerRadius: Radius.card) {
                     VStack(spacing: Spacing.s) {
                         ForEach(start..<min(start + Self.lettersPerCard, block.rows.count), id: \.self) { index in
-                            ClosedSyllablesRow(cells: block.rows[index], isTransliterationHidden: isTransliterationHidden, colors: colors)
+                            ClosedSyllablesRow(
+                                cells: block.rows[index], isTransliterationHidden: isTransliterationHidden, colors: colors,
+                                playingID: playingID, cellFrames: cellFrames, onTap: onTap
+                            )
                         }
                     }
                 }
@@ -456,73 +525,25 @@ private struct ClosedSyllablesRow: View {
     let cells: [ReadingClosedSyllable?]
     let isTransliterationHidden: Bool
     let colors: ReadingColors
+    var playingID: String? = nil
+    var cellFrames: TableCellFrames? = nil
+    let onTap: (ReadingLetter) -> Void
 
     var body: some View {
         WeightedRow(spacing: Spacing.s) {
             ForEach(Array(cells.enumerated()), id: \.offset) { _, cell in
                 if let cell {
-                    ClosedSyllableCell(cell: cell, isTransliterationHidden: isTransliterationHidden, colors: colors)
+                    let id = TableSyllable.id(letter: cell.letter, mark: cell.vowel)
+                    SyllableCell(
+                        closed: cell, isTransliterationHidden: isTransliterationHidden, colors: colors,
+                        isPlaying: id == playingID, onTap: onTap
+                    )
+                    .tableCell(id, frames: cellFrames)
                 } else {
                     Color.clear
                 }
             }
         }
-    }
-}
-
-/// Ячейка закрытого слога: слог и транскрипция под ним. Есть запись в сборке - 🔈 в углу, нажатие играет её
-/// (как слова-примеры форм); нет - не нажимается.
-private struct ClosedSyllableCell: View {
-    let cell: ReadingClosedSyllable
-    let isTransliterationHidden: Bool
-    let colors: ReadingColors
-
-    @Environment(\.theme) private var theme
-    @Environment(ClipPlayer.self) private var clips
-    @State private var playCount = 0
-
-    private static let syllableSize: Double = 32
-
-    var body: some View {
-        let audio = cell.audio.flatMap { clips.available.contains($0) ? $0 : nil }
-        Group {
-            if let audio {
-                Button {
-                    playCount += 1
-                    clips.play(audio)
-                } label: {
-                    content
-                        .parchmentCell(colors, isHighlighted: clips.playing == audio)
-                        .overlay(alignment: .topLeading) { ExampleWordSpeaker(colors: colors) }
-                        .contentShape(.rect(cornerRadius: Radius.box))
-                }
-                .buttonStyle(PressScaleButtonStyle(pressedScale: PressFeedback.iconScale))
-                .liveCell(hint: "makharij.hint.listen", tint: colors.tint)
-                .sensoryFeedback(.selection, trigger: playCount)
-            } else {
-                content
-                    .parchmentCell(colors)
-                    .accessibilityElement(children: .ignore)
-            }
-        }
-        .accessibilityLabel(Text(verbatim: "\(cell.letter.name), \(cell.transliteration)"))
-        .modifier(ListenAction(isEnabled: audio != nil) { if let audio { clips.play(audio) } })
-    }
-
-    private var content: some View {
-        VStack(spacing: 0) {
-            Text(verbatim: cell.arabic)
-                .font(.arabic(size: Self.syllableSize, bold: true))
-                .foregroundStyle(theme.palette.parchmentText)
-                .fixedSize()
-            Text(verbatim: cell.transliteration)
-                .font(.caption)
-                .foregroundStyle(colors.parchmentCaption)
-                .padding(.top, Spacing.xs)
-                .opacity(isTransliterationHidden ? 0 : 1)
-        }
-        .padding(.vertical, Spacing.xs)
-        .frame(maxWidth: .infinity)
     }
 }
 
@@ -809,6 +830,8 @@ private struct FormulaCell: View {
     let colors: ReadingColors
 
     @Environment(\.theme) private var theme
+    @Environment(ClipPlayer.self) private var clips
+    @State private var playCount = 0
 
     private enum Layout {
         static let result: Double = 32
@@ -816,7 +839,36 @@ private struct FormulaCell: View {
         static let wideLines = 2
     }
 
+    /// Есть запись примера (шадда, шаг 9) в сборке - формула нажимается и звучит; нет - как раньше.
     var body: some View {
+        if let audio = formula.audio, clips.available.contains(audio) {
+            Button {
+                playCount += 1
+                clips.play(audio)
+            } label: {
+                content
+                    .parchmentCell(colors, isPlaying: clips.playing == audio)
+                    .overlay(alignment: .topLeading) { ExampleWordSpeaker(colors: colors) }
+                    .contentShape(.rect(cornerRadius: Radius.box))
+            }
+            .buttonStyle(PressScaleButtonStyle(pressedScale: PressFeedback.iconScale))
+            .liveCell(hint: "makharij.hint.listen", tint: colors.tint)
+            .sensoryFeedback(.selection, trigger: playCount)
+            .accessibilityLabel(accessibilityLabel)
+            .modifier(ListenAction(isEnabled: true) { clips.play(audio) })
+        } else {
+            content
+                .parchmentCell(colors)
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel(accessibilityLabel)
+        }
+    }
+
+    private var accessibilityLabel: Text {
+        Text(verbatim: [fullText, formula.transliteration].compactMap { $0 }.joined(separator: ", "))
+    }
+
+    private var content: some View {
         VStack(spacing: 0) {
             if isWide {
                 arabic(parts + resultText, size: Layout.result)
@@ -838,9 +890,6 @@ private struct FormulaCell: View {
         .padding(.horizontal, Spacing.xxs)
         .padding(.vertical, Spacing.xs)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .parchmentCell(colors)
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(Text(verbatim: [fullText, formula.transliteration].compactMap { $0 }.joined(separator: ", ")))
     }
 
     private func arabic(_ text: AttributedString, size: Double) -> some View {

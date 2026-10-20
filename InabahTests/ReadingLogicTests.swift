@@ -555,6 +555,36 @@ struct ReadingLogicTests {
         #expect(!ReadingLogic.completeFinalIfRead(step: try course.requiredStep(1), progress: progress), "урок без зикров")
         #expect(!progress.lessonsDone.contains(1))
     }
+
+    // MARK: - «Послушать алфавит» в таблице
+
+    @Test("Таблица слогов звучит ряд за рядом, в ряду - знаки по порядку (на экране справа налево)", arguments: [2, 8])
+    func syllablesPlayOrder(stepNumber: Int) async throws {
+        let step = try await ReadingCourseFixture.load().requiredStep(stepNumber)
+        let block = try #require(step.syllablesBlocks.first)
+
+        let order = ReadingLogic.syllablesPlayOrder(block)
+
+        #expect(order.count == block.letters.count * block.marks.count)
+        #expect(order.prefix(block.marks.count).map(\.letter) == Array(repeating: block.letters[0], count: block.marks.count))
+        #expect(order.prefix(block.marks.count).map(\.mark) == block.marks)
+        #expect(order[block.marks.count].letter == block.letters[1])
+        #expect(Set(order.map(\.id)).count == order.count, "место каждого слога - своё")
+    }
+
+    @Test("Закрытые слоги звучат без мест мадда: 82, у و - фатхьа и касра, у ي - фатхьа и домма")
+    func closedSyllablesPlayOrder() async throws {
+        let course = try await ReadingCourseFixture.load()
+        let block = try #require(try course.requiredStep(7).closedSyllablesBlocks.first)
+
+        let order = ReadingLogic.closedSyllablesPlayOrder(block)
+
+        #expect(order.count == 82)
+        #expect(order.filter { $0.letter.letter == "و" }.map(\.mark.id) == ["fatha", "kasra"])
+        #expect(order.filter { $0.letter.letter == "ي" }.map(\.mark.id) == ["fatha", "damma"])
+        let first = try #require(order.first)
+        #expect(AlphabetItem.syllable(first).title == "\(first.letter.name) · \(first.mark.name)")
+    }
 }
 
 /// Ряд страницы для сравнения: число плиток и номера слов.

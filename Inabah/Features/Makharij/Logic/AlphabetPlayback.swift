@@ -1,14 +1,31 @@
-/// «Послушать алфавит» (Android `AlphabetPlayback`): какая буква звучит и на паузе ли. Чистое значение -
-/// урок хранит его в `@State`, звук ведёт сам по `key`. `nil` у урока - панели нет.
-nonisolated struct AlphabetPlayback: Hashable, Sendable {
-    /// После записи названия - пауза до следующей буквы (Android `ALPHABET_GAP_MILLIS`).
-    static let gap = Duration.milliseconds(500)
-    /// Буква без записи подсвечена столько (Android `LETTER_MILLIS`).
-    static let silentLetter = Duration.seconds(2)
+/// Что звучит в «Послушать алфавит»: буква урока («Ба») или слог таблицы («Ба · фатхьа») и его запись
+/// (Android `AlphabetItem`).
+nonisolated struct AlphabetItem: Hashable, Sendable {
+    let title: String
+    let audio: String?
 
-    /// Сколько букв в сетке (29).
+    /// Буква сетки урока - её название.
+    static func letter(_ letter: ReadingLetter) -> AlphabetItem {
+        AlphabetItem(title: letter.name, audio: letter.nameAudio)
+    }
+
+    /// Слог таблицы «Весь алфавит».
+    static func syllable(_ syllable: TableSyllable) -> AlphabetItem {
+        AlphabetItem(title: "\(syllable.letter.name) · \(syllable.mark.name)", audio: syllable.audio)
+    }
+}
+
+/// «Послушать алфавит» (Android `AlphabetPlayback`): какой элемент звучит и на паузе ли. Чистое значение -
+/// экран хранит его в `@State`, звук ведёт `alphabetPlayer` по `key`. `nil` у экрана - панели нет.
+nonisolated struct AlphabetPlayback: Hashable, Sendable {
+    /// После записи - пауза до следующего элемента (Android `ITEM_GAP_MILLIS`).
+    static let gap = Duration.milliseconds(500)
+    /// Элемент без записи подсвечен столько (Android `SILENT_ITEM_MILLIS`).
+    static let silentItem = Duration.seconds(2)
+
+    /// Сколько элементов: букв в сетке (29) или слогов в таблице.
     let count: Int
-    /// Звучащая буква, 0-based.
+    /// Звучащий элемент, 0-based.
     private(set) var index = 0
     private(set) var isPaused = false
     /// Растёт при каждом новом звучании той же буквы («Продолжить» - с начала её названия).
