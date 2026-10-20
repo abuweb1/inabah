@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -13,6 +14,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.inabah.android.R
 import app.inabah.android.core.content.Loadable
@@ -26,11 +29,15 @@ import app.inabah.android.core.designsystem.components.SettingsRow
 import app.inabah.android.core.designsystem.components.SettingsRowText
 import app.inabah.android.core.designsystem.components.SettingsScaffold
 import app.inabah.android.core.designsystem.components.SwitchRow
+import app.inabah.android.core.settings.DayTime
 import app.inabah.android.core.settings.ReadingProgress
+import app.inabah.android.core.settings.ReadingReminderSlot
 import app.inabah.android.core.settings.ReadingSettings
+import app.inabah.android.core.settings.ReminderSettings
 import app.inabah.android.feature.makharij.ReadingStore
 import app.inabah.android.feature.makharij.completedCount
 import app.inabah.android.feature.makharij.completedSteps
+import app.inabah.android.feature.makharij.currentStep
 import app.inabah.android.feature.makharij.hasProgress
 import app.inabah.android.feature.makharij.numberedStepCount
 import app.inabah.android.feature.makharij.stepTitle
@@ -38,6 +45,7 @@ import app.inabah.android.feature.makharij.stepTitle
 /**
  * Настройки «Махраджа» (решение пользователя 2026-10-19, Android-first): «Уроки» - «Показывать
  * транскрипцию» (то же состояние, что кнопка-глаз на экранах урока) и «Открыть все шаги» (без замков);
+ * «Напоминания» - «Пора на урок» утром, днём и вечером (2026-10-20, [ReadingReminderGroup]);
  * «Прогресс» - «пройдено N из M», начатые и пройденные шаги со сбросом каждого и «Сбросить весь
  * прогресс». Сброс - с подтверждением над строкой, как в настройках хадисов.
  */
@@ -46,6 +54,7 @@ fun MakharijSettingsScreen(
     store: ReadingStore,
     progress: ReadingProgress,
     settings: ReadingSettings,
+    reminderSettings: ReminderSettings,
     onBack: () -> Unit,
     contentPadding: PaddingValues,
     modifier: Modifier = Modifier,
@@ -61,6 +70,14 @@ fun MakharijSettingsScreen(
     val zikrs by progress.zikrs.collectAsStateWithLifecycle()
     var pendingStep by rememberSaveable { mutableStateOf<Int?>(null) }
     var pendingResetAll by rememberSaveable { mutableStateOf(false) }
+    // Время напоминаний - черновиком (как хадис дня): сохраняется при уходе с экрана или в фон.
+    var reminderTimeDrafts by remember { mutableStateOf(emptyMap<ReadingReminderSlot, DayTime>()) }
+    var editingReminder by remember { mutableStateOf<ReadingReminderSlot?>(null) }
+    val commitReminderTimes: () -> Unit = {
+        reminderTimeDrafts.forEach { (slot, time) -> reminderSettings.setReadingTime(slot, time) }
+    }
+    DisposableEffect(reminderSettings) { onDispose(commitReminderTimes) }
+    LifecycleEventEffect(Lifecycle.Event.ON_STOP, onEvent = commitReminderTimes)
     // Курс обычно уже загружен разделом; здесь - если настройки открыли раньше «Махраджа» или после ошибки.
     LaunchedEffect(store) { store.load() }
 
@@ -107,6 +124,15 @@ fun MakharijSettingsScreen(
                     }
                 },
             ),
+        )
+        ReadingReminderGroup(
+            settings = reminderSettings,
+            timeDrafts = reminderTimeDrafts,
+            editingSlot = editingReminder,
+            onEditSlot = { editingReminder = it },
+            onTimeChange = { slot, time -> reminderTimeDrafts = reminderTimeDrafts + (slot to time) },
+            courseDone = course != null && currentStep(course, completedSteps(course, lessonsDone, wordCounts)) == null,
+            tint = tint,
         )
         if (course != null) {
             val completed = remember(course, lessonsDone, wordCounts) { completedSteps(course, lessonsDone, wordCounts) }

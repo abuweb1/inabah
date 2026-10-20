@@ -13,9 +13,13 @@ import app.inabah.android.core.settings.AzkarHistory
 import app.inabah.android.core.settings.AzkarWindowSettings
 import app.inabah.android.core.settings.HadithCollectionOrder
 import app.inabah.android.core.settings.HadithProgress
+import app.inabah.android.core.settings.ReadingProgress
 import app.inabah.android.core.settings.ReminderSettings
 import app.inabah.android.feature.hadith.HadithStore
 import app.inabah.android.feature.hadith.title
+import app.inabah.android.feature.makharij.ReadingStore
+import app.inabah.android.feature.makharij.completedSteps
+import app.inabah.android.feature.makharij.readingReminderStep
 import java.time.Instant
 import java.time.ZoneId
 import kotlinx.coroutines.flow.combine
@@ -33,6 +37,8 @@ class ReminderService(
     private val hadithStore: HadithStore,
     private val hadithProgress: HadithProgress,
     private val hadithOrder: HadithCollectionOrder,
+    private val readingStore: ReadingStore,
+    private val readingProgress: ReadingProgress,
     private val texts: ReminderTextsSource,
     private val alarms: ReminderAlarms,
     private val notifier: ReminderNotifier,
@@ -60,6 +66,10 @@ class ReminderService(
 
     private suspend fun notify(kind: ReminderKind) {
         val text = texts.texts()?.forKind(kind) ?: return
+        if (kind.readingSlot != null) {
+            notifyReading(kind, text)
+            return
+        }
         val section = kind.section
         if (section == null) {
             notifyHadith(text)
@@ -72,6 +82,17 @@ class ReminderService(
         }
         if (!isAzkarReminderDue(kind, windowSettings.window(section), now(), zone()) { history.record(section, it) }) return
         notifier.showAzkar(kind, section, text)
+    }
+
+    /** «Пора на урок» — первый непройденный шаг, пока сегодня шаг не пройден ([readingReminderStep]). */
+    private suspend fun notifyReading(kind: ReminderKind, text: ReminderText) {
+        readingStore.load()
+        // Процесс мог стартовать ради будильника: курс, который уже грузится, load пропускает — дождаться.
+        val course = (readingStore.course.first { it is Loadable.Loaded || it is Loadable.Failed } as? Loadable.Loaded)?.value ?: return
+        val completed = completedSteps(course, readingProgress.lessonsDone.value, readingProgress.wordCounts.value)
+        val today = now().atZone(zone()).toLocalDate()
+        val step = readingReminderStep(course, completed, readingProgress.stepFinishedDay, today) ?: return
+        notifier.showReading(kind, step.number, text.fill(mapOf(ReminderPlaceholders.STEP to notifier.stepTitle(step))))
     }
 
     private suspend fun notifyHadith(text: ReminderText) {

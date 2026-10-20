@@ -43,6 +43,8 @@ const REMINDER_KINDS = {
   hadithOfDay: { sections: null, placeholders: ['collection', 'number', 'text'] },
   // «Серия под угрозой» (2026-10-11): {streak} — «12 дней подряд» (склонение — приложение).
   streakAtRisk: { sections: AZKAR_SECTIONS, placeholders: ['streak'] },
+  // «Пора на урок» «Учимся читать» (2026-10-20): {step} — «Шаг 7 · Сукун» (название шага — приложение).
+  readingLesson: { sections: null, placeholders: ['step'] },
 };
 const REMINDER_TEXT_KEYS = ['title', 'body'];
 

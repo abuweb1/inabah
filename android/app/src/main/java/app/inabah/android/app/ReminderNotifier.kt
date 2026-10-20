@@ -10,6 +10,7 @@ import androidx.core.app.NotificationManagerCompat
 import app.inabah.android.R
 import app.inabah.android.core.content.model.AzkarSection
 import app.inabah.android.core.content.model.HadithId
+import app.inabah.android.core.content.model.ReadingStep
 import app.inabah.android.core.reminders.ReminderChannels
 import app.inabah.android.core.reminders.ReminderKind
 import app.inabah.android.core.reminders.ReminderText
@@ -17,7 +18,7 @@ import app.inabah.android.core.settings.STREAK_DISPLAY_MAX
 import app.inabah.android.feature.settings.notificationsAllowed
 
 /**
- * Уведомления напоминаний: каналы «Азкары» и «Хадис дня» (видны в настройках системы), значок —
+ * Уведомления напоминаний: каналы «Азкары», «Хадис дня» и «Учимся читать» (видны в настройках системы), значок —
  * силуэт иконки, нажатие — явный интент на [MainActivity] (не на алиасы иконок: правило проекта).
  * Нет разрешения или канал выключен — ничего (пользователь выключил уведомления в системе). Вызывать с главного потока.
  */
@@ -35,6 +36,11 @@ class ReminderNotifier(context: Context) {
     /** Строки ресурсов на языке интерфейса — для подстановок (название сборника). */
     fun string(resId: Int): String = context.getString(resId)
 
+    /** «Шаг 7 · Сукун» / «Итог · …» для `{step}` — как заголовок урока. */
+    fun stepTitle(step: ReadingStep): String =
+        if (step.isFinal) context.getString(R.string.makharij_final_title, step.title)
+        else context.getString(R.string.makharij_step_title, step.number, step.title)
+
     /** «12 дней подряд» для `{streak}`; больше [STREAK_DISPLAY_MAX] — «9999+ дней подряд», как в капсуле. */
     fun streakText(days: Int): String =
         if (days > STREAK_DISPLAY_MAX) context.getString(R.string.azkar_streak_days_max)
@@ -47,6 +53,10 @@ class ReminderNotifier(context: Context) {
     /** Показано ли — хадис дня запоминается только показанным (аудит 2026-10-10, К1). */
     fun showHadith(id: HadithId, text: ReminderText): Boolean =
         show(ReminderKind.HadithOfDay, text, NotificationTarget.Hadith(id).intent(context))
+
+    /** «Пора на урок»: нажатие — урок шага [step]. */
+    fun showReading(kind: ReminderKind, step: Int, text: ReminderText): Boolean =
+        show(kind, text, NotificationTarget.ReadingLesson(step).intent(context))
 
     private fun show(kind: ReminderKind, text: ReminderText, open: Intent): Boolean {
         ensureChannels()
@@ -69,7 +79,7 @@ class ReminderNotifier(context: Context) {
             .build()
         // Разрешение проверено выше — notificationsAllowed (lint не видит проверки через функцию).
         @Suppress("MissingPermission")
-        manager.notify(kind.requestCode, notification)
+        manager.notify(kind.notificationId, notification)
         return true
     }
 
@@ -87,6 +97,7 @@ class ReminderNotifier(context: Context) {
             listOf(
                 NotificationChannel(ReminderChannels.AZKAR, context.getString(R.string.reminders_channel_azkar), NotificationManager.IMPORTANCE_HIGH),
                 NotificationChannel(ReminderChannels.HADITH, context.getString(R.string.reminders_channel_hadith), NotificationManager.IMPORTANCE_HIGH),
+                NotificationChannel(ReminderChannels.READING, context.getString(R.string.reminders_channel_reading), NotificationManager.IMPORTANCE_HIGH),
             ),
         )
         channelsReady = true

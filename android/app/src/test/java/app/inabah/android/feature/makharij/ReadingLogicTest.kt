@@ -8,6 +8,7 @@ import app.inabah.android.core.content.model.ReadingWord
 import app.inabah.android.core.settings.ReadingProgress
 import app.inabah.android.core.settings.TestStorage
 import app.inabah.android.core.settings.ZikrProgress
+import java.time.LocalDate
 import kotlin.random.Random
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -468,5 +469,17 @@ class ReadingLogicTest {
         assertTrue(form.group.size > 1, "карточка из шага форм, не одна буква")
         val options = quizOptions(course, form, step.number)
         assertEquals(1, options.count { it.isCorrect })
+    }
+
+    @Test
+    fun `Пора на урок — первый непройденный шаг, пока сегодня шаг не пройден, курс пройден — нет`() = runTest {
+        val course = loadAssetCourse()
+        val today = LocalDate.of(2026, 10, 20)
+        val all = course.steps.map { it.number }.toSet()
+
+        assertEquals(1, readingReminderStep(course, emptySet(), finishedDay = null, today)?.number, "ещё не начинал")
+        assertEquals(3, readingReminderStep(course, setOf(1, 2), finishedDay = today.minusDays(1), today)?.number, "вчера пройден - сегодня снова")
+        assertNull(readingReminderStep(course, setOf(1, 2), finishedDay = today, today), "сегодня шаг пройден")
+        assertNull(readingReminderStep(course, all, finishedDay = null, today), "курс пройден")
     }
 }

@@ -105,7 +105,10 @@ fun ReadingZikrScreen(
         val allDone = allZikrsDone(current, zikrs)
         var celebrate by rememberSaveable { mutableStateOf(false) }
         LaunchedEffect(allDone) {
-            if (completeFinalIfRead(current, progress)) celebrate = true
+            if (completeFinalIfRead(current, progress)) {
+                celebrate = true
+                progress.markStepFinished()
+            }
         }
         val intro = rememberTapIntro("zikr", settings)
         TapIntroHost(intro, Modifier.fillMaxSize()) {

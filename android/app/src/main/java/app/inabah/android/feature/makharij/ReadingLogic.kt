@@ -14,6 +14,7 @@ import app.inabah.android.core.content.model.ZikrId
 import app.inabah.android.core.content.model.closedSyllables
 import app.inabah.android.core.settings.ReadingProgress
 import app.inabah.android.core.settings.ZikrProgress
+import java.time.LocalDate
 import kotlin.random.Random
 
 // Правила «Учимся читать» без Compose (docs/08-screen-makharij.md): цепочка листа буквы,
@@ -178,6 +179,15 @@ fun quizRound(course: ReadingCourse, step: ReadingStep, seed: Long): List<QuizIt
 fun currentStep(course: ReadingCourse, completed: Set<Int>): ReadingStep? =
     course.steps.firstOrNull { it.hasLesson && it.number !in completed }
 
+/**
+ * Какой урок звать пройти напоминанием «Пора на урок» (решения пользователя 2026-10-20): первый непройденный шаг
+ * ([currentStep]) — пока сегодня ([today]) не пройден ни один шаг ([finishedDay]). Сегодня шаг уже пройден или курс
+ * пройден целиком — `null`, напоминание не показывается. «Открыть все шаги» не влияет: зовём по порядку.
+ */
+fun readingReminderStep(course: ReadingCourse, completed: Set<Int>, finishedDay: LocalDate?, today: LocalDate): ReadingStep? {
+    if (finishedDay == today) return null
+    return currentStep(course, completed)
+}
 /** Число шагов с номером - «M» в «пройдено N из M»; итог не считается. */
 fun numberedStepCount(course: ReadingCourse): Int = course.steps.count { !it.isFinal }
 

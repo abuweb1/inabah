@@ -321,7 +321,7 @@
     <string name="settings_hadith_subtitle">Сброс отметок сборников</string>
     <string name="settings_hadith_title">Хадисы</string>
     <string name="settings_makharij_title">Махрадж</string>
-    <string name="settings_makharij_subtitle">Учимся читать: шаги и сброс прогресса</string>
+    <string name="settings_makharij_subtitle">Учимся читать: шаги, напоминания и сброс прогресса</string>
     <string name="settings_makharij_lessons_header">Уроки</string>
     <string name="settings_makharij_translit">Показывать транскрипцию</string>
     <string name="settings_makharij_translit_subtitle">Кириллицей под арабским текстом. На экране урока её скрывает и показывает кнопка-глаз</string>
@@ -330,6 +330,13 @@
     <string name="settings_makharij_hints_reset">Показать подсказки снова</string>
     <string name="settings_makharij_hints_reset_subtitle">Надписи-подсказки при первом открытии уроков и «Читаем слова»</string>
     <string name="settings_makharij_progress_header">Прогресс</string>
+    <string name="settings_makharij_reminder_day">Днём</string>
+    <string name="settings_makharij_reminder_evening">Вечером</string>
+    <string name="settings_makharij_reminder_morning">Утром</string>
+    <string name="settings_makharij_reminder_time">Время</string>
+    <string name="settings_makharij_reminder_time_description">Время напоминания «%1$s»</string>
+    <string name="settings_makharij_reminders_footer">«Пора на урок» - пока сегодня не пройден ни один шаг.</string>
+    <string name="settings_makharij_reminders_footer_done">Курс пройден - напоминания не приходят.</string>
     <string name="settings_makharij_progress_empty">Здесь появятся начатые и пройденные шаги - любой можно сбросить и пройти заново.</string>
     <string name="settings_makharij_step_done">пройден</string>
     <string name="settings_makharij_step_started">начат</string>
@@ -376,6 +383,7 @@
     <string name="reminders_offer_title">Напоминать об азкарах?</string>
     <string name="reminders_channel_azkar">Азкары</string>
     <string name="reminders_channel_hadith">Хадис дня</string>
+    <string name="reminders_channel_reading">Учимся читать</string>
     <string name="reminder_action">Сделать напоминание</string>
     <string name="share_text_hadith_notes">Комментарии учёных:</string>
     <string name="share_text_reminder_evening_call">О рабы Аллаха, защитите себя и свою семью от сглаза, зависти и колдовства: прочитайте вечерние азкары.</string>

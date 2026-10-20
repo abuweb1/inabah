@@ -35,6 +35,8 @@ class ReminderTextsTest {
 
         for (kind in ReminderKind.entries) assertNotNull(texts.forKind(kind), "нет текста для $kind")
         assertEquals(AzkarSection.entries.toSet(), texts.azkarStart.keys)
+        assertEquals("Пора на урок", texts.readingLesson?.title)
+        assertEquals("Шаг 7 · Сукун", texts.readingLesson?.fill(mapOf(ReminderPlaceholders.STEP to "Шаг 7 · Сукун"))?.body)
     }
 
     @Test
