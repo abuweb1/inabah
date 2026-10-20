@@ -28,21 +28,32 @@ fun date(year: Int, month: Int, day: Int, hour: Int, minute: Int = 0): Instant =
 fun moscowDate(year: Int, month: Int, day: Int, hour: Int, minute: Int = 0): Instant =
     ZonedDateTime.of(year, month, day, hour, minute, 0, 0, moscow).toInstant()
 
+/** Утренние 5:00–12:00 — окно тестов механики (умолчания с 2026-10-20 другие: 6:00–11:30). */
+val classicMorningWindow = AzkarWindow(DayTime.of(5, 0), DayTime.of(12, 0))
+
+/** Окна тестов: утренние 5:00–12:00, вечерние по умолчанию 17:00–02:00. */
+val testWindows: Map<AzkarSection, AzkarWindow> = mapOf(
+    AzkarSection.Morning to classicMorningWindow,
+    AzkarSection.Evening to AzkarWindowSettings.defaultWindow(AzkarSection.Evening),
+)
+
 /** «Расписание времени азкаров» (iOS `AzkarWindowTests`). */
 class AzkarWindowScheduleTest {
-    private val morning = AzkarWindowSchedule(AzkarWindowSettings.defaultWindow(AzkarSection.Morning), berlin)
+    private val morning = AzkarWindowSchedule(classicMorningWindow, berlin)
     private val evening = AzkarWindowSchedule(AzkarWindowSettings.defaultWindow(AzkarSection.Evening), berlin)
 
-    private fun period(kind: Kind, day: Int, until: Instant) = AzkarPeriod(kind, LocalDate.of(2026, 10, day), until)
+    /** Отрезок октября 2026; [startedOn] — дата последнего начала окна (у окна — [day]). */
+    private fun period(kind: Kind, day: Int, until: Instant, startedOn: Int = day) =
+        AzkarPeriod(kind, LocalDate.of(2026, 10, day), until, startedOn = LocalDate.of(2026, 10, startedOn))
 
     @Test
     fun `Утренние 5·00–12·00 — начало уже окно, конец уже промежуток`() {
         val cases = listOf(
-            date(2026, 10, 3, 4, 59) to period(Kind.Gap, 3, until = date(2026, 10, 3, 5)),
+            date(2026, 10, 3, 4, 59) to period(Kind.Gap, 3, until = date(2026, 10, 3, 5), startedOn = 2),
             date(2026, 10, 3, 5, 0) to period(Kind.Window, 3, until = date(2026, 10, 3, 12)),
             date(2026, 10, 3, 11, 59) to period(Kind.Window, 3, until = date(2026, 10, 3, 12)),
-            date(2026, 10, 3, 12, 0) to period(Kind.Gap, 4, until = date(2026, 10, 4, 5)),
-            date(2026, 10, 3, 23, 0) to period(Kind.Gap, 4, until = date(2026, 10, 4, 5)),
+            date(2026, 10, 3, 12, 0) to period(Kind.Gap, 4, until = date(2026, 10, 4, 5), startedOn = 3),
+            date(2026, 10, 3, 23, 0) to period(Kind.Gap, 4, until = date(2026, 10, 4, 5), startedOn = 3),
         )
         for ((now, expected) in cases) assertEquals(expected, morning.period(now), "в $now")
     }
@@ -50,10 +61,10 @@ class AzkarWindowScheduleTest {
     @Test
     fun `Вечерние 17·00–02·00 — прочитанное после полуночи относится к дате начала`() {
         val cases = listOf(
-            date(2026, 10, 3, 16, 59) to period(Kind.Gap, 3, until = date(2026, 10, 3, 17)),
+            date(2026, 10, 3, 16, 59) to period(Kind.Gap, 3, until = date(2026, 10, 3, 17), startedOn = 2),
             date(2026, 10, 3, 21, 0) to period(Kind.Window, 3, until = date(2026, 10, 4, 2)),
             date(2026, 10, 4, 0, 30) to period(Kind.Window, 3, until = date(2026, 10, 4, 2)),
-            date(2026, 10, 4, 2, 0) to period(Kind.Gap, 4, until = date(2026, 10, 4, 17)),
+            date(2026, 10, 4, 2, 0) to period(Kind.Gap, 4, until = date(2026, 10, 4, 17), startedOn = 3),
         )
         for ((now, expected) in cases) assertEquals(expected, evening.period(now), "в $now")
     }
@@ -71,7 +82,8 @@ class AzkarWindowScheduleTest {
         val night = AzkarWindowSchedule(AzkarWindow(DayTime.of(2, 30), DayTime.of(6, 0)), berlin)
         val threeAm = ZonedDateTime.of(2026, 3, 29, 3, 0, 0, 0, berlin).toInstant()
 
-        assertEquals(AzkarPeriod(Kind.Gap, LocalDate.of(2026, 3, 29), threeAm), night.period(date(2026, 3, 29, 1, 59)))
+        val gap = AzkarPeriod(Kind.Gap, LocalDate.of(2026, 3, 29), threeAm, startedOn = LocalDate.of(2026, 3, 28))
+        assertEquals(gap, night.period(date(2026, 3, 29, 1, 59)))
         assertEquals(Kind.Window, night.period(threeAm).kind)
     }
 
@@ -86,16 +98,40 @@ class AzkarWindowScheduleTest {
         val gap = evening.period(secondTwo)
         assertEquals(Kind.Gap, gap.kind)
         assertEquals(date(2026, 10, 25, 17), gap.validUntil)
-        assertTrue(gap.isSameSpan(evening.period(window.validUntil)), "второе 02:00 — тот же промежуток")
+        assertTrue(gap.continuesProgress(evening.period(window.validUntil)), "второе 02:00 — тот же промежуток")
+    }
+
+    // Решение 2026-10-20: счёт обнуляется в начале окна, а не в конце.
+    @Test
+    fun `Счёт продолжается от начала окна до начала следующего`() {
+        val window = morning.period(date(2026, 10, 3, 8))
+        val afterWindow = morning.period(date(2026, 10, 3, 12))
+        val nightBefore = morning.period(date(2026, 10, 4, 4, 59))
+        val nextWindow = morning.period(date(2026, 10, 4, 5))
+        val dayLater = morning.period(date(2026, 10, 4, 13))
+
+        assertTrue(afterWindow.continuesProgress(window), "конец окна — счёт на месте")
+        assertTrue(nightBefore.continuesProgress(window), "до начала следующего окна — тоже")
+        assertFalse(nextWindow.continuesProgress(window), "новое окно — сброс")
+        assertFalse(dayLater.continuesProgress(afterWindow), "пропущенное окно целиком — сброс")
+    }
+
+    @Test
+    fun `Сохранение без даты начала окна — прежнее правило, тот же вид и дата`() {
+        val legacyGap = AzkarPeriod(Kind.Gap, LocalDate.of(2026, 10, 4), date(2026, 10, 4, 5))
+        val legacyWindow = AzkarPeriod(Kind.Window, LocalDate.of(2026, 10, 3), date(2026, 10, 3, 12), startedOn = null)
+
+        assertTrue(morning.period(date(2026, 10, 3, 20)).continuesProgress(legacyGap))
+        assertFalse(morning.period(date(2026, 10, 3, 13)).continuesProgress(legacyWindow))
     }
 
     @Test
     fun `Москва → Берлин внутри окна — то же окно`() {
-        val inMoscow = AzkarWindowSchedule(AzkarWindowSettings.defaultWindow(AzkarSection.Morning), moscow)
+        val inMoscow = AzkarWindowSchedule(classicMorningWindow, moscow)
             .period(moscowDate(2026, 10, 3, 8))
         val inBerlin = morning.period(date(2026, 10, 3, 9))
 
-        assertTrue(inBerlin.isSameSpan(inMoscow))
+        assertTrue(inBerlin.continuesProgress(inMoscow))
         assertEquals(date(2026, 10, 3, 12), inBerlin.validUntil)
     }
 }
@@ -133,10 +169,10 @@ class AzkarDayKeyTest {
 /** «Время азкаров в настройках». */
 class AzkarWindowSettingsTest {
     @Test
-    fun `По умолчанию утренние — 5·00–12·00, вечерние — 17·00–02·00`() = TestStorage.run { storage ->
+    fun `По умолчанию утренние — 6·00–11·30, вечерние — 17·00–02·00`() = TestStorage.run { storage ->
         val settings = AzkarWindowSettings(storage.storage)
 
-        assertEquals(AzkarWindow(DayTime.of(5, 0), DayTime.of(12, 0)), settings.window(AzkarSection.Morning))
+        assertEquals(AzkarWindow(DayTime.of(6, 0), DayTime.of(11, 30)), settings.window(AzkarSection.Morning))
         assertEquals(AzkarWindow(DayTime.of(17, 0), DayTime.of(2, 0)), settings.window(AzkarSection.Evening))
     }
 

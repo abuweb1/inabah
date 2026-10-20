@@ -5,12 +5,12 @@ import app.inabah.android.core.content.model.Hadith
 import app.inabah.android.core.content.model.HadithCollection
 import app.inabah.android.core.content.model.HadithId
 import app.inabah.android.core.settings.AzkarWindow
-import app.inabah.android.core.settings.AzkarWindowSettings
 import app.inabah.android.core.settings.DayTime
 import app.inabah.android.core.settings.ReadingReminderSlot
 import app.inabah.android.core.settings.ReminderPreferences
 import app.inabah.android.core.settings.berlin
 import app.inabah.android.core.settings.date
+import app.inabah.android.core.settings.testWindows
 import java.time.Instant
 import java.time.LocalDate
 import kotlin.test.assertEquals
@@ -18,9 +18,9 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import org.junit.Test
 
-/** «Напоминания»: когда срабатывает каждое (окна азкаров — по умолчанию 05:00–12:00 и 17:00–02:00). */
+/** «Напоминания»: когда срабатывает каждое (окна азкаров — `testWindows`: 05:00–12:00 и 17:00–02:00). */
 class ReminderPlannerTest {
-    private val windows = AzkarSection.entries.associateWith { AzkarWindowSettings.defaultWindow(it) }
+    private val windows = testWindows
     private val all = ReminderPreferences(azkarStart = AzkarSection.entries.toSet(), azkarUnfinished = true, hadithOfDay = true)
 
     private fun plan(preferences: ReminderPreferences, now: java.time.Instant, windows: Map<AzkarSection, AzkarWindow> = this.windows) =
