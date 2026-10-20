@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -52,7 +53,9 @@ fun ReadingExtraScreen(
     ) { course ->
         val blocks = course.step(stepNumber)?.extra(topic)?.blocks.orEmpty()
         val behindSheet = if (sheetLetter != null) Modifier.clearAndSetSemantics {} else Modifier
-        Box(Modifier.fillMaxSize()) {
+        val intro = rememberTapIntro("extra.$stepNumber.${topic ?: "extra"}", settings)
+        LaunchedEffect(sheetLetter) { if (sheetLetter != null) intro.tappedCell() }
+        TapIntroHost(intro, Modifier.fillMaxSize()) {
             Column(
                 Modifier
                     .fillMaxSize()

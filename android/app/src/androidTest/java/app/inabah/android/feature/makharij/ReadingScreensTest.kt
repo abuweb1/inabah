@@ -134,6 +134,27 @@ class ReadingScreensTest {
     }
 
     @Test
+    fun lessonIntroShowsHintOnceAndTapHidesIt() {
+        val settings = ReadingSettings(dataStore.storage)
+        compose.setContent {
+            InabahTheme {
+                ReadingLessonScreen(1, store, ReadingProgress(dataStore.storage), settings, onBack = {}, onOpenQuiz = {}, onOpenWords = {},
+                    onOpenAlphabet = {}, onOpenLetterForms = {}, contentPadding = PaddingValues())
+            }
+        }
+        // Первое открытие: после волны - подсказка у первой буквы (не мешает нажатиям).
+        waitForText("Нажмите на букву")
+        assertFalse(settings.introSeen("lesson.1"))
+        // Часы стоят: отметка - от нажатия, а не от конца 4 с подсказки.
+        compose.mainClock.autoAdvance = false
+        compose.onNodeWithContentDescription("Алиф").performClick()
+        compose.mainClock.advanceTimeByFrame()
+        assertTrue("нажали букву - урок отмечен, подсказки больше не будет", settings.introSeen("lesson.1"))
+        compose.mainClock.autoAdvance = true
+        compose.waitUntil(TIMEOUT_MILLIS) { compose.onAllNodesWithText("Нажмите на букву").fetchSemanticsNodes().isEmpty() }
+    }
+
+    @Test
     fun answeringAllQuestionsCompletesStep() {
         val progress = ReadingProgress(dataStore.storage)
         compose.setContent {
@@ -192,7 +213,7 @@ class ReadingScreensTest {
     fun letterFormsScreenSwitchesLettersOfGroup() {
         compose.setContent {
             InabahTheme {
-                ReadingLetterFormsScreen(3, "ب", store, onBack = {}, contentPadding = PaddingValues())
+                ReadingLetterFormsScreen(3, "ب", store, ReadingSettings(dataStore.storage), onBack = {}, contentPadding = PaddingValues())
             }
         }
         waitForText("буква 1 из 8")
@@ -203,9 +224,12 @@ class ReadingScreensTest {
 
     @Test
     fun letterCardHintShowsTransliterationAndLongPressZoomsWord() {
+        val settings = ReadingSettings(dataStore.storage)
+        // Волна и «зов» первого открытия - свои тесты; здесь их анимации торопили бы часы теста мимо подсказки 0,7 с.
+        settings.markIntroSeen("letterCard")
         compose.setContent {
             InabahTheme {
-                ReadingLetterFormsScreen(3, "ب", store, onBack = {}, contentPadding = PaddingValues())
+                ReadingLetterFormsScreen(3, "ب", store, settings, onBack = {}, contentPadding = PaddingValues())
             }
         }
         waitForText("буква 1 из 8")
@@ -218,6 +242,7 @@ class ReadingScreensTest {
         // Долгое нажатие - слово увеличено поверх (на месте ячейка прозрачна), «Назад» - на место.
         compose.onNodeWithContentDescription("بَكُمَ").performTouchInput { longClick() }
         compose.waitUntil(TIMEOUT_MILLIS) { compose.onAllNodesWithContentDescription("بَكُمَ").fetchSemanticsNodes().size == 2 }
+        assertTrue("увеличили - плитки больше не «зовут»", settings.zoomLearned.value)
         Espresso.pressBack()
         compose.waitUntil(TIMEOUT_MILLIS) { compose.onAllNodesWithContentDescription("بَكُمَ").fetchSemanticsNodes().size == 1 }
         waitForText("буква 1 из 8")
@@ -307,7 +332,7 @@ class ReadingScreensTest {
         val played = mutableListOf<String>()
         compose.setContent {
             InabahTheme {
-                ClosedSyllablesTable(ReadingBlock.ClosedSyllables(vowels, listOf(row)), hidden = false, clips = setOf(file), onPlay = { played += it })
+                ClosedSyllablesTable(ReadingBlock.ClosedSyllables(vowels, listOf(row)), hidden = false, clips = setOf(file), playingClip = null, onPlay = { played += it })
             }
         }
         // Слог - без формулы, просто «أَبْ»; с записью нажимается, без записи - нет.

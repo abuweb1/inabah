@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -41,6 +42,7 @@ fun ReadingAlphabetScreen(
 ) {
     val hidden by settings.transliterationHidden.collectAsStateWithLifecycle()
     val available by clips.available.collectAsStateWithLifecycle()
+    val playingClip by clips.playing.collectAsStateWithLifecycle()
     var sheetLetter by rememberSaveable { mutableStateOf<Int?>(null) }
     // Подзаголовок - до загрузки курса «с огласовками»; у шага без таблицы слогов - «закрытые слоги».
     val course by store.course.collectAsStateWithLifecycle()
@@ -58,7 +60,9 @@ fun ReadingAlphabetScreen(
         val table = course.step(stepNumber)?.blocks?.filterIsInstance<ReadingBlock.Syllables>()?.firstOrNull()
         // Открыт лист - таблица за ним для TalkBack скрыта.
         val behindSheet = if (sheetLetter != null) Modifier.clearAndSetSemantics {} else Modifier
-        Box(Modifier.fillMaxSize()) {
+        val intro = rememberTapIntro("alphabet.$stepNumber", settings)
+        LaunchedEffect(sheetLetter) { if (sheetLetter != null) intro.tappedCell() }
+        TapIntroHost(intro, Modifier.fillMaxSize()) {
             Column(
                 Modifier
                     .fillMaxSize()
@@ -70,7 +74,7 @@ fun ReadingAlphabetScreen(
                 val closed = course.step(stepNumber)?.blocks?.filterIsInstance<ReadingBlock.ClosedSyllables>()?.firstOrNull()
                 when {
                     table != null -> SyllablesTable(table.letters, table.marks, hidden, onLetter = { letter -> sheetLetter = letter.number })
-                    closed != null -> ClosedSyllablesTable(closed, hidden, available, clips::play)
+                    closed != null -> ClosedSyllablesTable(closed, hidden, available, playingClip, clips::play)
                 }
             }
             LetterSheet(

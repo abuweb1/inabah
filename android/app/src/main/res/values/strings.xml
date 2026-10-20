@@ -218,6 +218,12 @@
     <string name="makharij_translit_hide">Скрыть транскрипцию</string>
     <string name="makharij_translit_show">Показать транскрипцию</string>
     <string name="makharij_word_listen">Послушать</string>
+    <string name="makharij_hint_letter">Нажмите на букву</string>
+    <string name="makharij_hint_syllable">Нажмите на слог</string>
+    <string name="makharij_hint_listen">Нажмите, чтобы послушать</string>
+    <string name="makharij_hint_open_letter">Нажмите - откроется буква</string>
+    <string name="makharij_hint_zoom">Удерживайте, чтобы увеличить</string>
+    <string name="makharij_hint_zikr_word">Нажмите на слово, когда прочитаете</string>
     <string name="makharij_words_count">%1$d/%2$d</string>
     <string name="makharij_words_done_message">Шаг пройден - следующий открыт.</string>
     <string name="makharij_words_done_quiz">Осталось ответить на вопросы урока - тогда шаг будет пройден.</string>
@@ -320,6 +326,8 @@
     <string name="settings_makharij_translit_subtitle">Кириллицей под арабским текстом. На экране урока её скрывает и показывает кнопка-глаз</string>
     <string name="settings_makharij_all_steps">Открыть все шаги</string>
     <string name="settings_makharij_all_steps_subtitle">Без замков: начать можно с любого шага. Пройденные отмечаются как обычно</string>
+    <string name="settings_makharij_hints_reset">Показать подсказки снова</string>
+    <string name="settings_makharij_hints_reset_subtitle">Волна и подсказки при первом открытии уроков и «Читаем слова»</string>
     <string name="settings_makharij_progress_header">Прогресс</string>
     <string name="settings_makharij_progress_empty">Здесь появятся начатые и пройденные шаги - любой можно сбросить и пройти заново.</string>
     <string name="settings_makharij_step_done">пройден</string>

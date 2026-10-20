@@ -137,6 +137,7 @@ fun ReadingLessonScreen(
     val alphabet = step?.blocks?.filterIsInstance<ReadingBlock.Letters>()?.firstOrNull()?.letters
     val playback = rememberAlphabetPlayback()
     val available by clips.available.collectAsStateWithLifecycle()
+    val playingClip by clips.playing.collectAsStateWithLifecycle()
     // Звучит название буквы (`reading_NN_name.m4a`), следующая - по окончании записи; записи нет - буква
     // подсвечивается LETTER_MILLIS без звука.
     if (alphabet != null) {
@@ -185,7 +186,11 @@ fun ReadingLessonScreen(
         val current = loaded.step(stepNumber)
         // Открыт лист - урок за ним для TalkBack скрыт (как экран под «Что нового»).
         val behindSheet = if (sheetLetter != null) Modifier.clearAndSetSemantics {} else Modifier
-        Box(Modifier.fillMaxSize()) {
+        // Первое открытие урока - волна по нажимаемым ячейкам и подсказка (живые ячейки, 2026-10-20).
+        val intro = rememberTapIntro("lesson.$stepNumber", settings)
+        // Открыли лист буквы (и через TalkBack, без касаний) - подсказка над ним не остаётся.
+        LaunchedEffect(sheetLetter) { if (sheetLetter != null) intro.tappedCell() }
+        TapIntroHost(intro, Modifier.fillMaxSize()) {
             Box(Modifier.fillMaxSize().then(behindSheet)) {
                 if (current == null || !current.hasLesson) {
                     NoticeCard(
@@ -214,6 +219,7 @@ fun ReadingLessonScreen(
                         zikrs = zikrs,
                         onOpenZikr = onOpenZikr,
                         clips = available,
+                        playingClip = playingClip,
                         onPlayClip = clips::play,
                         onFinish = {
                             if (current.quiz.isEmpty()) {
@@ -257,6 +263,8 @@ private fun LessonContent(
     zikrs: Map<ZikrId, ZikrProgress>,
     onOpenZikr: (Int) -> Unit,
     clips: Set<String>,
+    /** Звучащая запись курса (слово-пример, закрытый слог) - подсвечена; `null` - ничего не звучит. */
+    playingClip: String?,
     onPlayClip: (String) -> Unit,
     onFinish: () -> Unit,
     contentPadding: PaddingValues,
@@ -276,7 +284,7 @@ private fun LessonContent(
                 when (block) {
                     is ReadingBlock.Text -> TextBlock(block.text, block.info)
                 // Нажатие на букву таблицы - экран буквы (вариант B), не лист: новичку нужна вся картина.
-                is ReadingBlock.Forms -> FormsTable(block, step.number, clips, onPlayClip) { onOpenLetterForms(it.letter) }
+                is ReadingBlock.Forms -> FormsTable(block, step.number, clips, playingClip, onPlayClip) { onOpenLetterForms(it.letter) }
                     is ReadingBlock.Marks -> MarksBlock(block.marks, block.example)
                     is ReadingBlock.Letters -> LettersGrid(block.letters, onLetter, playing = playing, available = clips)
                     is ReadingBlock.Syllables -> if (block.sample != null) {
@@ -292,9 +300,9 @@ private fun LessonContent(
                     }
                     is ReadingBlock.Formulas -> FormulasBlock(block.items, block.columns, hidden)
                     is ReadingBlock.ClosedSyllables -> if (block.sample != null) {
-                        SampleClosedSyllables(block, block.sample, hidden, clips, onPlayClip, onOpenAlphabet)
+                        SampleClosedSyllables(block, block.sample, hidden, clips, playingClip, onPlayClip, onOpenAlphabet)
                     } else {
-                        ClosedSyllablesTable(block, hidden, clips, onPlayClip)
+                        ClosedSyllablesTable(block, hidden, clips, playingClip, onPlayClip)
                     }
                 }
             }
@@ -469,12 +477,15 @@ private fun FormsTable(
     block: ReadingBlock.Forms,
     stepNumber: Int,
     clips: Set<String>,
+    playingClip: String?,
     onPlayClip: (String) -> Unit,
     onLetter: (ReadingLetter) -> Unit,
 ) {
     val groups = block.groups
     val palette = InabahTheme.palette
     val colors = readingColors
+    val intro = LocalTapIntro.current
+    val hint = stringResource(R.string.makharij_hint_letter)
     Column(verticalArrangement = Arrangement.spacedBy(Spacing.m)) {
         groups.forEachIndexed { index, group ->
             ParchmentPanel(topCornerRadius = Radius.card, bottomCornerRadius = Radius.card) {
@@ -499,11 +510,13 @@ private fun FormsTable(
                             Row(horizontalArrangement = Arrangement.spacedBy(Spacing.xs)) {
                                 for (form in LetterForm.entries) {
                                     val interaction = remember { MutableInteractionSource() }
+                                    val cellId = rememberTapCellId()
                                     val place = stringResource(form.place)
                                     Box(
                                         Modifier
                                             .weight(1f)
-                                            .clickable(interaction, indication = null, role = Role.Button) { onLetter(letter) }
+                                            .liveCell(intro, cellId, hint, colors.highlightBorder)
+                                            .clickable(interaction, indication = cellRipple(), role = Role.Button) { onLetter(letter) }
                                             .pressFeedback(interaction, scale = PressFeedback.ICON_SCALE)
                                             .surface(colors.parchmentCell, Radius.box, border = colors.parchmentCellBorder)
                                             .padding(top = Spacing.xs)
@@ -530,11 +543,13 @@ private fun FormsTable(
                             // Отдельная буква - узкая ячейка, слова - шире и крупнее; ряд одной высоты.
                             Row(Modifier.height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(Spacing.xs)) {
                                 val interaction = remember { MutableInteractionSource() }
+                                val cellId = rememberTapCellId()
                                 Box(
                                     Modifier
                                         .weight(ISOLATED_WEIGHT)
                                         .fillMaxHeight()
-                                        .clickable(interaction, indication = null, role = Role.Button) { onLetter(letter) }
+                                        .liveCell(intro, cellId, hint, colors.highlightBorder)
+                                        .clickable(interaction, indication = cellRipple(), role = Role.Button) { onLetter(letter) }
                                         .pressFeedback(interaction, scale = PressFeedback.ICON_SCALE)
                                         .surface(colors.parchmentCell, Radius.box, border = colors.parchmentCellBorder)
                                         .clearAndSetSemantics { contentDescription = letter.name },
@@ -553,6 +568,7 @@ private fun FormsTable(
                                         size = FORM_WORD_SIZE,
                                         modifier = Modifier.weight(WORD_WEIGHT).fillMaxHeight(),
                                         onClickWithoutAudio = { onLetter(letter) },
+                                        isPlaying = playingClip == formExampleAudio(stepNumber, letter, form),
                                     )
                                 }
                             }
@@ -658,12 +674,15 @@ private fun LettersGrid(
     val palette = InabahTheme.palette
     val colors = readingColors
     val tileHeight = with(LocalDensity.current) { LETTER_TILE_HEIGHT.sp.toDp() }
+    val intro = LocalTapIntro.current
+    val hint = stringResource(R.string.makharij_hint_letter)
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
         Column(verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
             for (row in letters.chunked(columns)) {
                 Row(horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
                     for (letter in row) {
                         val interaction = remember { MutableInteractionSource() }
+                        val cellId = rememberTapCellId()
                         // Звучащая буква «Послушать алфавит» - крупнее и поверх соседей (просьба пользователя).
                         val isPlaying = letter == playing
                         val scale by animateFloatAsState(if (isPlaying) PLAYING_SCALE else 1f, Motion.collapse(), label = "playingScale")
@@ -676,7 +695,8 @@ private fun LettersGrid(
                                     scaleY = scale
                                 }
                                 .height(tileHeight)
-                                .clickable(interaction, indication = null, role = Role.Button) { onLetter(letter) }
+                                .liveCell(intro, cellId, hint, colors.highlightBorder)
+                                .clickable(interaction, indication = cellRipple(), role = Role.Button) { onLetter(letter) }
                                 .pressFeedback(interaction, scale = PressFeedback.ICON_SCALE)
                                 .surface(
                                     if (letter == playing) colors.highlight else colors.tile,
@@ -829,6 +849,7 @@ private fun SampleClosedSyllables(
     count: Int,
     hidden: Boolean,
     clips: Set<String>,
+    playingClip: String?,
     onPlay: (String) -> Unit,
     onOpenAlphabet: () -> Unit,
 ) {
@@ -840,7 +861,7 @@ private fun SampleClosedSyllables(
                 Column(verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
                     for (row in sample.chunked(SAMPLE_COLUMNS)) {
                         Row(horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
-                            for (cell in row) ClosedSyllableCell(cell, hidden, clips, onPlay, Modifier.weight(1f))
+                            for (cell in row) ClosedSyllableCell(cell, hidden, clips, playingClip, onPlay, Modifier.weight(1f))
                             repeat(SAMPLE_COLUMNS - row.size) { Spacer(Modifier.weight(1f)) }
                         }
                     }
@@ -860,6 +881,7 @@ internal fun ClosedSyllablesTable(
     block: ReadingBlock.ClosedSyllables,
     hidden: Boolean,
     clips: Set<String>,
+    playingClip: String?,
     onPlay: (String) -> Unit,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(Spacing.m)) {
@@ -870,7 +892,7 @@ internal fun ClosedSyllablesTable(
                         for (row in chunk) {
                             Row(horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
                                 for (cell in row) {
-                                    if (cell != null) ClosedSyllableCell(cell, hidden, clips, onPlay, Modifier.weight(1f))
+                                    if (cell != null) ClosedSyllableCell(cell, hidden, clips, playingClip, onPlay, Modifier.weight(1f))
                                     else Spacer(Modifier.weight(1f))
                                 }
                             }
@@ -884,13 +906,15 @@ internal fun ClosedSyllablesTable(
 
 /**
  * Ячейка закрытого слога на пергаменте: слог и транскрипция под ним. Есть запись ([ReadingClosedSyllable.audio]
- * в [clips]) - 🔊 в углу, нажатие проигрывает её (как слова-примеры форм); нет - не нажимается.
+ * в [clips]) - 🔊 в углу, нажатие проигрывает её (как слова-примеры форм), пока звучит ([playingClip]) - подсвечена;
+ * нет - не нажимается и в волну не попадает.
  */
 @Composable
 private fun ClosedSyllableCell(
     cell: ReadingClosedSyllable,
     hidden: Boolean,
     clips: Set<String>,
+    playingClip: String?,
     onPlay: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -899,6 +923,10 @@ private fun ClosedSyllableCell(
     val haptics = LocalHapticFeedback.current
     val listen = stringResource(R.string.makharij_word_listen)
     val interaction = remember { MutableInteractionSource() }
+    val cellId = rememberTapCellId()
+    val hint = stringResource(R.string.makharij_hint_listen)
+    val intro = LocalTapIntro.current
+    val isPlaying = cell.audio != null && cell.audio == playingClip
     val play = cell.audio?.takeIf { it in clips }?.let { file ->
         {
             haptics.performHapticFeedback(HapticFeedbackType.ContextClick)
@@ -910,13 +938,19 @@ private fun ClosedSyllableCell(
             .then(
                 if (play != null) {
                     Modifier
-                        .clickable(interaction, indication = null, role = Role.Button, onClick = play)
+                        .liveCell(intro, cellId, hint, colors.highlightBorder)
+                        .clickable(interaction, indication = cellRipple(), role = Role.Button, onClick = play)
                         .pressFeedback(interaction, scale = PressFeedback.ICON_SCALE)
                 } else {
                     Modifier
                 },
             )
-            .surface(colors.parchmentCell, Radius.box, border = colors.parchmentCellBorder)
+            // Звучит - подсветка цвета раздела, как у элементов листа буквы.
+            .surface(
+                if (isPlaying) colors.highlight else colors.parchmentCell,
+                Radius.box,
+                border = if (isPlaying) colors.highlightBorder else colors.parchmentCellBorder,
+            )
             .clearAndSetSemantics {
                 contentDescription = "${cell.letter.name}, ${cell.transliteration}"
                 if (play != null) onClick(listen) { play(); true }
@@ -1042,9 +1076,11 @@ private fun SyllableCell(
     val colors = readingColors
     val transliteration = letter.transliteration(mark).orEmpty()
     val interaction = remember { MutableInteractionSource() }
+    val cellId = rememberTapCellId()
     Column(
         modifier
-            .clickable(interaction, indication = null, role = Role.Button) { onLetter(letter) }
+            .liveCell(LocalTapIntro.current, cellId, stringResource(R.string.makharij_hint_syllable), colors.highlightBorder)
+            .clickable(interaction, indication = cellRipple(), role = Role.Button) { onLetter(letter) }
             .pressFeedback(interaction, scale = PressFeedback.ICON_SCALE)
             .surface(colors.parchmentCell, Radius.box, border = colors.parchmentCellBorder)
             // Сверху - место под знак над хамзой на алифе (أُ касалась края ячейки).

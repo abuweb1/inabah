@@ -184,7 +184,10 @@ fun ReadingWordsScreen(
         val next = loaded.steps.firstOrNull {
             it.number > step.number && it.hasLesson && (allStepsOpen || isUnlocked(loaded, completed, it))
         }
-        Box(Modifier.fillMaxSize()) {
+        // Первое открытие - волна и «зов» плитки с подсказкой «Удерживайте…»; пока слово ни разу не увеличивали -
+        // «зов» при тишине (живые ячейки, 2026-10-20).
+        val intro = rememberTapIntro("words", settings, zoomable = true)
+        TapIntroHost(intro, Modifier.fillMaxSize()) {
             // Кнопки групп - внизу экрана, вне прокрутки: не прыгают, когда высота группы меняется
             // (последняя группа короче) - просьба пользователя 2026-10-15.
             Column(Modifier.fillMaxSize()) {
@@ -217,7 +220,10 @@ fun ReadingWordsScreen(
                                 showTransliteration = (page == 0 && !hidden) || hintPage == page,
                                 onRead = { progress.readWord(step.number, it, words.items.size, words.repeat) },
                                 zoomed = zoom?.index,
-                                onZoom = { index, bounds -> zoom = WordZoom(index, bounds, page) },
+                                onZoom = { index, bounds ->
+                                    zoom = WordZoom(index, bounds, page)
+                                    settings.markZoomLearned()
+                                },
                             )
                         }
                     }
@@ -399,6 +405,12 @@ internal fun WordTile(
     val interaction = remember { MutableInteractionSource() }
     val haptics = LocalHapticFeedback.current
     val readLabel = stringResource(R.string.makharij_words_read_action)
+    // Живость (2026-10-20): волна и подсказка, у увеличиваемой - «зов» и рост с кольцом при удержании. Увеличенная
+    // копия ([centered]) - без них: её не «зовут».
+    val intro = if (centered) null else LocalTapIntro.current
+    val cellId = rememberTapCellId()
+    val hold = if (onZoom != null && !centered) rememberHoldProgress(interaction) else null
+    val hint = stringResource(if (onZoom != null) R.string.makharij_hint_zoom else R.string.makharij_hint_zikr_word)
     // Одно прочтение (зикр итога) - счёта на плитке нет, и TalkBack его не читает.
     val state = when {
         repeat > 1 -> stringResource(R.string.makharij_words_tile_state, count, repeat)
@@ -428,10 +440,12 @@ internal fun WordTile(
         Box(
             Modifier
                 .fillMaxSize()
+                .then(if (hold != null) Modifier.holdRing({ hold.value }, colors.tint) else Modifier)
+                .liveCell(intro, cellId, hint, colors.highlightBorder, zoomable = onZoom != null)
                 // Прочитанное не считается, но увеличить его можно.
                 .combinedClickable(
                     interactionSource = interaction,
-                    indication = null,
+                    indication = cellRipple(),
                     role = Role.Button,
                     onLongClick = zoom,
                     onClick = { if (!isDone) read() },
