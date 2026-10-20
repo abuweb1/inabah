@@ -82,10 +82,28 @@ final class TapIntro {
         calls[id, default: 0] += 1
     }
 
+    /// Вспышка последнего нажатия: рамка ячейки и точка (окно). Рисует хозяин - у ячеек своих жестов нет.
+    private(set) var flash: CellFlash?
+
     /// Касание экрана: подсказка уходит, тишина отсчитывается заново.
     func touched() {
         if hint != nil { hint = nil }
         touches += 1
+    }
+
+    /// Ячейка под точкой окна (самая маленькая из накрывающих - вложенные ячейки).
+    func cell(at point: CGPoint) -> (id: UUID, cell: Cell)? {
+        cells.filter { $0.value.frame.contains(point) }
+            .min { $0.value.frame.width * $0.value.frame.height < $1.value.frame.width * $1.value.frame.height }
+            .map { (id: $0.key, cell: $0.value) }
+    }
+
+    /// Нажали ячейку в точке окна: вспышка в её рамке, «нажали ячейку», тишина отсчитывается заново.
+    func tapped(at point: CGPoint) {
+        touched()
+        guard let hit = cell(at: point) else { return }
+        flash = CellFlash(frame: hit.cell.frame, point: point, id: (flash?.id ?? 0) + 1)
+        tappedCell()
     }
 
     /// Нажали ячейку (или открылся лист буквы): подсказка уходит и больше не показывается.
@@ -166,18 +184,15 @@ private struct TapIntroHost: ViewModifier {
     @Environment(ReadingSettings.self) private var settings
     /// Одно на жизнь экрана: ячейки регистрируются в нём при раскладке; заход на экран (`task`) - новое вступление.
     @State private var intro = TapIntro()
-    @GestureState private var touching = false
 
     func body(content: Content) -> some View {
         content
             .environment(\.tapIntro, intro)
             .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { intro.hostFrame = $0 }
+            .overlay { TapFlashLayer(intro: intro, tint: tint) }
             .overlay { TapHintLayer(intro: intro, tint: tint) }
-            // Наблюдатель касаний: ничего не перехватывает - прокрутка и нажатия работают как раньше.
-            .simultaneousGesture(DragGesture(minimumDistance: 0).updating($touching) { _, state, _ in state = true })
-            .onChange(of: touching) { _, isTouching in
-                if isTouching { intro.touched() }
-            }
+            // Общего наблюдателя касаний нет: жест на весь экран (SwiftUI и UIKit) мешал свайпу назад, прокрутке
+            // и нажатиям плиток на iOS 26. Нажатия сообщают сами ячейки (`liveCell`, плитки слов).
             .onChange(of: cellOpened) { _, opened in
                 if opened { intro.tappedCell() }
             }
@@ -257,31 +272,41 @@ private struct TapHintLayer: View {
 // MARK: - Ячейка
 
 extension View {
-    /// Нажимаемая ячейка курса: участвует в волне, даёт подсказку `hint`, «зовёт» (`zoomable`), вспыхивает
-    /// от касания. `observesTaps: false` - ячейка на своих жестах (плитки слов): вспышку и `tappedCell` зовёт сама.
+    /// Нажимаемая ячейка курса: участвует в волне, даёт подсказку `hint`, «зовёт» (`zoomable`); вспышку от
+    /// касания рисует хозяин экрана по её рамке (`TapFlashLayer`). `observesTaps: false` - ячейка на своих
+    /// жестах (плитки слов): о нажатии сообщает сама (`tapIntro?.tapped(at:)`).
     func liveCell(hint: LocalizedStringResource, tint: Color, zoomable: Bool = false, observesTaps: Bool = true) -> some View {
         modifier(LiveCell(hint: hint, tint: tint, zoomable: zoomable, observesTaps: observesTaps))
     }
-
-    /// Вспышка касания: круг цвета `tint` от точки касания растёт и гаснет внутри формы ячейки.
-    func tapFlash(_ flash: TapFlash?, tint: Color) -> some View {
-        overlay {
-            if let flash {
-                TapFlashView(point: flash.point, tint: tint)
-                    .id(flash.id)
-                    .clipShape(.rect(cornerRadius: Radius.box))
-            }
-        }
-    }
 }
 
-/// Касание для вспышки: точка в координатах ячейки и номер (каждое касание - новая вспышка).
-struct TapFlash: Equatable {
+/// Вспышка нажатия ячейки: её рамка и точка касания в координатах окна; номер - каждое нажатие новая вспышка.
+struct CellFlash: Equatable {
+    let frame: CGRect
     let point: CGPoint
     let id: Int
+}
 
-    func next(at point: CGPoint) -> TapFlash { TapFlash(point: point, id: id + 1) }
-    static func first(at point: CGPoint) -> TapFlash { TapFlash(point: point, id: 0) }
+/// Вспышка поверх экрана в рамке нажатой ячейки: круг от точки касания, обрезан скруглением ячейки. Один слой
+/// на экран - у ячеек нет ни жестов, ни состояния вспышки. Касаний не перехватывает.
+private struct TapFlashLayer: View {
+    let intro: TapIntro
+    let tint: Color
+
+    var body: some View {
+        GeometryReader { proxy in
+            if let flash = intro.flash {
+                let host = proxy.frame(in: .global)
+                TapFlashView(point: CGPoint(x: flash.point.x - flash.frame.minX, y: flash.point.y - flash.frame.minY), tint: tint)
+                    .frame(width: flash.frame.width, height: flash.frame.height)
+                    .clipShape(.rect(cornerRadius: Radius.box))
+                    .offset(x: flash.frame.minX - host.minX, y: flash.frame.minY - host.minY)
+                    .id(flash.id)
+            }
+        }
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
+    }
 }
 
 private struct LiveCell: ViewModifier {
@@ -293,7 +318,6 @@ private struct LiveCell: ViewModifier {
     @Environment(\.tapIntro) private var intro
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var id = UUID()
-    @State private var flash: TapFlash?
     /// Доля своего «вдоха» в волне и «зова» (0...1). Не `keyframeAnimator`: на iOS 18 он задерживал смену
     /// содержимого ячейки (подсветка звучащего слога отставала на элемент) - здесь анимируемые модификаторы.
     @State private var breath = 0.0
@@ -301,11 +325,10 @@ private struct LiveCell: ViewModifier {
 
     func body(content: Content) -> some View {
         content
-            .tapFlash(flash, tint: tint)
-            .simultaneousGesture(SpatialTapGesture().onEnded { tap in
-                guard observesTaps else { return }
-                flash = flash?.next(at: tap.location) ?? .first(at: tap.location)
-                intro?.tappedCell()
+            // Нажатие ячейки (вместе с её кнопкой): вспышка от точки касания и «нажали». Плитки на своих жестах
+            // (`observesTaps: false`) сообщают нажатие сами.
+            .simultaneousGesture(SpatialTapGesture(coordinateSpace: .global).onEnded { tap in
+                intro?.tapped(at: tap.location)
             }, including: observesTaps ? .all : .subviews)
             .modifier(WaveBreath(progress: breath, tint: tint))
             .modifier(Wiggle(progress: wiggle))
@@ -425,44 +448,53 @@ private struct TapFlashView: View {
 // MARK: - Удержание
 
 extension View {
-    /// Кольцо удержания увеличиваемой плитки: пока палец держит (`pressing`), плитка подрастает, по краю от
-    /// середины верхнего края по часовой идёт кольцо - и успевает замкнуться к увеличению (`PressFeedback.zoomHold`).
-    func holdRing(pressing: Bool, tint: Color) -> some View {
-        modifier(HoldRing(pressing: pressing, tint: tint))
+    /// Кольцо удержания увеличиваемой плитки: палец держит дольше `HoldRing.delay` (`trigger` вырос) - плитка
+    /// подрастает, по краю от середины верхнего края по часовой идёт кольцо и замыкается к увеличению
+    /// (`PressFeedback.zoomHold`); затем уходит. Без `.updating` у жеста удержания: с ним удержание забирало
+    /// касание сразу, и на плитке не работали нажатие, прокрутка и листание.
+    func holdRing(trigger: Int, tint: Color) -> some View {
+        modifier(HoldRing(trigger: trigger, tint: tint))
     }
 }
 
+/// Сколько держать до начала кольца: обычное нажатие кольца не показывает.
+enum HoldRingTiming {
+    static let delay = 0.1
+}
+
 private struct HoldRing: ViewModifier {
-    let pressing: Bool
+    let trigger: Int
     let tint: Color
 
     @State private var progress = 0.0
 
     private enum Layout {
-        /// Кольцо начинает расти через столько после касания (обычное нажатие кольца не показывает).
-        static let delay = 0.1
         static let release = 0.2
         static let width: CGFloat = 3
         static let scale: CGFloat = 1.07
+        /// Кольцо держится столько после замыкания: увеличение уже началось или палец отпустили.
+        static let linger = Duration.milliseconds(50)
     }
 
     func body(content: Content) -> some View {
         content
+            // Кольцо - только пока держат: невидимое у каждой плитки тоже рисовалось бы.
             .overlay {
-                TopStartRoundedRectangle(cornerRadius: Radius.box)
-                    .inset(by: Layout.width / 2)
-                    .trim(from: 0, to: progress)
-                    .stroke(tint, style: StrokeStyle(lineWidth: Layout.width, lineCap: .round))
-                    .opacity(progress > 0 ? 1 : 0)
+                if progress > 0 {
+                    TopStartRoundedRectangle(cornerRadius: Radius.box)
+                        .inset(by: Layout.width / 2)
+                        .trim(from: 0, to: progress)
+                        .stroke(tint, style: StrokeStyle(lineWidth: Layout.width, lineCap: .round))
+                }
             }
             .scaleEffect(1 + (Layout.scale - 1) * progress)
-            .onChange(of: pressing) { _, isPressing in
-                if isPressing {
-                    let duration = max(PressFeedback.zoomHold - Layout.delay, 0.01)
-                    withAnimation(.linear(duration: duration).delay(Layout.delay)) { progress = 1 }
-                } else {
-                    withAnimation(.easeOut(duration: Layout.release)) { progress = 0 }
-                }
+            .task(id: trigger) {
+                guard trigger > 0 else { return }
+                let duration = max(PressFeedback.zoomHold - HoldRingTiming.delay, 0.01)
+                withAnimation(.linear(duration: duration)) { progress = 1 }
+                // Отпустили раньше увеличения или увеличение началось - кольцо уходит.
+                try? await Task.sleep(for: .seconds(duration) + Layout.linger)
+                withAnimation(.easeOut(duration: Layout.release)) { progress = 0 }
             }
     }
 }

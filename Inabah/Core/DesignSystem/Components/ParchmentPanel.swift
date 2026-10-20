@@ -31,6 +31,8 @@ struct ParchmentPanel<Content: View>: View {
             .frame(maxWidth: .infinity)
             .background { background }
             .overlay { ornaments }
+            // Обрезка всего содержимого формой нужна не только для вида: без неё (только фон) свайп по ячейкам
+            // внутри пергамента не прокручивал экран, а нажимал ячейку (проверено 2026-10-20).
             .clipShape(shape)
             .overlay { shape.strokeBorder(theme.palette.parchmentAccent, lineWidth: Size.parchmentBorder) }
     }

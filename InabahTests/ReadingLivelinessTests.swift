@@ -90,6 +90,26 @@ struct TapIntroTests {
         #expect(intro.firstCell(onlyZoomable: true)?.id == word)
     }
 
+    @Test("Тап находит ячейку под пальцем: вспышка в её рамке и «нажали ячейку»; между ячейками - ничего")
+    func tapFindsCell() {
+        let intro = intro()
+        var seen = 0
+        intro.beginVisit { seen += 1 }
+        let cell = UUID()
+        let frame = CGRect(x: 10, y: 120, width: 80, height: 60)
+        intro.register(cell, frame: frame, hint: "makharij.hint.letter", zoomable: false)
+
+        intro.tapped(at: CGPoint(x: 200, y: 140))
+        #expect(intro.flash == nil)
+        #expect(seen == 0)
+
+        intro.tapped(at: CGPoint(x: 30, y: 150))
+        #expect(intro.cell(at: CGPoint(x: 30, y: 150))?.id == cell)
+        #expect(intro.flash?.frame == frame)
+        #expect(intro.flash?.point == CGPoint(x: 30, y: 150))
+        #expect(seen == 1)
+    }
+
     @Test("Нажатие ячейки прячет подсказку и отмечает её показанной один раз; касание экрана - только прячет")
     func tapMarksSeenOnce() {
         let intro = intro()

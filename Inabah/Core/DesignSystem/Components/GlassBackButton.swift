@@ -117,7 +117,9 @@ extension View {
 }
 
 /// Без системной «‹» (`navigationBarBackButtonHidden`) UIKit выключает свайп назад от края экрана.
-/// Возвращаем его: жест разрешён, пока в стеке больше одного экрана.
+/// Возвращаем его: жест разрешён, пока в стеке больше одного экрана. Свайп назад из любого места (iOS 26)
+/// тоже проходит здесь - и не должен начинаться на том, что само листается вбок (страницы «Читаем слова»,
+/// карточки букв): там листаются страницы, а назад уводит свайп по неподвижному (тексту, шапке).
 extension UINavigationController: @retroactive UIGestureRecognizerDelegate {
     override open func viewDidLoad() {
         super.viewDidLoad()
@@ -125,6 +127,20 @@ extension UINavigationController: @retroactive UIGestureRecognizerDelegate {
     }
 
     public func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
-        viewControllers.count > 1
+        viewControllers.count > 1 && !startsOnHorizontalScroll(gestureRecognizer)
+    }
+
+    /// Палец лёг на прокрутку, которая листается вбок (содержимое шире окна).
+    private func startsOnHorizontalScroll(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
+        let point = gestureRecognizer.location(in: view)
+        var current = view.hitTest(point, with: nil)
+        while let candidate = current, candidate !== view {
+            if let scroll = candidate as? UIScrollView, scroll.isScrollEnabled,
+               scroll.contentSize.width > scroll.bounds.width + 1 {
+                return true
+            }
+            current = candidate.superview
+        }
+        return false
     }
 }

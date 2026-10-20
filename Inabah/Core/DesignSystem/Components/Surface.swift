@@ -13,13 +13,16 @@ extension View {
         shadow: ShadowToken? = nil
     ) -> some View {
         background {
-            RoundedRectangle(cornerRadius: cornerRadius)
-                .fill(fill)
-                .shadow(
-                    color: shadow?.color ?? .clear,
-                    radius: shadow?.radius ?? 0,
-                    y: shadow?.y ?? 0
-                )
+            // Без тени - без `.shadow`: даже прозрачная нулевая тень - отдельный проход отрисовки на GPU, а
+            // поверхностей на экране десятки (ячейки курса - до 260 проходов на кадр, рывки прокрутки).
+            if let shadow {
+                RoundedRectangle(cornerRadius: cornerRadius)
+                    .fill(fill)
+                    .shadow(color: shadow.color, radius: shadow.radius, y: shadow.y)
+            } else {
+                RoundedRectangle(cornerRadius: cornerRadius)
+                    .fill(fill)
+            }
         }
         .overlay {
             if let border {

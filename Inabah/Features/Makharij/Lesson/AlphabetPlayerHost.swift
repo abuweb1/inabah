@@ -1,5 +1,40 @@
 import SwiftUI
 
+/// «Послушать алфавит» экрана: что звучит (`playback`) и играет ли вообще (`isActive`). Отдельным объектом, а не
+/// `@State` экрана: кнопке ▶/■ в навбаре нужно только `isActive`, и смена буквы или слога (каждые 2 с) не
+/// пересобирает экран вместе с навбаром - только панель и звучащие ячейки.
+@Observable
+final class AlphabetPlayer {
+    var playback: AlphabetPlayback? {
+        didSet {
+            let active = playback != nil
+            if active != isActive { isActive = active }
+        }
+    }
+
+    private(set) var isActive = false
+
+    /// ▶ - с первого элемента, ■ - стоп.
+    func toggle(count: Int) {
+        playback = isActive ? nil : AlphabetPlayback(count: count)
+    }
+}
+
+/// ▶/■ «Послушать алфавит» в навбаре: читает только `isActive`.
+struct AlphabetPlayToggle: View {
+    let player: AlphabetPlayer
+    let count: Int
+
+    var body: some View {
+        ReadingHeaderButton(
+            symbol: player.isActive ? "stop.fill" : "play.fill",
+            label: player.isActive ? "makharij.alphabet.stop" : "makharij.alphabet.play"
+        ) {
+            player.toggle(count: count)
+        }
+    }
+}
+
 extension View {
     /// «Послушать алфавит» экрана (Android `AlphabetPlayerHost` + `AlphabetPlaybackEffect`): панель под шапкой
     /// поверх содержимого - выезжает сверху и уезжает обратно, содержимое не сдвигает (просьба пользователя
@@ -27,6 +62,9 @@ private struct AlphabetPlayerHost: ViewModifier {
     @Environment(ClipPlayer.self) private var clips
     @Environment(\.scenePhase) private var scenePhase
 
+    /// Запас под панелью, где рисуется её тень (`ShadowToken.floating`: радиус 18, сдвиг 6).
+    private static let shadowRoom: CGFloat = 28
+
     func body(content: Content) -> some View {
         content
             .overlay(alignment: .top) {
@@ -42,8 +80,10 @@ private struct AlphabetPlayerHost: ViewModifier {
                     }
                 }
                 .frame(maxWidth: .infinity)
-                // Выезжает из-под шапки: выше своего верха не рисуется, тень снизу и по бокам остаётся.
-                .clipShape(BelowTop())
+                // Выезжает из-под шапки: выше своего верха не рисуется. Обрезка - прямоугольником (`clipped`)
+                // с запасом снизу на тень: маска произвольной формы пересчитывалась каждый кадр выезда.
+                .padding(.bottom, Self.shadowRoom)
+                .clipped()
                 .animation(Motion.collapse, value: playback == nil)
             }
             .task(id: playback?.key) { await play() }
@@ -83,14 +123,5 @@ private struct AlphabetPlayerHost: ViewModifier {
         } else if self.playback?.advance() == false {
             self.playback = nil
         }
-    }
-}
-
-/// Всё ниже верхнего края: обрезает только то, что выше (панель, уезжающая под шапку), не тень снизу и по бокам.
-private nonisolated struct BelowTop: Shape {
-    private static let reach: CGFloat = 10_000
-
-    func path(in rect: CGRect) -> Path {
-        Path(CGRect(x: rect.minX - Self.reach, y: rect.minY, width: rect.width + 2 * Self.reach, height: rect.height + Self.reach))
     }
 }

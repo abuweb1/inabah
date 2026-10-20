@@ -7,7 +7,7 @@ struct ReadingAlphabetView: View {
     let stepNumber: Int
 
     @Environment(ReadingStore.self) private var store
-    @State private var playback: AlphabetPlayback?
+    @State private var player = AlphabetPlayer()
 
     var body: some View {
         ReadingScreen(
@@ -20,17 +20,12 @@ struct ReadingAlphabetView: View {
             intro: .alphabet(stepNumber),
             actions: {
                 if let table = store.course.value?.step(stepNumber).flatMap(AlphabetTable.init(step:)), !table.order.isEmpty {
-                    ReadingHeaderButton(
-                        symbol: playback == nil ? "play.fill" : "stop.fill",
-                        label: playback == nil ? "makharij.alphabet.play" : "makharij.alphabet.stop"
-                    ) {
-                        playback = playback == nil ? AlphabetPlayback(count: table.order.count) : nil
-                    }
+                    AlphabetPlayToggle(player: player, count: table.order.count)
                 }
             },
             content: { course, colors, openSheet in
                 if let table = course.step(stepNumber).flatMap(AlphabetTable.init(step:)) {
-                    AlphabetTableContent(table: table, colors: colors, openSheet: openSheet, playback: $playback)
+                    AlphabetTableContent(table: table, colors: colors, openSheet: openSheet, player: player)
                 }
             }
         )
@@ -65,7 +60,7 @@ private struct AlphabetTableContent: View {
     let table: AlphabetTable
     let colors: ReadingColors
     let openSheet: LetterSheetOpener
-    @Binding var playback: AlphabetPlayback?
+    @Bindable var player: AlphabetPlayer
 
     @Environment(ReadingSettings.self) private var settings
     @State private var cellFrames = TableCellFrames()
@@ -79,10 +74,10 @@ private struct AlphabetTableContent: View {
     }
 
     var body: some View {
-        let playingID = playback.flatMap { table.order.indices.contains($0.index) ? table.order[$0.index].id : nil }
+        let playingID = player.playback.flatMap { table.order.indices.contains($0.index) ? table.order[$0.index].id : nil }
         let opener = LetterSheetOpener { letter in
             // Лист буквы звучит сам - алфавит на паузу.
-            playback?.pause()
+            player.playback?.pause()
             openSheet(letter)
         }
         ScrollViewReader { proxy in
@@ -92,20 +87,23 @@ private struct AlphabetTableContent: View {
                     .padding(.top, Spacing.s)
                     // Снизу всегда запас на сдвиг под панель - конец таблицы досягаем и при игре.
                     .padding(.bottom, Spacing.xl + Layout.shift)
-                    .offset(y: playback == nil ? 0 : Layout.shift)
-                    .animation(Motion.collapse, value: playback == nil)
+                    .offset(y: player.isActive ? Layout.shift : 0)
+                    .animation(Motion.collapse, value: player.isActive)
             }
             .coordinateSpace(.named(TableCellFrames.space))
             .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { cellFrames.viewport = $0 }
             .onChange(of: playingID) { _, id in
+                // Место ячейки - без сдвига под панель (`offset` раскладку не меняет): на экране она ниже на
+                // `shift`. Вверх прокручивать, только если ушла под панель, - иначе первый слог у самого верха
+                // запускал прокрутку прямо во время выезда панели.
                 guard let id, let frame = cellFrames.frames[id] else { return }
-                if frame.minY < Layout.keepInView || frame.maxY > cellFrames.viewport - Layout.keepInView {
+                if frame.minY < 0 || frame.maxY + Layout.shift > cellFrames.viewport - Layout.keepInView {
                     withAnimation(Motion.collapse) { proxy.scrollTo(id, anchor: .center) }
                 }
             }
         }
         .alphabetPlayer(
-            $playback, items: table.order.map(AlphabetItem.syllable), colors: colors,
+            $player.playback, items: table.order.map(AlphabetItem.syllable), colors: colors,
             previousLabel: "makharij.alphabet.previousSyllable", nextLabel: "makharij.alphabet.nextSyllable"
         )
     }
@@ -117,11 +115,13 @@ private struct AlphabetTableContent: View {
                 block: syllables, isTransliterationHidden: settings.transliterationHidden, colors: colors,
                 playingID: playingID, cellFrames: cellFrames, onTap: onTap
             )
+            .equatable()
         } else if let closed = table.closed {
             ClosedSyllablesTable(
                 block: closed, isTransliterationHidden: settings.transliterationHidden, colors: colors,
                 playingID: playingID, cellFrames: cellFrames, onTap: onTap
             )
+            .equatable()
         }
     }
 }
