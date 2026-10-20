@@ -54,11 +54,16 @@ import app.inabah.android.core.designsystem.components.ArabicText
 import app.inabah.android.core.designsystem.components.ScheherazadeNew
 import app.inabah.android.core.designsystem.components.Sparkle
 import app.inabah.android.core.designsystem.components.LinearProgressBar
+import app.inabah.android.core.designsystem.components.NoticeCard
 import app.inabah.android.core.designsystem.components.pressFeedback
 import app.inabah.android.core.designsystem.components.surface
 import app.inabah.android.core.formatting.toArabicIndicDigits
+import app.inabah.android.core.reminders.ReminderChannels
 import app.inabah.android.core.settings.ReadingProgress
+import app.inabah.android.core.settings.ReadingReminderSlot
 import app.inabah.android.core.settings.ReadingSettings
+import app.inabah.android.core.settings.ReminderSettings
+import app.inabah.android.feature.settings.rememberNotificationPermission
 
 /** Состояние строки шага. */
 enum class StepState { Done, Current, Open, Locked }
@@ -73,6 +78,7 @@ fun ReadingStepsScreen(
     store: ReadingStore,
     progress: ReadingProgress,
     settings: ReadingSettings,
+    reminderSettings: ReminderSettings,
     onBack: () -> Unit,
     onOpenStep: (Int) -> Unit,
     contentPadding: PaddingValues,
@@ -82,6 +88,7 @@ fun ReadingStepsScreen(
     val wordCounts by progress.wordCounts.collectAsStateWithLifecycle()
     val unlockSeen by progress.unlockSeen.collectAsStateWithLifecycle()
     val allStepsOpen by settings.allStepsOpen.collectAsStateWithLifecycle()
+    val offerAnswered by reminderSettings.readingOfferAnswered.collectAsStateWithLifecycle()
     ReadingScaffold(
         store = store,
         title = stringResource(R.string.makharij_reading_title),
@@ -122,6 +129,10 @@ fun ReadingStepsScreen(
                         fill = colors.tint,
                     )
                 }
+            }
+            // Первый шаг пройден - один раз предложить напоминания (решение пользователя 2026-10-20).
+            if (!offerAnswered && completed.isNotEmpty() && current != null) {
+                item(key = "reminderOffer") { ReadingReminderOfferCard(reminderSettings) }
             }
             itemsIndexed(course.steps, key = { _, step -> step.number }) { index, step ->
                 val state = when {
@@ -306,3 +317,28 @@ private const val UNLOCK_ANIMATION_MILLIS = 1_200L
 private const val UNLOCK_ROTATION = 30f
 private val ThreadWidth = 2.dp
 
+/**
+ * Один раз, после первого пройденного шага - «Напоминать о занятиях?» (решение пользователя 2026-10-20, как
+ * предложение азкаров): «Включить» - разрешение и все три напоминания урока; любой ответ - больше не показывается.
+ */
+@Composable
+private fun ReadingReminderOfferCard(settings: ReminderSettings) {
+    // С каналом «Учимся читать»: выключен - «Включить» не включает напоминания, которые не придут.
+    val permission = rememberNotificationPermission(ReminderChannels.READING)
+    NoticeCard(
+        icon = R.drawable.ic_schedule,
+        title = stringResource(R.string.makharij_reminder_offer_title),
+        message = stringResource(R.string.makharij_reminder_offer_message),
+    ) {
+        ReadingButton(
+            text = stringResource(R.string.reminders_offer_enable),
+            onClick = {
+                permission.request { granted ->
+                    if (granted) ReadingReminderSlot.entries.forEach { settings.setReadingSlot(it, true) }
+                    settings.answerReadingOffer()
+                }
+            },
+        )
+        ReadingOutlineButton(text = stringResource(R.string.reminders_offer_later), onClick = settings::answerReadingOffer)
+    }
+}

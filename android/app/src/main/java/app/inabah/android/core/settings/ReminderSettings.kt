@@ -47,11 +47,15 @@ data class ReminderPreferences(
 class ReminderSettings(private val storage: PreferencesStorage) {
     private val _preferences = MutableStateFlow(read())
     private val _offerAnswered = MutableStateFlow(storage.snapshot[OFFER_KEY] ?: false)
+    private val _readingOfferAnswered = MutableStateFlow(storage.snapshot[READING_OFFER_KEY] ?: false)
 
     val preferences: StateFlow<ReminderPreferences> = _preferences.asStateFlow()
 
     /** Предложение «Включить напоминания?» на главной азкаров уже получило ответ — больше не показывать. */
     val offerAnswered: StateFlow<Boolean> = _offerAnswered.asStateFlow()
+
+    /** Предложение «Напоминать о занятиях?» на списке шагов «Учимся читать» уже получило ответ (2026-10-20). */
+    val readingOfferAnswered: StateFlow<Boolean> = _readingOfferAnswered.asStateFlow()
 
     /** Последний показанный хадис дня — с него продолжается круг, когда всё прочитано. */
     val lastHadithOfDay: HadithId?
@@ -84,6 +88,12 @@ class ReminderSettings(private val storage: PreferencesStorage) {
         storage.edit { it[OFFER_KEY] = true }
     }
 
+    fun answerReadingOffer() {
+        if (_readingOfferAnswered.value) return
+        _readingOfferAnswered.value = true
+        storage.edit { it[READING_OFFER_KEY] = true }
+    }
+
     fun rememberHadithOfDay(id: HadithId) {
         storage.edit { it[LAST_HADITH_KEY] = "${id.collection.key}_${id.number}" }
     }
@@ -92,8 +102,10 @@ class ReminderSettings(private val storage: PreferencesStorage) {
         val next = transform(_preferences.value)
         if (next == _preferences.value) return
         _preferences.value = next
-        // Включил напоминание сам (в настройках) — предлагать на главной уже незачем.
-        if (next.isAnyEnabled) answerOffer()
+        // Включил напоминание сам (в настройках) — предлагать его уже незачем: азкары и хадис — на главной
+        // азкаров, урок — на списке шагов.
+        if (next.azkarStart.isNotEmpty() || next.azkarStreak || next.hadithOfDay) answerOffer()
+        if (next.readingSlots.isNotEmpty()) answerReadingOffer()
         storage.edit { preferences ->
             AzkarSection.entries.forEach { preferences[startKey(it)] = it in next.azkarStart }
             preferences[UNFINISHED_KEY] = next.azkarUnfinished
@@ -132,6 +144,7 @@ class ReminderSettings(private val storage: PreferencesStorage) {
         private val HADITH_KEY = booleanPreferencesKey("reminders.hadith.enabled")
         private val HADITH_TIME_KEY = intPreferencesKey("reminders.hadith.time")
         private val OFFER_KEY = booleanPreferencesKey("reminders.offer.answered")
+        private val READING_OFFER_KEY = booleanPreferencesKey("reminders.reading.offer.answered")
         private val LAST_HADITH_KEY = stringPreferencesKey("reminders.hadith.last")
 
         private fun parseHadithId(value: String): HadithId? {

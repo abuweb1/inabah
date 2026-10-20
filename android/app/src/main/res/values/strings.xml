@@ -14,6 +14,7 @@
     <string name="about_licenses">Лицензии</string>
     <string name="about_licenses_header">Шрифт и значки</string>
     <string name="about_link_privacy">Политика конфиденциальности</string>
+    <string name="about_link_feedback">Вопросы и предложения</string>
     <string name="about_sources_azkar_text">Утренние и вечерние азкары из Сунны — арабский текст, транскрипция и перевод.</string>
     <string name="about_sources_azkar_title">Азкары</string>
     <string name="about_sources_audio_text">Читает автор приложения.</string>
@@ -210,6 +211,8 @@
     <string name="makharij_reading_all_done">Все шаги пройдены</string>
     <string name="makharij_reading_card_progress">Пройдено %1$d из %2$d</string>
     <string name="makharij_reading_card_step">Шаг %1$d из %2$d · %3$s</string>
+    <string name="makharij_reminder_offer_title">Напоминать о занятиях?</string>
+    <string name="makharij_reminder_offer_message">Утром, днём и вечером - пока за день не пройден шаг. Время можно поменять в настройках «Махраджа».</string>
     <string name="makharij_reading_title">Учимся читать</string>
     <string name="makharij_step_state_current">текущий</string>
     <string name="makharij_step_state_done">пройден</string>
@@ -386,6 +389,8 @@
     <string name="reminders_channel_reading">Учимся читать</string>
     <string name="reminder_action">Сделать напоминание</string>
     <string name="share_text_hadith_notes">Комментарии учёных:</string>
+    <string name="share_text_store_android">Для Android</string>
+    <string name="share_text_store_iphone">Для iPhone</string>
     <string name="share_text_reminder_evening_call">О рабы Аллаха, защитите себя и свою семью от сглаза, зависти и колдовства: прочитайте вечерние азкары.</string>
     <string name="share_text_reminder_evening_time">✅ Лучшее время для чтения вечерних азкаров с Асра до Магриба.</string>
     <string name="share_text_reminder_evening_title">⚠️ Вечерние азкары ⚠️</string>

@@ -62,6 +62,9 @@ private const val ARABIC_NAME = "إنابة"
 /** Внешние адреса экрана (iOS `AboutLinks`). */
 internal object AboutLinks {
     const val PRIVACY = "https://github.com/abuweb1/inabah/blob/main/PRIVACY.md"
+
+    /** «Вопросы и предложения» - Телеграм-канал приложения (решение пользователя 2026-10-20). */
+    const val FEEDBACK = "https://t.me/inabah_app"
 }
 
 /** Версия как в iOS: «1.0.0 (1)» — versionName и versionCode. */
@@ -69,7 +72,7 @@ internal val appVersion: String get() = "${BuildConfig.VERSION_NAME} (${BuildCon
 
 /**
  * «О приложении» (iOS `AboutView`): иконка, название и версия; откуда тексты (без ссылок на сайты); политика
- * конфиденциальности (её требует Apple) и «Лицензии» ([onOpenLicenses] - шрифты и значки одной строкой,
+ * конфиденциальности (её требует Apple), «Вопросы и предложения» (Телеграм-канал, 2026-10-20) и «Лицензии» ([onOpenLicenses] - шрифты и значки одной строкой,
  * решение пользователя 2026-10-19: ссылок на исходный код и Issues нет - пользователям они ни к чему).
  * Под версией — «История версий» ([onOpenVersionHistory], Android-first 2026-10-10).
  */
@@ -113,6 +116,7 @@ fun AboutScreen(
             footer = stringResource(R.string.about_app_footer),
             rows = listOf(
                 { AboutLinkRow(R.string.about_link_privacy) { uriHandler.openSafely(AboutLinks.PRIVACY) } },
+                { AboutLinkRow(R.string.about_link_feedback) { uriHandler.openSafely(AboutLinks.FEEDBACK) } },
                 {
                     SettingsRow(onClick = onOpenLicenses, trailing = { SettingsChevron() }) {
                         SettingsRowText(title = stringResource(R.string.about_licenses))

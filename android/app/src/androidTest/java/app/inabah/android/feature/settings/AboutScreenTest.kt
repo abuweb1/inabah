@@ -107,6 +107,7 @@ class AboutScreenTest {
         compose.onNodeWithText(context.getString(R.string.about_version, appVersion), substring = true).assertIsDisplayed()
         compose.onNodeWithText(context.getString(R.string.about_sources_azkar_text), substring = true).assertIsDisplayed()
         compose.onNodeWithText(context.getString(R.string.about_link_privacy)).performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText(context.getString(R.string.about_link_feedback)).performScrollTo().assertIsDisplayed()
         // Лицензии - одной строкой, без отдельных шрифтов и значков на экране.
         compose.onNodeWithText(context.getString(R.string.about_license_material_title)).assertDoesNotExist()
 
