@@ -483,10 +483,10 @@ struct WordTile: View {
                 shape.fill(theme.palette.success.opacity(Layout.doneFill))
             } else {
                 shape.fill(colors.parchmentCell)
-                // Наливается снизу - масштабом отрисовки, не высотой.
-                colors.tint.opacity(Layout.readingFill)
-                    .scaleEffect(x: 1, y: fill, anchor: .bottom)
-                    .clipShape(shape)
+                // Наливается снизу - полосой самой формы, не высотой вёрстки и не маской (`clipShape` - закадровый
+                // проход на каждой плитке в каждом кадре).
+                ShapeBand(base: shape, edge: .bottom, fraction: fill)
+                    .fill(colors.tint.opacity(Layout.readingFill))
                     .animation(Motion.progress, value: fill)
             }
             shape.strokeBorder(isDone ? theme.palette.parchmentAccent : colors.parchmentCellBorder, lineWidth: Size.hairline)
