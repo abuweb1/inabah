@@ -330,9 +330,11 @@ private fun TabScreens(tab: AppTab, services: AppServices, contentPadding: Paddi
                         stepNumber = route.step,
                         letter = route.letter,
                         store = services.readingStore,
+                        settings = services.readingSettings,
                         onBack = { router.pop(AppTab.Makharij) },
                         contentPadding = contentPadding.bottomOnly(),
                         clips = clips,
+                        playingClip = services.clipPlayer.playing.collectAsStateWithLifecycle().value,
                         onPlayClip = services.clipPlayer::play,
                     )
                 }

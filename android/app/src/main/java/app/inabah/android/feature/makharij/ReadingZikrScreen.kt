@@ -107,7 +107,8 @@ fun ReadingZikrScreen(
         LaunchedEffect(allDone) {
             if (completeFinalIfRead(current, progress)) celebrate = true
         }
-        Box(Modifier.fillMaxSize()) {
+        val intro = rememberTapIntro("zikr", settings)
+        TapIntroHost(intro, Modifier.fillMaxSize()) {
             Column(
                 Modifier
                     .fillMaxSize()

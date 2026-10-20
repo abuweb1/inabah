@@ -97,6 +97,15 @@ fun MakharijSettingsScreen(
                         )
                     }
                 },
+                {
+                    // Волна и подсказки показываются один раз - здесь их можно вернуть (живые ячейки, 2026-10-20).
+                    SettingsRow(onClick = settings::resetIntros) {
+                        SettingsRowText(
+                            title = stringResource(R.string.settings_makharij_hints_reset),
+                            subtitle = stringResource(R.string.settings_makharij_hints_reset_subtitle),
+                        )
+                    }
+                },
             ),
         )
         if (course != null) {

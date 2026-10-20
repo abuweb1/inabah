@@ -54,6 +54,37 @@ class ReadingSettings(private val storage: PreferencesStorage) {
         storage.edit { it[ALL_STEPS_OPEN_KEY] = open }
     }
 
+    /**
+     * Подсказка экрана «Учимся читать» уже показана (живые ячейки, решение пользователя 2026-10-20): волна и подсказка
+     * у первой ячейки - только при первом открытии экрана [key] (`lesson.3`, `words`). Читается при открытии экрана.
+     */
+    fun introSeen(key: String): Boolean = storage.snapshot[introKey(key)] ?: false
+
+    fun markIntroSeen(key: String) {
+        if (introSeen(key)) return
+        storage.edit { it[introKey(key)] = true }
+    }
+
+    private val _zoomLearned = MutableStateFlow(storage.snapshot[ZOOM_LEARNED_KEY] ?: false)
+
+    /** Слово уже увеличивали долгим нажатием - плитки больше не «зовут» (покачивание при тишине). */
+    val zoomLearned: StateFlow<Boolean> = _zoomLearned.asStateFlow()
+
+    fun markZoomLearned() {
+        if (_zoomLearned.value) return
+        _zoomLearned.value = true
+        storage.edit { it[ZOOM_LEARNED_KEY] = true }
+    }
+
+    /** «Показать подсказки снова» (настройки «Махраджа»): забыть показанные подсказки и увеличение. Прогресс не трогает. */
+    fun resetIntros() {
+        _zoomLearned.value = false
+        storage.edit { preferences ->
+            preferences.asMap().keys.filter { it.name.startsWith(INTRO_PREFIX) }.forEach { preferences.remove(it) }
+            preferences.remove(ZOOM_LEARNED_KEY)
+        }
+    }
+
     fun increaseArabicFontSize() = setArabicFontSize(_arabicFontSize.value + STEP)
 
     fun decreaseArabicFontSize() = setArabicFontSize(_arabicFontSize.value - STEP)
@@ -81,5 +112,8 @@ class ReadingSettings(private val storage: PreferencesStorage) {
         private val COLLAPSE_KEY = booleanPreferencesKey("reading.hadithArabicCollapsed")
         private val TRANSLIT_KEY = booleanPreferencesKey("reading.transliterationHidden")
         private val ALL_STEPS_OPEN_KEY = booleanPreferencesKey("reading.allStepsOpen")
+        private const val INTRO_PREFIX = "reading.intro."
+        private fun introKey(key: String) = booleanPreferencesKey(INTRO_PREFIX + key)
+        private val ZOOM_LEARNED_KEY = booleanPreferencesKey("reading.zoomLearned")
     }
 }

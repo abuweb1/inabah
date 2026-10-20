@@ -56,6 +56,7 @@ import app.inabah.android.core.designsystem.components.ArabicText
 import app.inabah.android.core.designsystem.components.ParchmentPanel
 import app.inabah.android.core.designsystem.components.pressFeedback
 import app.inabah.android.core.designsystem.components.surface
+import app.inabah.android.core.settings.ReadingSettings
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.mutableIntStateOf
@@ -72,11 +73,13 @@ fun ReadingLetterFormsScreen(
     stepNumber: Int,
     letter: String,
     store: ReadingStore,
+    settings: ReadingSettings,
     onBack: () -> Unit,
     contentPadding: PaddingValues,
     modifier: Modifier = Modifier,
-    /** Записи в сборке и их проигрывание (`ClipPlayer`). */
+    /** Записи в сборке, звучащая запись и их проигрывание (`ClipPlayer`). */
     clips: Set<String> = emptySet(),
+    playingClip: String? = null,
     onPlayClip: (String) -> Unit = {},
 ) {
     val course = (store.course.collectAsStateWithLifecycle().value as? Loadable.Loaded)?.value
@@ -119,7 +122,9 @@ fun ReadingLetterFormsScreen(
         },
     ) { _ ->
         if (forms == null || letters.isEmpty()) return@ReadingScaffold
-        Box(Modifier.fillMaxSize()) {
+        // Слова-примеры увеличиваются - первое открытие: волна, «зов» и подсказка «Удерживайте…» (2026-10-20).
+        val intro = rememberTapIntro("letterCard", settings, zoomable = true)
+        TapIntroHost(intro, Modifier.fillMaxSize()) {
             Column(Modifier.fillMaxSize()) {
                 GroupStrip(letters, pager.currentPage) { scope.launch { pager.animateScrollToPage(it) } }
                 // Листать - в ту же сторону, что стоят буквы в ряду сверху: справа налево.
@@ -134,7 +139,11 @@ fun ReadingLetterFormsScreen(
                                 onPlayClip = onPlayClip,
                                 showTransliteration = peek,
                                 zoomed = zoom?.takeIf { it.letter == letters[page] }?.form,
-                                onZoom = { form, bounds -> zoom = ExampleZoom(letters[page], form, bounds) },
+                                onZoom = { form, bounds ->
+                                    zoom = ExampleZoom(letters[page], form, bounds)
+                                    settings.markZoomLearned()
+                                },
+                                playingClip = playingClip,
                                 contentPadding = contentPadding,
                             )
                         }
@@ -163,6 +172,7 @@ fun ReadingLetterFormsScreen(
                         zoomed = true,
                         contentScale = scale,
                         modifier = tileModifier,
+                        isPlaying = playingClip == formExampleAudio(stepNumber, current.letter, current.form),
                     )
                 }
             }
@@ -228,6 +238,7 @@ private fun LetterFormsPage(
     zoomed: LetterForm?,
     onZoom: (LetterForm, Rect) -> Unit,
     contentPadding: PaddingValues,
+    playingClip: String? = null,
 ) {
     val palette = InabahTheme.palette
     val colors = readingColors
@@ -268,6 +279,7 @@ private fun LetterFormsPage(
                                         transliteration = examples.transliteration(form),
                                         showTransliteration = showTransliteration,
                                         onZoom = { bounds -> onZoom(form, bounds) },
+                                        isPlaying = playingClip == formExampleAudio(stepNumber, letter, form),
                                         modifier = Modifier.weight(1f).alpha(if (form == zoomed) 0f else 1f),
                                     )
                                 }

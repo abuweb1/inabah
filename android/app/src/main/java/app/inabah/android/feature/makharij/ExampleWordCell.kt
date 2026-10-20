@@ -51,6 +51,10 @@ import app.inabah.android.core.designsystem.components.surface
  * место есть всегда), долгое нажатие - [onZoom] (где ячейка на экране) - увеличить, как в «Читаем слова».
  * [zoomed] - сама увеличенная: подпись крупнее; [contentScale] - поправка масштаба в полёте. Касание по
  * увеличенной без записи проходит к затемнению - она закрывается.
+ *
+ * Живость (2026-10-20): ячейка с действием - в волне первого открытия ([LocalTapIntro]) с подсказкой, нажатие -
+ * вспышка ([cellRipple]); пока звучит её запись ([isPlaying]) - подсветка; увеличиваемая - «зов» и при удержании
+ * растёт с кольцом по краю ([holdRing]).
  */
 @Composable
 fun ExampleWordCell(
@@ -68,6 +72,7 @@ fun ExampleWordCell(
     onZoom: ((Rect) -> Unit)? = null,
     zoomed: Boolean = false,
     contentScale: (() -> Offset)? = null,
+    isPlaying: Boolean = false,
 ) {
     val palette = InabahTheme.palette
     val colors = readingColors
@@ -78,6 +83,17 @@ fun ExampleWordCell(
     val zoomLabel = stringResource(R.string.makharij_words_zoom_action)
     // Где ячейка - для полёта в центр; хранится без состояния Compose: меняется при каждой раскладке.
     val bounds = remember { arrayOf(Rect.Zero) }
+    val cellId = rememberTapCellId()
+    // Увеличенная копия - без волны и «зова».
+    val intro = if (zoomed) null else LocalTapIntro.current
+    val hold = if (onZoom != null) rememberHoldProgress(interaction) else null
+    val hint = stringResource(
+        when {
+            onZoom != null -> R.string.makharij_hint_zoom
+            hasAudio -> R.string.makharij_hint_listen
+            else -> R.string.makharij_hint_open_letter
+        },
+    )
     val action: (() -> Unit)? = if (hasAudio) {
         {
             haptics.performHapticFeedback(HapticFeedbackType.ContextClick)
@@ -100,9 +116,11 @@ fun ExampleWordCell(
             .then(
                 if (action != null || zoom != null) {
                     Modifier
+                        .then(if (hold != null) Modifier.holdRing({ hold.value }, colors.tint) else Modifier)
+                        .liveCell(intro, cellId, hint, colors.highlightBorder, zoomable = zoom != null)
                         .combinedClickable(
                             interactionSource = interaction,
-                            indication = null,
+                            indication = cellRipple(),
                             role = Role.Button,
                             onLongClick = zoom,
                             onClick = { action?.invoke() },
@@ -113,7 +131,11 @@ fun ExampleWordCell(
                     Modifier
                 },
             )
-            .surface(colors.parchmentCell, Radius.box, border = colors.parchmentCellBorder)
+            .surface(
+                if (isPlaying) colors.highlight else colors.parchmentCell,
+                Radius.box,
+                border = if (isPlaying) colors.highlightBorder else colors.parchmentCellBorder,
+            )
             .padding(top = Spacing.xs, bottom = Spacing.xxs)
             .clearAndSetSemantics {
                 contentDescription = description
