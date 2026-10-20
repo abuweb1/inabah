@@ -14,6 +14,7 @@ final class ReminderSettings {
         static let hadithEnabled = "reminders.hadith.enabled"
         static let hadithTime = "reminders.hadith.time"
         static let offerAnswered = "reminders.offer.answered"
+        static let readingOfferAnswered = "reminders.reading.offer.answered"
         static let hadithLast = "reminders.hadith.last"
         static let hadithPlan = "reminders.hadith.plan"
 
@@ -25,6 +26,8 @@ final class ReminderSettings {
 
     private(set) var preferences: ReminderPreferences
     private(set) var offerAnswered: Bool
+    /// Ответ на «Напоминать о занятиях?» на списке шагов - отдельно от предложения азкаров (Android 2026-10-20).
+    private(set) var readingOfferAnswered: Bool
 
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
@@ -45,11 +48,13 @@ final class ReminderSettings {
         }
         self.preferences = preferences
         offerAnswered = defaults.bool(forKey: Key.offerAnswered)
+        readingOfferAnswered = defaults.bool(forKey: Key.readingOfferAnswered)
     }
 
     func isStartEnabled(_ section: AzkarSection) -> Bool { preferences.azkarStart.contains(section) }
 
-    /// Включение любого напоминания отвечает и на предложение на главной.
+    /// Включение напоминания азкаров или хадиса дня отвечает и на предложение на главной азкаров;
+    /// напоминания урока - только на своё (`readingOfferAnswered`), как на Android.
     func setStart(_ isOn: Bool, for section: AzkarSection) {
         guard isOn != isStartEnabled(section) else { return }
         if isOn { preferences.azkarStart.insert(section) } else { preferences.azkarStart.remove(section) }
@@ -93,7 +98,13 @@ final class ReminderSettings {
         guard isOn != isReadingEnabled(slot) else { return }
         if isOn { preferences.readingSlots.insert(slot) } else { preferences.readingSlots.remove(slot) }
         defaults.set(isOn, forKey: Key.reading(slot))
-        if isOn { answerOffer() }
+        if isOn { answerReadingOffer() }
+    }
+
+    func answerReadingOffer() {
+        guard !readingOfferAnswered else { return }
+        readingOfferAnswered = true
+        defaults.set(true, forKey: Key.readingOfferAnswered)
     }
 
     /// Записывается только выбранное время (как Android): без него - время слота по умолчанию.

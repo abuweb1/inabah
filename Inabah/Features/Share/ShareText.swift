@@ -1,7 +1,7 @@
 import Foundation
 
 /// Текст «Поделиться» зикром и хадисом: всё, что на экране, блоками через пустую строку,
-/// в порядке экрана; последним блоком — ссылка на приложение в App Store.
+/// в порядке экрана; последним — ссылки на приложение («Для iPhone» / App Store, «Для Android» / Google Play).
 ///
 /// Только текст (решение пользователя 2026-10-06): «Скопировать» — пункт системного окна.
 /// Тот же состав на Android — `ShareText.kt` (docs/02-screen-azkar.md, «Поделиться»).
@@ -14,6 +14,22 @@ nonisolated enum ShareText {
             .compactMap { $0?.trimmingCharacters(in: .whitespacesAndNewlines) }
             .filter { !$0.isEmpty }
             .joined(separator: blockSeparator)
+    }
+
+    /// Ссылки на приложение (решение пользователя 2026-10-20, Android `storeLinksBlock`): обе — под подписями
+    /// платформ через пустую строку; одна — без подписи; ни одной — `nil`.
+    static func storeLinks(appStore: String?, googlePlay: String?) -> String? {
+        guard let appStore, let googlePlay else { return appStore ?? googlePlay }
+        let iphone = String(localized: "share.text.store.iphone")
+        let android = String(localized: "share.text.store.android")
+        return "\(iphone)\n\(appStore)\(blockSeparator)\(android)\n\(googlePlay)"
+    }
+}
+
+extension AboutLinks {
+    /// Последний блок «Поделиться» и «Сделать напоминание»: App Store и Google Play.
+    static var shareBlock: String? {
+        ShareText.storeLinks(appStore: appStore.absoluteString, googlePlay: googlePlay.absoluteString)
     }
 }
 
@@ -42,7 +58,7 @@ extension AzkarSection {
             header,
             quote,
             Self.reminderSeparator + "\n" + String(localized: reminderBestTime),
-            AboutLinks.appStore.absoluteString
+            AboutLinks.shareBlock
         )
     }
 
@@ -88,7 +104,7 @@ extension Zikr {
             translation?.transliteration,
             translation?.text,
             translation?.source,
-            AboutLinks.appStore.absoluteString
+            AboutLinks.shareBlock
         )
     }
 }
@@ -104,7 +120,7 @@ extension Hadith {
             translation?.text,
             translation?.source.map { String(localized: "hadith.detail.source \($0)") },
             notesBlock,
-            AboutLinks.appStore.absoluteString
+            AboutLinks.shareBlock
         )
     }
 

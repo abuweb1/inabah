@@ -133,6 +133,22 @@ struct ReminderSchedulerTests {
         #expect(!center.requests.contains { $0.content.threadIdentifier == ReminderPlan.readingThread })
     }
 
+    @Test("Напоминание урока отвечает на своё предложение, не на предложение азкаров (как Android)")
+    func readingOfferAnswer() throws {
+        let azkar = ReminderSettings(defaults: defaults)
+        azkar.setHadithOfDay(true)
+        #expect(azkar.offerAnswered)
+        #expect(!azkar.readingOfferAnswered, "азкары и хадис дня не отвечают на предложение урока")
+
+        let storage = try IsolatedDefaults("ReminderSchedulerTests.readingOffer")
+        let reading = ReminderSettings(defaults: storage.defaults)
+        reading.setReading(true, for: .evening)
+        #expect(reading.readingOfferAnswered)
+        #expect(!reading.offerAnswered, "урок не скрывает карточку азкаров")
+        #expect(storage.defaults.bool(forKey: "reminders.reading.offer.answered"))
+        #expect(ReminderSettings(defaults: storage.defaults).readingOfferAnswered, "после перезапуска")
+    }
+
     @Test("Слоты и время чтения - в ключах как на Android, время пишется только выбранное")
     func readingSettingsKeys() {
         let settings = ReminderSettings(defaults: defaults)

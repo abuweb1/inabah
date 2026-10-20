@@ -100,6 +100,17 @@
         }
       }
     },
+    "about.link.feedback" : {
+      "comment" : "О приложении: ссылка на Телеграм-канал",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вопросы и предложения"
+          }
+        }
+      }
+    },
     "about.link.privacy" : {
       "comment" : "О приложении: ссылка на PRIVACY.md",
       "localizations" : {
@@ -2482,6 +2493,28 @@
         }
       }
     },
+    "makharij.reminderOffer.message" : {
+      "comment" : "Список шагов: текст карточки предложения напоминаний",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Утром, днём и вечером - пока за день не пройден шаг. Время можно поменять в настройках «Махраджа»."
+          }
+        }
+      }
+    },
+    "makharij.reminderOffer.title" : {
+      "comment" : "Список шагов: карточка предложения напоминаний «Пора на урок»",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Напоминать о занятиях?"
+          }
+        }
+      }
+    },
     "makharij.step.state.current" : {
       "comment" : "Список шагов: состояние шага для VoiceOver",
       "localizations" : {
@@ -4590,6 +4623,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "«Те, чьи языки влажные от поминания Аллаха, войдут в Рай смеясь»."
+          }
+        }
+      }
+    },
+    "share.text.store.android" : {
+      "comment" : "Поделиться: подпись над ссылкой Google Play (только для отправки)",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Для Android"
+          }
+        }
+      }
+    },
+    "share.text.store.iphone" : {
+      "comment" : "Поделиться: подпись над ссылкой App Store (только для отправки)",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Для iPhone"
           }
         }
       }
