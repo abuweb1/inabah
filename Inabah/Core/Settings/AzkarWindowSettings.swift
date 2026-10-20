@@ -3,16 +3,16 @@ import Observation
 
 /// Время азкаров: «с — до» для каждого раздела. Сохраняется между запусками.
 ///
-/// По умолчанию утренние — 5:00–12:00, вечерние — 17:00–02:00 (решение пользователя 2026-10-06).
-/// Вне этого времени счёт не идёт в отметку и историю, на границах счётчики обнуляются
-/// (`AzkarStore`). Экран настроек правит черновик и сохраняет его сюда, только когда
+/// По умолчанию утренние — 6:00–11:30 (до 2026-10-20 — 5:00–12:00), вечерние — 17:00–02:00
+/// (решения пользователя). Вне этого времени счёт не идёт в отметку и историю, в начале окна
+/// счётчики обнуляются (`AzkarStore`). Экран настроек правит черновик и сохраняет его сюда, только когда
 /// пользователь уходит с экрана (или приложение уходит в фон), — промежуточные значения
 /// колеса времени не видны ни сверке прогресса, ни главной.
 @Observable
 final class AzkarWindowSettings {
     static func defaultWindow(for section: AzkarSection) -> AzkarWindow {
         switch section {
-        case .morning: AzkarWindow(start: DayTime(hour: 5, minute: 0), end: DayTime(hour: 12, minute: 0))
+        case .morning: AzkarWindow(start: DayTime(hour: 6, minute: 0), end: DayTime(hour: 11, minute: 30))
         case .evening: AzkarWindow(start: DayTime(hour: 17, minute: 0), end: DayTime(hour: 2, minute: 0))
         }
     }

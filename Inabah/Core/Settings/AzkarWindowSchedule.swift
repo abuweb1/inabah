@@ -29,7 +29,8 @@ nonisolated struct AzkarWindow: Hashable, Sendable {
 }
 
 /// Отрезок времени, к которому относится прогресс раздела: само время азкаров или промежуток
-/// до него. На каждой границе счётчики обнуляются.
+/// до него. Счётчики обнуляются только в начале окна (`continuesProgress`): прочитанное в окне видно
+/// и после его конца, до начала следующего (решение пользователя 2026-10-20, как на Android).
 ///
 /// Отрезок узнаётся по виду и дате (`day`), а не по мгновениям: после перелёта в другой часовой
 /// пояс то же окно — то же самое, и прочитанное не теряется.
@@ -47,6 +48,22 @@ nonisolated struct AzkarPeriod: Codable, Hashable, Sendable {
     let day: String
     /// Граница отрезка: конец окна или начало следующего.
     let validUntil: Date
+    /// Дата последнего начала окна (`yyyy-MM-dd`): у окна — `day`, у промежутка — дата окна, которое
+    /// только что кончилось. `nil` — сохранение до 2026-10-20, где этой даты нет.
+    let startedOn: String?
+
+    private enum CodingKeys: String, CodingKey {
+        case kind, day, validUntil
+        case startedOn = "started"
+    }
+
+    /// У окна без `startedOn` датой начала считается `day` (как Android).
+    init(kind: Kind, day: String, validUntil: Date, startedOn: String? = nil) {
+        self.kind = kind
+        self.day = day
+        self.validUntil = validUntil
+        self.startedOn = startedOn ?? (kind == .window ? day : nil)
+    }
 
     var isWindow: Bool { kind == .window }
 
@@ -54,10 +71,14 @@ nonisolated struct AzkarPeriod: Codable, Hashable, Sendable {
         now >= validUntil
     }
 
-    /// Тот же отрезок — счёт сохраняется, даже если граница сдвинулась (новое время в настройках,
-    /// другой часовой пояс).
-    func isSameSpan(as other: AzkarPeriod) -> Bool {
-        kind == other.kind && day == other.day
+    /// Счёт продолжается: окно с тех пор не начиналось заново (тот же отрезок или промежуток после
+    /// этого окна). Граница могла сдвинуться (новое время в настройках, другой пояс) — счёт остаётся.
+    /// Без `startedOn` у одной из сторон (сохранение до 2026-10-20) — прежнее правило: тот же вид и дата.
+    func continuesProgress(_ other: AzkarPeriod) -> Bool {
+        if let startedOn, let otherStarted = other.startedOn {
+            return startedOn == otherStarted
+        }
+        return kind == other.kind && day == other.day
     }
 }
 
@@ -75,11 +96,12 @@ nonisolated struct AzkarWindowSchedule: Sendable {
     func period(at now: Date) -> AzkarPeriod {
         let start = lastOccurrence(of: window.start, notAfter: now)
         let end = nextOccurrence(of: window.end, after: start)
+        let startedOn = dayKey(of: start)
         if now < end {
-            return AzkarPeriod(kind: .window, day: dayKey(of: start), validUntil: end)
+            return AzkarPeriod(kind: .window, day: startedOn, validUntil: end)
         }
         let nextStart = nextOccurrence(of: window.start, after: now)
-        return AzkarPeriod(kind: .gap, day: dayKey(of: nextStart), validUntil: nextStart)
+        return AzkarPeriod(kind: .gap, day: dayKey(of: nextStart), validUntil: nextStart, startedOn: startedOn)
     }
 
     /// Григорианская дата (`yyyy-MM-dd`) в часовом поясе расписания — ключ окна в истории
