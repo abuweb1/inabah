@@ -425,6 +425,7 @@ struct SyllablesTable: View {
                                         isTransliterationHidden: isTransliterationHidden, colors: colors,
                                         isPlaying: id == playingID, onTap: onTap
                                     )
+                                    .equatable()
                                     .tableCell(id, frames: cellFrames)
                                 }
                             }
@@ -512,6 +513,7 @@ struct ClosedSyllablesTable: View {
                                 cells: block.rows[index], isTransliterationHidden: isTransliterationHidden, colors: colors,
                                 playingID: playingID, cellFrames: cellFrames, onTap: onTap
                             )
+                            .equatable()
                         }
                     }
                 }
@@ -538,6 +540,7 @@ private struct ClosedSyllablesRow: View {
                         closed: cell, isTransliterationHidden: isTransliterationHidden, colors: colors,
                         isPlaying: id == playingID, onTap: onTap
                     )
+                    .equatable()
                     .tableCell(id, frames: cellFrames)
                 } else {
                     Color.clear
@@ -1048,5 +1051,72 @@ struct LessonZikrCard: View {
         }
         .frame(width: circle, height: circle)
         .accessibilityHidden(true)
+    }
+}
+
+// MARK: - Сравнение по данным
+
+// Таблицы и ячейки сравниваются по тому, что показывают, без замыканий: замыкание («открыть лист») в каждом
+// `body` экрана новое, и без этого открытие листа или каждый слог «Послушать алфавит» пересобирали все ячейки
+// экрана. Вызовы - через `.equatable()`.
+
+extension SyllableCell: Equatable {
+    nonisolated static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.letter == rhs.letter && lhs.arabic == rhs.arabic && lhs.transliteration == rhs.transliteration
+            && lhs.isTransliterationHidden == rhs.isTransliterationHidden && lhs.colors == rhs.colors
+            && lhs.isPlaying == rhs.isPlaying
+    }
+}
+
+extension SyllablesTable: Equatable {
+    nonisolated static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.block == rhs.block && lhs.isTransliterationHidden == rhs.isTransliterationHidden && lhs.colors == rhs.colors
+            && lhs.playingID == rhs.playingID && lhs.cellFrames === rhs.cellFrames
+    }
+}
+
+extension ClosedSyllablesTable: Equatable {
+    nonisolated static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.block == rhs.block && lhs.isTransliterationHidden == rhs.isTransliterationHidden && lhs.colors == rhs.colors
+            && lhs.playingID == rhs.playingID && lhs.cellFrames === rhs.cellFrames
+    }
+}
+
+extension ClosedSyllablesRow: Equatable {
+    nonisolated static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.cells == rhs.cells && lhs.isTransliterationHidden == rhs.isTransliterationHidden && lhs.colors == rhs.colors
+            && lhs.playingID == rhs.playingID && lhs.cellFrames === rhs.cellFrames
+    }
+}
+
+extension LessonLettersGrid: Equatable {
+    nonisolated static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.letters == rhs.letters && lhs.columns == rhs.columns && lhs.colors == rhs.colors
+            && lhs.playingLetter == rhs.playingLetter
+    }
+}
+
+extension LessonSampleSyllables: Equatable {
+    nonisolated static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.samples == rhs.samples && lhs.isTransliterationHidden == rhs.isTransliterationHidden && lhs.colors == rhs.colors
+    }
+}
+
+extension LessonSampleClosedSyllables: Equatable {
+    nonisolated static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.samples == rhs.samples && lhs.isTransliterationHidden == rhs.isTransliterationHidden && lhs.colors == rhs.colors
+    }
+}
+
+extension LessonFormsTable: Equatable {
+    nonisolated static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.block == rhs.block && lhs.step == rhs.step && lhs.colors == rhs.colors
+    }
+}
+
+extension LessonFormulasBlock: Equatable {
+    nonisolated static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.items == rhs.items && lhs.columns == rhs.columns && lhs.isTransliterationHidden == rhs.isTransliterationHidden
+            && lhs.colors == rhs.colors
     }
 }

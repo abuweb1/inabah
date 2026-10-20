@@ -7,8 +7,8 @@ struct ReadingLessonView: View {
     let stepNumber: Int
 
     @Environment(ReadingStore.self) private var store
-    /// «Послушать алфавит»: `nil` - не звучит, панели нет. Здесь, а не в содержимом: кнопка - в навбаре.
-    @State private var playback: AlphabetPlayback?
+    /// «Послушать алфавит». Здесь, а не в содержимом: кнопка - в навбаре.
+    @State private var player = AlphabetPlayer()
 
     var body: some View {
         ReadingScreen(
@@ -22,17 +22,12 @@ struct ReadingLessonView: View {
             intro: .lesson(stepNumber),
             actions: {
                 if let letters = store.course.value?.step(stepNumber)?.alphabetLetters {
-                    ReadingHeaderButton(
-                        symbol: playback == nil ? "play.fill" : "stop.fill",
-                        label: playback == nil ? "makharij.alphabet.play" : "makharij.alphabet.stop"
-                    ) {
-                        playback = playback == nil ? AlphabetPlayback(count: letters.count) : nil
-                    }
+                    AlphabetPlayToggle(player: player, count: letters.count)
                 }
             },
             content: { course, colors, openSheet in
                 if let step = course.step(stepNumber), step.hasLesson {
-                    LessonContent(course: course, step: step, colors: colors, openSheet: openSheet, playback: $playback)
+                    LessonContent(course: course, step: step, colors: colors, openSheet: openSheet, player: player)
                 } else {
                     ReadingLessonSoon()
                 }
@@ -63,7 +58,7 @@ private struct LessonContent: View {
     let step: ReadingStep
     let colors: ReadingColors
     let openSheet: LetterSheetOpener
-    @Binding var playback: AlphabetPlayback?
+    @Bindable var player: AlphabetPlayer
 
     @Environment(AppRouter.self) private var router
     @Environment(ReadingProgress.self) private var progress
@@ -77,7 +72,7 @@ private struct LessonContent: View {
         let actions = LessonActions(
             // Лист буквы звучит сам - алфавит на паузу.
             openSheet: LetterSheetOpener { letter in
-                playback?.pause()
+                player.playback?.pause()
                 openSheet(letter)
             },
             openLetterForms: { router.makharijPath.append(.letterForms(step: step.number, letter: $0.letter)) },
@@ -114,13 +109,13 @@ private struct LessonContent: View {
             .padding(.bottom, Spacing.xl)
         }
         // Панель - поверх урока, урок не сдвигается.
-        .alphabetPlayer($playback, items: (step.alphabetLetters ?? []).map(AlphabetItem.letter), colors: colors)
+        .alphabetPlayer($player.playback, items: (step.alphabetLetters ?? []).map(AlphabetItem.letter), colors: colors)
         .lessonInfoPopover($info, colors: colors)
     }
 
     /// Буква, на которой стоит «Послушать алфавит».
     private var playingLetter: ReadingLetter? {
-        guard let playback, let letters = step.alphabetLetters, letters.indices.contains(playback.index) else { return nil }
+        guard let playback = player.playback, let letters = step.alphabetLetters, letters.indices.contains(playback.index) else { return nil }
         return letters[playback.index]
     }
 
@@ -165,29 +160,36 @@ struct LessonBlockView: View {
             LessonMarksBlock(block: marks, colors: colors)
         case .letters(let letters):
             LessonLettersGrid(letters: letters.letters, colors: colors, playingLetter: playingLetter, onTap: actions.openSheet.open)
+                .equatable()
         case .syllables(let syllables):
             if let sample = syllables.sample {
                 LessonSampleSyllables(
                     samples: ReadingLogic.sampleSyllables(letters: syllables.letters, marks: syllables.marks, count: sample, seed: seed),
                     isTransliterationHidden: isTransliterationHidden, colors: colors, actions: actions
                 )
+                .equatable()
             } else {
                 SyllablesTable(block: syllables, isTransliterationHidden: isTransliterationHidden, colors: colors, onTap: actions.openSheet.open)
+                    .equatable()
             }
         case .rule(let rule):
             LessonRuleBlock(block: rule, colors: colors, onTap: actions.openSheet.open)
         case .forms(let forms):
             LessonFormsTable(block: forms, step: step.number, colors: colors, onOpen: actions.openLetterForms)
+                .equatable()
         case .formulas(let formulas):
             LessonFormulasBlock(items: formulas.items, columns: formulas.columns, isTransliterationHidden: isTransliterationHidden, colors: colors)
+                .equatable()
         case .closedSyllables(let closed):
             if let sample = closed.sample {
                 LessonSampleClosedSyllables(
                     samples: ReadingLogic.sampleClosedSyllables(items: closed.all, count: sample, seed: seed),
                     isTransliterationHidden: isTransliterationHidden, colors: colors, actions: actions
                 )
+                .equatable()
             } else {
                 ClosedSyllablesTable(block: closed, isTransliterationHidden: isTransliterationHidden, colors: colors, onTap: actions.openSheet.open)
+                    .equatable()
             }
         case .topic(let topic):
             LessonTopicCard(topic: topic, colors: colors) {

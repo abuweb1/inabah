@@ -294,9 +294,8 @@ private struct ZoomableExampleWord: View {
     @State private var frame: CGRect = .zero
     @State private var zoomCount = 0
     @State private var playCount = 0
-    @State private var flash: TapFlash?
-    /// Палец держит слово - идёт кольцо удержания.
-    @GestureState private var holding = false
+    /// Палец держит слово дольше `HoldRingTiming.delay` - идёт кольцо удержания.
+    @State private var holdCount = 0
 
     var body: some View {
         ExampleWordCell(
@@ -304,24 +303,23 @@ private struct ZoomableExampleWord: View {
             isHintShown: isHintShown, isZoomed: false, colors: colors, hasAudio: audio != nil,
             isPlaying: audio != nil && clips.playing == audio
         )
-        .tapFlash(flash, tint: colors.tint)
-        .holdRing(pressing: holding, tint: colors.tint)
+        .holdRing(trigger: holdCount, tint: colors.tint)
         .liveCell(hint: "makharij.hint.zoom", tint: colors.tint, zoomable: true, observesTaps: false)
         .onGeometryChange(for: CGRect.self) { $0.frame(in: .named(coordinateSpace)) } action: { frame = $0 }
         .contentShape(.rect(cornerRadius: Radius.box))
         // Один жест: удержание - увеличение, отпустили раньше - касание (отдельные спорили, и увеличение
-        // срабатывало только при отпускании пальца).
+        // срабатывало только при отпускании пальца). Кольцо - коротким удержанием, без `.updating` (с ним
+        // удержание забирало касание сразу: не работали касание и листание по слову).
         .gesture(
             LongPressGesture(minimumDuration: PressFeedback.zoomHold)
-                .updating($holding) { _, state, _ in state = true }
                 .onEnded { _ in
                     zoomCount += 1
                     intro?.tappedCell()
                     onZoom(frame)
                 }
-                .exclusively(before: SpatialTapGesture().onEnded { tap in
-                    flash = flash?.next(at: tap.location) ?? .first(at: tap.location)
-                    intro?.tappedCell()
+                .simultaneously(with: LongPressGesture(minimumDuration: HoldRingTiming.delay).onEnded { _ in holdCount += 1 })
+                .exclusively(before: SpatialTapGesture(coordinateSpace: .global).onEnded { tap in
+                    intro?.tapped(at: tap.location)
                     play()
                 })
         )

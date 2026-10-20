@@ -345,35 +345,34 @@ struct ReadableWordTile: View {
     /// Прочитано ли слово, когда плитка появилась: вспышка - только если дочитали сейчас.
     @State private var wasDone: Bool?
     @State private var burst = 0
-    @State private var flash: TapFlash?
-    /// Палец держит увеличиваемую плитку - идёт кольцо удержания.
-    @GestureState private var holding = false
+    /// Палец держит увеличиваемую плитку дольше `HoldRingTiming.delay` - идёт кольцо удержания.
+    @State private var holdCount = 0
 
     private var isDone: Bool { count >= `repeat` }
 
     /// Касание - прочитал; с увеличением - один жест: удержание - увеличение, отпустили раньше - касание.
     /// Отдельные касание и удержание спорили, и увеличение срабатывало только при отпускании пальца.
+    /// Кольцо - коротким удержанием вместе с увеличением, без `.updating` (с ним удержание забирало касание
+    /// сразу: не работали нажатие, прокрутка и листание по плитке). Вспышку рисует хозяин экрана.
     private var readOrZoom: AnyGesture<Void> {
-        let read = SpatialTapGesture().onEnded { tap in
-            flash = flash?.next(at: tap.location) ?? .first(at: tap.location)
-            intro?.tappedCell()
+        let read = SpatialTapGesture(coordinateSpace: .global).onEnded { tap in
+            intro?.tapped(at: tap.location)
             if !isDone { onRead() }
         }
         guard let onZoom else { return AnyGesture(read.map { _ in }) }
         let zoom = LongPressGesture(minimumDuration: PressFeedback.zoomHold)
-            .updating($holding) { _, state, _ in state = true }
             .onEnded { _ in
                 zoomCount += 1
                 intro?.tappedCell()
                 onZoom(frame)
             }
-        return AnyGesture(zoom.exclusively(before: read).map { _ in })
+        let ring = LongPressGesture(minimumDuration: HoldRingTiming.delay).onEnded { _ in holdCount += 1 }
+        return AnyGesture(zoom.simultaneously(with: ring).exclusively(before: read).map { _ in })
     }
 
     var body: some View {
         WordTile(word: word, count: count, repeat: `repeat`, showsTransliteration: showsTransliteration, isZoomed: false, colors: colors)
-            .tapFlash(flash, tint: colors.tint)
-            .holdRing(pressing: holding, tint: colors.tint)
+            .holdRing(trigger: holdCount, tint: colors.tint)
             .liveCell(
                 hint: onZoom == nil ? "makharij.hint.zikrWord" : "makharij.hint.zoom",
                 tint: colors.tint,

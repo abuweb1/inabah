@@ -76,3 +76,33 @@ struct AlphabetPlaybackTests {
         #expect(playback.key == paused)
     }
 }
+
+@MainActor
+@Suite("Курс «Учимся читать»: кнопка «Послушать алфавит»")
+struct AlphabetPlayerTests {
+    @Test("▶ - с первого элемента, ■ - стоп; «играет» меняется только при старте и стопе")
+    func toggle() throws {
+        let player = AlphabetPlayer()
+        #expect(!player.isActive)
+
+        player.toggle(count: 82)
+        #expect(player.isActive)
+        #expect(player.playback?.index == 0)
+
+        player.playback?.next()
+        player.playback?.pause()
+        #expect(player.isActive, "смена слога и пауза - всё ещё играет")
+
+        player.toggle(count: 82)
+        #expect(!player.isActive)
+        #expect(player.playback == nil)
+    }
+
+    @Test("Алфавит доиграл (`playback = nil`) - кнопка снова ▶")
+    func finished() {
+        let player = AlphabetPlayer()
+        player.toggle(count: 1)
+        player.playback = nil
+        #expect(!player.isActive)
+    }
+}
