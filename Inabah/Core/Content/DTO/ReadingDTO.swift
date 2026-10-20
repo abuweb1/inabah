@@ -161,14 +161,17 @@ nonisolated struct ReadingFormulaDTO: Decodable, Sendable {
     let parts: [String]
     let result: String
     let translations: [String: ReadingWordTranslationDTO]
+    /// Запись примера (шадда, `reading_s09_NN.m4a`); `null` или нет поля - не записан.
+    let audio: String?
 
-    private enum CodingKeys: String, CodingKey { case parts, result, translations }
+    private enum CodingKeys: String, CodingKey { case parts, result, translations, audio }
 
     init(from decoder: any Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         parts = try c.decode([String].self, forKey: .parts)
         result = try c.decode(String.self, forKey: .result)
         translations = try c.decode(.translations, default: [:])
+        audio = try c.decodeIfPresent(String.self, forKey: .audio)
     }
 }
 

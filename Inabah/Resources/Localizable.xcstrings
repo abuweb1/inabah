@@ -1668,17 +1668,6 @@
         }
       }
     },
-    "makharij.alphabet.formulas.open" : {
-      "comment" : "Учимся читать: кнопка под случайными закрытыми слогами урока",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Прочтите весь алфавит"
-          }
-        }
-      }
-    },
     "makharij.alphabet.formulas.subtitle" : {
       "comment" : "Учимся читать: подзаголовок «Весь алфавит» (закрытые слоги)",
       "localizations" : {
@@ -1697,6 +1686,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Следующая буква"
+          }
+        }
+      }
+    },
+    "makharij.alphabet.nextSyllable" : {
+      "comment" : "«Послушать алфавит» в таблице: кнопка ⏭",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Следующий слог"
           }
         }
       }
@@ -1741,6 +1741,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Предыдущая буква"
+          }
+        }
+      }
+    },
+    "makharij.alphabet.previousSyllable" : {
+      "comment" : "«Послушать алфавит» в таблице: кнопка ⏮",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Предыдущий слог"
           }
         }
       }

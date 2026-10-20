@@ -253,11 +253,12 @@ nonisolated struct ReadingJoin: Hashable, Sendable {
     let note: String
 }
 
-/// Формула блока `formulas`: части, итог и его транскрипция (`nil` - без подписи).
+/// Формула блока `formulas`: части, итог и его транскрипция (`nil` - без подписи); запись примера (`nil` - нет).
 nonisolated struct ReadingFormula: Hashable, Sendable {
     let parts: [String]
     let result: String
     let transliteration: String?
+    var audio: String? = nil
 }
 
 /// Блок урока; неизвестные типы данных сюда не попадают.

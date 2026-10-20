@@ -220,6 +220,7 @@ struct ReadingContentTests {
         let equal = try #require(step.formulasBlocks.only)
         #expect(equal.items.count == 9)
         #expect([0, 6, 8].map { equal.items[$0].transliteration } == ["ъабба", "джиддан", "роббун"])
+        #expect(equal.items.allSatisfy { $0.audio == nil }, "примеры шадды ещё не записаны")
         let words = step.quiz.compactMap(\.word)
         #expect(words.count == step.quiz.count)
         let first = try #require(words.first)
@@ -228,6 +229,16 @@ struct ReadingContentTests {
         #expect(words.allSatisfy { $0.explanation != nil && $0.options.count == 3 })
         #expect(step.words?.items.count == 60)
         #expect(step.words?.items.first { $0.arabic == "مُحَمَّدٌ" }?.transliteration == "мухьаммадун")
+    }
+
+    @Test("Запись формулы - имя файла; `null` и нет поля - не записана", arguments: [
+        (#"{"parts": ["بَ"], "result": "بَّ", "audio": "reading_s09_01.m4a"}"#, "reading_s09_01.m4a"),
+        (#"{"parts": ["بَ"], "result": "بَّ", "audio": null}"#, nil),
+        (#"{"parts": ["بَ"], "result": "بَّ"}"#, nil),
+    ] as [(String, String?)])
+    func formulaAudio(json: String, audio: String?) throws {
+        let formula = try JSONDecoder().decode(ReadingFormulaDTO.self, from: Data(json.utf8))
+        #expect(formula.audio == audio)
     }
 
     @Test("Шаг 10 - артикль, лунные и солнечные буквы справкой, вопросы со словом")

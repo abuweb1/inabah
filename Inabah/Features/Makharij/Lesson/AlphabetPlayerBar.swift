@@ -1,15 +1,18 @@
 import SwiftUI
 
-/// Панель «Послушать алфавит» под навбаром урока (Android `AlphabetPlayerBar`, скриншот 04): название
-/// звучащей буквы и «N из 29», ⏮ ⏸/▶ ⏹ ⏭. Пауза - заливка цвета раздела.
+/// Панель «Послушать алфавит» под навбаром (Android `AlphabetPlayerBar`, скриншоты 04, 24): что звучит
+/// («Ба» или «Ба · фатхьа») и «N из M», ⏮ ⏸/▶ ⏹ ⏭. Пауза - заливка цвета раздела.
 struct AlphabetPlayerBar: View {
     enum Command {
         case previous, togglePause, stop, next
     }
 
-    let letter: ReadingLetter
+    let item: AlphabetItem
     let playback: AlphabetPlayback
     let colors: ReadingColors
+    /// Подписи ⏮ ⏭: «Предыдущая буква» в уроке, «Предыдущий слог» в таблице.
+    let previousLabel: LocalizedStringResource
+    let nextLabel: LocalizedStringResource
     let onCommand: (Command) -> Void
 
     @Environment(\.theme) private var theme
@@ -23,7 +26,7 @@ struct AlphabetPlayerBar: View {
     var body: some View {
         HStack(spacing: Spacing.s) {
             VStack(alignment: .leading, spacing: Spacing.xxxs) {
-                Text(verbatim: letter.name)
+                Text(verbatim: item.title)
                     .font(.headline)
                     .foregroundStyle(theme.palette.onAccent)
                 Text("makharij.alphabet.position \(playback.index + 1) \(playback.count)")
@@ -33,7 +36,7 @@ struct AlphabetPlayerBar: View {
             .lineLimit(1)
             .frame(maxWidth: .infinity, alignment: .leading)
             .accessibilityElement(children: .combine)
-            button("backward.end.fill", label: "makharij.alphabet.previous", command: .previous)
+            button("backward.end.fill", label: previousLabel, command: .previous)
                 .disabled(!playback.hasPrevious)
                 .opacity(playback.hasPrevious ? 1 : Layout.disabledOpacity)
             button(
@@ -43,7 +46,7 @@ struct AlphabetPlayerBar: View {
                 isProminent: true
             )
             button("stop.fill", label: "makharij.alphabet.stop", command: .stop)
-            button("forward.end.fill", label: "makharij.alphabet.next", command: .next)
+            button("forward.end.fill", label: nextLabel, command: .next)
                 .disabled(!playback.hasNext)
                 .opacity(playback.hasNext ? 1 : Layout.disabledOpacity)
         }
@@ -51,15 +54,18 @@ struct AlphabetPlayerBar: View {
         .padding(.trailing, Spacing.s)
         .padding(.vertical, Spacing.s)
         .background {
+            // Плавающая поверхность поверх содержимого: тень - только у фоновой фигуры.
+            let shadow = ShadowToken.floating(theme.palette)
             RoundedRectangle(cornerRadius: Radius.box)
                 .fill(colors.sheet)
                 .strokeBorder(colors.tileBorder, lineWidth: Size.hairline)
+                .shadow(color: shadow.color, radius: shadow.radius, y: shadow.y)
         }
         .fixedTextSize()
-        // Сменилась буква - VoiceOver называет её и место.
+        // Сменился элемент - VoiceOver называет его и место.
         .onChange(of: playback.index) {
             AccessibilityNotification.Announcement(
-                "\(letter.name), \(String(localized: "makharij.alphabet.position \(playback.index + 1) \(playback.count)"))"
+                "\(item.title), \(String(localized: "makharij.alphabet.position \(playback.index + 1) \(playback.count)"))"
             ).post()
         }
     }
