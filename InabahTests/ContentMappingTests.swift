@@ -81,7 +81,8 @@ struct ContentMappingTests {
         let dto = try decode(RemindersFileDTO.self, """
             { "translations": { "ru": {
               "azkarStart": { "morning": { "title": "Утро", "body": "" }, "evening": { "title": " ", "body": "" } },
-              "hadithOfDay": { "title": "Прочти хадис · {collection}, № {number}", "body": "{text} " } } } }
+              "hadithOfDay": { "title": "Прочти хадис · {collection}, № {number}", "body": "{text} " },
+              "readingLesson": { "title": "Пора на урок", "body": "{step}" } } } }
             """)
 
         let texts = try #require(ReminderTexts(dto: dto, languages: russian))
@@ -92,6 +93,7 @@ struct ContentMappingTests {
         #expect(texts.azkarUnfinished.isEmpty)
         #expect(hadith.filled([.collection: "40 хадисов ан-Навави", .number: "7", .text: ""])
             == ReminderText(title: "Прочти хадис · 40 хадисов ан-Навави, № 7", body: ""))
+        #expect(texts.readingLesson?.filled([.step: "Шаг 7 · Сукун"]) == ReminderText(title: "Пора на урок", body: "Шаг 7 · Сукун"))
     }
 
     @Test("Тексты напоминаний без подходящего языка — nil")

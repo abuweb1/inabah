@@ -166,4 +166,44 @@ struct ReadingProgressTests {
         #expect(progress.unlockSeen == 1)
         #expect(defaults.object(forKey: "reading.unlockSeen") == nil)
     }
+
+    // MARK: - День пройденного шага («Пора на урок»)
+
+    private static let tokyo: Calendar = {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(identifier: "Asia/Tokyo")!
+        return calendar
+    }()
+
+    @Test("День пройденного шага - григорианская дата в поясе календаря, переживает перезапуск")
+    func stepFinishedDay() {
+        // 2026-10-20 20:00 UTC = 21 октября в Токио.
+        let moment = Date(timeIntervalSince1970: 1_792_526_400)
+        var japanese = Calendar(identifier: .japanese)
+        japanese.timeZone = Self.tokyo.timeZone
+        let progress = ReadingProgress(defaults: defaults, calendar: japanese, now: { moment })
+
+        progress.markStepFinished()
+
+        #expect(progress.stepFinishedDay == "2026-10-21", "не в японском календаре пользователя")
+        #expect(defaults.string(forKey: "reading.stepFinishedDay") == "2026-10-21")
+        #expect(ReadingProgress(defaults: defaults).stepFinishedDay == "2026-10-21", "после перезапуска")
+    }
+
+    @Test("Полный сброс стирает день пройденного шага, сброс шага - нет; испорченный день - nil")
+    func stepFinishedDayReset() {
+        let progress = ReadingProgress(defaults: defaults, calendar: Self.tokyo)
+        progress.markLessonDone(2)
+        progress.markStepFinished()
+
+        progress.resetStep(2)
+        #expect(progress.stepFinishedDay != nil)
+
+        progress.reset()
+        #expect(progress.stepFinishedDay == nil)
+        #expect(defaults.object(forKey: "reading.stepFinishedDay") == nil)
+
+        defaults.set("2026-13-40", forKey: "reading.stepFinishedDay")
+        #expect(ReadingProgress(defaults: defaults).stepFinishedDay == nil)
+    }
 }

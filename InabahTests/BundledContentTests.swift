@@ -116,6 +116,9 @@ struct BundledContentTests {
         #expect(texts.streakAtRisk.values.allSatisfy { $0.title.contains("{streak}") })
         let hadith = try #require(texts.hadithOfDay)
         #expect(hadith.title.contains("{collection}"))
+        let lesson = try #require(texts.readingLesson)
+        #expect(lesson.title == "Пора на урок")
+        #expect(lesson.body.contains("{step}"))
     }
 
     /// Сноски появляются во всех сборниках по мере правки данных (аль-Аджурри — 2026-10-11), поэтому

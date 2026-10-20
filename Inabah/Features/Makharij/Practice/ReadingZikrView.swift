@@ -140,6 +140,7 @@ private struct ZikrContent: View {
     private func completeIfRead() {
         if ReadingLogic.completeFinalIfRead(step: step, progress: progress) {
             isCelebrating = true
+            progress.markStepFinished()
         }
     }
 

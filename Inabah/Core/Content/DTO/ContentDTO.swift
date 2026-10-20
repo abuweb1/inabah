@@ -80,6 +80,8 @@ nonisolated struct ReminderTranslationDTO: Decodable, Sendable {
     /// «Серия под угрозой» (2026-10-11): подстановка `{streak}` — «12 дней подряд».
     let streakAtRisk: [String: ReminderTextDTO]?
     let hadithOfDay: ReminderTextDTO?
+    /// «Пора на урок» (2026-10-20): подстановка `{step}` — «Шаг 7 · Сукун».
+    let readingLesson: ReminderTextDTO?
 }
 
 nonisolated struct ReminderTextDTO: Decodable, Sendable {

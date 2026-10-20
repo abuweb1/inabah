@@ -16,6 +16,9 @@ final class ReminderSettings {
         static let offerAnswered = "reminders.offer.answered"
         static let hadithLast = "reminders.hadith.last"
         static let hadithPlan = "reminders.hadith.plan"
+
+        static func reading(_ slot: ReadingReminderSlot) -> String { "reminders.reading.\(slot.rawValue)" }
+        static func readingTime(_ slot: ReadingReminderSlot) -> String { "reminders.reading.\(slot.rawValue).time" }
     }
 
     @ObservationIgnored private let defaults: UserDefaults
@@ -33,6 +36,12 @@ final class ReminderSettings {
         preferences.hadithOfDay = defaults.bool(forKey: Key.hadithEnabled)
         if let minutes = defaults.object(forKey: Key.hadithTime) as? Int {
             preferences.hadithTime = DayTime(minutesSinceMidnight: minutes)
+        }
+        for slot in ReadingReminderSlot.allCases {
+            if defaults.bool(forKey: Key.reading(slot)) { preferences.readingSlots.insert(slot) }
+            if let minutes = defaults.object(forKey: Key.readingTime(slot)) as? Int {
+                preferences.readingTimes[slot] = DayTime(minutesSinceMidnight: minutes)
+            }
         }
         self.preferences = preferences
         offerAnswered = defaults.bool(forKey: Key.offerAnswered)
@@ -74,6 +83,24 @@ final class ReminderSettings {
         guard time != preferences.hadithTime else { return }
         preferences.hadithTime = time
         defaults.set(time.minutesSinceMidnight, forKey: Key.hadithTime)
+    }
+
+    // MARK: - «Пора на урок» (Android-first 2026-10-20)
+
+    func isReadingEnabled(_ slot: ReadingReminderSlot) -> Bool { preferences.readingSlots.contains(slot) }
+
+    func setReading(_ isOn: Bool, for slot: ReadingReminderSlot) {
+        guard isOn != isReadingEnabled(slot) else { return }
+        if isOn { preferences.readingSlots.insert(slot) } else { preferences.readingSlots.remove(slot) }
+        defaults.set(isOn, forKey: Key.reading(slot))
+        if isOn { answerOffer() }
+    }
+
+    /// Записывается только выбранное время (как Android): без него - время слота по умолчанию.
+    func setReadingTime(_ time: DayTime, for slot: ReadingReminderSlot) {
+        guard time != preferences.readingTime(slot) else { return }
+        preferences.readingTimes[slot] = time
+        defaults.set(time.minutesSinceMidnight, forKey: Key.readingTime(slot))
     }
 
     func answerOffer() {

@@ -13,13 +13,16 @@ nonisolated struct ZikrProgress: Hashable, Sendable {
 /// - «Читаем слова» - сколько раз прочитано каждое слово шага: `reading.words.<N>` = `"10,10,3,0"`;
 /// - итог «Читаем зикр» - зикр по разделу и номеру в «Азкарах» (не по месту в шаге): прочитанные слова
 ///   `reading.zikr.morning.6.words` = `"0,1,4"` и «прочитал целиком» `reading.zikr.morning.6.read` = `true`;
-/// - последний шаг, открытие которого уже показано (замок «отщёлкнулся»): `reading.unlockSeen`.
+/// - последний шаг, открытие которого уже показано (замок «отщёлкнулся»): `reading.unlockSeen`;
+/// - день, когда последний раз показано окно «Шаг пройден» (`ГГГГ-ММ-ДД`, григорианский календарь, пояс
+///   устройства): `reading.stepFinishedDay` - «Пора на урок» в этот день больше не зовёт.
 /// Пройден ли шаг целиком (урок и все слова) - решает `ReadingLogic.completedSteps`.
 @Observable
 final class ReadingProgress {
     private enum Key {
         static let prefix = "reading."
         static let unlockSeen = "reading.unlockSeen"
+        static let stepFinishedDay = "reading.stepFinishedDay"
         static let zikrPrefix = "reading.zikr."
 
         static func lesson(_ step: Int) -> String { "reading.step.\(step).done" }
@@ -29,6 +32,8 @@ final class ReadingProgress {
     }
 
     @ObservationIgnored private let defaults: UserDefaults
+    @ObservationIgnored private let calendar: Calendar
+    @ObservationIgnored private let now: () -> Date
 
     /// Номера шагов с пройденным уроком.
     private(set) var lessonsDone: Set<Int>
@@ -38,14 +43,36 @@ final class ReadingProgress {
     private(set) var zikrs: [ZikrID: ZikrProgress]
     /// Последний открытый шаг, открытие которого уже показано; по умолчанию 1.
     private(set) var unlockSeen: Int
+    /// День последнего пройденного шага (`ГГГГ-ММ-ДД`); испорченное значение - `nil`.
+    private(set) var stepFinishedDay: String?
 
-    init(defaults: UserDefaults = .standard) {
+    /// `calendar` - пояс «сегодня» (в приложении - пояс устройства, как у азкаров), `now` - часы для тестов.
+    init(defaults: UserDefaults = .standard, calendar: Calendar = .current, now: @escaping () -> Date = Date.init) {
         self.defaults = defaults
+        self.calendar = calendar
+        self.now = now
         let stored = defaults.dictionaryRepresentation().filter { $0.key.hasPrefix(Key.prefix) }
         lessonsDone = Self.readLessons(stored)
         wordCounts = Self.readWords(stored)
         zikrs = Self.readZikrs(stored)
         unlockSeen = defaults.object(forKey: Key.unlockSeen) as? Int ?? 1
+        stepFinishedDay = defaults.string(forKey: Key.stepFinishedDay).flatMap { AzkarCalendarDay(key: $0)?.key }
+    }
+
+    /// Григорианская дата `date` (`ГГГГ-ММ-ДД`) в поясе `calendar` - не в календаре пользователя (хиджра, японский).
+    nonisolated static func dayKey(of date: Date, in calendar: Calendar) -> String {
+        var gregorian = Calendar(identifier: .gregorian)
+        gregorian.timeZone = calendar.timeZone
+        let components = gregorian.dateComponents([.year, .month, .day], from: date)
+        return String(format: "%04d-%02d-%02d", components.year ?? 0, components.month ?? 0, components.day ?? 0)
+    }
+
+    /// Показано окно «Шаг пройден» - сегодня «Пора на урок» больше не зовёт (Android `markStepFinished`).
+    func markStepFinished() {
+        let today = Self.dayKey(of: now(), in: calendar)
+        guard today != stepFinishedDay else { return }
+        stepFinishedDay = today
+        defaults.set(today, forKey: Key.stepFinishedDay)
     }
 
     /// Замок шага `step` «отщёлкнулся»; только растёт.
@@ -109,16 +136,19 @@ final class ReadingProgress {
     }
 
     /// Сбросить весь прогресс - все ключи `reading.step.…`, `reading.words.…` и любые `reading.zikr.…` (и
-    /// старые, по номеру в шаге). Настройки курса (`ReadingSettings`) не трогает.
+    /// старые, по номеру в шаге) и день пройденного шага. Настройки курса (`ReadingSettings`) не трогает.
     func reset() {
         let keys = defaults.dictionaryRepresentation().keys.filter(Self.isProgressKey)
-        guard !lessonsDone.isEmpty || !wordCounts.isEmpty || !zikrs.isEmpty || !keys.isEmpty else { return }
+        let hasDay = defaults.object(forKey: Key.stepFinishedDay) != nil
+        guard !lessonsDone.isEmpty || !wordCounts.isEmpty || !zikrs.isEmpty || !keys.isEmpty || hasDay else { return }
         if !lessonsDone.isEmpty { lessonsDone = [] }
         if !wordCounts.isEmpty { wordCounts = [:] }
         if !zikrs.isEmpty { zikrs = [:] }
         if unlockSeen != 1 { unlockSeen = 1 }
+        if stepFinishedDay != nil { stepFinishedDay = nil }
         keys.forEach(defaults.removeObject)
         defaults.removeObject(forKey: Key.unlockSeen)
+        defaults.removeObject(forKey: Key.stepFinishedDay)
     }
 
     // MARK: - Разбор ключей

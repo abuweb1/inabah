@@ -61,7 +61,11 @@ private struct QuizContent: View {
                         QuizDots(count: round.count, current: index, colors: colors)
                             .id(QuizScroll.top)
                         QuizQuestion(item: round[index], isLast: index == round.count - 1, colors: colors) {
-                            if index == round.count - 1 { progress.markLessonDone(step.number) }
+                            if index == round.count - 1 {
+                                progress.markLessonDone(step.number)
+                                // Шаг без слов пройден проверкой - окно «Шаг пройден» (как Android).
+                                if step.words == nil { progress.markStepFinished() }
+                            }
                             index += 1
                             proxy.scrollTo(QuizScroll.top, anchor: .top)
                         }

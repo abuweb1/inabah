@@ -25,11 +25,66 @@ struct ReminderPlannerTests {
         now: Date,
         windows: [AzkarSection: AzkarWindow] = windows,
         days: Int = 1,
-        completed: Set<String> = []
+        completed: Set<String> = [],
+        reading: ReadingReminderInput? = nil
     ) -> [PlannedReminder] {
-        ReminderPlan.plan(preferences: preferences, windows: windows, now: now, calendar: berlin, days: days) { section, day in
+        ReminderPlan.plan(preferences: preferences, windows: windows, now: now, calendar: berlin, days: days, reading: reading) { section, day in
             completed.contains("\(section.rawValue) \(day)")
         }
+    }
+
+    // MARK: - «Пора на урок»
+
+    @Test("«Пора на урок»: каждый слот на каждый день, сегодняшнее прошедшее - с завтра")
+    func readingSlots() {
+        let preferences = ReminderPreferences(readingSlots: [.morning, .evening])
+        let planned = Self.plan(preferences, now: Self.date(2026, 10, 12, 10), days: 2, reading: ReadingReminderInput(step: 3, finishedToday: false))
+
+        #expect(planned.map(\.at) == [
+            Self.date(2026, 10, 12, 19), Self.date(2026, 10, 13, 9), Self.date(2026, 10, 13, 19), Self.date(2026, 10, 14, 9),
+        ])
+        #expect(planned.map(\.kind) == [.readingEvening, .readingMorning, .readingEvening, .readingMorning])
+        #expect(planned.allSatisfy { $0.step == 3 })
+    }
+
+    @Test("«Пора на урок»: выбранное время вместо умолчания")
+    func readingCustomTime() {
+        let preferences = ReminderPreferences(readingSlots: [.day], readingTimes: [.day: DayTime(hour: 15, minute: 30)])
+        let planned = Self.plan(preferences, now: Self.date(2026, 10, 12, 10), reading: ReadingReminderInput(step: 1, finishedToday: false))
+
+        #expect(planned.map(\.at) == [Self.date(2026, 10, 12, 15, 30)])
+    }
+
+    @Test("Шаг сегодня пройден - сегодняшних нет, завтрашние есть")
+    func readingFinishedToday() {
+        let preferences = ReminderPreferences(readingSlots: [.evening])
+        let planned = Self.plan(preferences, now: Self.date(2026, 10, 12, 10), days: 2, reading: ReadingReminderInput(step: 3, finishedToday: true))
+
+        #expect(planned.map(\.at) == [Self.date(2026, 10, 13, 19)])
+    }
+
+    @Test("Курс пройден (нет шага) или слоты выключены - ничего")
+    func readingNone() {
+        #expect(Self.plan(ReminderPreferences(readingSlots: [.morning]), now: Self.date(2026, 10, 12, 6)).isEmpty)
+        #expect(Self.plan(ReminderPreferences(), now: Self.date(2026, 10, 12, 6), reading: ReadingReminderInput(step: 1, finishedToday: false)).isEmpty)
+    }
+
+    @Test("Больше лимита iOS - план обрезается, остаются ближайшие")
+    func trimmedToLimit() {
+        let all = ReminderPreferences(
+            azkarStart: [.morning, .evening], azkarUnfinished: true, hadithOfDay: true,
+            readingSlots: Set(ReadingReminderSlot.allCases)
+        )
+        let now = Self.date(2026, 10, 12, 4)
+        // 10 дней: 20 начал + 20 «не прочитаны» + 10 хадисов + 30 уроков = 80.
+        let full = ReminderPlan.plan(
+            preferences: all, windows: Self.windows, now: now, calendar: Self.berlin, days: 10,
+            reading: ReadingReminderInput(step: 1, finishedToday: false)
+        ) { _, _ in false }
+
+        #expect(full.count == ReminderPlan.requestLimit)
+        #expect(full == full.sorted { $0.at < $1.at })
+        #expect(full.contains { $0.kind == .readingMorning && $0.at == Self.date(2026, 10, 12, 9) }, "ближайшие не выпали")
     }
 
     @Test("В начале времени — ближайшее начало строго после «сейчас»")
@@ -197,5 +252,12 @@ struct ReminderPlannerTests {
         #expect(ReminderPayload.target(from: ["kind": "hadithOfDay", "collection": "nawawi", "number": "0"]) == nil)
         #expect(ReminderPayload.target(from: ["kind": "x"]) == nil)
         #expect(ReminderPayload.target(from: [:]) == nil)
+    }
+
+    @Test("Разбор нажатия «Пора на урок»: шаг; номер 0 или без шага - ничего")
+    func readingPayload() {
+        #expect(ReminderPayload.target(from: ReminderPayload.userInfo(kind: .readingDay, step: 7)) == .readingLesson(7))
+        #expect(ReminderPayload.target(from: ["kind": "readingMorning", "step": "0"]) == nil)
+        #expect(ReminderPayload.target(from: ["kind": "readingEvening"]) == nil)
     }
 }

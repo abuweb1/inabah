@@ -63,6 +63,17 @@ struct AppRouterTests {
         #expect(router.hadithPath == [.list(.qudsi), .detail(id)])
     }
 
+    @Test("«Пора на урок» открывает урок шага поверх списка шагов")
+    func reminderOpensReadingLesson() {
+        let router = AppRouter()
+        router.select(.settings)
+
+        router.open(ReminderTarget.readingLesson(4))
+
+        #expect(router.selectedTab == .makharij)
+        #expect(router.makharijPath == [.steps, .lesson(4)])
+    }
+
     @Test("«Календарь азкаров» открывается с главной азкаров и переживает кодирование маршрута")
     func openCalendar() throws {
         let router = AppRouter()

@@ -29,6 +29,8 @@ nonisolated enum ReminderPlaceholder: String, CaseIterable, Hashable, Sendable {
     case number
     /// Серия «12 дней подряд» — в «серия под угрозой».
     case streak
+    /// Шаг курса «Шаг 7 · Сукун» / «Итог · …» - в «Пора на урок».
+    case step
     case text
 }
 
@@ -40,4 +42,6 @@ nonisolated struct ReminderTexts: Hashable, Sendable {
     let hadithOfDay: ReminderText?
     /// «Серия под угрозой» (2026-10-11), подстановка `{streak}`.
     var streakAtRisk: [AzkarSection: ReminderText] = [:]
+    /// «Пора на урок» «Учимся читать» (2026-10-20), подстановка `{step}`.
+    var readingLesson: ReminderText?
 }
