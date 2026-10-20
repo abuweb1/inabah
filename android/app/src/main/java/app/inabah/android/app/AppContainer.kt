@@ -46,6 +46,7 @@ import app.inabah.android.feature.azkar.AzkarStore
 import app.inabah.android.feature.hadith.HadithStore
 import app.inabah.android.feature.makharij.ReadingStore
 import java.time.Instant
+import java.time.LocalDate
 import java.time.ZoneId
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -173,6 +174,8 @@ class AppContainer(context: Context) {
         val hadithProgress = HadithProgress(storage)
         val hadithCollectionOrder = HadithCollectionOrder(storage)
         val reminderSettings = ReminderSettings(storage)
+        val readingStore = ReadingStore(repository)
+        val readingProgress = ReadingProgress(storage) { LocalDate.now(ZoneId.systemDefault()) }
         val releaseNotes = ReleaseNotesSource(appContext.assets::open, contentLanguagePriority, Dispatchers.IO) { message, error ->
             Log.e(TAG, "История версий: $message", error)
         }
@@ -197,8 +200,8 @@ class AppContainer(context: Context) {
             hadithProgress = hadithProgress,
             hadithFavorites = HadithFavorites(storage),
             hadithCollectionOrder = hadithCollectionOrder,
-            readingStore = ReadingStore(repository),
-            readingProgress = ReadingProgress(storage),
+            readingStore = readingStore,
+            readingProgress = readingProgress,
             clipPlayer = ClipPlayer(appContext, Dispatchers.IO),
             appearanceSettings = AppearanceSettings(storage),
             parchmentSettings = ParchmentSettings(storage),
@@ -220,6 +223,8 @@ class AppContainer(context: Context) {
                 hadithStore = hadithStore,
                 hadithProgress = hadithProgress,
                 hadithOrder = hadithCollectionOrder,
+                readingStore = readingStore,
+                readingProgress = readingProgress,
                 texts = ReminderTextsSource(appContext.assets::open, contentLanguagePriority, Dispatchers.IO) { message, error ->
                     Log.e(TAG, "Тексты напоминаний: $message", error)
                 },

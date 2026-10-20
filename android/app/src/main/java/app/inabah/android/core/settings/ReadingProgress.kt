@@ -6,6 +6,8 @@ import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import app.inabah.android.core.content.model.AzkarSection
 import app.inabah.android.core.content.model.ZikrId
+import java.time.LocalDate
+import java.time.format.DateTimeParseException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -18,9 +20,14 @@ import kotlinx.coroutines.flow.asStateFlow
  * - итог «Читаем зикр» (2026-10-17) - зикр по разделу и номеру в «Азкарах» (`morning.6`, не по месту в шаге:
  *   отметки не переходят к другому зикру, если зикры итога переставят): прочитанные слова
  *   `reading.zikr.morning.6.words` = `"0,1,4"` (каждое - один раз) и «прочитал целиком» `reading.zikr.morning.6.read` = `true`.
+ * - день, когда последний раз пройден шаг (напоминание пройти урок, 2026-10-20): `reading.stepFinishedDay` = `"2026-10-20"`.
  * Пройден ли шаг целиком (урок и все слова) - решает `completedSteps` (feature/makharij).
+ * [today] - сегодняшняя дата в поясе устройства (в тестах подменяется).
  */
-class ReadingProgress(private val storage: PreferencesStorage) {
+class ReadingProgress(
+    private val storage: PreferencesStorage,
+    private val today: () -> LocalDate = { LocalDate.now() },
+) {
     private val _lessonsDone = MutableStateFlow(readLessons(storage.snapshot))
     private val _wordCounts = MutableStateFlow(readWords(storage.snapshot))
     private val _unlockSeen = MutableStateFlow(storage.snapshot[UNLOCK_SEEN_KEY] ?: 1)
@@ -34,6 +41,23 @@ class ReadingProgress(private val storage: PreferencesStorage) {
 
     /** Зикр итога → прочитанные слова и прочитан ли целиком; нет зикра - ничего не читали. */
     val zikrs: StateFlow<Map<ZikrId, ZikrProgress>> = _zikrs.asStateFlow()
+
+    /** День, когда последний раз пройден шаг (впервые или снова); не проходили - `null`. */
+    val stepFinishedDay: LocalDate?
+        get() = storage.snapshot[STEP_FINISHED_DAY_KEY]?.let { value ->
+            try {
+                LocalDate.parse(value)
+            } catch (_: DateTimeParseException) {
+                null
+            }
+        }
+
+    /** Шаг пройден сейчас (окно «Шаг пройден»): сегодня напоминание пройти урок больше не нужно. */
+    fun markStepFinished() {
+        val day = today().toString()
+        if (storage.snapshot[STEP_FINISHED_DAY_KEY] == day) return
+        storage.edit { it[STEP_FINISHED_DAY_KEY] = day }
+    }
 
     /** Последний открытый шаг, открытие которого уже показано (замок «отщёлкнулся»); по умолчанию 1. */
     val unlockSeen: StateFlow<Int> = _unlockSeen.asStateFlow()
@@ -99,7 +123,7 @@ class ReadingProgress(private val storage: PreferencesStorage) {
         }
     }
 
-    /** Сбросить весь прогресс - все ключи `reading.step.…`, `reading.words.…` и `reading.zikr.…`. */
+    /** Сбросить весь прогресс - все ключи `reading.step.…`, `reading.words.…`, `reading.zikr.…` и день пройденного шага. */
     fun reset() {
         val keys = storage.snapshot.asMap().keys.filter { isProgressKey(it.name) }
         if (_lessonsDone.value.isEmpty() && _wordCounts.value.isEmpty() && _zikrs.value.isEmpty() && keys.isEmpty()) return
@@ -121,10 +145,11 @@ class ReadingProgress(private val storage: PreferencesStorage) {
         private val ZikrWordsPattern = Regex("""^reading\.zikr\.(\w+)\.(\d+)\.words$""")
         private val ZikrReadPattern = Regex("""^reading\.zikr\.(\w+)\.(\d+)\.read$""")
         private val UNLOCK_SEEN_KEY = intPreferencesKey("reading.unlockSeen")
+        private val STEP_FINISHED_DAY_KEY = stringPreferencesKey("reading.stepFinishedDay")
 
         // Зикры - любой ключ `reading.zikr.…`: и ключи по номеру в шаге из проверочных сборок до 2026-10-17.
         private fun isProgressKey(name: String) = LessonPattern.matches(name) || WordsPattern.matches(name) ||
-            name.startsWith(ZIKR_KEY_PREFIX)
+            name.startsWith(ZIKR_KEY_PREFIX) || name == STEP_FINISHED_DAY_KEY.name
         private const val ZIKR_KEY_PREFIX = "reading.zikr."
 
         fun lessonKey(step: Int) = booleanPreferencesKey("reading.step.$step.done")

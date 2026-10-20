@@ -23,6 +23,7 @@ internal data class ReminderTranslationDto(
     val azkarUnfinished: Map<String, ReminderTextDto> = emptyMap(),
     val hadithOfDay: ReminderTextDto? = null,
     val streakAtRisk: Map<String, ReminderTextDto> = emptyMap(),
+    val readingLesson: ReminderTextDto? = null,
 )
 
 @Serializable
@@ -44,9 +45,12 @@ data class ReminderTexts(
     val hadithOfDay: ReminderText?,
     /** «Серия под угрозой»; подстановка `{streak}` — «12 дней подряд». */
     val streakAtRisk: Map<AzkarSection, ReminderText> = emptyMap(),
+    /** «Пора на урок»; подстановка `{step}` — «Шаг 7 · Сукун». */
+    val readingLesson: ReminderText? = null,
 ) {
     fun forKind(kind: ReminderKind): ReminderText? = when {
         kind == ReminderKind.HadithOfDay -> hadithOfDay
+        kind.readingSlot != null -> readingLesson
         kind.isStreak -> streakAtRisk[kind.section]
         kind.isUnfinished -> azkarUnfinished[kind.section]
         else -> azkarStart[kind.section]
@@ -59,6 +63,7 @@ object ReminderPlaceholders {
     const val NUMBER = "number"
     const val TEXT = "text"
     const val STREAK = "streak"
+    const val STEP = "step"
 }
 
 /**
@@ -106,5 +111,11 @@ internal fun RemindersFileDto.toTexts(priority: ContentLanguagePriority): Remind
     fun ReminderTextDto.model() = takeIf { title.isNotBlank() || body.isNotBlank() }?.let { ReminderText(title, body) }
     fun Map<String, ReminderTextDto>.bySection() =
         AzkarSection.entries.mapNotNull { section -> this[section.key]?.model()?.let { section to it } }.toMap()
-    return ReminderTexts(dto.azkarStart.bySection(), dto.azkarUnfinished.bySection(), dto.hadithOfDay?.model(), dto.streakAtRisk.bySection())
+    return ReminderTexts(
+        azkarStart = dto.azkarStart.bySection(),
+        azkarUnfinished = dto.azkarUnfinished.bySection(),
+        hadithOfDay = dto.hadithOfDay?.model(),
+        streakAtRisk = dto.streakAtRisk.bySection(),
+        readingLesson = dto.readingLesson?.model(),
+    )
 }

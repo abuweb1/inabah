@@ -43,4 +43,10 @@ class NotificationTargetTest {
         assertNull(notificationTarget(MainActivity.ACTION_OPEN_HADITH, null, "unknown", 3))
         assertNull(notificationTarget(MainActivity.ACTION_OPEN_HADITH, null, HadithCollection.Nawawi.key, 0))
     }
+
+    @Test
+    fun `Пора на урок — урок шага, неверный шаг — ничего`() {
+        assertEquals(NotificationTarget.ReadingLesson(7), notificationTarget(MainActivity.ACTION_OPEN_READING, null, null, 0, step = 7))
+        assertNull(notificationTarget(MainActivity.ACTION_OPEN_READING, null, null, 0, step = 0))
+    }
 }

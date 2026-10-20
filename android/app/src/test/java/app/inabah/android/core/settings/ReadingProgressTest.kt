@@ -4,6 +4,7 @@ import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import app.inabah.android.core.content.model.AzkarSection
 import app.inabah.android.core.content.model.ZikrId
+import java.time.LocalDate
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
@@ -162,5 +163,30 @@ class ReadingProgressTest {
         ReadingProgress(storage.storage).reset()
 
         assertTrue(ReadingSettings(storage.storage).allStepsOpen.value, "после перезапуска")
+    }
+
+    @Test
+    fun `День пройденного шага — сегодняшний, переживает перезапуск и стирается сбросом всего прогресса`() = TestStorage.run { storage ->
+        var today = LocalDate.of(2026, 10, 20)
+        val progress = ReadingProgress(storage.storage) { today }
+        assertNull(progress.stepFinishedDay)
+
+        progress.markStepFinished()
+        assertEquals(today, ReadingProgress(storage.restart()).stepFinishedDay, "после перезапуска")
+
+        today = today.plusDays(1)
+        val next = ReadingProgress(storage.storage) { today }
+        next.markStepFinished()
+        assertEquals(today, next.stepFinishedDay)
+
+        next.reset()
+        assertNull(ReadingProgress(storage.restart()).stepFinishedDay)
+    }
+
+    @Test
+    fun `Испорченный день пройденного шага — как не проходили`() = TestStorage.run { storage ->
+        storage.seed { it[stringPreferencesKey("reading.stepFinishedDay")] = "вчера" }
+
+        assertNull(ReadingProgress(storage.storage).stepFinishedDay)
     }
 }

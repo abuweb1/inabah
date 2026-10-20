@@ -72,7 +72,7 @@ class MainActivity : ComponentActivity() {
     /**
      * Нажатие на уведомление: медиа — раздел звучащей записи с открытым плеером; напоминание азкаров —
      * список раздела, «серия под угрозой» — главная «Азкаров»; хадис дня — этот хадис (поверх списка своего
-     * сборника). Цель — [notificationTarget].
+     * сборника); «пора на урок» — урок шага поверх списка шагов. Цель — [notificationTarget].
      */
     private fun handleIntent(intent: Intent?) {
         val target = intent?.notificationTarget() ?: return
@@ -89,6 +89,7 @@ class MainActivity : ComponentActivity() {
                 NotificationTarget.AzkarHome -> router.openRoot(AppTab.Azkar)
                 is NotificationTarget.AzkarList -> router.open(AzkarRoute.SectionList(target.section))
                 is NotificationTarget.Hadith -> router.open(HadithRoute.Detail(target.id))
+                is NotificationTarget.ReadingLesson -> router.open(MakharijRoute.Lesson(target.step))
             }
         }
     }
@@ -98,8 +99,10 @@ class MainActivity : ComponentActivity() {
         const val ACTION_OPEN_AZKAR = "app.inabah.android.action.OPEN_AZKAR"
         const val ACTION_OPEN_AZKAR_HOME = "app.inabah.android.action.OPEN_AZKAR_HOME"
         const val ACTION_OPEN_HADITH = "app.inabah.android.action.OPEN_HADITH"
+        const val ACTION_OPEN_READING = "app.inabah.android.action.OPEN_READING"
         const val EXTRA_SECTION = "section"
         const val EXTRA_COLLECTION = "collection"
         const val EXTRA_NUMBER = "number"
+        const val EXTRA_STEP = "step"
     }
 }

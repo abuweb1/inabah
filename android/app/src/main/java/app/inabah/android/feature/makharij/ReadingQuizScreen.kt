@@ -134,7 +134,11 @@ fun ReadingQuizScreen(
                 solved = solved,
                 onAnswer = { i, isCorrect -> if (isCorrect) solved = true else wrongMask = wrongMask or (1 shl i) },
                 onNext = {
-                    if (index == round.lastIndex) progress.markLessonDone(step.number)
+                    if (index == round.lastIndex) {
+                        progress.markLessonDone(step.number)
+                        // Шаг без слов пройден проверкой - сегодня напоминание «Пора на урок» больше не нужно.
+                        if (step.words == null) progress.markStepFinished()
+                    }
                     wrongMask = 0
                     solved = false
                     index += 1

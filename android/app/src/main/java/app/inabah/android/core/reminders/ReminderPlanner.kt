@@ -8,6 +8,7 @@ import app.inabah.android.core.settings.AzkarDay
 import app.inabah.android.core.settings.AzkarDayRecord
 import app.inabah.android.core.settings.AzkarWindow
 import app.inabah.android.core.settings.AzkarWindowSchedule
+import app.inabah.android.core.settings.ReadingReminderSlot
 import app.inabah.android.core.settings.ReminderPreferences
 import app.inabah.android.core.settings.azkarStreak
 import app.inabah.android.core.settings.azkarStreakDay
@@ -17,8 +18,11 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 
-/** Вид напоминания; [requestCode] — постоянный номер будильника (у каждого вида свой, одновременно один). */
-enum class ReminderKind(val requestCode: Int, val section: AzkarSection?) {
+/**
+ * Вид напоминания; [requestCode] — постоянный номер будильника (у каждого вида свой, одновременно один).
+ * [section] — раздел азкаров, [readingSlot] — время напоминания пройти урок.
+ */
+enum class ReminderKind(val requestCode: Int, val section: AzkarSection?, val readingSlot: ReadingReminderSlot? = null) {
     MorningStart(1, AzkarSection.Morning),
     EveningStart(2, AzkarSection.Evening),
     MorningUnfinished(3, AzkarSection.Morning),
@@ -27,6 +31,10 @@ enum class ReminderKind(val requestCode: Int, val section: AzkarSection?) {
     /** «Серия под угрозой» (2026-10-11): за [STREAK_LEAD] до конца окна. */
     MorningStreak(6, AzkarSection.Morning),
     EveningStreak(7, AzkarSection.Evening),
+    /** «Пора на урок» «Учимся читать» (2026-10-20): утром, днём, вечером — пока сегодня не пройден шаг. */
+    ReadingMorning(8, null, ReadingReminderSlot.Morning),
+    ReadingDay(9, null, ReadingReminderSlot.Day),
+    ReadingEvening(10, null, ReadingReminderSlot.Evening),
     ;
 
     val isUnfinished: Boolean get() = this == MorningUnfinished || this == EveningUnfinished
@@ -34,7 +42,17 @@ enum class ReminderKind(val requestCode: Int, val section: AzkarSection?) {
     val isStreak: Boolean get() = this == MorningStreak || this == EveningStreak
 
     /** Канал уведомлений вида — пользователь может выключить его в системе отдельно от остальных. */
-    val channel: String get() = if (section == null) ReminderChannels.HADITH else ReminderChannels.AZKAR
+    val channel: String get() = when {
+        section != null -> ReminderChannels.AZKAR
+        readingSlot != null -> ReminderChannels.READING
+        else -> ReminderChannels.HADITH
+    }
+
+    /**
+     * Номер уведомления: у напоминаний урока один на всех — новое заменяет прежнее, а не копится
+     * (утреннее «Пора на урок» не висит рядом с дневным).
+     */
+    val notificationId: Int get() = if (readingSlot != null) ReadingMorning.requestCode else requestCode
 
     companion object {
         fun start(section: AzkarSection): ReminderKind =
@@ -45,6 +63,8 @@ enum class ReminderKind(val requestCode: Int, val section: AzkarSection?) {
 
         fun streak(section: AzkarSection): ReminderKind =
             if (section == AzkarSection.Morning) MorningStreak else EveningStreak
+
+        fun reading(slot: ReadingReminderSlot): ReminderKind = entries.first { it.readingSlot == slot }
 
         fun fromName(name: String?): ReminderKind? = entries.firstOrNull { it.name == name }
     }
@@ -57,6 +77,7 @@ enum class ReminderKind(val requestCode: Int, val section: AzkarSection?) {
 object ReminderChannels {
     const val AZKAR = "reminders.azkar.alert"
     const val HADITH = "reminders.hadith.alert"
+    const val READING = "reminders.reading.alert"
 
     /** Каналы пробных сборок 1.1.1 с важностью «обычная» — удаляются. */
     val LEGACY = listOf("reminders.azkar", "reminders.hadith")
@@ -106,7 +127,12 @@ fun planReminders(
     if (preferences.hadithOfDay) {
         add(PlannedReminder(ReminderKind.HadithOfDay, preferences.hadithTime.nextOccurrence(after = now, zone)))
     }
+    for (slot in ReadingReminderSlot.entries) {
+        if (slot !in preferences.readingSlots) continue
+        add(PlannedReminder(ReminderKind.reading(slot), preferences.readingTime(slot).nextOccurrence(after = now, zone)))
+    }
 }
+
 
 /**
  * [kind] («ещё не прочитаны», «серия под угрозой») — за [lead] до конца текущего (если ещё не прошло)

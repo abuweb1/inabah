@@ -175,6 +175,8 @@ fun ReadingWordsScreen(
         LaunchedEffect(stepDone) {
             if (stepDone && !wasDone) {
                 celebrate = true
+                // Сегодня шаг пройден - напоминание «Пора на урок» до завтра молчит.
+                progress.markStepFinished()
                 // Последнее слово дочитано в увеличенной плитке: она закрывается, иначе её BackHandler под
                 // праздником съест первое «Назад».
                 zoom = null

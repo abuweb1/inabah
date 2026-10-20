@@ -19,6 +19,7 @@ import app.inabah.android.core.content.ContentLanguagePriority
 import app.inabah.android.core.designsystem.InabahTheme
 import app.inabah.android.core.settings.ReadingProgress
 import app.inabah.android.core.settings.ReadingSettings
+import app.inabah.android.core.settings.ReminderSettings
 import app.inabah.android.core.settings.TestDataStoreRule
 import app.inabah.android.feature.makharij.ReadingStepsScreen
 import app.inabah.android.feature.makharij.ReadingStore
@@ -132,7 +133,7 @@ class MakharijSettingsTest {
     private fun showSettings(progress: ReadingProgress, settings: ReadingSettings) {
         compose.setContent {
             InabahTheme {
-                MakharijSettingsScreen(store, progress, settings, onBack = {}, contentPadding = PaddingValues())
+                MakharijSettingsScreen(store, progress, settings, ReminderSettings(dataStore.storage), onBack = {}, contentPadding = PaddingValues())
             }
         }
         waitForText("Прогресс")

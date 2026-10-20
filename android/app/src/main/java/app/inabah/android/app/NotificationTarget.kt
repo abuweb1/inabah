@@ -20,6 +20,9 @@ sealed interface NotificationTarget {
 
     /** Хадис дня: этот хадис поверх списка своего сборника. */
     data class Hadith(val id: HadithId) : NotificationTarget
+
+    /** «Пора на урок»: урок шага [step] поверх списка шагов. */
+    data class ReadingLesson(val step: Int) : NotificationTarget
 }
 
 /** Куда ведёт напоминание азкаров вида [kind] раздела [section]. */
@@ -37,11 +40,13 @@ fun NotificationTarget.intent(context: Context): Intent {
         is NotificationTarget.Hadith -> intent.setAction(MainActivity.ACTION_OPEN_HADITH)
             .putExtra(MainActivity.EXTRA_COLLECTION, id.collection.key)
             .putExtra(MainActivity.EXTRA_NUMBER, id.number)
+        is NotificationTarget.ReadingLesson -> intent.setAction(MainActivity.ACTION_OPEN_READING)
+            .putExtra(MainActivity.EXTRA_STEP, step)
     }
 }
 
 /** Цель по действию и дополнениям интента; чужое действие или неполные данные — `null` (ничего не открывать). */
-fun notificationTarget(action: String?, section: String?, collection: String?, number: Int): NotificationTarget? =
+fun notificationTarget(action: String?, section: String?, collection: String?, number: Int, step: Int = 0): NotificationTarget? =
     when (action) {
         MainActivity.ACTION_OPEN_PLAYER -> NotificationTarget.Player
         MainActivity.ACTION_OPEN_AZKAR_HOME -> NotificationTarget.AzkarHome
@@ -50,6 +55,7 @@ fun notificationTarget(action: String?, section: String?, collection: String?, n
         MainActivity.ACTION_OPEN_HADITH -> HadithCollection.fromKey(collection.orEmpty())
             ?.takeIf { number >= 1 }
             ?.let { NotificationTarget.Hadith(HadithId(it, number)) }
+        MainActivity.ACTION_OPEN_READING -> step.takeIf { it >= 1 }?.let(NotificationTarget::ReadingLesson)
         else -> null
     }
 
@@ -59,4 +65,5 @@ fun Intent.notificationTarget(): NotificationTarget? = notificationTarget(
     section = getStringExtra(MainActivity.EXTRA_SECTION),
     collection = getStringExtra(MainActivity.EXTRA_COLLECTION),
     number = getIntExtra(MainActivity.EXTRA_NUMBER, 0),
+    step = getIntExtra(MainActivity.EXTRA_STEP, 0),
 )
