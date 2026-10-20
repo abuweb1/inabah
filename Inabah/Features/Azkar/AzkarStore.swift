@@ -4,10 +4,11 @@ import Observation
 /// Азкары и прогресс их чтения.
 ///
 /// Прогресс относится к отрезку времени (`AzkarPeriod`): времени азкаров из
-/// `AzkarWindowSettings` (утренние 5:00–12:00, вечерние 17:00–02:00 по умолчанию) или промежутку
-/// до него. На каждой границе счётчики обнуляются — строго, даже посреди чтения. Отметка
-/// на главной, оверлей завершения и история (`AzkarHistory`) — только во время азкаров;
-/// вне его счёт работает, но никуда не идёт и к началу окна обнуляется.
+/// `AzkarWindowSettings` (утренние 6:00–11:30, вечерние 17:00–02:00 по умолчанию) или промежутку
+/// до него. Счётчики обнуляются в начале окна — строго, даже посреди чтения; после конца окна
+/// прочитанное остаётся видно до начала следующего (2026-10-20). Отметка на главной, оверлей
+/// завершения и история (`AzkarHistory`) — только во время азкаров; вне его счёт работает,
+/// но никуда не идёт и к началу окна обнуляется.
 ///
 /// Живёт на уровне приложения, поэтому счёт не теряется при переходе между экранами.
 @Observable
@@ -151,9 +152,10 @@ final class AzkarStore {
 
     // MARK: - Время азкаров
 
-    /// Сверяет отрезок каждого раздела с расписанием на сейчас. Тот же отрезок (окно или
-    /// промежуток с той же датой) — счёт сохраняется, обновляется только граница; другой —
-    /// счётчики и флаг оверлея обнуляются.
+    /// Сверяет отрезок каждого раздела с расписанием на сейчас. Окно с тех пор не начиналось
+    /// заново (`AzkarPeriod.continuesProgress`: тот же отрезок или промежуток после этого окна) —
+    /// счёт сохраняется, обновляются граница и признак окна; началось новое окно — счётчики и флаг
+    /// оверлея обнуляются.
     ///
     /// Вызывается по таймеру на границе, при возврате приложения на экран, при смене системного
     /// времени или часового пояса и при уходе с экрана настроек времени — так прокрутка колеса
@@ -165,7 +167,7 @@ final class AzkarStore {
             let expected = schedule(for: section).period(at: current)
             guard expected != loaded else { continue }
             adopt(expected, for: section)
-            if !expected.isSameSpan(as: loaded) {
+            if !expected.continuesProgress(loaded) {
                 sessions(in: section).forEach { $0.discardProgress() }
                 acknowledgedCompletions.remove(section)
                 updateProgress(of: section)
@@ -223,7 +225,8 @@ final class AzkarStore {
     // MARK: - Хранение
 
     /// Прогресс раздела: отрезок, счёт по номерам зикров, показан ли оверлей завершения.
-    /// Сохранение версии 1.0.0 (другой формат периода) не декодируется — прогресс начинается заново.
+    /// Сохранение версии 1.0.0 (другой формат периода) не декодируется — прогресс начинается заново;
+    /// в отрезке до 2026-10-20 нет `started` — сверка по прежнему правилу.
     private nonisolated struct StoredProgress: Codable {
         var period: AzkarPeriod
         var counts: [Int: Int]
@@ -250,7 +253,7 @@ final class AzkarStore {
 
     private func restoredProgress(of section: AzkarSection) -> RestoredProgress {
         let expected = schedule(for: section).period(at: now())
-        guard let stored = storedProgress(of: section), stored.period.isSameSpan(as: expected) else {
+        guard let stored = storedProgress(of: section), expected.continuesProgress(stored.period) else {
             return RestoredProgress(period: expected)
         }
         return RestoredProgress(
@@ -278,7 +281,7 @@ final class AzkarStore {
 
     // MARK: - Оверлей завершения
 
-    /// Разделы, для которых «مَا شَاءَ اللَّهُ» уже показан в этом окне. Сохраняется вместе
+    /// Разделы, для которых «مَا شَاءَ اللَّهُ» уже показан в этом окне (помнится до начала следующего). Сохраняется вместе
     /// с прогрессом — после перезапуска выполненный раздел не поздравляет снова. Читается только
     /// из задач, не из `body`, — наблюдение не нужно.
     @ObservationIgnored private var acknowledgedCompletions: Set<AzkarSection> = []
