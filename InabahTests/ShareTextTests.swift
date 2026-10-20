@@ -6,7 +6,11 @@ import Testing
 @Suite("Текст «Поделиться»")
 struct ShareTextTests {
     /// `nonisolated` — читается и в аргументах параметризованного теста.
-    private nonisolated static let link = "https://apps.apple.com/app/id6819638881"
+    /// Ссылки на приложение под подписями платформ (2026-10-20): между ними пустая строка - при делении текста
+    /// по блокам это два последних блока.
+    private nonisolated static let iphone = "Для iPhone\nhttps://apps.apple.com/app/id6819638881"
+    private nonisolated static let android = "Для Android\nhttps://play.google.com/store/apps/details?id=app.inabah.android"
+    private nonisolated static let links = "\(iphone)\n\n\(android)"
 
     private static func zikr(translation: ZikrTranslation?) -> Zikr {
         Zikr(
@@ -27,6 +31,15 @@ struct ShareTextTests {
         )
     }
 
+    @Test("Ссылки на приложение - две под подписями платформ через пустую строку, одна - без подписи (как Android)")
+    func storeLinks() {
+        #expect(ShareText.storeLinks(appStore: "https://a", googlePlay: "https://g") == "Для iPhone\nhttps://a\n\nДля Android\nhttps://g")
+        #expect(ShareText.storeLinks(appStore: nil, googlePlay: "https://g") == "https://g")
+        #expect(ShareText.storeLinks(appStore: "https://a", googlePlay: nil) == "https://a")
+        #expect(ShareText.storeLinks(appStore: nil, googlePlay: nil) == nil)
+        #expect(AboutLinks.shareBlock == Self.links)
+    }
+
     @Test("Блоки: пустые и отсутствующие пропускаются, края обрезаются")
     func blocksSkipEmpty() {
         #expect(ShareText.blocks("  А\n", nil, "", " \n ", "Б") == "А\n\nБ")
@@ -40,7 +53,7 @@ struct ShareTextTests {
         ))
 
         #expect(zikr.shareText.components(separatedBy: ShareText.blockSeparator) == [
-            "Утренние азкары", "سُبْحَانَ اللَّهِ", "100 раз", "Субхана-Ллах", "Пречист Аллах", "(Муслим)", Self.link,
+            "Утренние азкары", "سُبْحَانَ اللَّهِ", "100 раз", "Субхана-Ллах", "Пречист Аллах", "(Муслим)", Self.iphone, Self.android,
         ])
     }
 
@@ -51,14 +64,14 @@ struct ShareTextTests {
         ))
 
         #expect(zikr.shareText.components(separatedBy: ShareText.blockSeparator) == [
-            "Утренние азкары", "سُبْحَانَ اللَّهِ", "100 раз", "Абу Хурайра", "Субхана-Ллах", "Пречист Аллах", Self.link,
+            "Утренние азкары", "سُبْحَانَ اللَّهِ", "100 раз", "Абу Хурайра", "Субхана-Ллах", "Пречист Аллах", Self.iphone, Self.android,
         ])
     }
 
     @Test("Зикр без перевода: раздел, арабский, «N раз», ссылка")
     func zikrWithoutTranslation() {
         #expect(Self.zikr(translation: nil).shareText.components(separatedBy: ShareText.blockSeparator) == [
-            "Утренние азкары", "سُبْحَانَ اللَّهِ", "100 раз", Self.link,
+            "Утренние азкары", "سُبْحَانَ اللَّهِ", "100 раз", Self.iphone, Self.android,
         ])
     }
 
@@ -68,7 +81,7 @@ struct ShareTextTests {
 
         #expect(hadith.shareText.components(separatedBy: ShareText.blockSeparator) == [
             "40 хадисов ан-Навави · Хадис 2", "عَنْ عُمَرَ قَالَ", "Передаётся от Умара, что он сказал:", "Перевод",
-            "Приводится: Муслим", Self.link,
+            "Приводится: Муслим", Self.iphone, Self.android,
         ])
     }
 
@@ -94,7 +107,7 @@ struct ShareTextTests {
             Различия передач
             у Муслима иначе
 
-            \(Self.link)
+            \(Self.links)
             """))
     }
 
@@ -117,7 +130,7 @@ struct ShareTextTests {
             \(dots)
             ✅ Лучшее время для чтения утренних азкаров с Фаджра до восхода солнца.
 
-            \(Self.link)
+            \(Self.links)
             """)
     }
 
@@ -135,11 +148,11 @@ struct ShareTextTests {
 
     @Test("Хадис без части блоков — пропущенные не оставляют пустых строк", arguments: [
         (nil as String?, "Перевод" as String?, "Муслим" as String?,
-         ["40 хадисов ан-Навави · Хадис 2", "عَنْ عُمَرَ قَالَ", "Перевод", "Приводится: Муслим", link]),
+         ["40 хадисов ан-Навави · Хадис 2", "عَنْ عُمَرَ قَالَ", "Перевод", "Приводится: Муслим", iphone, android]),
         ("Умар", "Перевод", nil,
-         ["40 хадисов ан-Навави · Хадис 2", "عَنْ عُمَرَ قَالَ", "Умар", "Перевод", link]),
+         ["40 хадисов ан-Навави · Хадис 2", "عَنْ عُمَرَ قَالَ", "Умар", "Перевод", iphone, android]),
         (nil, nil, nil,
-         ["40 хадисов ан-Навави · Хадис 2", "عَنْ عُمَرَ قَالَ", link]),
+         ["40 хадисов ан-Навави · Хадис 2", "عَنْ عُمَرَ قَالَ", iphone, android]),
     ])
     func partialHadith(narrator: String?, text: String?, source: String?, expected: [String]) {
         let shareText = Self.hadith(narrator: narrator, text: text, source: source).shareText

@@ -1,7 +1,7 @@
 import SwiftUI
 
-/// «О приложении»: версия, «История версий», источники текстов и записей, политика конфиденциальности
-/// и строка «Лицензии». Источники согласованы с пользователем 2026-10-05.
+/// «О приложении»: версия, «История версий», источники текстов и записей, политика конфиденциальности,
+/// «Вопросы и предложения» (Телеграм) и строка «Лицензии». Источники согласованы с пользователем 2026-10-05.
 struct AboutView: View {
     @Environment(\.theme) private var theme
 
@@ -33,10 +33,13 @@ struct AboutView: View {
             }
 
             // Политику требует Apple (5.1.1(i)); ссылок на исходный код и Issues нет —
-            // решение пользователя 2026-10-19, как на Android.
+            // решение пользователя 2026-10-19, как на Android; «Вопросы и предложения» — Телеграм (2026-10-20).
             SettingsGroup {
                 Link(destination: AboutLinks.privacy) {
                     AboutLinkLabel(title: "about.link.privacy")
+                }
+                Link(destination: AboutLinks.feedback) {
+                    AboutLinkLabel(title: "about.link.feedback")
                 }
                 NavigationLink(value: SettingsRoute.licenses) {
                     SettingsLinkLabel {
@@ -166,7 +169,12 @@ enum AboutLinks {
     /// Страница в App Store (Apple ID приложения из App Store Connect) — последний блок
     /// текста «Поделиться».
     static let appStore = URL(string: "https://apps.apple.com/app/id6819638881")!
+    /// Google Play — в «Поделиться» вместе с App Store (решение пользователя 2026-10-20: ставится уже сейчас,
+    /// откроется после выхода из закрытого теста).
+    static let googlePlay = URL(string: "https://play.google.com/store/apps/details?id=app.inabah.android")!
     static let privacy = URL(string: "https://github.com/abuweb1/inabah/blob/main/PRIVACY.md")!
+    /// «Вопросы и предложения» — Телеграм-канал приложения (решение пользователя 2026-10-20).
+    static let feedback = URL(string: "https://t.me/inabah_app")!
 }
 
 #Preview {

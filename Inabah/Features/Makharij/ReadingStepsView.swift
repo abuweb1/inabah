@@ -55,6 +55,7 @@ private struct ReadingStepsList: View {
 
     @Environment(ReadingProgress.self) private var progress
     @Environment(ReadingSettings.self) private var settings
+    @Environment(ReminderSettings.self) private var reminders
     @Environment(\.theme) private var theme
 
     /// Кружок номера - как в строке: нить «пути» идёт через их центры.
@@ -74,6 +75,11 @@ private struct ReadingStepsList: View {
             LazyVStack(spacing: Spacing.s) {
                 header(completed: completed, colors: colors)
                     .padding(.bottom, Layout.headerBottom)
+                // «Напоминать о занятиях?» - один раз, после первого пройденного шага, пока курс не пройден.
+                if !reminders.readingOfferAnswered, !completed.isEmpty, current != nil {
+                    ReadingReminderOfferCard(colors: colors)
+                        .padding(.bottom, Layout.headerBottom)
+                }
                 ForEach(Array(course.steps.enumerated()), id: \.element.number) { index, step in
                     let state = ReadingLogic.stepState(
                         course: course, step: step, completed: completed, current: current, allStepsOpen: settings.allStepsOpen
@@ -131,6 +137,48 @@ private struct ReadingStepsList: View {
     /// Отрезок нити после шага: золотой, если шаг пройден.
     private func threadColor(after step: ReadingStep, completed: Set<Int>) -> Color {
         completed.contains(step.number) ? theme.palette.gold : theme.palette.track
+    }
+}
+
+/// «Напоминать о занятиях?» (Android `ReadingReminderOfferCard`, 2026-10-20): «Включить» спрашивает разрешение и
+/// включает «Пора на урок» утром, днём и вечером; «Не сейчас» - просто скрывает. Ответ запоминается в любом случае
+/// и только для курса: предложение азкаров на главной им не отвечается.
+private struct ReadingReminderOfferCard: View {
+    let colors: ReadingColors
+
+    @Environment(ReminderSettings.self) private var reminders
+    @Environment(ReminderScheduler.self) private var scheduler
+
+    /// Идёт запрос разрешения - кнопки неактивны: второе нажатие не запустит второй запрос.
+    @State private var isRequesting = false
+
+    var body: some View {
+        NoticeCard(symbol: "clock", title: "makharij.reminderOffer.title", message: "makharij.reminderOffer.message") {
+            VStack(spacing: Spacing.xs) {
+                Button("reminders.offer.enable", action: enable)
+                    .buttonStyle(ReadingButtonStyle(colors: colors))
+                Button("reminders.offer.later", action: answer)
+                    .buttonStyle(ReadingButtonStyle(colors: colors, isProminent: false))
+            }
+            .padding(.top, Spacing.s)
+            .disabled(isRequesting)
+        }
+    }
+
+    private func enable() {
+        isRequesting = true
+        Task {
+            if await scheduler.requestAuthorization() {
+                for slot in ReadingReminderSlot.allCases { reminders.setReading(true, for: slot) }
+                scheduler.reschedule()
+            }
+            answer()
+        }
+    }
+
+    /// Карточка уходит плавно - шаги не съезжают скачком.
+    private func answer() {
+        withAnimation(Motion.collapse) { reminders.answerReadingOffer() }
     }
 }
 
