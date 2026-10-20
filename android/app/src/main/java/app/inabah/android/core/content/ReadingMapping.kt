@@ -181,6 +181,7 @@ private fun ReadingBlockDto.toBlock(
                 result = item.result,
                 transliteration = priority.select(item.translations.keyedByLanguage())
                     ?.translation?.translit?.trim()?.ifEmpty { null },
+                audio = item.audio?.trim()?.ifEmpty { null },
             )
         },
     )

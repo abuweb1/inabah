@@ -246,8 +246,11 @@ data class ReadingWord(val arabic: String, val transliteration: String?) {
 /** Место слитного чтения зикра: слова подряд, как читаются вместе, и почему ([note]). */
 data class ReadingJoin(val arabic: String, val transliteration: String, val note: String)
 
-/** Формула блока [ReadingBlock.Formulas]: части, итог и его транскрипция (`null` - без подписи). */
-data class ReadingFormula(val parts: List<String>, val result: String, val transliteration: String?)
+/**
+ * Формула блока [ReadingBlock.Formulas]: части, итог и его транскрипция (`null` - без подписи),
+ * запись итога (`null` - нет; есть у примеров шадды).
+ */
+data class ReadingFormula(val parts: List<String>, val result: String, val transliteration: String?, val audio: String? = null)
 
 /**
  * Закрытый слог (решение пользователя 2026-10-19: согласная с сукуном одна не произносится): буква [letter],

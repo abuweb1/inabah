@@ -82,6 +82,9 @@ data class ReadingColors(
     val parchmentCell: Color,
     val parchmentCellBorder: Color,
     val parchmentCaption: Color,
+    /** Звучащая ячейка на пергаменте («Послушать алфавит» таблицы, запись примера): заливка и рамка. */
+    val parchmentPlaying: Color,
+    val parchmentPlayingBorder: Color,
 ) {
     companion object {
         fun from(palette: Palette): ReadingColors {
@@ -103,6 +106,9 @@ data class ReadingColors(
                 parchmentCell = palette.parchmentText.copy(alpha = PARCHMENT_CELL_ALPHA),
                 parchmentCellBorder = palette.parchmentText.copy(alpha = PARCHMENT_CELL_BORDER_ALPHA),
                 parchmentCaption = palette.parchmentText.copy(alpha = PARCHMENT_CAPTION_ALPHA),
+                // Цвет раздела на пергаменте почти не виден (2026-10-20) - выделение пергамента, своё у каждого фона.
+                parchmentPlaying = palette.parchmentMark.copy(alpha = PARCHMENT_PLAYING_ALPHA),
+                parchmentPlayingBorder = palette.parchmentMark,
             )
         }
 
@@ -118,6 +124,7 @@ data class ReadingColors(
         private const val PARCHMENT_CELL_ALPHA = 0.06f
         private const val PARCHMENT_CELL_BORDER_ALPHA = 0.18f
         private const val PARCHMENT_CAPTION_ALPHA = 0.75f
+        private const val PARCHMENT_PLAYING_ALPHA = 0.22f
     }
 }
 

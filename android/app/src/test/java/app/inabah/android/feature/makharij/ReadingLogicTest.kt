@@ -239,6 +239,28 @@ class ReadingLogicTest {
     }
 
     @Test
+    fun `«Послушать алфавит» таблицы - ряд за рядом, в ряду по знакам, у сукуна без мадда`() = runTest {
+        val course = loadAssetCourse()
+        val vowels = requireNotNull(course.step(2)).blocks.filterIsInstance<ReadingBlock.Syllables>().first()
+        val order = syllablesPlayOrder(vowels)
+        assertEquals(vowels.letters.size * 3, order.size)
+        assertEquals(listOf("fatha", "kasra", "damma", "fatha"), order.take(4).map { it.mark.id })
+        assertEquals(listOf("ا", "ا", "ا", "ب"), order.take(4).map { it.letter.letter })
+        assertEquals(order.map { it.letter.audio[it.mark.id] }, order.map { it.audio })
+
+        val tanwin = requireNotNull(course.step(8)).blocks.filterIsInstance<ReadingBlock.Syllables>().single()
+        assertTrue(syllablesPlayOrder(tanwin).all { it.mark.id in listOf("fathatan", "kasratan", "dammatan") })
+
+        val closed = requireNotNull(course.step(7)).blocks.filterIsInstance<ReadingBlock.ClosedSyllables>().single()
+        val closedOrder = closedSyllablesPlayOrder(closed)
+        assertEquals(82, closedOrder.size, "28 рядов по 3, без мадда أُوْ и إِيْ")
+        assertEquals(closed.all.map { it.audio }, closedOrder.map { it.audio })
+        fun marksOf(letter: String) = closedOrder.filter { it.letter.letter == letter }.map { it.mark.id }
+        assertEquals(listOf("fatha", "kasra"), marksOf("و"), "ъав, ъив")
+        assertEquals(listOf("fatha", "damma"), marksOf("ي"), "ъай, ъуй")
+    }
+
+    @Test
     fun `Вопрос с танвином - варианты только танвины, верный один`() = runTest {
         val course = loadAssetCourse()
         val step = course.steps.first { "fathatan" in it.markIds }

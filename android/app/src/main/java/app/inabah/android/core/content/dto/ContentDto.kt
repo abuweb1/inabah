@@ -172,6 +172,8 @@ data class ReadingFormulaDto(
     val result: String,
     /** Транскрипция итога; нет - без подписи. */
     val translations: Map<String, ReadingWordTranslationDto> = emptyMap(),
+    /** Запись итога (примеры шадды, 2026-10-20); `null` - записи нет (ещё не записана или не нужна). */
+    val audio: String? = null,
 )
 
 @Serializable
