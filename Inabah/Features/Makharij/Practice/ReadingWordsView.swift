@@ -138,41 +138,38 @@ private struct WordsContent: View {
     }
 
     private func pager(counts: [Int]) -> some View {
-        ScrollViewReader { proxy in
-            ScrollView(.horizontal) {
-                LazyHStack(alignment: .top, spacing: 0) {
-                    ForEach(Array(pages.enumerated()), id: \.offset) { number, rows in
-                        ParchmentPanel(bottomCornerRadius: Radius.card) {
-                            WordGrid(
-                                rows: rows,
-                                words: words,
-                                counts: counts,
-                                showsTransliteration: (number == 0 && !settings.transliterationHidden) || hintPage == number,
-                                zoomedIndex: zoom?.index,
-                                colors: colors,
-                                coordinateSpace: Self.space,
-                                onRead: read,
-                                onZoom: { index, frame in
-                                    settings.markZoomLearned()
-                                    zoom = WordZoom(index: index, page: number, source: frame)
-                                }
-                            )
-                        }
-                        .padding(.horizontal, Spacing.xl)
-                        .containerRelativeFrame(.horizontal)
-                        .id(number)
+        ScrollView(.horizontal) {
+            LazyHStack(alignment: .top, spacing: 0) {
+                ForEach(Array(pages.enumerated()), id: \.offset) { number, rows in
+                    ParchmentPanel(bottomCornerRadius: Radius.card) {
+                        WordGrid(
+                            rows: rows,
+                            words: words,
+                            counts: counts,
+                            showsTransliteration: (number == 0 && !settings.transliterationHidden) || hintPage == number,
+                            zoomedIndex: zoom?.index,
+                            colors: colors,
+                            coordinateSpace: Self.space,
+                            onRead: read,
+                            onZoom: { index, frame in
+                                settings.markZoomLearned()
+                                zoom = WordZoom(index: index, page: number, source: frame)
+                            }
+                        )
                     }
+                    .padding(.horizontal, Spacing.xl)
+                    .containerRelativeFrame(.horizontal)
+                    .id(number)
                 }
-                .scrollTargetLayout()
             }
-            .scrollTargetBehavior(.paging)
-            .scrollPosition(id: $page)
-            .scrollIndicators(.hidden)
-            .onChange(of: page) { _, number in
-                // Кнопки «Назад» / «Дальше» листают с анимацией.
-                if let number { withAnimation(Motion.collapse) { proxy.scrollTo(number) } }
-            }
+            .scrollTargetLayout()
         }
+        .scrollTargetBehavior(.paging)
+        // Кнопки «Назад» / «Дальше» листают этой же привязкой (с анимацией). Не `onChange(of: page)` +
+        // `scrollTo`: номер меняется уже при отпускании пальца, и `scrollTo` обрывал доводку свайпа своей
+        // анимацией - короткий свайп перескакивал рывком.
+        .scrollPosition(id: $page)
+        .scrollIndicators(.hidden)
     }
 
     @ViewBuilder
@@ -521,13 +518,13 @@ private struct GroupNavigation: View {
         if count > 1 {
             HStack(spacing: Spacing.s) {
                 if current > 0 {
-                    Button("makharij.words.previous") { page = current - 1 }
+                    Button("makharij.words.previous") { withAnimation(Motion.collapse) { page = current - 1 } }
                         .buttonStyle(ReadingButtonStyle(colors: colors, isProminent: false))
                 } else {
                     Color.clear.frame(maxWidth: .infinity, minHeight: Size.primaryButtonHeight)
                 }
                 if current < count - 1 {
-                    Button("makharij.words.next") { page = current + 1 }
+                    Button("makharij.words.next") { withAnimation(Motion.collapse) { page = current + 1 } }
                         .buttonStyle(ReadingButtonStyle(colors: colors))
                 } else {
                     Color.clear.frame(maxWidth: .infinity, minHeight: Size.primaryButtonHeight)
