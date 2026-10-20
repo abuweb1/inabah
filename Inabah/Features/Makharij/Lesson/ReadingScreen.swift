@@ -8,6 +8,8 @@ struct ReadingScreen<Content: View, Actions: View>: View {
     let title: (ReadingCourse?) -> Text
     var subtitle: (ReadingCourse?) -> Text? = { _ in nil }
     var showsTransliterationToggle = true
+    /// «Живые» ячейки экрана (волна, подсказка); `nil` - экран без них (проверка).
+    var intro: ReadingScreenIntro? = nil
     @ViewBuilder var actions: Actions
     @ViewBuilder var content: (ReadingCourse, ReadingColors, LetterSheetOpener) -> Content
 
@@ -39,6 +41,7 @@ struct ReadingScreen<Content: View, Actions: View>: View {
             case .loaded(let course):
                 content(course, colors, LetterSheetOpener { sheetLetter = $0.number })
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .tapIntroHost(intro, tint: colors.tint, cellOpened: sheetLetter != nil)
                     // Под открытым листом содержимое для VoiceOver скрыто.
                     .accessibilityHidden(sheetLetter != nil)
                 // Лист - соседним слоем, не наложением на прокрутку: `ScrollView` заходит под панель
@@ -99,6 +102,19 @@ struct ReadingScreen<Content: View, Actions: View>: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
         .animation(Motion.collapse, value: sheetLetter)
     }
+}
+
+/// Ключ надписи-подсказки экрана (`reading.intro.<key>`) и есть ли на нём увеличиваемые плитки.
+struct ReadingScreenIntro: Equatable {
+    let key: String
+    var zoomable = false
+
+    static func lesson(_ step: Int) -> Self { Self(key: "lesson.\(step)") }
+    static func alphabet(_ step: Int) -> Self { Self(key: "alphabet.\(step)") }
+    static func extra(_ step: Int, topic: Int?) -> Self { Self(key: "extra.\(step).\(topic.map(String.init) ?? "extra")") }
+    static let words = Self(key: "words", zoomable: true)
+    static let letterCard = Self(key: "letterCard", zoomable: true)
+    static let zikr = Self(key: "zikr")
 }
 
 /// Открыть лист буквы - передаётся блокам урока (не через окружение: замыкание в окружении не хранится).

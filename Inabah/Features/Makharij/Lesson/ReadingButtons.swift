@@ -50,12 +50,19 @@ struct ReadingTile: ViewModifier {
     }
 }
 
-/// Ячейка на пергаменте: слог, форма, слово-пример, формула.
+/// Ячейка на пергаменте: слог, форма, слово-пример, формула. `isHighlighted` - звучит её запись.
 struct ParchmentCell: ViewModifier {
     let colors: ReadingColors
+    var isHighlighted = false
 
     func body(content: Content) -> some View {
-        content.surface(colors.parchmentCell, cornerRadius: Radius.box, border: colors.parchmentCellBorder)
+        content
+            .surface(
+                isHighlighted ? colors.highlight : colors.parchmentCell,
+                cornerRadius: Radius.box,
+                border: isHighlighted ? colors.highlightBorder : colors.parchmentCellBorder
+            )
+            .animation(Motion.highlight, value: isHighlighted)
     }
 }
 
@@ -64,8 +71,8 @@ extension View {
         modifier(ReadingTile(colors: colors, cornerRadius: cornerRadius, lineWidth: lineWidth, isHighlighted: isHighlighted))
     }
 
-    func parchmentCell(_ colors: ReadingColors) -> some View {
-        modifier(ParchmentCell(colors: colors))
+    func parchmentCell(_ colors: ReadingColors, isHighlighted: Bool = false) -> some View {
+        modifier(ParchmentCell(colors: colors, isHighlighted: isHighlighted))
     }
 }
 

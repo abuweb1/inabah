@@ -14,6 +14,8 @@ final class ReadingSettings {
         static let hadithArabicCollapsed = "reading.hadithArabicCollapsed"
         static let transliterationHidden = "reading.transliterationHidden"
         static let allStepsOpen = "reading.allStepsOpen"
+        static let introPrefix = "reading.intro."
+        static let zoomLearned = "reading.zoomLearned"
     }
 
     @ObservationIgnored private let defaults: UserDefaults
@@ -38,6 +40,11 @@ final class ReadingSettings {
         didSet { defaults.set(allStepsOpen, forKey: Key.allStepsOpen) }
     }
 
+    /// «Учимся читать»: слово уже увеличивали долгим нажатием - плитки больше не «зовут» в тишине.
+    private(set) var zoomLearned: Bool {
+        didSet { defaults.set(zoomLearned, forKey: Key.zoomLearned) }
+    }
+
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
         let stored = defaults.object(forKey: Key.arabicFontSize) as? Double
@@ -45,6 +52,32 @@ final class ReadingSettings {
         hadithArabicCollapsed = defaults.bool(forKey: Key.hadithArabicCollapsed)
         transliterationHidden = defaults.bool(forKey: Key.transliterationHidden)
         allStepsOpen = defaults.bool(forKey: Key.allStepsOpen)
+        zoomLearned = defaults.bool(forKey: Key.zoomLearned)
+    }
+
+    /// Надпись-подсказку экрана курса (`lesson.N`, `words`…) уже показывали. Читается один раз при входе -
+    /// не наблюдается.
+    func introSeen(_ key: String) -> Bool {
+        defaults.bool(forKey: Key.introPrefix + key)
+    }
+
+    func markIntroSeen(_ key: String) {
+        guard !introSeen(key) else { return }
+        defaults.set(true, forKey: Key.introPrefix + key)
+    }
+
+    func markZoomLearned() {
+        guard !zoomLearned else { return }
+        zoomLearned = true
+    }
+
+    /// «Показать подсказки снова»: все `reading.intro.…` и `reading.zoomLearned`. Прогресс не трогает.
+    func resetIntros() {
+        defaults.dictionaryRepresentation().keys
+            .filter { $0.hasPrefix(Key.introPrefix) }
+            .forEach(defaults.removeObject)
+        if zoomLearned { zoomLearned = false }
+        defaults.removeObject(forKey: Key.zoomLearned)
     }
 
     func setHadithArabicCollapsed(_ value: Bool) {

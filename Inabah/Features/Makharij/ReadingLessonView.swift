@@ -19,6 +19,7 @@ struct ReadingLessonView: View {
             subtitle: { course in
                 course?.step(stepNumber).flatMap { $0.subtitle.isEmpty ? nil : Text(verbatim: $0.subtitle) }
             },
+            intro: .lesson(stepNumber),
             actions: {
                 if let letters = store.course.value?.step(stepNumber)?.alphabetLetters {
                     ReadingHeaderButton(

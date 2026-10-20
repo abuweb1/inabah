@@ -16,6 +16,7 @@ struct ReadingAlphabetView: View {
                 let hasSyllables = course?.step(stepNumber)?.blocks.contains { if case .syllables = $0 { true } else { false } } ?? true
                 return Text(hasSyllables ? "makharij.alphabet.table.subtitle" : "makharij.alphabet.formulas.subtitle")
             },
+            intro: .alphabet(stepNumber),
             actions: { EmptyView() },
             content: { course, colors, openSheet in
                 ScrollView {
@@ -55,6 +56,7 @@ struct ReadingExtraView: View {
             title: { course in Text(verbatim: course?.step(stepNumber)?.extra(topic: topic)?.title ?? "") },
             subtitle: { course in course?.step(stepNumber).map { Text($0.displayTitle) } },
             showsTransliterationToggle: false,
+            intro: .extra(stepNumber, topic: topic),
             actions: { EmptyView() },
             content: { course, colors, openSheet in
                 ScrollView {

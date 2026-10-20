@@ -18,6 +18,7 @@ struct ReadingZikrView: View {
             subtitle: { course in
                 zikr(in: course).map { Text("makharij.zikr.source \(String(localized: $0.zikr.section.title)) \($0.zikr.number)") }
             },
+            intro: .zikr,
             actions: { EmptyView() },
             content: { course, colors, _ in
                 if let step = course.step(stepNumber), let zikr = zikr(in: course) {

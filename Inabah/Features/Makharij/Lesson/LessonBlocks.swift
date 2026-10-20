@@ -250,6 +250,7 @@ struct LessonLettersGrid: View {
                 .contentShape(.rect(cornerRadius: Radius.box))
         }
         .buttonStyle(PressScaleButtonStyle(pressedScale: PressFeedback.iconScale))
+        .liveCell(hint: "makharij.hint.letter", tint: colors.tint)
         .scaleEffect(isPlaying ? Layout.playingScale : 1)
         .overlay(alignment: .top) {
             if isPlaying {
@@ -327,6 +328,7 @@ struct SyllableCell: View {
             .contentShape(.rect(cornerRadius: Radius.box))
         }
         .buttonStyle(PressScaleButtonStyle(pressedScale: PressFeedback.iconScale))
+        .liveCell(hint: "makharij.hint.syllable", tint: colors.tint)
         .accessibilityLabel(Text(verbatim: "\(letter.name), \(transliteration)"))
     }
 }
@@ -490,13 +492,16 @@ private struct ClosedSyllableCell: View {
                     clips.play(audio)
                 } label: {
                     content
+                        .parchmentCell(colors, isHighlighted: clips.playing == audio)
                         .overlay(alignment: .topLeading) { ExampleWordSpeaker(colors: colors) }
                         .contentShape(.rect(cornerRadius: Radius.box))
                 }
                 .buttonStyle(PressScaleButtonStyle(pressedScale: PressFeedback.iconScale))
+                .liveCell(hint: "makharij.hint.listen", tint: colors.tint)
                 .sensoryFeedback(.selection, trigger: playCount)
             } else {
                 content
+                    .parchmentCell(colors)
                     .accessibilityElement(children: .ignore)
             }
         }
@@ -518,7 +523,6 @@ private struct ClosedSyllableCell: View {
         }
         .padding(.vertical, Spacing.xs)
         .frame(maxWidth: .infinity)
-        .parchmentCell(colors)
     }
 }
 
@@ -659,6 +663,7 @@ struct LessonFormsTable: View {
                 .contentShape(.rect(cornerRadius: Radius.box))
         }
         .buttonStyle(PressScaleButtonStyle(pressedScale: PressFeedback.iconScale))
+        .liveCell(hint: "makharij.hint.letter", tint: colors.tint)
         .accessibilityLabel(Text(verbatim: "\(letter.name), \(String(localized: form.place))"))
     }
 
@@ -674,6 +679,7 @@ struct LessonFormsTable: View {
                     .contentShape(.rect(cornerRadius: Radius.box))
             }
             .buttonStyle(PressScaleButtonStyle(pressedScale: PressFeedback.iconScale))
+            .liveCell(hint: "makharij.hint.letter", tint: colors.tint)
             .accessibilityLabel(Text(verbatim: letter.name))
             ForEach(LetterForm.placed, id: \.self) { form in
                 if let word = examples.word(form) {
@@ -692,13 +698,14 @@ struct LessonFormsTable: View {
                             .padding(.top, Spacing.xs)
                             .padding(.bottom, Spacing.xxs)
                             .frame(maxWidth: .infinity, maxHeight: .infinity)
-                            .parchmentCell(colors)
+                            .parchmentCell(colors, isHighlighted: audio != nil && clips.playing == audio)
                             .overlay(alignment: .topLeading) {
                                 if audio != nil { ExampleWordSpeaker(colors: colors) }
                             }
                             .contentShape(.rect(cornerRadius: Radius.box))
                     }
                     .buttonStyle(PressScaleButtonStyle(pressedScale: PressFeedback.iconScale))
+                    .liveCell(hint: audio != nil ? "makharij.hint.listen" : "makharij.hint.openLetter", tint: colors.tint)
                     .accessibilityLabel(Text(verbatim: word))
                     .modifier(ListenAction(isEnabled: audio != nil) { if let audio { clips.play(audio) } })
                 }

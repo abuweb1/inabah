@@ -1998,6 +1998,72 @@
         }
       }
     },
+    "makharij.hint.letter" : {
+      "comment" : "Учимся читать: надпись-подсказка над буквой при первом открытии экрана",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Нажмите на букву"
+          }
+        }
+      }
+    },
+    "makharij.hint.listen" : {
+      "comment" : "Учимся читать: надпись-подсказка над ячейкой с записью",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Нажмите, чтобы послушать"
+          }
+        }
+      }
+    },
+    "makharij.hint.openLetter" : {
+      "comment" : "Учимся читать: надпись-подсказка над словом-примером без записи",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Нажмите - откроется буква"
+          }
+        }
+      }
+    },
+    "makharij.hint.syllable" : {
+      "comment" : "Учимся читать: надпись-подсказка над слогом",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Нажмите на слог"
+          }
+        }
+      }
+    },
+    "makharij.hint.zikrWord" : {
+      "comment" : "Учимся читать: надпись-подсказка над словом зикра итога",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Нажмите на слово, когда прочитаете"
+          }
+        }
+      }
+    },
+    "makharij.hint.zoom" : {
+      "comment" : "Учимся читать: надпись-подсказка над увеличиваемой плиткой слова",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Удерживайте, чтобы увеличить"
+          }
+        }
+      }
+    },
     "makharij.home.brand.tagline" : {
       "comment" : "Главная «Махрадж»: подзаголовок под арабским названием",
       "localizations" : {
@@ -3633,6 +3699,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Без замков: начать можно с любого шага. Пройденные отмечаются как обычно"
+          }
+        }
+      }
+    },
+    "settings.makharij.hintsReset" : {
+      "comment" : "Настройки «Махраджа»: снова показать надписи-подсказки",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показать подсказки снова"
+          }
+        }
+      }
+    },
+    "settings.makharij.hintsReset.subtitle" : {
+      "comment" : "Настройки «Махраджа»: подпись под «Показать подсказки снова»",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Надписи-подсказки при первом открытии уроков и «Читаем слова»"
           }
         }
       }
