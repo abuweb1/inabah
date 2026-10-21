@@ -47,6 +47,8 @@ fun ReadingAlphabetScreen(
     modifier: Modifier = Modifier,
     /** Записи листа буквы и «Послушать алфавит» (`ClipPlayer`). */
     clips: ClipPlayback = ClipPlayback.None,
+    /** Руководство по произношению буквы - из её листа. */
+    onOpenGuide: (String) -> Unit = {},
 ) {
     val hidden by settings.transliterationHidden.collectAsStateWithLifecycle()
     var sheetLetter by rememberSaveable { mutableStateOf<Int?>(null) }
@@ -125,6 +127,7 @@ fun ReadingAlphabetScreen(
                 onDismiss = { sheetLetter = null },
                 contentPadding = contentPadding,
                 clips = clips,
+                onOpenGuide = onOpenGuide,
             )
         }
     }

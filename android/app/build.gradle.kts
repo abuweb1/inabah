@@ -155,6 +155,11 @@ abstract class CopySharedContentTask : DefaultTask() {
     @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val audioFiles: ConfigurableFileCollection
 
+    // Рисунки «Учимся читать» (руководства, 2026-10-21) → assets/images/reading/ (как в репозитории).
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val imageFiles: ConfigurableFileCollection
+
     @get:OutputDirectory
     abstract val outputDir: DirectoryProperty
 
@@ -172,6 +177,7 @@ abstract class CopySharedContentTask : DefaultTask() {
                 eachFile { path = "audio/$name" }
                 duplicatesStrategy = DuplicatesStrategy.FAIL
             }
+            from(imageFiles) { into("images/reading") }
             includeEmptyDirs = false
         }
     }
@@ -205,6 +211,7 @@ val copySharedContent = tasks.register<CopySharedContentTask>("copySharedContent
     dataFiles.from(repositoryRoot.dir("data").asFileTree.matching { include("*.json") })
     licenseFiles.from(repositoryRoot.file("Inabah/Resources/Fonts/ScheherazadeNew-OFL.txt"))
     audioFiles.from(repositoryRoot.dir("audio").asFileTree.matching { include("*/*.m4a") })
+    imageFiles.from(repositoryRoot.dir("images/reading").asFileTree.matching { include("*.webp") })
 }
 
 val copyTestTones = tasks.register<CopyTestTonesTask>("copyTestTones") {

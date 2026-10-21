@@ -45,6 +45,7 @@ import app.inabah.android.core.content.Loadable
 import app.inabah.android.core.content.model.FormExamples
 import app.inabah.android.core.content.model.LetterForm
 import app.inabah.android.core.content.model.ReadingBlock
+import app.inabah.android.core.content.model.ReadingGuide
 import app.inabah.android.core.content.model.ReadingLetter
 import app.inabah.android.core.designsystem.InabahTheme
 import app.inabah.android.core.designsystem.InabahType
@@ -81,6 +82,8 @@ fun ReadingLetterFormsScreen(
     clips: Set<String> = emptySet(),
     playingClip: String? = null,
     onPlayClip: (String) -> Unit = {},
+    /** Руководство по произношению буквы (ث ذ ظ ض, 2026-10-21) - кнопкой под её формами. */
+    onOpenGuide: (String) -> Unit = {},
 ) {
     val course = (store.course.collectAsStateWithLifecycle().value as? Loadable.Loaded)?.value
     val forms = course?.step(stepNumber)?.blocks?.filterIsInstance<ReadingBlock.Forms>()?.firstOrNull()
@@ -145,6 +148,8 @@ fun ReadingLetterFormsScreen(
                                 },
                                 playingClip = playingClip,
                                 contentPadding = contentPadding,
+                                guide = course?.guideFor(letters[page]),
+                                onOpenGuide = onOpenGuide,
                             )
                         }
                     }
@@ -239,6 +244,8 @@ private fun LetterFormsPage(
     onZoom: (LetterForm, Rect) -> Unit,
     contentPadding: PaddingValues,
     playingClip: String? = null,
+    guide: ReadingGuide? = null,
+    onOpenGuide: (String) -> Unit = {},
 ) {
     val palette = InabahTheme.palette
     val colors = readingColors
@@ -289,6 +296,7 @@ private fun LetterFormsPage(
                 }
             }
         }
+        guide?.let { ReadingOutlineButton(it.title, onClick = { onOpenGuide(it.id) }) }
     }
 }
 

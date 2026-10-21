@@ -67,6 +67,10 @@ sealed interface MakharijRoute {
     /** «Читаем слова» шага. */
     @Serializable
     data class Words(val step: Int) : MakharijRoute
+
+    /** Руководство по произношению ([id] - `guides` в reading.json) - с урока, из листа и карточки буквы. */
+    @Serializable
+    data class Guide(val id: String) : MakharijRoute
 }
 
 @Serializable

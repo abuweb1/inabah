@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.background
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
@@ -36,6 +37,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.AbsoluteAlignment
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -72,6 +74,7 @@ import app.inabah.android.core.content.model.LetterForm
 import app.inabah.android.core.content.model.ReadingBlock
 import app.inabah.android.core.content.model.ReadingClosedSyllable
 import app.inabah.android.core.content.model.ReadingFormula
+import app.inabah.android.core.content.model.ReadingGuide
 import app.inabah.android.core.content.model.ReadingLetter
 import app.inabah.android.core.content.model.ReadingMark
 import app.inabah.android.core.content.model.ReadingStep
@@ -124,6 +127,8 @@ fun ReadingLessonScreen(
     onOpenZikr: (Int) -> Unit = {},
     /** Записи (`ClipPlayer`): слова-примеры форм, лист буквы, «Послушать алфавит». */
     clips: ClipPlayback = ClipPlayback.None,
+    /** Руководство по произношению ([ReadingGuide]) - кнопкой урока и из листа буквы. */
+    onOpenGuide: (String) -> Unit = {},
 ) {
     val hidden by settings.transliterationHidden.collectAsStateWithLifecycle()
     val zikrs by progress.zikrs.collectAsStateWithLifecycle()
@@ -185,6 +190,8 @@ fun ReadingLessonScreen(
                         onOpenAlphabet = onOpenAlphabet,
                         onOpenLetterForms = onOpenLetterForms,
                         onOpenExtra = onOpenExtra,
+                        guides = loaded.guides,
+                        onOpenGuide = onOpenGuide,
                         zikrs = zikrs,
                         onOpenZikr = onOpenZikr,
                         clips = available,
@@ -211,6 +218,7 @@ fun ReadingLessonScreen(
                 onDismiss = { sheetLetter = null },
                 contentPadding = contentPadding,
                 clips = clips,
+                onOpenGuide = onOpenGuide,
             )
         }
     }
@@ -229,6 +237,9 @@ private fun LessonContent(
     onOpenAlphabet: () -> Unit,
     onOpenLetterForms: (String) -> Unit,
     onOpenExtra: (Int?) -> Unit,
+    /** Руководства курса: их буквы на уроке помечены, у урока с ними - кнопки. */
+    guides: List<ReadingGuide>,
+    onOpenGuide: (String) -> Unit,
     zikrs: Map<ZikrId, ZikrProgress>,
     onOpenZikr: (Int) -> Unit,
     clips: Set<String>,
@@ -238,6 +249,18 @@ private fun LessonContent(
     onFinish: () -> Unit,
     contentPadding: PaddingValues,
 ) {
+    val marked = remember(guides) { guides.flatMapTo(mutableSetOf()) { it.letters } }
+    // Руководства, буквы которых есть в сетке или таблице форм урока (шаг «Буквы», шаги форм).
+    val stepGuides = remember(step, guides) {
+        val shown = step.blocks.flatMapTo(mutableSetOf()) { block ->
+            when (block) {
+                is ReadingBlock.Letters -> block.letters
+                is ReadingBlock.Forms -> block.letters
+                else -> emptyList()
+            }
+        }
+        guides.filter { guide -> guide.letters.any { it in shown } }
+    }
     Box(Modifier.fillMaxSize()) {
         Column(
             Modifier
@@ -252,9 +275,12 @@ private fun LessonContent(
                 when (block) {
                     is ReadingBlock.Text -> TextBlock(block.text, block.info)
                 // Нажатие на букву таблицы - экран буквы (вариант B), не лист: новичку нужна вся картина.
-                is ReadingBlock.Forms -> FormsTable(block, step.number, clips, playingClip, onPlayClip) { onOpenLetterForms(it.letter) }
+                is ReadingBlock.Forms -> FormsTable(block, step.number, clips, playingClip, onPlayClip, marked) { onOpenLetterForms(it.letter) }
                     is ReadingBlock.Marks -> MarksBlock(block.marks, block.example)
-                    is ReadingBlock.Letters -> LettersGrid(block.letters, onLetter, playing = playing, available = clips)
+                    is ReadingBlock.Letters -> {
+                        LettersGrid(block.letters, onLetter, playing = playing, available = clips, marked = marked)
+                        if (block.letters.any { it in marked }) GuideMarkCaption()
+                    }
                     is ReadingBlock.Syllables -> if (block.sample != null) {
                         SampleSyllables(block, block.sample, hidden, onLetter, onOpenAlphabet)
                     } else {
@@ -272,10 +298,14 @@ private fun LessonContent(
                     } else {
                         ClosedSyllablesTable(block, hidden, onLetter = onLetter)
                     }
+                    // Рисунки - только в руководстве (ReadingGuideScreen).
+                    is ReadingBlock.Image -> Unit
                 }
             }
             // Справка (солнечные и лунные буквы) - для желающих, отдельным экраном (решение пользователя 2026-10-16).
             step.extra?.let { ReadingOutlineButton(it.title, onClick = { onOpenExtra(null) }) }
+            // Особое произношение (ث ذ ظ ض, решение пользователя 2026-10-21) - перед «Проверить себя».
+            for (guide in stepGuides) ReadingOutlineButton(guide.title, onClick = { onOpenGuide(guide.id) })
             // Итог с зикрами - без «Готово»: пройден, когда прочитаны все зикры (экран зикра отмечает сам).
             if (step.zikrs.isEmpty()) {
                 Spacer(Modifier.height(Spacing.s))
@@ -449,6 +479,8 @@ private fun FormsTable(
     clips: Set<String>,
     playingClip: String?,
     onPlayClip: (String) -> Unit,
+    /** Буквы с руководством по произношению - точка у отдельной формы. */
+    marked: Set<ReadingLetter>,
     onLetter: (ReadingLetter) -> Unit,
 ) {
     val groups = block.groups
@@ -482,6 +514,8 @@ private fun FormsTable(
                                     val interaction = remember { MutableInteractionSource() }
                                     val cellId = rememberTapCellId()
                                     val place = stringResource(form.place)
+                                    val isMarked = form == LetterForm.Isolated && letter in marked
+                                    val special = if (isMarked) ", ${stringResource(R.string.makharij_guide_marked_description)}" else ""
                                     Box(
                                         Modifier
                                             .weight(1f)
@@ -490,10 +524,11 @@ private fun FormsTable(
                                             .pressFeedback(interaction, scale = PressFeedback.ICON_SCALE)
                                             .surface(colors.parchmentCell, Radius.box, border = colors.parchmentCellBorder)
                                             .padding(top = Spacing.xs)
-                                            .clearAndSetSemantics { contentDescription = "${letter.name}, $place" },
+                                            .clearAndSetSemantics { contentDescription = "${letter.name}, $place$special" },
                                         contentAlignment = Alignment.Center,
                                     ) {
                                         ArabicText(letter.form(form), FORM_SIZE, palette.parchmentText, bold = true, maxLines = 1)
+                                        if (isMarked) GuideMark(palette.parchmentMark, Modifier.align(AbsoluteAlignment.TopRight))
                                     }
                                 }
                             }
@@ -640,12 +675,15 @@ private fun LettersGrid(
     playing: ReadingLetter? = null,
     /** Записи в сборке: у буквы с записью - 🔈 в углу плитки (набросок 1A). */
     available: Set<String> = emptySet(),
+    /** Буквы с руководством по произношению - точка в правом верхнем углу (🔈 - в левом нижнем). */
+    marked: Set<ReadingLetter> = emptySet(),
 ) {
     val palette = InabahTheme.palette
     val colors = readingColors
     val tileHeight = with(LocalDensity.current) { LETTER_TILE_HEIGHT.sp.toDp() }
     val intro = LocalTapIntro.current
     val hint = stringResource(R.string.makharij_hint_letter)
+    val special = stringResource(R.string.makharij_guide_marked_description)
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
         Column(verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
             for (row in letters.chunked(columns)) {
@@ -679,10 +717,11 @@ private fun LettersGrid(
                                         border = if (letter == playing) colors.highlightBorder else colors.tileBorder,
                                         lineWidth = ReadingTileBorder,
                                     )
-                                    .clearAndSetSemantics { contentDescription = letter.name },
+                                    .clearAndSetSemantics { contentDescription = if (letter in marked) "${letter.name}, $special" else letter.name },
                                 contentAlignment = Alignment.Center,
                             ) {
                                 ArabicText(letter.letter, LETTER_SIZE, palette.onAccent, maxLines = 1)
+                                if (letter in marked) GuideMark(colors.tint, Modifier.align(AbsoluteAlignment.TopRight))
                                 if (letter.audio.values.any { it in available }) {
                                     Icon(
                                         painterResource(R.drawable.ic_volume_up),
@@ -705,6 +744,29 @@ private fun LettersGrid(
                 }
             }
         }
+    }
+}
+
+/** Точка буквы с руководством по произношению - в углу плитки. */
+@Composable
+private fun GuideMark(color: Color, modifier: Modifier = Modifier) = Box(
+    modifier
+        .padding(Spacing.xs)
+        .size(Size.statusDot)
+        .background(color, CircleShape),
+)
+
+/** Под сеткой: что значит точка (кнопка руководства - ниже, перед «Проверить себя»). */
+@Composable
+private fun GuideMarkCaption() {
+    val colors = readingColors
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
+        Box(Modifier.size(Size.statusDot).background(colors.tint, CircleShape))
+        Text(
+            stringResource(R.string.makharij_guide_marked),
+            color = InabahTheme.palette.onAccentSecondary,
+            style = InabahType.footnote,
+        )
     }
 }
 

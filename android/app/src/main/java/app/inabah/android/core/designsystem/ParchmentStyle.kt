@@ -17,6 +17,8 @@ enum class ParchmentStyle(val key: String, val colors: ParchmentColors) {
             light = Color(0xFFF5D07A), highlight = Color(0xFFECC87B), mid = Color(0xFFF3D080),
             deep = Color(0xFFE8C068), text = Color(0xFF1A1208),
             mark = Color(0xFF961F14),
+            // Кремовый фон самих рисунков руководств (решение пользователя 2026-10-21: на «Классике» - как в рисунке).
+            illustration = Color(0xFFFBEED1),
         ),
     ),
     /** Тёплая старая бумага — к «Янтарной» палитре. */
@@ -114,6 +116,8 @@ data class ParchmentColors(
      * на светлых тёмно-красный, на тёмных тёплый оранжевый, на янтарном голубой; контраст к фону ≥ 4,5:1.
      */
     val mark: Color = DEFAULT_MARK,
+    /** Фон под рисунком руководства («Учимся читать», 2026-10-21): рисунок вырезан без фона; по умолчанию - [light]. */
+    val illustration: Color = light,
 ) {
     /** Все оттенки фона — для проверки контраста текста. */
     val backgrounds: List<Color> get() = listOf(light, highlight, mid, deep)
@@ -135,6 +139,7 @@ fun Theme.withParchment(style: ParchmentStyle): Theme {
         parchmentText = colors.text,
         parchmentAccent = colors.accent,
         parchmentMark = colors.mark,
+        parchmentIllustration = colors.illustration,
     )
     return Theme(parchmentPalette, gradients.copy(parchment = ThemeGradients.parchment(parchmentPalette)))
 }

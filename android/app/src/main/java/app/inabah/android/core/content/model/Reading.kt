@@ -8,8 +8,14 @@ data class ReadingCourse(
     val marks: List<ReadingMark>,
     val letters: List<ReadingLetter>,
     val steps: List<ReadingStep>,
+    val guides: List<ReadingGuide> = emptyList(),
 ) {
     fun step(number: Int): ReadingStep? = steps.firstOrNull { it.number == number }
+
+    fun guide(id: String): ReadingGuide? = guides.firstOrNull { it.id == id }
+
+    /** Руководство по произношению буквы; у обычной буквы - `null`. */
+    fun guideFor(letter: ReadingLetter): ReadingGuide? = guides.firstOrNull { letter in it.letters }
 
     /** Знаки, пройденные к шагу [stepNumber] включительно, в порядке [marks]. */
     fun learnedMarks(stepNumber: Int): List<ReadingMark> {
@@ -215,6 +221,15 @@ data class ReadingStep(
 data class ReadingExtra(val title: String, val blocks: List<ReadingBlock>)
 
 /**
+ * Руководство по произношению (решение пользователя 2026-10-21, «Межзубные буквы и дод»): свой экран с текстом
+ * и рисунками; открывается с шага «Буквы», из листа и карточки буквы. [letters] на сетке и в таблицах форм помечены.
+ */
+data class ReadingGuide(val id: String, val title: String, val letters: List<ReadingLetter>, val blocks: List<ReadingBlock>)
+
+/** Строка легенды под рисунком: [color] - ARGB метки на самом рисунке (не цвет темы). */
+data class ReadingLegendItem(val color: Long, val text: String)
+
+/**
  * «Читаем слова» (решение пользователя 2026-10-15): каждое слово прочитать [repeat] раз. Страницы строит
  * экран (`wordPages`, 2026-10-16): [groupSize] - слов на странице из коротких слов (15 = 5 рядов по 3).
  * Транскрипция - у всех слов, на экране - только на первой странице (дальше - подсказкой).
@@ -281,8 +296,19 @@ fun closedSyllables(letter: ReadingLetter, alif: ReadingLetter, vowels: List<Rea
 
 /** Блок урока; неизвестные типы данных сюда не попадают. */
 sealed interface ReadingBlock {
-    /** Короткий текст; [info] - полный, во всплывающем окне по ⓘ. */
-    data class Text(val text: String, val info: String? = null) : ReadingBlock
+    /** Короткий текст; [info] - полный, во всплывающем окне по ⓘ; [title] - заголовок над текстом (руководство). */
+    data class Text(val text: String, val info: String? = null, val title: String? = null) : ReadingBlock
+
+    /**
+     * Рисунок руководства (2026-10-21): [image] - имя файла в `images/reading/` без расширения, вырезан без фона -
+     * лежит на пергаменте темы; [title] и [text] - подпись, [legend] - что значат метки рисунка.
+     */
+    data class Image(
+        val image: String,
+        val title: String?,
+        val text: String?,
+        val legend: List<ReadingLegendItem> = emptyList(),
+    ) : ReadingBlock
 
     /**
      * Таблица форм: карточки по группам похожего написания, ряд - буква, столбцы - 4 формы; [examples] -

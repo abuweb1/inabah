@@ -81,6 +81,26 @@ data class ReadingFileDto(
     val marks: List<ReadingMarkDto>,
     val letters: List<ReadingLetterDto>,
     val steps: List<ReadingStepDto>,
+    /** Руководства по произношению (2026-10-21): экран для букв [ReadingGuideDto.letters], открывается из разных мест курса. */
+    val guides: List<ReadingGuideDto> = emptyList(),
+)
+
+@Serializable
+data class ReadingGuideDto(
+    val id: String,
+    /** Буквы руководства: на сетке шага 1 и в таблицах форм помечены, в листе и карточке буквы - переход. */
+    val letters: List<String>,
+    /** `title` - название (кнопка, навбар). */
+    val translations: Map<String, ReadingTextTranslationDto>,
+    val blocks: List<ReadingBlockDto> = emptyList(),
+)
+
+/** `image`: строка легенды под рисунком - цвет метки на рисунке и что она значит. */
+@Serializable
+data class ReadingLegendDto(
+    /** `#RRGGBB` - цвет метки самого рисунка, не темы. */
+    val color: String,
+    val translations: Map<String, ReadingTextTranslationDto>,
 )
 
 @Serializable
@@ -218,6 +238,10 @@ data class ReadingBlockDto(
     /** `zikr`: слова по порядку и места слитного чтения (слова подряд, транскрипция и подпись). */
     val words: List<ReadingWordDto> = emptyList(),
     val joins: List<ReadingWordDto> = emptyList(),
+    /** `image`: имя рисунка в `images/reading/` без расширения. */
+    val image: String? = null,
+    /** `image`: легенда меток рисунка. */
+    val legend: List<ReadingLegendDto> = emptyList(),
     val translations: Map<String, ReadingTextTranslationDto> = emptyMap(),
 )
 
@@ -228,7 +252,7 @@ data class ReadingTextTranslationDto(
     val translit: String = "",
     /** `text`: полный текст во всплывающем окне по ⓘ. */
     val info: String = "",
-    /** `topic`: название (на карточке и в навбаре экрана темы); `text` - краткое описание. */
+    /** `topic`: название (на карточке и в навбаре экрана темы); `text` - краткое описание. `text`, `image`: заголовок блока. */
     val title: String = "",
     /** `forms`: буква → транскрипция её 3 слов-примеров (по порядку `examples`). */
     val examples: Map<String, List<String>> = emptyMap(),

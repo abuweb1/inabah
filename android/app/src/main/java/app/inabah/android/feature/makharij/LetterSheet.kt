@@ -98,6 +98,7 @@ import kotlinx.coroutines.launch
  * при открытии листа цепочка звучит сама, по очереди, звучащий элемент подсвечен, во время цепочки - ⏹;
  * любой элемент с записью - отдельно по нажатию. Закрыли лист, ушли с экрана или в фон - звук остановлен.
  * Записей нет - ни кнопки, ни нажатий: лист как без звука.
+ * У буквы с руководством по произношению (ث ذ ظ ض, 2026-10-21) внизу - кнопка с его названием.
  */
 @Composable
 fun BoxScope.LetterSheet(
@@ -108,6 +109,8 @@ fun BoxScope.LetterSheet(
     onDismiss: () -> Unit,
     contentPadding: PaddingValues,
     clips: ClipPlayback = ClipPlayback.None,
+    /** Открыть руководство по [id][app.inabah.android.core.content.model.ReadingGuide.id]; `null` - без кнопки. */
+    onOpenGuide: ((String) -> Unit)? = null,
 ) {
     // Пока лист уезжает, показывать последнюю букву, а не пустоту.
     var shown by remember { mutableStateOf(letter) }
@@ -130,7 +133,7 @@ fun BoxScope.LetterSheet(
         exit = slideOutVertically(Motion.collapse()) { it },
         modifier = Modifier.align(Alignment.BottomCenter),
     ) {
-        shown?.let { SheetPanel(course, it, stepNumber, transliterationHidden, letter != null, clips, onDismiss, contentPadding) }
+        shown?.let { SheetPanel(course, it, stepNumber, transliterationHidden, letter != null, clips, onDismiss, contentPadding, onOpenGuide) }
     }
 }
 
@@ -149,6 +152,7 @@ private fun SheetPanel(
     clips: ClipPlayback,
     onDismiss: () -> Unit,
     contentPadding: PaddingValues,
+    onOpenGuide: ((String) -> Unit)?,
 ) {
     val palette = InabahTheme.palette
     val colors = readingColors
@@ -280,6 +284,10 @@ private fun SheetPanel(
                     }
                 }
             }
+        }
+        val guide = onOpenGuide?.let { course.guideFor(letter) }
+        if (guide != null) {
+            ReadingOutlineButton(guide.title, onClick = { onOpenGuide(guide.id) }, modifier = Modifier.padding(top = Spacing.xl))
         }
     }
 }
