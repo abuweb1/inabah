@@ -14,6 +14,7 @@ import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertHasNoClickAction
 import androidx.compose.ui.test.hasClickAction
+import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.accessibility.enableAccessibilityChecks
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -378,6 +379,32 @@ class ReadingScreensTest {
         compose.onNodeWithContentDescription("Следующий слог").performClick()
         compose.onAllNodesWithContentDescription("Стоп")[0].performClick()
         compose.onNodeWithContentDescription("Послушать алфавит").assertExists()
+    }
+
+    @Test
+    fun hamzaTileOfStep6OpensLetterCard() {
+        val opened = mutableListOf<String>()
+        compose.setContent {
+            InabahTheme {
+                ReadingLessonScreen(6, store, ReadingProgress(dataStore.storage), ReadingSettings(dataStore.storage),
+                    onBack = {}, onOpenQuiz = {}, onOpenWords = {}, onOpenAlphabet = {}, onOpenLetterForms = { opened += it },
+                    contentPadding = PaddingValues())
+            }
+        }
+        waitForText("Шаг 6 · Формы букв и мадд")
+        compose.onNode(hasContentDescription("Хӏамза") and hasClickAction()).performScrollTo().performClick()
+        assertEquals(listOf("ء"), opened)
+    }
+
+    @Test
+    fun hamzaLetterCardShowsVariantsAndNote() {
+        compose.setContent {
+            InabahTheme {
+                ReadingLetterFormsScreen(6, "ء", store, ReadingSettings(dataStore.storage), onBack = {}, contentPadding = PaddingValues())
+            }
+        }
+        waitForText("буква 7 из 7")
+        waitForSubstring("Подставка не читается")
     }
 
     @Test

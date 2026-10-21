@@ -3,6 +3,7 @@ package app.inabah.android.core.content
 import app.inabah.android.core.content.model.LetterForm
 import app.inabah.android.core.content.model.ReadingBlock
 import app.inabah.android.core.content.model.ReadingCourse
+import app.inabah.android.core.content.model.ReadingLetterNote
 import app.inabah.android.core.content.model.ReadingMark
 import app.inabah.android.core.content.model.ReadingQuestion
 import java.io.ByteArrayInputStream
@@ -91,6 +92,21 @@ class ReadingContentTest {
 
         val future = repository(minimalJson(blocks = "[{\"type\":\"video\"},{\"type\":\"letters\"}]")).reading()
         assertEquals(listOf<ReadingBlock>(ReadingBlock.Letters(future.letters)), future.steps.single().blocks)
+    }
+
+    @Test
+    fun `Написания буквы вне групп и текст карточки - variants и notes, не 4 строки - DecodingFailed`() = runTest {
+        val forms = """[{"type":"forms","groups":[],"variants":{"ب":["ب"," بـ ","ـبـ","ـب"]},
+            "translations":{"ru":{"notes":{"ب":{"text":" Текст ","info":""}}}}}]"""
+        val course = repository(minimalJson(blocks = forms)).reading()
+        val block = course.steps.single().blocks.single() as ReadingBlock.Forms
+        val ba = course.letters.single()
+        assertEquals(listOf("ب", "بـ", "ـبـ", "ـب"), block.variants.getValue(ba))
+        assertEquals(listOf(ba), block.letters, "буква с написаниями - в листании карточки")
+        assertEquals(ReadingLetterNote("Текст", info = null), block.notes.getValue(ba))
+
+        val broken = repository(minimalJson(blocks = """[{"type":"forms","groups":[],"variants":{"ب":["ب","بـ"]}}]"""))
+        assertFailsWith<ContentError.DecodingFailed> { broken.reading() }
     }
 
     @Test

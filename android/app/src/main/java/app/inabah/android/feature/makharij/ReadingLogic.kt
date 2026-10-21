@@ -331,6 +331,7 @@ fun sampleClosedSyllables(items: List<ReadingClosedSyllable>, count: Int, seed: 
 /**
  * Где в слове подсветить букву [letter] формы [form]: диапазон символов буквы вместе с её знаками.
  * Начало - первая буква, конец - последняя, середина - первая такая буква не с краю. Нет - `null`.
+ * Буква на подставке засчитывается ([LETTER_SEATS]): алиф в أَنَا, хӏамза в سُئِلَ.
  */
 fun letterRange(word: String, letter: String, form: LetterForm): IntRange? {
     // Буквы слова: позиция и длина вместе со следующими за буквой знаками огласовки.
@@ -342,7 +343,8 @@ fun letterRange(word: String, letter: String, form: LetterForm): IntRange? {
         units += i until end
         i = end
     }
-    val matches = units.withIndex().filter { word.substring(it.value.first, it.value.first + 1) == letter }
+    val spellings = LETTER_SEATS[letter].orEmpty() + letter
+    val matches = units.withIndex().filter { word.substring(it.value.first, it.value.first + 1) in spellings }
     return when (form) {
         LetterForm.Initial -> matches.firstOrNull { it.index == 0 }
         LetterForm.Final -> matches.lastOrNull { it.index == units.lastIndex }
@@ -350,6 +352,12 @@ fun letterRange(word: String, letter: String, form: LetterForm): IntRange? {
         LetterForm.Isolated -> null
     }?.value
 }
+
+/**
+ * Написания буквы с хӏамзой (2026-10-21, как `LETTER_SEATS` в check-data): алиф несёт хӏамзу (أ إ), хӏамза стоит
+ * на алифе, вав и йа без точек (أ إ ؤ ئ).
+ */
+private val LETTER_SEATS = mapOf("ا" to setOf("أ", "إ"), "ء" to setOf("أ", "إ", "ؤ", "ئ"))
 
 /** Знаки огласовки (U+064B…U+0652) и кинжальный алиф. */
 private val HARAKAT = ('\u064B'..'\u0652').toSet() + '\u0670'

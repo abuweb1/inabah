@@ -46,6 +46,7 @@ import app.inabah.android.core.content.model.FormExamples
 import app.inabah.android.core.content.model.LetterForm
 import app.inabah.android.core.content.model.ReadingBlock
 import app.inabah.android.core.content.model.ReadingGuide
+import app.inabah.android.core.content.model.ReadingLetterNote
 import app.inabah.android.core.content.model.ReadingLetter
 import app.inabah.android.core.designsystem.InabahTheme
 import app.inabah.android.core.designsystem.InabahType
@@ -138,6 +139,8 @@ fun ReadingLetterFormsScreen(
                                 stepNumber = stepNumber,
                                 letter = letters[page],
                                 examples = forms.examples[letters[page]],
+                                variants = forms.variants[letters[page]],
+                                note = forms.notes[letters[page]],
                                 clips = clips,
                                 onPlayClip = onPlayClip,
                                 showTransliteration = peek,
@@ -236,6 +239,10 @@ private fun LetterFormsPage(
     stepNumber: Int,
     letter: ReadingLetter,
     examples: FormExamples?,
+    /** Написания буквы вне групп (хӏамза) - вместо ряда форм. */
+    variants: List<String>?,
+    /** Текст под пергаментом (хӏамза: подставка не читается). */
+    note: ReadingLetterNote?,
     clips: Set<String>,
     onPlayClip: (String) -> Unit,
     showTransliteration: Boolean,
@@ -265,8 +272,21 @@ private fun LetterFormsPage(
                     modifier = Modifier.fillMaxWidth().clearAndSetSemantics { contentDescription = letter.name },
                     textAlign = TextAlign.Center,
                 )
-                FormRow(placed) { form ->
-                    ArabicText(letter.form(form), FORM_LETTER, palette.parchmentText, bold = true, maxLines = 1)
+                if (variants != null) {
+                    LetterVariants(
+                        variants,
+                        VARIANT_LETTER,
+                        palette.parchmentText,
+                        Modifier
+                            .fillMaxWidth()
+                            .surface(colors.parchmentCell, Radius.box, border = colors.parchmentCellBorder)
+                            .padding(horizontal = Spacing.s)
+                            .padding(top = Spacing.xs),
+                    )
+                } else {
+                    FormRow(placed) { form ->
+                        ArabicText(letter.form(form), FORM_LETTER, palette.parchmentText, bold = true, maxLines = 1)
+                    }
                 }
                 if (examples != null) {
                     // Слова справа налево под своими формами; есть запись - нажатие проигрывает.
@@ -296,6 +316,7 @@ private fun LetterFormsPage(
                 }
             }
         }
+        note?.let { TextBlock(it.text, it.info) }
         guide?.let { ReadingOutlineButton(it.title, onClick = { onOpenGuide(it.id) }) }
     }
 }
@@ -330,6 +351,8 @@ private const val STRIP_CHIP = 34f
 private const val STRIP_LETTER = 20f
 private const val BIG_LETTER = 84f
 private const val FORM_LETTER = 34f
+/** Написания хӏамзы в ряд (13 знаков) - мельче форм буквы. */
+private const val VARIANT_LETTER = 26f
 private const val EXAMPLE_WORD = 26f
 /** Увеличенное слово-пример - как слово в «Читаем слова». */
 private const val ZOOM_EXAMPLE_WORD = 60f
