@@ -428,7 +428,9 @@ const READING_BLOCKS = {
   // Зикр итога «Читаем зикр» (2026-10-17): ссылка на зикр «Азкаров», слова, места слитного чтения.
   zikr: ['type', 'section', 'id', 'audio', 'arabic', 'words', 'joins', 'translations'],
   rule: ['type', 'arabic', 'letters', 'translations'],
-  forms: ['type', 'groups', 'examples', 'exampleCard', 'translations'],
+  // variants (хӏамза, 2026-10-21): буква не из groups - плитка во всю строку, 4 строки написаний (отдельно, в начале,
+  // в середине, в конце); notes в переводе - текст на карточке буквы.
+  forms: ['type', 'groups', 'variants', 'examples', 'exampleCard', 'translations'],
   formulas: ['type', 'columns', 'items'],
   // Закрытые слоги шага «Сукун» (2026-10-19): строит приложение из букв (closedVowels, closedBase) - ряд на букву;
   // на уроке - sample случайных, весь алфавит - отдельным экраном.
@@ -436,6 +438,9 @@ const READING_BLOCKS = {
   // Тема урока (шаг «Особые случаи», 2026-10-17): карточка - название, описание, пример; блоки - её экран.
   topic: ['type', 'arabic', 'blocks', 'translations'],
 };
+// Буква в слове-примере - и на подставке (подсветка - letterRange в Android): алиф несёт хӏамзу (أ إ), хӏамза стоит
+// на алифе, вав и йа (أ إ ؤ ئ).
+const LETTER_SEATS = { 'ا': ['أ', 'إ'], 'ء': ['أ', 'إ', 'ؤ', 'ئ'] };
 // Справка (extra) и экран темы рисуют только текст, правила и формулы (ReadingExtraScreen).
 const READING_EXTRA_BLOCKS = ['text', 'rule', 'formulas'];
 // Мадд (2026-10-15): буква мадда без знака тянет огласовку перед ней - ا после фатхьи, ي после касры,
@@ -783,17 +788,31 @@ function checkReading(file) {
       if (block.type === 'forms') for (const g of block.groups ?? []) for (const l of g ?? []) knownLetter(where, l);
       // Примеры форм: буква → 3 слова (буква в начале, в середине, в конце); exampleCard - буквы третьей карточки.
       if (block.type === 'forms') {
+        const grouped = new Set((block.groups ?? []).flat());
+        for (const [l, rows] of Object.entries(block.variants ?? {})) {
+          knownLetter(where, l);
+          if (grouped.has(l)) error(where, `variants.${l}: буква уже в groups`);
+          if (!Array.isArray(rows) || rows.length !== 4 || rows.some(r => typeof r !== 'string' || !r.trim())) error(where, `variants.${l} - 4 строки: отдельно, в начале, в середине, в конце`);
+        }
         for (const [l, words] of Object.entries(block.examples ?? {})) {
           knownLetter(where, l);
+          if (!grouped.has(l) && !block.variants?.[l]) error(where, `examples.${l}: буквы нет ни в groups, ни в variants`);
           if (!Array.isArray(words) || words.length !== 3) { error(where, `examples.${l} - 3 слова: начало, середина, конец`); continue; }
           for (const w of words) {
-            if (typeof w !== 'string' || !w.includes(l)) error(where, `examples.${l}: в слове «${w}» нет буквы ${l}`);
+            if (typeof w !== 'string' || ![l, ...(LETTER_SEATS[l] ?? [])].some(c => w.includes(c))) error(where, `examples.${l}: в слове «${w}» нет буквы ${l}`);
             else checkArabic(where, w);
           }
         }
         for (const l of block.exampleCard ?? []) if (!block.examples?.[l]) error(where, `exampleCard: у буквы ${l} нет примеров`);
         // Транскрипция примеров (карточка буквы, «подсмотреть»): у каждой буквы - 3, по словам examples.
-        const ru = checkTexts(where, block.translations, ['examples'], []);
+        const ru = checkTexts(where, block.translations, ['examples', 'notes'], []);
+        for (const [l, note] of Object.entries(ru?.notes ?? {})) {
+          if (!block.examples?.[l] && !block.variants?.[l] && !grouped.has(l)) error(where, `notes.${l}: буквы нет в блоке`);
+          if (typeof note?.text !== 'string' || !note.text.trim()) error(where, `notes.${l}: нужен text`);
+          else checkRussian(where, note.text);
+          if (note?.info !== undefined && (typeof note.info !== 'string' || !note.info.trim())) error(where, `notes.${l}.info - непустая строка`);
+          for (const k of Object.keys(note ?? {})) if (!['text', 'info'].includes(k)) error(where, `notes.${l}: неизвестное поле «${k}»`);
+        }
         const translit = ru?.examples ?? {};
         for (const [l, words] of Object.entries(block.examples ?? {})) {
           const t = translit[l];

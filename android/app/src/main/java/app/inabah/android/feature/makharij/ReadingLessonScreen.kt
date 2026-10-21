@@ -533,6 +533,28 @@ private fun FormsTable(
                                 }
                             }
                         }
+                        // Буквы вне групп (хӏамза, решение пользователя 2026-10-21) - плитка во всю строку после
+                        // последней группы: написания подряд, как в книге; нажатие - карточка буквы.
+                        if (index == groups.lastIndex) {
+                            for ((letter, rows) in block.variants) {
+                                val interaction = remember { MutableInteractionSource() }
+                                val cellId = rememberTapCellId()
+                                LetterVariants(
+                                    rows,
+                                    VARIANT_SIZE,
+                                    palette.parchmentText,
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .liveCell(intro, cellId, hint, colors.highlightBorder)
+                                        .clickable(interaction, indication = cellRipple(), role = Role.Button) { onLetter(letter) }
+                                        .pressFeedback(interaction, scale = PressFeedback.ICON_SCALE)
+                                        .surface(colors.parchmentCell, Radius.box, border = colors.parchmentCellBorder)
+                                        .padding(horizontal = Spacing.s)
+                                        .padding(top = Spacing.xs)
+                                        .clearAndSetSemantics { contentDescription = letter.name },
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -581,6 +603,19 @@ private fun FormsTable(
                     }
                 }
             }
+        }
+    }
+}
+
+/**
+ * Написания буквы ([ReadingBlock.Forms.variants]) в ряд справа налево - отдельно, в начале, в середине, в конце;
+ * плитка таблицы форм и карточка буквы.
+ */
+@Composable
+internal fun LetterVariants(rows: List<String>, size: Float, color: Color, modifier: Modifier = Modifier) {
+    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+        Row(modifier, horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.CenterVertically) {
+            for (row in rows) ArabicText(row, size, color, bold = true, maxLines = 1)
         }
     }
 }
@@ -1081,6 +1116,8 @@ private const val LETTER_COLUMNS = 5
 private const val WIDE_FORMULA_LINES = 2
 private const val FORM_SIZE = 28f
 private const val FORM_WORD_SIZE = 26f
+/** Написания хӏамзы в плитке во всю строку - мельче формы: 13 знаков в ширину телефона. */
+private const val VARIANT_SIZE = 24f
 private const val ISOLATED_WEIGHT = 0.6f
 private const val WORD_WEIGHT = 1.15f
 private val PLACED_FORMS = listOf(LetterForm.Initial, LetterForm.Medial, LetterForm.Final)

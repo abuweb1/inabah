@@ -15,6 +15,7 @@ import app.inabah.android.core.content.model.ReadingGuide
 import app.inabah.android.core.content.model.ReadingLegendItem
 import app.inabah.android.core.content.model.ReadingJoin
 import app.inabah.android.core.content.model.ReadingLetter
+import app.inabah.android.core.content.model.ReadingLetterNote
 import app.inabah.android.core.content.model.ReadingMark
 import app.inabah.android.core.content.model.ReadingQuestion
 import app.inabah.android.core.content.model.ReadingStep
@@ -165,6 +166,13 @@ private fun ReadingBlockDto.toBlock(
             letter(char) to FormExamples(words[0], words[1], words[2], transliteration)
         }.toMap(),
         exampleCard = exampleCard.map(letter),
+        variants = variants.map { (char, rows) ->
+            require(rows.size == LetterForm.entries.size) { "reading.json: $where, variants.$char - ${LetterForm.entries.size} строки" }
+            letter(char) to rows.map(String::trim)
+        }.toMap(),
+        notes = priority.select(translations.keyedByLanguage())?.translation?.notes.orEmpty().mapNotNull { (char, note) ->
+            note.text.trim().ifEmpty { null }?.let { letter(char) to ReadingLetterNote(it, note.info.trim().ifEmpty { null }) }
+        }.toMap(),
     )
     // Знаки - на первой букве таблицы слогов шага без подставки (у алифа знак - на хамзе), иначе на «ب».
     "marks" -> ReadingBlock.Marks(

@@ -13,6 +13,8 @@ import kotlin.random.Random
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotEquals
+import kotlin.test.assertNotEquals
+import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlinx.coroutines.test.runTest
@@ -60,7 +62,9 @@ class ReadingLogicTest {
         val sukunStep = course.steps.first { "sukun" in it.markIds }.number
         val closed = lam.copy(audio = lam.audio + ("closedKasra" to "ck.m4a"))
         assertEquals("ck.m4a", letterChain(course, closed, sukunStep).playableFiles(all + "ck.m4a").last(), "закрытый слог - последним")
-        assertNull(course.letters.first().nameAudio, "записей в данных пока нет")
+        // Свои записи (2026-10-21): у алифа - название; хӏамза звучит как алиф, но название у неё своё - не алифа.
+        assertEquals("reading_01_name.m4a", course.letters.first().nameAudio)
+        assertNotEquals("reading_01_name.m4a", course.letters.first { it.letter == "ء" }.nameAudio)
     }
 
     @Test
@@ -218,6 +222,32 @@ class ReadingLogicTest {
         assertEquals(4..5, letterRange("ثَبَتَ", "ت", LetterForm.Final))
         assertEquals(2..3, letterRange("لِيَرِثَ", "ي", LetterForm.Medial))
         assertNull(letterRange("بَحَثَ", "ب", LetterForm.Final))
+    }
+
+    @Test
+    fun `Буква на подставке — алиф и хӏамза подсвечиваются и с хӏамзой`() {
+        assertEquals(0..1, letterRange("أَنَا", "ا", LetterForm.Initial), "алиф несёт хӏамзу")
+        assertEquals(2..2, letterRange("قَالَ", "ا", LetterForm.Medial))
+        assertEquals(4..4, letterRange("دَعَا", "ا", LetterForm.Final))
+        assertEquals(0..1, letterRange("أَكَلَ", "ء", LetterForm.Initial), "хӏамза на алифе")
+        assertEquals(2..3, letterRange("سُئِلَ", "ء", LetterForm.Medial), "хӏамза на йа")
+        assertEquals(3..4, letterRange("جَاءَ", "ء", LetterForm.Final), "хӏамза отдельно")
+        assertNull(letterRange("قَالَ", "ء", LetterForm.Medial), "мад алиф - не хӏамза")
+    }
+
+    @Test
+    fun `Хӏамза шага 6 — плитка написаний и карточка, но не квиз форм`() = runTest {
+        val course = loadAssetCourse()
+        val forms = course.step(6)!!.blocks.filterIsInstance<ReadingBlock.Forms>().single()
+        val hamza = course.letters.first { it.letter == "ء" }
+        val alif = course.letters.first { it.letter == "ا" }
+
+        assertEquals(LetterForm.entries.size, forms.variants.getValue(hamza).size)
+        assertEquals(hamza, forms.letters.last(), "карточка листается до хӏамзы последней")
+        assertTrue(forms.groups.none { hamza in it }, "в группах (и в квизе форм) хӏамзы нет")
+        assertNotNull(forms.notes[hamza]?.info)
+        assertNotNull(forms.examples[hamza])
+        assertNotNull(forms.examples[alif], "у алифа - слова с мад алифом")
     }
 
     @Test

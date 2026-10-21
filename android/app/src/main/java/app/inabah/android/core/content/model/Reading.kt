@@ -152,6 +152,9 @@ enum class LetterForm(val id: String) {
     }
 }
 
+/** Текст на карточке буквы ([ReadingBlock.Forms.notes]); [info] - полный текст по ⓘ. */
+data class ReadingLetterNote(val text: String, val info: String?)
+
 /**
  * Слова-примеры буквы: она в начале, в середине и в конце слова; [transliterations] - их транскрипция
  * (на карточке буквы - «подсмотреть», 2026-10-19), нет - пусто.
@@ -313,13 +316,19 @@ sealed interface ReadingBlock {
     /**
      * Таблица форм: карточки по группам похожего написания, ряд - буква, столбцы - 4 формы; [examples] -
      * слова, где буква в начале, в середине и в конце; [exampleCard] - буквы третьей карточки «в словах».
+     * [variants] - буквы вне групп (хӏамза, 2026-10-21): написания по [LetterForm.entries] (отдельно, в начале,
+     * в середине, в конце), плитка во всю строку после последней группы; в квиз форм они не входят.
+     * [notes] - текст на карточке буквы.
      */
     data class Forms(
         val groups: List<List<ReadingLetter>>,
         val examples: Map<ReadingLetter, FormExamples> = emptyMap(),
         val exampleCard: List<ReadingLetter> = emptyList(),
+        val variants: Map<ReadingLetter, List<String>> = emptyMap(),
+        val notes: Map<ReadingLetter, ReadingLetterNote> = emptyMap(),
     ) : ReadingBlock {
-        val letters: List<ReadingLetter> get() = groups.flatten()
+        /** Буквы по порядку таблицы: группы, затем буквы с [variants] (так листается карточка буквы). */
+        val letters: List<ReadingLetter> get() = groups.flatten() + variants.keys
     }
 
     /** Знаки с названием и звуком, на примере [example]. */

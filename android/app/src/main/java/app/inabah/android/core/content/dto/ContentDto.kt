@@ -223,6 +223,11 @@ data class ReadingBlockDto(
     val groups: List<List<String>>? = null,
     /** `forms`: буква → 3 слова, где она в начале, в середине и в конце. */
     val examples: Map<String, List<String>> = emptyMap(),
+    /**
+     * `forms`: буква не из [groups] (хӏамза, 2026-10-21) → 4 строки написаний - отдельно, в начале, в середине,
+     * в конце; плитка во всю строку после последней группы.
+     */
+    val variants: Map<String, List<String>> = emptyMap(),
     /** `forms`: буквы третьей карточки «в словах». */
     val exampleCard: List<String> = emptyList(),
     /** `formulas`: формул в ряду (1…3). */
@@ -256,6 +261,15 @@ data class ReadingTextTranslationDto(
     val title: String = "",
     /** `forms`: буква → транскрипция её 3 слов-примеров (по порядку `examples`). */
     val examples: Map<String, List<String>> = emptyMap(),
+    /** `forms`: буква → текст на её карточке (хӏамза: подставка не читается). */
+    val notes: Map<String, ReadingNoteDto> = emptyMap(),
+)
+
+@Serializable
+data class ReadingNoteDto(
+    val text: String = "",
+    /** Полный текст во всплывающем окне по ⓘ. */
+    val info: String = "",
 )
 
 @Serializable
