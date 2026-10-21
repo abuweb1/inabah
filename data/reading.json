@@ -105,7 +105,18 @@
         "dammatan": "أ"
       },
       "closedBase": "أ",
-      "audio": {},
+      "audio": {
+        "name": "reading_01_name.m4a",
+        "fatha": "reading_01_fatha.m4a",
+        "kasra": "reading_01_kasra.m4a",
+        "damma": "reading_01_damma.m4a",
+        "fathatan": "reading_01_fathatan.m4a",
+        "kasratan": "reading_01_kasratan.m4a",
+        "dammatan": "reading_01_dammatan.m4a",
+        "closedFatha": "reading_01_closed_fatha.m4a",
+        "closedKasra": "reading_01_closed_kasra.m4a",
+        "closedDamma": "reading_01_closed_damma.m4a"
+      },
       "translations": {
         "ru": {
           "name": "Алиф",
@@ -127,7 +138,18 @@
       "id": 2,
       "letter": "ب",
       "name": "بَاء",
-      "audio": {},
+      "audio": {
+        "name": "reading_02_name.m4a",
+        "fatha": "reading_02_fatha.m4a",
+        "kasra": "reading_02_kasra.m4a",
+        "damma": "reading_02_damma.m4a",
+        "fathatan": "reading_02_fathatan.m4a",
+        "kasratan": "reading_02_kasratan.m4a",
+        "dammatan": "reading_02_dammatan.m4a",
+        "closedFatha": "reading_02_closed_fatha.m4a",
+        "closedKasra": "reading_02_closed_kasra.m4a",
+        "closedDamma": "reading_02_closed_damma.m4a"
+      },
       "translations": {
         "ru": {
           "name": "Ба",
@@ -148,7 +170,18 @@
       "id": 3,
       "letter": "ت",
       "name": "تَاء",
-      "audio": {},
+      "audio": {
+        "name": "reading_03_name.m4a",
+        "fatha": "reading_03_fatha.m4a",
+        "kasra": "reading_03_kasra.m4a",
+        "damma": "reading_03_damma.m4a",
+        "fathatan": "reading_03_fathatan.m4a",
+        "kasratan": "reading_03_kasratan.m4a",
+        "dammatan": "reading_03_dammatan.m4a",
+        "closedFatha": "reading_03_closed_fatha.m4a",
+        "closedKasra": "reading_03_closed_kasra.m4a",
+        "closedDamma": "reading_03_closed_damma.m4a"
+      },
       "translations": {
         "ru": {
           "name": "Та",
@@ -169,7 +202,18 @@
       "id": 4,
       "letter": "ث",
       "name": "ثَاء",
-      "audio": {},
+      "audio": {
+        "name": "reading_04_name.m4a",
+        "fatha": "reading_04_fatha.m4a",
+        "kasra": "reading_04_kasra.m4a",
+        "damma": "reading_04_damma.m4a",
+        "fathatan": "reading_04_fathatan.m4a",
+        "kasratan": "reading_04_kasratan.m4a",
+        "dammatan": "reading_04_dammatan.m4a",
+        "closedFatha": "reading_04_closed_fatha.m4a",
+        "closedKasra": "reading_04_closed_kasra.m4a",
+        "closedDamma": "reading_04_closed_damma.m4a"
+      },
       "translations": {
         "ru": {
           "name": "Са",
@@ -711,7 +755,17 @@
       "joinsPrevious": false,
       "closedBase": "أ",
       "audioLike": "ا",
-      "audio": {},
+      "audio": {
+        "fatha": "reading_01_fatha.m4a",
+        "kasra": "reading_01_kasra.m4a",
+        "damma": "reading_01_damma.m4a",
+        "fathatan": "reading_01_fathatan.m4a",
+        "kasratan": "reading_01_kasratan.m4a",
+        "dammatan": "reading_01_dammatan.m4a",
+        "closedFatha": "reading_01_closed_fatha.m4a",
+        "closedKasra": "reading_01_closed_kasra.m4a",
+        "closedDamma": "reading_01_closed_damma.m4a"
+      },
       "translations": {
         "ru": {
           "name": "Хӏамза",
