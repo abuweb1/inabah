@@ -78,6 +78,43 @@ struct ReadingContentTests {
         #expect(future.steps.first?.blocks == [.letters(ReadingBlock.Letters(letters: future.letters))])
     }
 
+    @Test("Шаг 6: хӏамза - написания и текст на карточке, вне групп и вопросов; слова с мад алифом")
+    func hamzaVariants() async throws {
+        let course = try await ReadingCourseFixture.load()
+        let step = try course.requiredStep(6)
+        let forms = try #require(step.formsBlocks.only)
+        let hamza = try course.letter("ء")
+        let alif = try course.letter("ا")
+
+        #expect(forms.variants[hamza]?.count == LetterForm.allCases.count)
+        #expect(forms.variants[hamza]?.first == "ء")
+        #expect(!forms.groups.joined().contains(hamza), "хӏамза - не в группах")
+        #expect(forms.letters.last == hamza, "карточка буквы листается до хӏамзы последней")
+        let note = try #require(forms.notes[hamza])
+        #expect(note.text.hasPrefix("Хӏамза пишется по-разному"))
+        #expect(note.info != nil)
+        #expect(forms.examples[alif]?.initial == "أَنَا")
+        #expect(forms.examples[hamza]?.medial == "سُئِلَ")
+        let asked = step.quiz.compactMap { if case .letterInForm(let item) = $0 { item.letter } else { nil } }
+        #expect(!asked.contains(hamza), "вопросы «форма буквы» - только о буквах групп")
+    }
+
+    @Test("Написания не из 4 строк - ошибка; текст на карточке без текста пропускается")
+    func variantsAndNotes() throws {
+        #expect(throws: ReadingMappingError.self) {
+            try Self.course(Self.minimalJSON(blocks: #"[{"type":"forms","groups":[["ب"]],"variants":{"ب":["ب","ب"]}}]"#))
+        }
+        let course = try Self.course(Self.minimalJSON(blocks: #"""
+            [{"type":"forms","groups":[],"variants":{"ب":[" ب ","بـ","ـبـ","ـب"]},
+              "translations":{"ru":{"notes":{"ب":{"text":" "}}}}}]
+            """#))
+        let forms = try #require(course.steps.first?.formsBlocks.only)
+        let ba = try course.letter("ب")
+        #expect(forms.variants[ba] == ["ب", "بـ", "ـبـ", "ـب"])
+        #expect(forms.notes.isEmpty)
+        #expect(forms.letters == [ba])
+    }
+
     @Test("Руководство «Межзубные буквы и дод» из Bundle: буквы, рисунки, легенда (как Android)")
     func articulationGuide() async throws {
         let course = try await ReadingCourseFixture.load()

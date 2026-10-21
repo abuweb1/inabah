@@ -81,7 +81,6 @@ struct ReadingLogicTests {
         let closed = lam.with(audio: lam.audio.merging(["closedKasra": "ck.m4a"]) { $1 })
         #expect(ReadingLogic.letterChain(course: course, letter: closed, stepNumber: sukunStep).playableFiles(available: all.union(["ck.m4a"])).last
                 == "ck.m4a", "закрытый слог - последним")
-        #expect(course.letters.first?.nameAudio == nil, "записей в данных пока нет")
     }
 
     // MARK: - Варианты ответа
@@ -420,6 +419,16 @@ struct ReadingLogicTests {
         #expect(ReadingLogic.letterRange(word: "ثَبَتَ", letter: "ت", form: .final) == 4...5)
         #expect(ReadingLogic.letterRange(word: "لِيَرِثَ", letter: "ي", form: .medial) == 2...3)
         #expect(ReadingLogic.letterRange(word: "بَحَثَ", letter: "ب", form: .final) == nil)
+    }
+
+    @Test("Буква на подставке засчитывается: алиф в أَنَا, хӏамза на алифе, йа и отдельно (как Android)")
+    func letterRangeSeats() {
+        #expect(ReadingLogic.letterRange(word: "أَنَا", letter: "ا", form: .initial) == 0...1)
+        #expect(ReadingLogic.letterRange(word: "أَكَلَ", letter: "ء", form: .initial) == 0...1)
+        #expect(ReadingLogic.letterRange(word: "سُئِلَ", letter: "ء", form: .medial) == 2...3)
+        #expect(ReadingLogic.letterRange(word: "جَاءَ", letter: "ء", form: .final) == 3...4)
+        #expect(ReadingLogic.letterRange(word: "بُؤْسٌ", letter: "ء", form: .medial) == 2...3)
+        #expect(ReadingLogic.letterRange(word: "أَبَ", letter: "ب", form: .initial) == nil, "у ب подставок нет")
     }
 
     @Test("Имя записи слова-примера - шаг, номер буквы и место")

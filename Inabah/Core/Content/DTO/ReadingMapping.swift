@@ -219,10 +219,25 @@ nonisolated extension ReadingCourse {
                     initial: words[0], medial: words[1], final: words[2], transliterations: transliterations
                 )
             }
+            // Буквы вне групп (хӏамза): ровно 4 строки - по одной на форму.
+            var variants: [ReadingLetter: [String]] = [:]
+            for (character, rows) in block.variants {
+                guard rows.count == LetterForm.allCases.count else {
+                    throw ReadingMappingError(description: "reading.json: variants.\(character) - \(LetterForm.allCases.count) строки")
+                }
+                variants[try letter(character)] = rows.map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            }
+            var notes: [ReadingLetter: ReadingLetterNote] = [:]
+            for (character, note) in translation?.notes ?? [:] {
+                guard let text = Optional(note.text).nonEmpty else { continue }
+                notes[try letter(character)] = ReadingLetterNote(text: text, info: Optional(note.info).nonEmpty)
+            }
             return ReadingBlock.Forms(
                 groups: try (block.groups ?? []).map { try $0.map(letter) },
                 examples: examples,
-                exampleCard: try block.exampleCard.map(letter)
+                exampleCard: try block.exampleCard.map(letter),
+                variants: variants,
+                notes: notes
             )
         }
 

@@ -674,6 +674,8 @@ struct LessonFormsTable: View {
     private enum Layout {
         static let form: Double = 28
         static let word: Double = 26
+        /// Написания хӏамзы во всю строку - мельче формы: 13 знаков в ширину телефона.
+        static let variant: Double = 24
         static let letterWeight: CGFloat = 0.6
         static let wordWeight: CGFloat = 1.15
     }
@@ -689,6 +691,13 @@ struct LessonFormsTable: View {
                                 ForEach(LetterForm.allCases, id: \.self) { form in
                                     formCell(letter, form)
                                 }
+                            }
+                        }
+                        // Буквы вне групп (хӏамза, решение пользователя 2026-10-21) - плитка во всю строку после
+                        // последней группы: написания подряд, как в книге; нажатие - карточка буквы.
+                        if index == block.groups.count - 1 {
+                            ForEach(block.variantLetters, id: \.number) { letter in
+                                variantsCell(letter, rows: block.variants[letter] ?? [])
                             }
                         }
                     }
@@ -740,6 +749,20 @@ struct LessonFormsTable: View {
         .accessibilityLabel(GuideMark.label("\(letter.name), \(String(localized: form.place))", isMarked: isMarked))
     }
 
+    private func variantsCell(_ letter: ReadingLetter, rows: [String]) -> some View {
+        Button { onOpen(letter) } label: {
+            LetterVariants(rows: rows, size: Layout.variant)
+                .padding(.horizontal, Spacing.s)
+                .padding(.top, Spacing.xs)
+                .frame(maxWidth: .infinity)
+                .parchmentCell(colors)
+                .contentShape(.rect(cornerRadius: Radius.box))
+        }
+        .buttonStyle(PressScaleButtonStyle(pressedScale: PressFeedback.iconScale))
+        .liveCell(hint: "makharij.hint.letter", tint: colors.tint)
+        .accessibilityLabel(Text(verbatim: letter.name))
+    }
+
     private func exampleRow(_ letter: ReadingLetter, examples: FormExamples) -> some View {
         WeightedRow(weights: [Layout.letterWeight] + Array(repeating: Layout.wordWeight, count: 3), spacing: Spacing.xs) {
             Button { onOpen(letter) } label: {
@@ -785,6 +808,30 @@ struct LessonFormsTable: View {
             }
         }
         .sensoryFeedback(.selection, trigger: playCount)
+    }
+}
+
+/// Написания буквы (`ReadingBlock.Forms.variants`) в ряд справа налево - отдельно, в начале, в середине,
+/// в конце, с равными промежутками; плитка таблицы форм и карточка буквы (Android `LetterVariants`).
+struct LetterVariants: View {
+    let rows: [String]
+    let size: Double
+
+    @Environment(\.theme) private var theme
+
+    var body: some View {
+        HStack(spacing: 0) {
+            Spacer(minLength: 0)
+            ForEach(Array(rows.enumerated()), id: \.offset) { _, row in
+                Text(verbatim: row)
+                    .font(.arabic(size: size, bold: true))
+                    .foregroundStyle(theme.palette.parchmentText)
+                    .lineLimit(1)
+                    .fixedSize()
+                Spacer(minLength: 0)
+            }
+        }
+        .environment(\.layoutDirection, .rightToLeft)
     }
 }
 
