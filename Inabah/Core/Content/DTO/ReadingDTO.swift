@@ -248,6 +248,8 @@ nonisolated struct ReadingBlockDTO: Decodable, Sendable {
     let groups: [[String]]?
     /// Буква → 3 слова, где она в начале, в середине и в конце.
     let examples: [String: [String]]
+    /// Буква не из `groups` (хӏамза, 2026-10-21) → 4 строки написаний: отдельно, в начале, в середине, в конце.
+    let variants: [String: [String]]
     let exampleCard: [String]
     let columns: Int
     let items: [ReadingFormulaDTO]
@@ -263,7 +265,7 @@ nonisolated struct ReadingBlockDTO: Decodable, Sendable {
     let translations: [String: ReadingTextTranslationDTO]
 
     private enum CodingKeys: String, CodingKey {
-        case type, marks, letters, arabic, sample, groups, examples, exampleCard, columns, items, blocks
+        case type, marks, letters, arabic, sample, groups, examples, variants, exampleCard, columns, items, blocks
         case section, id, audio, words, joins, image, legend, translations
     }
 
@@ -276,6 +278,7 @@ nonisolated struct ReadingBlockDTO: Decodable, Sendable {
         sample = try c.decodeIfPresent(Int.self, forKey: .sample)
         groups = try c.decodeIfPresent([[String]].self, forKey: .groups)
         examples = try c.decode(.examples, default: [:])
+        variants = try c.decode(.variants, default: [:])
         exampleCard = try c.decode(.exampleCard, default: [])
         columns = try c.decode(.columns, default: 1)
         items = try c.decode(.items, default: [])
@@ -298,8 +301,10 @@ nonisolated struct ReadingTextTranslationDTO: Decodable, Sendable {
     let title: String
     /// Транскрипция слов-примеров формы: буква → 3 строки.
     let examples: [String: [String]]
+    /// Таблица форм: буква → текст на её карточке (хӏамза: подставка не читается).
+    let notes: [String: ReadingNoteDTO]
 
-    private enum CodingKeys: String, CodingKey { case text, translit, info, title, examples }
+    private enum CodingKeys: String, CodingKey { case text, translit, info, title, examples, notes }
 
     init(from decoder: any Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -308,6 +313,21 @@ nonisolated struct ReadingTextTranslationDTO: Decodable, Sendable {
         info = try c.decode(.info, default: "")
         title = try c.decode(.title, default: "")
         examples = try c.decode(.examples, default: [:])
+        notes = try c.decode(.notes, default: [:])
+    }
+}
+
+/// Текст на карточке буквы; `info` - полный текст во всплывающем окне по ⓘ.
+nonisolated struct ReadingNoteDTO: Decodable, Sendable {
+    let text: String
+    let info: String
+
+    private enum CodingKeys: String, CodingKey { case text, info }
+
+    init(from decoder: any Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        text = try c.decode(.text, default: "")
+        info = try c.decode(.info, default: "")
     }
 }
 

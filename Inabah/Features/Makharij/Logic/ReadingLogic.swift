@@ -246,9 +246,11 @@ nonisolated enum ReadingLogic {
 
     /// Где в слове подсветить букву `letter` формы `form`: диапазон единиц UTF-16 буквы вместе с её знаками.
     /// Начало - первая буква, конец - последняя, середина - первая такая буква не с краю. Нет - `nil`.
+    /// Буква на подставке засчитывается (`letterSeats`): алиф в أَنَا, хӏамза в سُئِلَ.
     static func letterRange(word: String, letter: String, form: LetterForm) -> ClosedRange<Int>? {
         let code = Array(word.utf16)
         let letterCode = Array(letter.utf16)
+        let spellings = Set(([letter] + (letterSeats[letter] ?? [])).compactMap { $0.utf16.count == 1 ? $0.utf16.first : nil })
         // Буквы слова: позиция и длина вместе со следующими за буквой знаками огласовки.
         var units: [Range<Int>] = []
         var i = 0
@@ -258,7 +260,7 @@ nonisolated enum ReadingLogic {
             units.append(i..<end)
             i = end
         }
-        let matches = units.enumerated().filter { letterCode.count == 1 && code[$0.element.lowerBound] == letterCode[0] }
+        let matches = units.enumerated().filter { letterCode.count == 1 && spellings.contains(code[$0.element.lowerBound]) }
         let match: Range<Int>? = switch form {
         case .initial: matches.first { $0.offset == 0 }?.element
         case .final: matches.last { $0.offset == units.count - 1 }?.element
@@ -267,6 +269,10 @@ nonisolated enum ReadingLogic {
         }
         return match.map { $0.lowerBound...($0.upperBound - 1) }
     }
+
+    /// Написания буквы с хӏамзой (2026-10-21, как `LETTER_SEATS` в check-data и Android): алиф несёт хӏамзу
+    /// (أ إ), хӏамза стоит на алифе, вав и йа без точек (أ إ ؤ ئ).
+    private static let letterSeats: [String: [String]] = ["ا": ["أ", "إ"], "ء": ["أ", "إ", "ؤ", "ئ"]]
 
     /// Запись слова-примера формы буквы (docs/process/audio.md, раздел 5): `reading_s03_02_medial.m4a` -
     /// шаг 3, буква 2 (ب), слово, где она в середине.

@@ -163,6 +163,12 @@ nonisolated enum LetterForm: String, CaseIterable, Hashable, Sendable {
     case isolated, initial, medial, final
 }
 
+/// Текст на карточке буквы (`ReadingBlock.Forms.notes`); `info` - полный текст по ⓘ.
+nonisolated struct ReadingLetterNote: Hashable, Sendable {
+    let text: String
+    var info: String?
+}
+
 /// Слова-примеры буквы: она в начале, в середине и в конце слова; `transliterations` - их транскрипция
 /// (на карточке буквы - «подсмотреть»), нет - пусто.
 nonisolated struct FormExamples: Hashable, Sendable {
@@ -316,12 +322,20 @@ nonisolated enum ReadingBlock: Hashable, Sendable {
 
     /// Таблица форм: карточки по группам похожего написания, ряд - буква, столбцы - 4 формы; `examples` -
     /// слова, где буква в начале, в середине и в конце; `exampleCard` - буквы третьей карточки «в словах».
+    /// `variants` - буквы вне групп (хӏамза, 2026-10-21): написания по `LetterForm.allCases`, плитка во всю
+    /// строку после последней группы; в вопросы «форма буквы» не входят. `notes` - текст на карточке буквы.
     struct Forms: Hashable, Sendable {
         let groups: [[ReadingLetter]]
         var examples: [ReadingLetter: FormExamples] = [:]
         var exampleCard: [ReadingLetter] = []
+        var variants: [ReadingLetter: [String]] = [:]
+        var notes: [ReadingLetter: ReadingLetterNote] = [:]
 
-        var letters: [ReadingLetter] { groups.flatMap { $0 } }
+        /// Буквы по порядку таблицы: группы, затем буквы с `variants` по номеру (так листается карточка буквы).
+        var letters: [ReadingLetter] { groups.flatMap { $0 } + variantLetters }
+
+        /// Буквы с `variants` по номеру: порядок словаря не определён.
+        var variantLetters: [ReadingLetter] { variants.keys.sorted { $0.number < $1.number } }
     }
 
     /// Знаки с названием и звуком, на примере `example`.

@@ -81,6 +81,8 @@ private struct LetterFormsContent: View {
     @Environment(ClipPlayer.self) private var clips
     @Environment(ReadingSettings.self) private var settings
     @State private var zoom: ExampleZoom?
+    /// Открытая ⓘ текста под пергаментом (хӏамза).
+    @State private var info: LessonInfo?
 
     private static let space = "letterForms"
 
@@ -96,9 +98,12 @@ private struct LetterFormsContent: View {
                             LetterFormsPage(
                                 letter: letter,
                                 examples: forms.examples[letter],
+                                variants: forms.variants[letter],
+                                note: forms.notes[letter],
                                 guide: guides.first { $0.letters.contains(letter) },
                                 colors: colors,
                                 isHintShown: isHintShown,
+                                info: $info,
                                 zoomedForm: zoom?.letter == letter ? zoom?.form : nil,
                                 coordinateSpace: Self.space,
                                 audio: { audio(letter, $0) }
@@ -126,6 +131,7 @@ private struct LetterFormsContent: View {
             }
         }
         .coordinateSpace(.named(Self.space))
+        .lessonInfoPopover($info, colors: colors)
         .overlay {
             if let zoom, let examples = forms.examples[zoom.letter], let word = examples.word(zoom.form) {
                 let audio = audio(zoom.letter, zoom.form)
@@ -212,10 +218,15 @@ private struct GroupStrip: View {
 private struct LetterFormsPage: View {
     let letter: ReadingLetter
     let examples: FormExamples?
+    /// Написания буквы вне групп (хӏамза) - вместо ряда форм.
+    let variants: [String]?
+    /// Текст под пергаментом (хӏамза: подставка не читается).
+    let note: ReadingLetterNote?
     /// Руководство по произношению буквы - кнопка под пергаментом; нет - `nil`.
     let guide: ReadingGuide?
     let colors: ReadingColors
     let isHintShown: Bool
+    @Binding var info: LessonInfo?
     /// Форма слова, которое сейчас увеличено - его ячейка «вылетела» и пуста.
     let zoomedForm: LetterForm?
     let coordinateSpace: String
@@ -228,6 +239,8 @@ private struct LetterFormsPage: View {
     private enum Layout {
         static let bigLetter: Double = 84
         static let form: Double = 34
+        /// Написания хӏамзы в ряд (13 знаков) - мельче форм буквы.
+        static let variant: Double = 26
     }
 
     var body: some View {
@@ -241,21 +254,30 @@ private struct LetterFormsPage: View {
                             .fixedSize()
                             .frame(maxWidth: .infinity)
                             .accessibilityLabel(Text(verbatim: letter.name))
-                        WeightedRow(spacing: Spacing.xs) {
-                            ForEach(LetterForm.placed, id: \.self) { form in
-                                VStack(spacing: 0) {
-                                    Text(verbatim: letter.form(form))
-                                        .font(.arabic(size: Layout.form, bold: true))
-                                        .foregroundStyle(theme.palette.parchmentText)
-                                        .fixedSize()
-                                    Text(form.caption)
-                                        .font(.caption2)
-                                        .foregroundStyle(colors.parchmentCaption)
-                                }
-                                .padding(.vertical, Spacing.xs)
-                                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        if let variants {
+                            LetterVariants(rows: variants, size: Layout.variant)
+                                .padding(.horizontal, Spacing.s)
+                                .padding(.top, Spacing.xs)
+                                .frame(maxWidth: .infinity)
                                 .parchmentCell(colors)
-                                .accessibilityElement(children: .combine)
+                                .accessibilityHidden(true)
+                        } else {
+                            WeightedRow(spacing: Spacing.xs) {
+                                ForEach(LetterForm.placed, id: \.self) { form in
+                                    VStack(spacing: 0) {
+                                        Text(verbatim: letter.form(form))
+                                            .font(.arabic(size: Layout.form, bold: true))
+                                            .foregroundStyle(theme.palette.parchmentText)
+                                            .fixedSize()
+                                        Text(form.caption)
+                                            .font(.caption2)
+                                            .foregroundStyle(colors.parchmentCaption)
+                                    }
+                                    .padding(.vertical, Spacing.xs)
+                                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                                    .parchmentCell(colors)
+                                    .accessibilityElement(children: .combine)
+                                }
                             }
                         }
                         if let examples {
@@ -274,6 +296,9 @@ private struct LetterFormsPage: View {
                             }
                         }
                     }
+                }
+                if let note {
+                    LessonTextBlock(block: ReadingBlock.Text(text: note.text, info: note.info), id: letter.number, colors: colors, info: $info)
                 }
                 // Буква с руководством по произношению - переход к нему под пергаментом.
                 if let guide {
