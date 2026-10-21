@@ -2020,6 +2020,28 @@
         }
       }
     },
+    "makharij.guide.marked" : {
+      "comment" : "Учимся читать: подпись под сеткой букв - точка у букв с руководством по произношению",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Точка - особое произношение"
+          }
+        }
+      }
+    },
+    "makharij.guide.marked.description" : {
+      "comment" : "Учимся читать: VoiceOver после названия буквы с руководством («Са, особое произношение»)",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "особое произношение"
+          }
+        }
+      }
+    },
     "makharij.hint.letter" : {
       "comment" : "Учимся читать: надпись-подсказка над буквой при первом открытии экрана",
       "localizations" : {

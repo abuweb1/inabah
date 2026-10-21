@@ -39,15 +39,17 @@ nonisolated enum ParchmentStyle: String, CaseIterable, Identifiable, Sendable {
             deep: color(.deep),
             text: color(.text),
             accent: color(.accent),
-            mark: color(.mark)
+            mark: color(.mark),
+            illustration: color(.illustration)
         )
     }
 }
 
 /// Цвета варианта: четыре оттенка градиента (по порядку стопов), текст, акцент
-/// (рамка, «✦», значок «N раз») и выделение буквы в слове («Учимся читать»). Порядок — как в генераторе ассетов.
+/// (рамка, «✦», значок «N раз»), выделение буквы в слове и фон рисунков руководства («Учимся читать»).
+/// Порядок — как в генераторе ассетов.
 nonisolated enum ParchmentToken: String, CaseIterable, Sendable {
-    case light, highlight, mid, deep, text, accent, mark
+    case light, highlight, mid, deep, text, accent, mark, illustration
 
     /// Оттенки фона — для проверки контраста текста и акцента.
     static let backgrounds: [ParchmentToken] = [.light, .highlight, .mid, .deep]
@@ -61,6 +63,7 @@ nonisolated enum ParchmentToken: String, CaseIterable, Sendable {
         case .text: AssetColor.parchmentInk.rawValue
         case .accent: AssetColor.successDeep.rawValue
         case .mark: AssetColor.parchmentMark.rawValue
+        case .illustration: AssetColor.parchmentIllustration.rawValue
         }
     }
 }
@@ -73,6 +76,8 @@ nonisolated struct ParchmentColors: Hashable, Sendable {
     let text: Color
     let accent: Color
     let mark: Color
+    /// Фон рисунков руководства: у «Пергамента» - исходный цвет рисунков `#FBEED1`, у остальных - `light`.
+    let illustration: Color
 }
 
 nonisolated extension Theme {

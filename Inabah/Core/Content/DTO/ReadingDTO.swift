@@ -7,6 +7,42 @@ nonisolated struct ReadingFileDTO: Decodable, Sendable {
     let marks: [ReadingMarkDTO]
     let letters: [ReadingLetterDTO]
     let steps: [ReadingStepDTO]
+    /// Руководства по произношению (2026-10-21, «Межзубные буквы и дод»).
+    let guides: [ReadingGuideDTO]
+
+    private enum CodingKeys: String, CodingKey { case marks, letters, steps, guides }
+
+    init(from decoder: any Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        marks = try c.decode([ReadingMarkDTO].self, forKey: .marks)
+        letters = try c.decode([ReadingLetterDTO].self, forKey: .letters)
+        steps = try c.decode([ReadingStepDTO].self, forKey: .steps)
+        guides = try c.decode(.guides, default: [])
+    }
+}
+
+/// Руководство: отдельный экран курса для своих букв (у буквы - не больше одного руководства).
+nonisolated struct ReadingGuideDTO: Decodable, Sendable {
+    let id: String
+    let letters: [String]
+    let translations: [String: ReadingTextTranslationDTO]
+    let blocks: [ReadingBlockDTO]
+
+    private enum CodingKeys: String, CodingKey { case id, letters, translations, blocks }
+
+    init(from decoder: any Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(String.self, forKey: .id)
+        letters = try c.decode([String].self, forKey: .letters)
+        translations = try c.decode([String: ReadingTextTranslationDTO].self, forKey: .translations)
+        blocks = try c.decode(.blocks, default: [])
+    }
+}
+
+/// Пункт легенды рисунка: цвет метки на самом рисунке (`#RRGGBB`) и подпись.
+nonisolated struct ReadingLegendDTO: Decodable, Sendable {
+    let color: String
+    let translations: [String: ReadingTextTranslationDTO]
 }
 
 nonisolated struct ReadingMarkDTO: Decodable, Sendable {
@@ -221,11 +257,14 @@ nonisolated struct ReadingBlockDTO: Decodable, Sendable {
     let audio: String?
     let words: [ReadingWordDTO]
     let joins: [ReadingWordDTO]
+    /// Рисунок руководства: имя файла `images/reading/<image>.webp` без расширения.
+    let image: String?
+    let legend: [ReadingLegendDTO]
     let translations: [String: ReadingTextTranslationDTO]
 
     private enum CodingKeys: String, CodingKey {
         case type, marks, letters, arabic, sample, groups, examples, exampleCard, columns, items, blocks
-        case section, id, audio, words, joins, translations
+        case section, id, audio, words, joins, image, legend, translations
     }
 
     init(from decoder: any Decoder) throws {
@@ -246,6 +285,8 @@ nonisolated struct ReadingBlockDTO: Decodable, Sendable {
         audio = try c.decodeIfPresent(String.self, forKey: .audio)
         words = try c.decode(.words, default: [])
         joins = try c.decode(.joins, default: [])
+        image = try c.decodeIfPresent(String.self, forKey: .image)
+        legend = try c.decode(.legend, default: [])
         translations = try c.decode(.translations, default: [:])
     }
 }

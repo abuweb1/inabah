@@ -196,6 +196,8 @@ struct LessonLettersGrid: View {
     let colors: ReadingColors
     /// Номер буквы, звучащей в «Послушать алфавит»: увеличена поверх соседей, над ней - название.
     var playingLetter: Int? = nil
+    /// Буквы с руководством по произношению - точка в правом верхнем углу плитки.
+    var marked: Set<ReadingLetter> = []
     let onTap: (ReadingLetter) -> Void
 
     static let defaultColumns = 5
@@ -247,6 +249,9 @@ struct LessonLettersGrid: View {
                             .accessibilityHidden(true)
                     }
                 }
+                .overlay(alignment: .topTrailing) {
+                    if marked.contains(letter) { GuideMark(color: colors.tint) }
+                }
                 .contentShape(.rect(cornerRadius: Radius.box))
         }
         .buttonStyle(PressScaleButtonStyle(pressedScale: PressFeedback.iconScale))
@@ -259,7 +264,45 @@ struct LessonLettersGrid: View {
             }
         }
         .zIndex(isPlaying ? 1 : 0)
-        .accessibilityLabel(Text(verbatim: letter.name))
+        .accessibilityLabel(GuideMark.label(letter.name, isMarked: marked.contains(letter)))
+    }
+}
+
+/// Точка «особое произношение» у буквы с руководством (Android `GuideMark`): наложение в углу ячейки.
+struct GuideMark: View {
+    let color: Color
+
+    var body: some View {
+        Circle()
+            .fill(color)
+            .frame(width: Size.statusDot, height: Size.statusDot)
+            .padding(Spacing.xs)
+            .accessibilityHidden(true)
+    }
+
+    /// «Са, особое произношение» - у буквы с руководством; иначе - как было.
+    static func label(_ name: String, isMarked: Bool) -> Text {
+        Text(verbatim: isMarked ? "\(name), \(String(localized: "makharij.guide.marked.description"))" : name)
+    }
+}
+
+/// «● Точка - особое произношение» под сеткой, где есть буквы с руководством.
+struct GuideMarkCaption: View {
+    let colors: ReadingColors
+
+    @Environment(\.theme) private var theme
+
+    var body: some View {
+        HStack(spacing: Spacing.s) {
+            Circle()
+                .fill(colors.tint)
+                .frame(width: Size.statusDot, height: Size.statusDot)
+            Text("makharij.guide.marked")
+                .font(.footnote)
+                .foregroundStyle(theme.palette.onAccentSecondary)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .accessibilityElement(children: .combine)
     }
 }
 
@@ -620,6 +663,8 @@ struct LessonFormsTable: View {
     /// Шаг - для имени записи слова-примера.
     let step: Int
     let colors: ReadingColors
+    /// Буквы с руководством по произношению - точка у отдельной формы.
+    var marked: Set<ReadingLetter> = []
     let onOpen: (ReadingLetter) -> Void
 
     @Environment(\.theme) private var theme
@@ -676,7 +721,8 @@ struct LessonFormsTable: View {
     }
 
     private func formCell(_ letter: ReadingLetter, _ form: LetterForm) -> some View {
-        Button { onOpen(letter) } label: {
+        let isMarked = form == .isolated && marked.contains(letter)
+        return Button { onOpen(letter) } label: {
             Text(verbatim: letter.form(form))
                 .font(.arabic(size: Layout.form, bold: true))
                 .foregroundStyle(theme.palette.parchmentText)
@@ -684,11 +730,14 @@ struct LessonFormsTable: View {
                 .padding(.top, Spacing.xs)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .parchmentCell(colors)
+                .overlay(alignment: .topTrailing) {
+                    if isMarked { GuideMark(color: theme.palette.parchmentMark) }
+                }
                 .contentShape(.rect(cornerRadius: Radius.box))
         }
         .buttonStyle(PressScaleButtonStyle(pressedScale: PressFeedback.iconScale))
         .liveCell(hint: "makharij.hint.letter", tint: colors.tint)
-        .accessibilityLabel(Text(verbatim: "\(letter.name), \(String(localized: form.place))"))
+        .accessibilityLabel(GuideMark.label("\(letter.name), \(String(localized: form.place))", isMarked: isMarked))
     }
 
     private func exampleRow(_ letter: ReadingLetter, examples: FormExamples) -> some View {
@@ -1092,7 +1141,7 @@ extension ClosedSyllablesRow: Equatable {
 extension LessonLettersGrid: Equatable {
     nonisolated static func == (lhs: Self, rhs: Self) -> Bool {
         lhs.letters == rhs.letters && lhs.columns == rhs.columns && lhs.colors == rhs.colors
-            && lhs.playingLetter == rhs.playingLetter
+            && lhs.playingLetter == rhs.playingLetter && lhs.marked == rhs.marked
     }
 }
 
@@ -1110,7 +1159,7 @@ extension LessonSampleClosedSyllables: Equatable {
 
 extension LessonFormsTable: Equatable {
     nonisolated static func == (lhs: Self, rhs: Self) -> Bool {
-        lhs.block == rhs.block && lhs.step == rhs.step && lhs.colors == rhs.colors
+        lhs.block == rhs.block && lhs.step == rhs.step && lhs.colors == rhs.colors && lhs.marked == rhs.marked
     }
 }
 

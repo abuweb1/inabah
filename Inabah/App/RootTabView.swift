@@ -77,6 +77,7 @@ struct RootTabView: View {
                                 case .quiz(let number): ReadingQuizView(stepNumber: number)
                                 case .words(let number): ReadingWordsView(stepNumber: number)
                                 case .zikr(let number, let zikr): ReadingZikrView(stepNumber: number, zikrIndex: zikr)
+                                case .guide(let id): ReadingGuideView(guideID: id)
                                 }
                             }
                             .interfaceTextSize()

@@ -161,6 +161,16 @@ struct AppRouterTests {
         #expect(router.makharijPath == [.steps, .lesson(3)])
     }
 
+    @Test("Руководство по произношению, открытое напрямую, - поверх списка шагов")
+    func openGuide() {
+        let router = AppRouter()
+
+        router.open(MakharijRoute.guide(id: "articulation"))
+
+        #expect(router.selectedTab == .makharij)
+        #expect(router.makharijPath == [.steps, .guide(id: "articulation")])
+    }
+
     @Test("Экраны урока открываются поверх урока своего шага", arguments: [
         MakharijRoute.alphabet(2),
         .extra(step: 2, topic: nil),

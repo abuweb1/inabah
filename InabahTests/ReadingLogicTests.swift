@@ -12,6 +12,20 @@ struct ReadingLogicTests {
         storage = try IsolatedDefaults("ReadingLogicTests")
     }
 
+    // MARK: - Руководства
+
+    @Test("Руководство - на уроке, где его буквы в сетке или таблице форм; пометка - у всех его букв",
+          arguments: [(1, true), (2, false), (3, true), (4, true), (6, true), (12, false)])
+    func stepGuides(step number: Int, shows: Bool) async throws {
+        let course = try await ReadingCourseFixture.load()
+        let guide = try #require(course.guide(id: "articulation"))
+
+        let guides = ReadingLogic.guides(for: try course.requiredStep(number), course: course)
+
+        #expect(guides == (shows ? [guide] : []))
+        #expect(ReadingLogic.markedLetters(course: course) == Set(guide.letters))
+    }
+
     // MARK: - Лист буквы
 
     @Test("Цепочка - название и слоги, закрытые слоги только с шага «Сукун», до шага 2 огласовки не пройдены")

@@ -78,6 +78,61 @@ struct ReadingContentTests {
         #expect(future.steps.first?.blocks == [.letters(ReadingBlock.Letters(letters: future.letters))])
     }
 
+    @Test("Руководство «Межзубные буквы и дод» из Bundle: буквы, рисунки, легенда (как Android)")
+    func articulationGuide() async throws {
+        let course = try await ReadingCourseFixture.load()
+        let guide = try #require(course.guide(id: "articulation"))
+
+        #expect(guide.title == "Межзубные буквы и дод")
+        #expect(guide.letters.map(\.letter) == ["ث", "ذ", "ظ", "ض"])
+        for letter in guide.letters {
+            #expect(course.guide(for: letter) == guide)
+        }
+        let ba = try #require(course.letters.first { $0.letter == "ب" })
+        #expect(course.guide(for: ba) == nil)
+
+        let images = guide.blocks.compactMap { if case .image(let image) = $0 { image } else { nil } }
+        #expect(images.map(\.image) == ["interdental-sa-za", "interdental-zo", "dod-place", "dod-palate", "dod-air"])
+        let titledTexts = guide.blocks.filter { if case .text(let text) = $0 { text.title != nil } else { false } }
+        #expect(titledTexts.count == 2)
+        for image in images {
+            #expect(GuideImageLoader.url(image.image) != nil, "\(image.image).webp в Bundle")
+        }
+        let legend = try #require(images.first { !$0.legend.isEmpty }?.legend)
+        #expect(legend.map(\.rgb) == [0xB17CD5, 0x23113C])
+        #expect(legend.map(\.text) == ["Касание без давления", "Касание и давление"])
+        #expect(images.last?.title == nil && images.last?.text == nil, "рисунок без подписи")
+    }
+
+    @Test("Руководство: битые рисунок, цвет легенды и неизвестная буква - ошибка", arguments: [
+        ##"{"id":"g","letters":["ب"],"translations":{"ru":{"title":"Р"}},"blocks":[{"type":"image"}]}"##,
+        ##"{"id":"g","letters":["ب"],"translations":{"ru":{"title":"Р"}},"blocks":[{"type":"image","image":"x","legend":[{"color":"violet","translations":{"ru":{"text":"т"}}}]}]}"##,
+        ##"{"id":"g","letters":["ب"],"translations":{"ru":{"title":"Р"}},"blocks":[{"type":"image","image":"x","legend":[{"color":"#B17CD5","translations":{"ru":{"text":""}}}]}]}"##,
+        ##"{"id":"g","letters":["ث"],"translations":{"ru":{"title":"Р"}},"blocks":[]}"##,
+    ])
+    func brokenGuide(guide: String) {
+        #expect(throws: ReadingMappingError.self) {
+            try Self.course(Self.minimalJSON(guides: "[\(guide)]"))
+        }
+    }
+
+    @Test("Руководство: цвет легенды #RRGGBB, необязательная подпись, неизвестные блоки пропускаются")
+    func minimalGuide() throws {
+        let course = try Self.course(Self.minimalJSON(guides: ##"""
+            [{"id":"g","letters":["ب"],"translations":{"ru":{"title":"Р"}},"blocks":[
+              {"type":"text","translations":{"ru":{"title":" ","text":"Текст"}}},
+              {"type":"video"},
+              {"type":"image","image":"x","legend":[{"color":"#b17cd5","translations":{"ru":{"text":"т"}}}]}
+            ]}]
+            """##))
+        let guide = try #require(course.guides.only)
+        #expect(guide.blocks == [
+            .text(ReadingBlock.Text(text: "Текст")),
+            .image(ReadingBlock.Image(image: "x", legend: [ReadingLegendItem(rgb: 0xB17CD5, text: "т")])),
+        ])
+        #expect(try Self.course(Self.minimalJSON()).guides.isEmpty, "без guides - пусто")
+    }
+
     @Test("«Форма буквы» без карточки в таблицах форм - ошибка, не вопрос с одним вариантом")
     func letterFormWithoutCard() {
         #expect(throws: ReadingMappingError.self) {
@@ -291,12 +346,14 @@ struct ReadingContentTests {
         return try ReadingCourse(dto: dto, languages: ContentLanguagePriority(languages: [.base]))
     }
 
-    private static func minimalJSON(stepMarks: String = #"["fatha"]"#, blocks: String = "[]", quiz: String = "[]") -> String {
+    private static func minimalJSON(
+        stepMarks: String = #"["fatha"]"#, blocks: String = "[]", quiz: String = "[]", guides: String? = nil
+    ) -> String {
         """
         {
           "marks": [{ "id": "fatha", "sign": "َ", "translations": { "ru": { "name": "фатха" } } }],
           "letters": [{ "id": 1, "letter": "ب", "name": "بَاء", "translations": { "ru": { "name": "Ба" } } }],
-          "steps": [{ "id": 1, "marks": \(stepMarks), "translations": { "ru": { "title": "Шаг" } }, "blocks": \(blocks), "quiz": \(quiz) }]
+          "steps": [{ "id": 1, "marks": \(stepMarks), "translations": { "ru": { "title": "Шаг" } }, "blocks": \(blocks), "quiz": \(quiz) }]\(guides.map { ",\n  \"guides\": \($0)" } ?? "")
         }
         """
     }
