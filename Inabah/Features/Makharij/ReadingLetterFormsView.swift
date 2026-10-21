@@ -35,7 +35,7 @@ struct ReadingLetterFormsView: View {
             content: { course, colors, _ in
                 if let forms = Self.forms(course.step(stepNumber)) {
                     LetterFormsContent(
-                        forms: forms, stepNumber: stepNumber, stepLetter: letter, colors: colors,
+                        forms: forms, guides: course.guides, stepNumber: stepNumber, stepLetter: letter, colors: colors,
                         isHintShown: isHintShown, current: $current
                     )
                 } else {
@@ -69,6 +69,8 @@ struct ReadingLetterFormsView: View {
 
 private struct LetterFormsContent: View {
     let forms: ReadingBlock.Forms
+    /// Руководства курса - кнопка под пергаментом у буквы с руководством.
+    let guides: [ReadingGuide]
     let stepNumber: Int
     /// Буква, с которой открыли карточку.
     let stepLetter: String
@@ -94,6 +96,7 @@ private struct LetterFormsContent: View {
                             LetterFormsPage(
                                 letter: letter,
                                 examples: forms.examples[letter],
+                                guide: guides.first { $0.letters.contains(letter) },
                                 colors: colors,
                                 isHintShown: isHintShown,
                                 zoomedForm: zoom?.letter == letter ? zoom?.form : nil,
@@ -209,6 +212,8 @@ private struct GroupStrip: View {
 private struct LetterFormsPage: View {
     let letter: ReadingLetter
     let examples: FormExamples?
+    /// Руководство по произношению буквы - кнопка под пергаментом; нет - `nil`.
+    let guide: ReadingGuide?
     let colors: ReadingColors
     let isHintShown: Bool
     /// Форма слова, которое сейчас увеличено - его ячейка «вылетела» и пуста.
@@ -227,46 +232,52 @@ private struct LetterFormsPage: View {
 
     var body: some View {
         ScrollView {
-            ParchmentPanel(bottomCornerRadius: Radius.card) {
-                VStack(spacing: Spacing.s) {
-                    Text(verbatim: letter.letter)
-                        .font(.arabic(size: Layout.bigLetter, bold: true))
-                        .foregroundStyle(theme.palette.parchmentText)
-                        .fixedSize()
-                        .frame(maxWidth: .infinity)
-                        .accessibilityLabel(Text(verbatim: letter.name))
-                    WeightedRow(spacing: Spacing.xs) {
-                        ForEach(LetterForm.placed, id: \.self) { form in
-                            VStack(spacing: 0) {
-                                Text(verbatim: letter.form(form))
-                                    .font(.arabic(size: Layout.form, bold: true))
-                                    .foregroundStyle(theme.palette.parchmentText)
-                                    .fixedSize()
-                                Text(form.caption)
-                                    .font(.caption2)
-                                    .foregroundStyle(colors.parchmentCaption)
-                            }
-                            .padding(.vertical, Spacing.xs)
-                            .frame(maxWidth: .infinity, maxHeight: .infinity)
-                            .parchmentCell(colors)
-                            .accessibilityElement(children: .combine)
-                        }
-                    }
-                    if let examples {
+            VStack(spacing: Spacing.m) {
+                ParchmentPanel(bottomCornerRadius: Radius.card) {
+                    VStack(spacing: Spacing.s) {
+                        Text(verbatim: letter.letter)
+                            .font(.arabic(size: Layout.bigLetter, bold: true))
+                            .foregroundStyle(theme.palette.parchmentText)
+                            .fixedSize()
+                            .frame(maxWidth: .infinity)
+                            .accessibilityLabel(Text(verbatim: letter.name))
                         WeightedRow(spacing: Spacing.xs) {
                             ForEach(LetterForm.placed, id: \.self) { form in
-                                if let word = examples.word(form) {
-                                    ZoomableExampleWord(
-                                        word: word, letter: letter, form: form,
-                                        transliteration: examples.transliteration(form),
-                                        isHintShown: isHintShown, colors: colors,
-                                        coordinateSpace: coordinateSpace, audio: audio(form)
-                                    ) { frame in onZoom(form, frame) }
-                                    .opacity(zoomedForm == form ? 0 : 1)
+                                VStack(spacing: 0) {
+                                    Text(verbatim: letter.form(form))
+                                        .font(.arabic(size: Layout.form, bold: true))
+                                        .foregroundStyle(theme.palette.parchmentText)
+                                        .fixedSize()
+                                    Text(form.caption)
+                                        .font(.caption2)
+                                        .foregroundStyle(colors.parchmentCaption)
+                                }
+                                .padding(.vertical, Spacing.xs)
+                                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                                .parchmentCell(colors)
+                                .accessibilityElement(children: .combine)
+                            }
+                        }
+                        if let examples {
+                            WeightedRow(spacing: Spacing.xs) {
+                                ForEach(LetterForm.placed, id: \.self) { form in
+                                    if let word = examples.word(form) {
+                                        ZoomableExampleWord(
+                                            word: word, letter: letter, form: form,
+                                            transliteration: examples.transliteration(form),
+                                            isHintShown: isHintShown, colors: colors,
+                                            coordinateSpace: coordinateSpace, audio: audio(form)
+                                        ) { frame in onZoom(form, frame) }
+                                        .opacity(zoomedForm == form ? 0 : 1)
+                                    }
                                 }
                             }
                         }
                     }
+                }
+                // Буква с руководством по произношению - переход к нему под пергаментом.
+                if let guide {
+                    GuideButton(guide: guide, colors: colors)
                 }
             }
             .padding(.horizontal, Spacing.xl)

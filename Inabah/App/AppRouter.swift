@@ -67,6 +67,8 @@ nonisolated enum MakharijRoute: Hashable, Codable, Sendable {
     case words(Int)
     /// Зикр итога «Читаем зикр» по номеру в шаге - поверх урока итога.
     case zikr(step: Int, zikr: Int)
+    /// Руководство по произношению (`ReadingGuide.id`) - поверх урока, листа буквы или карточки буквы.
+    case guide(id: String)
 }
 
 /// Навигация приложения: выбранная вкладка и типизированный стек каждой вкладки.
@@ -132,7 +134,7 @@ final class AppRouter {
         switch route {
         case .steps:
             makharijPath = [route]
-        case .lesson:
+        case .lesson, .guide:
             makharijPath = [.steps, route]
         case .alphabet(let step), .quiz(let step), .words(let step),
              .extra(let step, _), .letterForms(let step, _), .zikr(let step, _):

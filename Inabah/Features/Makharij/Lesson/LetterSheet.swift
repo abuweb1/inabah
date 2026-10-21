@@ -78,6 +78,11 @@ struct LetterSheet: View {
                 }
             }
             .padding(.top, Spacing.xl)
+            // Буква с руководством по произношению - переход к нему; лист остаётся открытым, «назад» вернёт к нему.
+            if let guide = course.guide(for: letter) {
+                GuideButton(guide: guide, colors: colors)
+                    .padding(.top, Spacing.xl)
+            }
         }
         .padding(.horizontal, Spacing.xl)
         .padding(.top, Spacing.s)

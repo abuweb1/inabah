@@ -80,6 +80,7 @@ private struct LessonContent: View {
             openTopic: { router.makharijPath.append(.extra(step: step.number, topic: $0)) },
             openZikr: { router.makharijPath.append(.zikr(step: step.number, zikr: $0)) }
         )
+        let marked = ReadingLogic.markedLetters(course: course)
         ScrollView {
             VStack(spacing: Spacing.m) {
                 if let example = step.example {
@@ -89,7 +90,7 @@ private struct LessonContent: View {
                     LessonBlockView(
                         block: block, index: index, step: step, colors: colors, seed: seed,
                         isTransliterationHidden: settings.transliterationHidden, info: $info, actions: actions,
-                        playingLetter: playingLetter?.number
+                        playingLetter: playingLetter?.number, marked: marked
                     )
                 }
                 if let extra = step.extra {
@@ -97,6 +98,9 @@ private struct LessonContent: View {
                         Text(verbatim: extra.title)
                     }
                     .buttonStyle(ReadingButtonStyle(colors: colors, isProminent: false))
+                }
+                ForEach(ReadingLogic.guides(for: step, course: course)) { guide in
+                    GuideButton(guide: guide, colors: colors)
                 }
                 primaryButton
                 if step.words != nil {
@@ -151,6 +155,8 @@ struct LessonBlockView: View {
     let actions: LessonActions
     /// Номер буквы, звучащей в «Послушать алфавит» (в сетке - увеличена и подписана).
     var playingLetter: Int? = nil
+    /// Буквы с руководством по произношению - точка в сетке и таблице форм.
+    var marked: Set<ReadingLetter> = []
 
     var body: some View {
         switch block {
@@ -159,8 +165,13 @@ struct LessonBlockView: View {
         case .marks(let marks):
             LessonMarksBlock(block: marks, colors: colors)
         case .letters(let letters):
-            LessonLettersGrid(letters: letters.letters, colors: colors, playingLetter: playingLetter, onTap: actions.openSheet.open)
-                .equatable()
+            LessonLettersGrid(
+                letters: letters.letters, colors: colors, playingLetter: playingLetter, marked: marked, onTap: actions.openSheet.open
+            )
+            .equatable()
+            if letters.letters.contains(where: marked.contains) {
+                GuideMarkCaption(colors: colors)
+            }
         case .syllables(let syllables):
             if let sample = syllables.sample {
                 LessonSampleSyllables(
@@ -175,7 +186,7 @@ struct LessonBlockView: View {
         case .rule(let rule):
             LessonRuleBlock(block: rule, colors: colors, onTap: actions.openSheet.open)
         case .forms(let forms):
-            LessonFormsTable(block: forms, step: step.number, colors: colors, onOpen: actions.openLetterForms)
+            LessonFormsTable(block: forms, step: step.number, colors: colors, marked: marked, onOpen: actions.openLetterForms)
                 .equatable()
         case .formulas(let formulas):
             LessonFormulasBlock(items: formulas.items, columns: formulas.columns, isTransliterationHidden: isTransliterationHidden, colors: colors)
@@ -203,6 +214,9 @@ struct LessonBlockView: View {
             ) {
                 actions.openZikr(step.zikrs.firstIndex(of: zikr) ?? 0)
             }
+        case .image:
+            // Рисунки - только на экране руководства (как Android).
+            EmptyView()
         }
     }
 }

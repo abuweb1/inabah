@@ -18,7 +18,7 @@ nonisolated enum AssetColor: String, CaseIterable, Sendable {
     // Gold
     case gold, goldLight, goldDeep, sunRays
     // Parchment
-    case parchmentLight, parchmentMid, parchmentDeep, parchmentInk, parchmentMark
+    case parchmentLight, parchmentMid, parchmentDeep, parchmentInk, parchmentMark, parchmentIllustration
     // Gradients
     case azkarBackgroundTop, azkarBackgroundMid, azkarBackgroundBottom
     case morningCardStart, morningCardMid, morningCardEnd

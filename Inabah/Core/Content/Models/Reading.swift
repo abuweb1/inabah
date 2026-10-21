@@ -8,8 +8,15 @@ nonisolated struct ReadingCourse: Hashable, Sendable {
     let marks: [ReadingMark]
     let letters: [ReadingLetter]
     let steps: [ReadingStep]
+    /// Руководства по произношению - отдельные экраны курса (2026-10-21).
+    var guides: [ReadingGuide] = []
 
     func step(_ number: Int) -> ReadingStep? { steps.first { $0.number == number } }
+
+    func guide(id: String) -> ReadingGuide? { guides.first { $0.id == id } }
+
+    /// Руководство буквы; у обычной буквы - `nil` (у буквы не больше одного руководства).
+    func guide(for letter: ReadingLetter) -> ReadingGuide? { guides.first { $0.letters.contains(letter) } }
 
     /// Знаки, пройденные к шагу `stepNumber` включительно, в порядке `marks`.
     func learnedMarks(through stepNumber: Int) -> [ReadingMark] {
@@ -222,6 +229,22 @@ nonisolated struct ReadingExtra: Hashable, Sendable {
     let blocks: [ReadingBlock]
 }
 
+/// Руководство по произношению своих букв («Межзубные буквы и дод»): карточки текста и рисунки.
+/// Открывается с урока, где эти буквы в сетке или таблице форм, из листа буквы и с карточки буквы.
+nonisolated struct ReadingGuide: Hashable, Sendable, Identifiable {
+    let id: String
+    let title: String
+    let letters: [ReadingLetter]
+    let blocks: [ReadingBlock]
+}
+
+/// Пункт легенды рисунка. `rgb` (0xRRGGBB) - цвет метки на самом рисунке, часть данных, а не цвет темы:
+/// правило «HEX только в ассетах» его не касается.
+nonisolated struct ReadingLegendItem: Hashable, Sendable {
+    let rgb: UInt32
+    let text: String
+}
+
 /// «Читаем слова»: каждое слово прочитать `repeat` раз; `groupSize` - слов на странице из коротких слов
 /// (15 = 5 рядов по 3). Страницы строит `ReadingLogic.wordPages` / `pairPages`.
 nonisolated struct ReadingWords: Hashable, Sendable {
@@ -273,11 +296,22 @@ nonisolated enum ReadingBlock: Hashable, Sendable {
     case topic(Topic)
     case zikr(Zikr)
     case rule(Rule)
+    /// Рисунок руководства; в уроке не рисуется (как Android).
+    case image(Image)
 
-    /// Короткий текст; `info` - полный, во всплывающем окне по ⓘ.
+    /// Короткий текст; `info` - полный, во всплывающем окне по ⓘ; `title` - заголовок карточки руководства.
     struct Text: Hashable, Sendable {
         let text: String
         var info: String?
+        var title: String?
+    }
+
+    /// Рисунок `images/reading/<image>.webp` с необязательными заголовком, подписью и легендой.
+    struct Image: Hashable, Sendable {
+        let image: String
+        var title: String?
+        var text: String?
+        var legend: [ReadingLegendItem] = []
     }
 
     /// Таблица форм: карточки по группам похожего написания, ряд - буква, столбцы - 4 формы; `examples` -

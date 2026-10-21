@@ -109,6 +109,8 @@ nonisolated struct Palette: Hashable, Sendable {
     var parchmentInk: Color
     /// Выделение буквы в слове на пергаменте («Учимся читать»): своё у каждого фона, контраст ≥ 4,5.
     var parchmentMark: Color = .clear
+    /// Фон рисунков руководства «Учимся читать» - светлый тон пергамента (2026-10-21).
+    var parchmentIllustration: Color = .clear
 
     // Фон перевода — сдвигается ползунком «Фон перевода» (`Theme.withTranslationShade`). Задаются
     // при сборке темы (`Palette.inabah`, `Theme.unified`), как цвета пергамента.
@@ -131,6 +133,7 @@ nonisolated extension Palette {
         parchmentAccentTint = colors.accent.opacity(0.1)
         parchmentAccentBorder = colors.accent.opacity(0.25)
         parchmentMark = colors.mark
+        parchmentIllustration = colors.illustration
     }
 }
 

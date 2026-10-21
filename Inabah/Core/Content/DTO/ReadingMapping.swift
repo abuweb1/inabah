@@ -61,7 +61,15 @@ nonisolated extension ReadingCourse {
                 quizCount: step.quizCount ?? ReadingStep.quizRound
             ))
         }
-        self.init(marks: context.marks, letters: context.letters, steps: steps)
+        let guides = try dto.guides.map { guide in
+            ReadingGuide(
+                id: guide.id,
+                title: try context.require(guide.translations, "руководство \(guide.id)").title,
+                letters: try guide.letters.map(context.letter),
+                blocks: try guide.blocks.compactMap { try context.guideBlock($0, guide: guide.id) }
+            )
+        }
+        self.init(marks: context.marks, letters: context.letters, steps: steps, guides: guides)
     }
 
     /// Знаки и буквы курса и поиск по ним - общие для всех шагов.
@@ -137,7 +145,9 @@ nonisolated extension ReadingCourse {
             switch block.type {
             case "text":
                 let text = try require(block.translations, "шаг \(step.id), текст")
-                return .text(.init(text: text.text, info: Optional(text.info).nonEmpty))
+                return .text(.init(text: text.text, info: Optional(text.info).nonEmpty, title: Optional(text.title).nonEmpty))
+            case "image":
+                return .image(try image(block, place: "шаг \(step.id)"))
             case "forms":
                 return .forms(try forms(block))
             case "marks":
@@ -214,6 +224,50 @@ nonisolated extension ReadingCourse {
                 examples: examples,
                 exampleCard: try block.exampleCard.map(letter)
             )
+        }
+
+        /// Блок руководства: только текст (с заголовком) и рисунок; остальные виды пропускаются.
+        func guideBlock(_ block: ReadingBlockDTO, guide: String) throws -> ReadingBlock? {
+            switch block.type {
+            case "text":
+                let text = try require(block.translations, "руководство \(guide), текст")
+                return .text(.init(text: text.text, info: Optional(text.info).nonEmpty, title: Optional(text.title).nonEmpty))
+            case "image":
+                return .image(try image(block, place: "руководство \(guide)"))
+            default:
+                return nil
+            }
+        }
+
+        /// Рисунок: имя файла обязательно, подпись - нет; у пункта легенды обязательны цвет `#RRGGBB` и текст.
+        private func image(_ block: ReadingBlockDTO, place: String) throws -> ReadingBlock.Image {
+            guard let image = block.image.nonEmpty else {
+                throw ReadingMappingError(description: "reading.json: \(place), рисунок без image")
+            }
+            let text = languages.select(from: block.translations.keyedByLanguage)?.translation
+            let legend = try block.legend.map { item in
+                guard let rgb = Self.rgb(item.color) else {
+                    throw ReadingMappingError(description: "reading.json: \(place), \(image): цвет легенды \(item.color)")
+                }
+                guard let caption = Optional(try require(item.translations, "\(place), \(image), легенда").text).nonEmpty else {
+                    throw ReadingMappingError(description: "reading.json: \(place), \(image): легенда без текста")
+                }
+                return ReadingLegendItem(rgb: rgb, text: caption)
+            }
+            return ReadingBlock.Image(
+                image: image,
+                title: text.flatMap { Optional($0.title).nonEmpty },
+                text: text.flatMap { Optional($0.text).nonEmpty },
+                legend: legend
+            )
+        }
+
+        /// `#RRGGBB` → 0xRRGGBB; другое - `nil`.
+        private static func rgb(_ hex: String) -> UInt32? {
+            guard hex.count == 7, hex.hasPrefix("#") else { return nil }
+            let digits = hex.dropFirst()
+            guard digits.allSatisfy(\.isHexDigit) else { return nil }
+            return UInt32(digits, radix: 16)
         }
 
         private func zikr(_ block: ReadingBlockDTO, step: ReadingStepDTO) throws -> ReadingBlock.Zikr {
