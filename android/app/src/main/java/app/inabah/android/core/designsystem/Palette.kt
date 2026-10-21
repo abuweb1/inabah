@@ -63,6 +63,8 @@ data class Palette(
     val parchmentAccent: Color = successDeep,
     /** Выделение буквы в слове на пергаменте («Учимся читать»); цвет - у варианта фона, [ParchmentStyle]. */
     val parchmentMark: Color = ParchmentStyle.Classic.colors.mark,
+    /** Фон под рисунком руководства «Учимся читать» - [ParchmentColors.illustration]. */
+    val parchmentIllustration: Color = ParchmentStyle.Classic.colors.illustration,
     val tabAzkar: Color,
     val tabHadith: Color,
     val tabMakharij: Color,

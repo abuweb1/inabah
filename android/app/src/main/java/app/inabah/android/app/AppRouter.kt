@@ -81,6 +81,8 @@ class AppRouter {
             is MakharijRoute.Extra -> listOf(MakharijRoute.Steps, MakharijRoute.Lesson(route.step), route)
             is MakharijRoute.LetterForms -> listOf(MakharijRoute.Steps, MakharijRoute.Lesson(route.step), route)
             is MakharijRoute.Zikr -> listOf(MakharijRoute.Steps, MakharijRoute.Lesson(route.step), route)
+            // Руководство не привязано к шагу: открытое напрямую - поверх списка шагов.
+            is MakharijRoute.Guide -> listOf(MakharijRoute.Steps, route)
         }
         _makharijStack.replaceWith(stack)
     }

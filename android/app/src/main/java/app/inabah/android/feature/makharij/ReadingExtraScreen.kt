@@ -40,6 +40,8 @@ fun ReadingExtraScreen(
     modifier: Modifier = Modifier,
     /** Записи листа буквы (`ClipPlayer`). */
     clips: ClipPlayback = ClipPlayback.None,
+    /** Руководство по произношению буквы - из её листа. */
+    onOpenGuide: (String) -> Unit = {},
 ) {
     val hidden by settings.transliterationHidden.collectAsStateWithLifecycle()
     var sheetLetter by rememberSaveable { mutableStateOf<Int?>(null) }
@@ -83,6 +85,7 @@ fun ReadingExtraScreen(
                 onDismiss = { sheetLetter = null },
                 contentPadding = contentPadding,
                 clips = clips,
+                onOpenGuide = onOpenGuide,
             )
         }
     }

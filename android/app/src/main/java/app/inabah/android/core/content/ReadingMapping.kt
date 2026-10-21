@@ -3,7 +3,6 @@ package app.inabah.android.core.content
 import app.inabah.android.core.content.dto.ReadingBlockDto
 import app.inabah.android.core.content.dto.ReadingFileDto
 import app.inabah.android.core.content.dto.ReadingQuizDto
-import app.inabah.android.core.content.dto.ReadingStepDto
 import app.inabah.android.core.content.dto.ReadingWordDto
 import app.inabah.android.core.content.model.AzkarSection
 import app.inabah.android.core.content.model.FormExamples
@@ -12,6 +11,8 @@ import app.inabah.android.core.content.model.ReadingBlock
 import app.inabah.android.core.content.model.ReadingCourse
 import app.inabah.android.core.content.model.ReadingExtra
 import app.inabah.android.core.content.model.ReadingFormula
+import app.inabah.android.core.content.model.ReadingGuide
+import app.inabah.android.core.content.model.ReadingLegendItem
 import app.inabah.android.core.content.model.ReadingJoin
 import app.inabah.android.core.content.model.ReadingLetter
 import app.inabah.android.core.content.model.ReadingMark
@@ -79,12 +80,12 @@ internal fun ReadingFileDto.toReadingCourse(priority: ContentLanguagePriority): 
             title = text.title,
             subtitle = text.subtitle,
             blocks = dto.blocks.mapNotNull { block ->
-                block.toBlock(dto, learnedMarks, priority, ::mark, ::letter, letters)
+                block.toBlock("шаг ${dto.id}", dto.blocks, learnedMarks, priority, ::mark, ::letter, letters)
             },
             extra = dto.extra?.let { extra ->
                 ReadingExtra(
                     title = priority.require(extra.translations, "шаг ${dto.id}, справка").title,
-                    blocks = extra.blocks.mapNotNull { block -> block.toBlock(dto, learnedMarks, priority, ::mark, ::letter, letters) },
+                    blocks = extra.blocks.mapNotNull { block -> block.toBlock("шаг ${dto.id}", dto.blocks, learnedMarks, priority, ::mark, ::letter, letters) },
                 )
             },
             quiz = dto.quiz.mapNotNull { quiz ->
@@ -109,19 +110,48 @@ internal fun ReadingFileDto.toReadingCourse(priority: ContentLanguagePriority): 
             isFinal = dto.final,
         )
     }
-    return ReadingCourse(marks = marks, letters = letters, steps = steps)
+    val guides = guides.map { dto ->
+        val where = "руководство ${dto.id}"
+        ReadingGuide(
+            id = dto.id,
+            title = priority.require(dto.translations, where).title,
+            letters = dto.letters.map(::letter),
+            blocks = dto.blocks.mapNotNull { it.toBlock(where, dto.blocks, emptyList(), priority, ::mark, ::letter, letters) },
+        )
+    }
+    return ReadingCourse(marks = marks, letters = letters, steps = steps, guides = guides)
+}
+
+/** `#RRGGBB` → непрозрачный ARGB. */
+private fun legendColor(hex: String, where: String): Long {
+    val rgb = requireNotNull(hex.removePrefix("#").takeIf { it.length == 6 }?.toLongOrNull(16)) { "reading.json: $where, цвет легенды $hex" }
+    return 0xFF000000 or rgb
 }
 
 private fun ReadingBlockDto.toBlock(
-    step: ReadingStepDto,
+    /** Где блок - для сообщений об ошибках данных: «шаг 3», «руководство articulation». */
+    where: String,
+    /** Блоки того же шага (руководства): знаки показываются на первой букве его таблицы слогов. */
+    siblings: List<ReadingBlockDto>,
     learnedMarks: List<ReadingMark>,
     priority: ContentLanguagePriority,
     mark: (String) -> ReadingMark,
     letter: (String) -> ReadingLetter,
     alphabet: List<ReadingLetter>,
 ): ReadingBlock? = when (type) {
-    "text" -> priority.require(translations, "шаг ${step.id}, текст").let {
-        ReadingBlock.Text(it.text, it.info.trim().ifEmpty { null })
+    "text" -> priority.require(translations, "$where, текст").let {
+        ReadingBlock.Text(it.text, it.info.trim().ifEmpty { null }, it.title.trim().ifEmpty { null })
+    }
+    "image" -> {
+        val text = priority.select(translations.keyedByLanguage())?.translation
+        ReadingBlock.Image(
+            image = requireNotNull(image?.trim()?.ifEmpty { null }) { "reading.json: $where, рисунок без image" },
+            title = text?.title?.trim()?.ifEmpty { null },
+            text = text?.text?.trim()?.ifEmpty { null },
+            legend = legend.map { item ->
+                ReadingLegendItem(legendColor(item.color, where), priority.require(item.translations, "$where, легенда").text)
+            },
+        )
     }
     "forms" -> ReadingBlock.Forms(
         groups = groups.orEmpty().map { group -> group.map(letter) },
@@ -139,7 +169,7 @@ private fun ReadingBlockDto.toBlock(
     // Знаки - на первой букве таблицы слогов шага без подставки (у алифа знак - на хамзе), иначе на «ب».
     "marks" -> ReadingBlock.Marks(
         marks = marks.map(mark),
-        example = step.blocks.firstOrNull { it.type == "syllables" }?.letters.orEmpty()
+        example = siblings.firstOrNull { it.type == "syllables" }?.letters.orEmpty()
             .map(letter)
             .firstOrNull { it.syllableBases.isEmpty() }
             ?: letter(EXAMPLE_LETTER),
@@ -154,7 +184,7 @@ private fun ReadingBlockDto.toBlock(
         ReadingBlock.Syllables(rows, columns.filter { m -> rows.all { m.id in it.syllables } }, sample)
     }
     "rule" -> {
-        val text = priority.require(translations, "шаг ${step.id}, правило")
+        val text = priority.require(translations, "$where, правило")
         ReadingBlock.Rule(
             arabic = requireNotNull(arabic) { "reading.json: правило без arabic" },
             transliteration = text.translit,
@@ -163,13 +193,13 @@ private fun ReadingBlockDto.toBlock(
         )
     }
     "topic" -> {
-        val text = priority.require(translations, "шаг ${step.id}, тема")
+        val text = priority.require(translations, "$where, тема")
         ReadingBlock.Topic(
             summary = text.text,
             example = arabic,
             extra = ReadingExtra(
                 title = text.title,
-                blocks = blocks.mapNotNull { it.toBlock(step, learnedMarks, priority, mark, letter, alphabet) },
+                blocks = blocks.mapNotNull { it.toBlock(where, siblings, learnedMarks, priority, mark, letter, alphabet) },
             ),
         )
     }
@@ -197,7 +227,7 @@ private fun ReadingBlockDto.toBlock(
         ReadingBlock.ClosedSyllables(vowels, rows, sample)
     }
     "zikr" -> {
-        val text = priority.require(translations, "шаг ${step.id}, зикр")
+        val text = priority.require(translations, "$where, зикр")
         val zikrSection = requireNotNull(AzkarSection.entries.firstOrNull { it.key == section }) { "reading.json: зикр - неизвестный раздел $section" }
         ReadingBlock.Zikr(
             zikr = ZikrId(zikrSection, requireNotNull(id) { "reading.json: зикр без id" }),
@@ -205,7 +235,7 @@ private fun ReadingBlockDto.toBlock(
             arabic = requireNotNull(arabic) { "reading.json: зикр без arabic" },
             words = words.map { ReadingWord(it.arabic, it.translation(priority)?.translit?.trim()?.ifEmpty { null }) },
             joins = joins.map { join ->
-                val joinText = priority.require(join.translations, "шаг ${step.id}, зикр, ${join.arabic}")
+                val joinText = priority.require(join.translations, "$where, зикр, ${join.arabic}")
                 ReadingJoin(join.arabic, joinText.translit, joinText.note)
             },
             summary = text.text,

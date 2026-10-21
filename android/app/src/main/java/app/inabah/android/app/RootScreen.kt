@@ -47,6 +47,7 @@ import app.inabah.android.feature.hadith.HadithDetailScreen
 import app.inabah.android.feature.hadith.HadithHomeScreen
 import app.inabah.android.feature.hadith.HadithListScreen
 import app.inabah.android.feature.makharij.MakharijHomeScreen
+import app.inabah.android.feature.makharij.ReadingGuideScreen
 import app.inabah.android.feature.makharij.ReadingZikrScreen
 import app.inabah.android.feature.makharij.ReadingAlphabetScreen
 import app.inabah.android.feature.makharij.ReadingExtraScreen
@@ -310,6 +311,7 @@ private fun TabScreens(tab: AppTab, services: AppServices, contentPadding: Paddi
                         onOpenExtra = { router.push(MakharijRoute.Extra(route.step, it)) },
                         onOpenLetterForms = { router.push(MakharijRoute.LetterForms(route.step, it)) },
                         onOpenZikr = { router.push(MakharijRoute.Zikr(route.step, it)) },
+                        onOpenGuide = { router.push(MakharijRoute.Guide(it)) },
                         clips = services.clipPlayer,
                         contentPadding = contentPadding.bottomOnly(),
                     )
@@ -337,6 +339,7 @@ private fun TabScreens(tab: AppTab, services: AppServices, contentPadding: Paddi
                         clips = clips,
                         playingClip = services.clipPlayer.playing.collectAsStateWithLifecycle().value,
                         onPlayClip = services.clipPlayer::play,
+                        onOpenGuide = { router.push(MakharijRoute.Guide(it)) },
                     )
                 }
                 entry<MakharijRoute.Alphabet> { route ->
@@ -347,6 +350,7 @@ private fun TabScreens(tab: AppTab, services: AppServices, contentPadding: Paddi
                         onBack = { router.pop(AppTab.Makharij) },
                         contentPadding = contentPadding.bottomOnly(),
                         clips = services.clipPlayer,
+                        onOpenGuide = { router.push(MakharijRoute.Guide(it)) },
                     )
                 }
                 entry<MakharijRoute.Extra> { route ->
@@ -358,6 +362,15 @@ private fun TabScreens(tab: AppTab, services: AppServices, contentPadding: Paddi
                         onBack = { router.pop(AppTab.Makharij) },
                         contentPadding = contentPadding.bottomOnly(),
                         clips = services.clipPlayer,
+                        onOpenGuide = { router.push(MakharijRoute.Guide(it)) },
+                    )
+                }
+                entry<MakharijRoute.Guide> { route ->
+                    ReadingGuideScreen(
+                        guideId = route.id,
+                        store = services.readingStore,
+                        onBack = { router.pop(AppTab.Makharij) },
+                        contentPadding = contentPadding.bottomOnly(),
                     )
                 }
                 entry<MakharijRoute.Zikr> { route ->

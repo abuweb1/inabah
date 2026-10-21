@@ -51,6 +51,8 @@ class ParchmentStyleTest {
             ParchmentColors(
                 palette.parchmentLight, palette.gold, palette.parchmentMid, palette.parchmentDeep, palette.parchmentInk,
                 accent = palette.successDeep,
+                // Фон рисунков руководств (2026-10-21) - кремовый цвет самих рисунков, не пергамент.
+                illustration = palette.parchmentIllustration,
             ),
             ParchmentStyle.Classic.colors,
         )

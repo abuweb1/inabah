@@ -380,6 +380,45 @@ class ReadingScreensTest {
         compose.onNodeWithContentDescription("Послушать алфавит").assertExists()
     }
 
+    @Test
+    fun guideOpensFromLessonButtonAndLetterSheetOfMarkedLetter() {
+        val opened = mutableListOf<String>()
+        compose.setContent {
+            InabahTheme {
+                ReadingLessonScreen(1, store, ReadingProgress(dataStore.storage), ReadingSettings(dataStore.storage),
+                    onBack = {}, onOpenQuiz = {}, onOpenWords = {}, onOpenAlphabet = {}, onOpenLetterForms = {},
+                    contentPadding = PaddingValues(), onOpenGuide = { opened += it })
+            }
+        }
+        waitForText("Шаг 1 · Буквы")
+        compose.onNodeWithText("Точка - особое произношение").assertExists()
+        compose.onNode(hasText("Межзубные буквы и дод") and hasClickAction()).performScrollTo().performClick()
+        assertEquals(listOf("articulation"), opened)
+
+        // У обычной буквы в листе перехода нет, у межзубной - есть (урок за листом для TalkBack скрыт).
+        compose.onNodeWithContentDescription("Ба").performScrollTo().performClick()
+        compose.onNodeWithText("2-я буква").assertExists()
+        assertTrue(compose.onAllNodesWithText("Межзубные буквы и дод").fetchSemanticsNodes().isEmpty())
+        compose.onNodeWithContentDescription("Закрыть").performClick()
+        compose.waitUntil(TIMEOUT_MILLIS) { compose.onAllNodesWithText("2-я буква").fetchSemanticsNodes().isEmpty() }
+        compose.onNodeWithContentDescription("Са, особое произношение").performScrollTo().performClick()
+        compose.onNodeWithText("4-я буква").assertExists()
+        compose.onNode(hasText("Межзубные буквы и дод") and hasClickAction()).performClick()
+        assertEquals(listOf("articulation", "articulation"), opened)
+    }
+
+    @Test
+    fun guideScreenShowsSectionsAndPalateLegend() {
+        compose.setContent {
+            InabahTheme { ReadingGuideScreen("articulation", store, onBack = {}, contentPadding = PaddingValues()) }
+        }
+        waitForText("Межзубные буквы и дод")
+        compose.onNode(hasText("(са) и", substring = true)).assertExists()
+        compose.onNode(hasText("(дод)", substring = true)).performScrollTo()
+        compose.onNodeWithText("Касание без давления").performScrollTo().assertExists()
+        compose.onNodeWithText("Касание и давление").assertExists()
+    }
+
     private fun hasStateDescriptionPrefix(prefix: String) = SemanticsMatcher("StateDescription начинается с «$prefix»") {
         it.config.getOrNull(SemanticsProperties.StateDescription)?.startsWith(prefix) == true
     }

@@ -10,6 +10,8 @@ import java.io.File
 import java.io.FileNotFoundException
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
@@ -292,17 +294,56 @@ class ReadingContentTest {
         assertEquals(20, course.step(12)?.quizCount)
     }
 
+    @Test
+    fun `Руководство «Межзубные буквы и дод» - буквы ث ذ ظ ض, текст и рисунки из ассетов, легенда нёба`() = runTest {
+        val course = loadAssetCourse()
+        val guide = assertNotNull(course.guide("articulation"))
+
+        assertEquals("Межзубные буквы и дод", guide.title)
+        assertEquals(listOf("ث", "ذ", "ظ", "ض"), guide.letters.map { it.letter })
+        for (letter in guide.letters) assertEquals(guide, course.guideFor(letter))
+        assertNull(course.guideFor(course.letters.first { it.letter == "ب" }))
+        val images = guide.blocks.filterIsInstance<ReadingBlock.Image>()
+        assertEquals(listOf("interdental-sa-za", "interdental-zo", "dod-place", "dod-palate", "dod-air"), images.map { it.image })
+        assertEquals(2, guide.blocks.filterIsInstance<ReadingBlock.Text>().count { it.title != null })
+        val assetsDir = File(requireNotNull(System.getProperty("inabah.assetsDir")))
+        for (image in images) assertTrue(File(assetsDir, "images/reading/${image.image}.webp").isFile, "нет рисунка ${image.image}")
+        val legend = images.single { it.legend.isNotEmpty() }.legend
+        assertEquals(listOf(0xFFB17CD5, 0xFF23113C), legend.map { it.color })
+        assertEquals(listOf("Касание без давления", "Касание и давление"), legend.map { it.text })
+    }
+
+    @Test
+    fun `Руководство - рисунок без имени, цвет легенды не #RRGGBB или неизвестная буква - DecodingFailed`() = runTest {
+        val image = """{"type":"image","image":"dod-palate","legend":[{"color":"#B17CD5","translations":{"ru":{"text":"Касание"}}}]}"""
+        val fine = repository(minimalJson(guides = guide(letters = "[\"ب\"]", blocks = "[$image]"))).reading()
+        assertEquals(0xFFB17CD5, (fine.guides.single().blocks.single() as ReadingBlock.Image).legend.single().color)
+
+        val broken = listOf(
+            guide(letters = "[\"ب\"]", blocks = """[{"type":"image"}]"""),
+            guide(letters = "[\"ب\"]", blocks = "[${image.replace("#B17CD5", "violet")}]"),
+            guide(letters = "[\"ث\"]", blocks = "[$image]"),
+        )
+        for (guides in broken) {
+            assertFailsWith<ContentError.DecodingFailed>(guides) { repository(minimalJson(guides = guides)).reading() }
+        }
+    }
+
+    private fun guide(letters: String, blocks: String) =
+        """[{"id":"g","letters":$letters,"translations":{"ru":{"title":"Руководство"}},"blocks":$blocks}]"""
+
     private fun TestScope.repository(json: String) = AssetContentRepository(
         { ByteArrayInputStream(json.toByteArray()) },
         ContentLanguagePriority(listOf(ContentLanguage.Base)),
         StandardTestDispatcher(testScheduler),
     )
 
-    private fun minimalJson(stepMarks: String = "[\"fatha\"]", blocks: String = "[]", quiz: String = "[]") = """
+    private fun minimalJson(stepMarks: String = "[\"fatha\"]", blocks: String = "[]", quiz: String = "[]", guides: String = "[]") = """
         {
           "marks": [{ "id": "fatha", "sign": "َ", "translations": { "ru": { "name": "фатха" } } }],
           "letters": [{ "id": 1, "letter": "ب", "name": "بَاء", "translations": { "ru": { "name": "Ба" } } }],
-          "steps": [{ "id": 1, "marks": $stepMarks, "translations": { "ru": { "title": "Шаг" } }, "blocks": $blocks, "quiz": $quiz }]
+          "steps": [{ "id": 1, "marks": $stepMarks, "translations": { "ru": { "title": "Шаг" } }, "blocks": $blocks, "quiz": $quiz }],
+          "guides": $guides
         }
     """.trimIndent()
 }

@@ -223,6 +223,8 @@
     <string name="makharij_translit_show">Показать транскрипцию</string>
     <string name="makharij_word_listen">Послушать</string>
     <string name="makharij_hint_letter">Нажмите на букву</string>
+    <string name="makharij_guide_marked">Точка - особое произношение</string>
+    <string name="makharij_guide_marked_description">особое произношение</string>
     <string name="makharij_hint_syllable">Нажмите на слог</string>
     <string name="makharij_hint_listen">Нажмите, чтобы послушать</string>
     <string name="makharij_hint_open_letter">Нажмите - откроется буква</string>

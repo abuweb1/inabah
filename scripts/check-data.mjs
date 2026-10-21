@@ -407,7 +407,7 @@ function checkVersions(file) {
 // reading.json - «Учимся читать» в разделе «Махрадж» (docs/06-data-structure.md, «Учимся читать»):
 // знаки огласовок, 28 букв и хамза (29-я) и шаги. Слоги и формы букв не хранятся - их строят приложения из буквы и знака;
 // хранится транскрипция слогов (нерегулярна: «ли», а не «льи»). В текстах - только «-», без длинного тире (решение пользователя).
-const READING_KEYS = ['marks', 'letters', 'steps'];
+const READING_KEYS = ['marks', 'letters', 'steps', 'guides'];
 const READING_MARK_KEYS = ['id', 'sign', 'translations'];
 const READING_MARK_TEXT_KEYS = ['name', 'where', 'sound'];
 const READING_LETTER_KEYS = ['id', 'letter', 'name', 'joinsNext', 'joinsPrevious', 'syllableBases', 'closedBase', 'closedVowels', 'audioLike', 'audio', 'translations'];
@@ -528,6 +528,11 @@ const READING_ALPHABET = 29;
 // Слоги с этими знаками читаются по-своему у каждой буквы - их транскрипция нужна в letters[].syllables.
 const VOWEL_MARKS = ['fatha', 'kasra', 'damma', 'fathatan', 'kasratan', 'dammatan'];
 const READING_AUDIO_DIR = join(AUDIO_DIR, 'reading');
+// Рисунки руководств (2026-10-21): images/reading/<image>.webp, вырезает scripts/cut-reading-images.py.
+const READING_IMAGES_DIR = join(ROOT, 'images', 'reading');
+// Руководство по произношению: свой экран для букв letters; блоки - текст с заголовком и рисунки.
+const READING_GUIDE_KEYS = ['id', 'letters', 'translations', 'blocks'];
+const READING_GUIDE_BLOCKS = { text: ['type', 'translations'], image: ['type', 'image', 'legend', 'translations'] };
 
 /**
  * Зикр итога «Читаем зикр» (2026-10-17): зикр есть в azkar.json, запись - его же; `arabic` - слова через
@@ -758,7 +763,7 @@ function checkReading(file) {
       for (const k of Object.keys(block)) if (!keys.includes(k)) error(where, `неизвестное поле «${k}»`);
       if (block.type === 'text') {
         // info - полный текст во всплывающем окне по ⓘ.
-        const ru = checkTexts(where, block.translations, ['text', 'info'], ['text']);
+        const ru = checkTexts(where, block.translations, ['text', 'info', 'title'], ['text']);
         if (ru?.text) checkRussian(where, ru.text);
         if (ru?.info) checkRussian(where, ru.info);
       }
@@ -870,6 +875,53 @@ function checkReading(file) {
         // После этой огласовки буква слог не закрывает (أُوْ, إِيْ - мадд): closedVowels буквы.
         const vowels = byLetter.get(q.letter)?.closedVowels;
         if (vowels && !vowels.includes(q.mark)) error(where, `closedSyllable: у ${q.letter} после ${q.mark} закрытого слога нет (closedVowels)`);
+      }
+    }
+  }
+
+  // Руководства: id уникален, буквы известны и не повторяются между руководствами (у буквы - одно).
+  if (file.guides !== undefined && !Array.isArray(file.guides)) error('reading guides', 'guides - массив');
+  const guideIds = new Set();
+  const guideLetters = new Set();
+  for (const [i, guide] of (Array.isArray(file.guides) ? file.guides : []).entries()) {
+    const at = `reading guide ${guide?.id ?? `#${i + 1}`}`;
+    for (const k of Object.keys(guide ?? {})) if (!READING_GUIDE_KEYS.includes(k)) error(at, `неизвестное поле «${k}»`);
+    if (requireString(at, guide ?? {}, 'id')) {
+      if (guideIds.has(guide.id)) error(at, 'id повторяется');
+      guideIds.add(guide.id);
+    }
+    if (!Array.isArray(guide?.letters) || !guide.letters.length) error(at, 'нет непустого массива letters');
+    for (const l of guide?.letters ?? []) {
+      knownLetter(at, l);
+      if (guideLetters.has(l)) error(at, `буква ${l} уже в другом руководстве`);
+      guideLetters.add(l);
+    }
+    checkTexts(at, guide?.translations, ['title'], ['title']);
+    if (!Array.isArray(guide?.blocks) || !guide.blocks.length) error(at, 'нет непустого массива blocks');
+    for (const [k, block] of (guide?.blocks ?? []).entries()) {
+      const where = `${at} block ${k + 1}`;
+      const keys = READING_GUIDE_BLOCKS[block?.type];
+      if (!keys) { error(where, `«${block?.type}» - руководство показывает только ${Object.keys(READING_GUIDE_BLOCKS).join(', ')}`); continue; }
+      for (const f of Object.keys(block)) if (!keys.includes(f)) error(where, `неизвестное поле «${f}»`);
+      if (block.type === 'text') {
+        const ru = checkTexts(where, block.translations, ['title', 'text'], ['text']);
+        if (ru?.text) checkRussian(where, ru.text);
+        continue;
+      }
+      if (requireString(where, block, 'image') && !existsSync(join(READING_IMAGES_DIR, `${block.image}.webp`))) {
+        error(where, `нет файла images/reading/${block.image}.webp`);
+      }
+      // Подпись необязательна: рисунок без текста - тоже рисунок.
+      if (block.translations !== undefined) {
+        const ru = checkTexts(where, block.translations, ['title', 'text'], []);
+        if (ru?.text) checkRussian(where, ru.text);
+      }
+      if (block.legend !== undefined && !Array.isArray(block.legend)) error(where, 'legend - массив');
+      for (const [n, item] of (Array.isArray(block.legend) ? block.legend : []).entries()) {
+        const lat = `${where} legend ${n + 1}`;
+        for (const f of Object.keys(item ?? {})) if (!['color', 'translations'].includes(f)) error(lat, `неизвестное поле «${f}»`);
+        if (!/^#[0-9A-Fa-f]{6}$/.test(item?.color ?? '')) error(lat, `color «${item?.color}» - ожидается #RRGGBB`);
+        checkTexts(lat, item?.translations, ['text'], ['text']);
       }
     }
   }
