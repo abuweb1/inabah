@@ -8,6 +8,7 @@ import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.preferencesDataStoreFile
 import app.inabah.android.core.audio.AudioPlayerController
+import app.inabah.android.core.audio.ClipPlayer
 import app.inabah.android.core.audio.MediaControllerEngine
 import app.inabah.android.core.content.AssetContentRepository
 import app.inabah.android.core.content.ContentLanguagePriority
@@ -35,6 +36,7 @@ import app.inabah.android.core.settings.PackageManagerAppIconSwitcher
 import app.inabah.android.core.settings.ParchmentSettings
 import app.inabah.android.core.settings.PlaylistSettings
 import app.inabah.android.core.settings.PreferencesStorage
+import app.inabah.android.core.settings.ReadingProgress
 import app.inabah.android.core.settings.ReadingSettings
 import app.inabah.android.core.settings.ReminderSettings
 import app.inabah.android.core.settings.TextSizeSettings
@@ -42,7 +44,9 @@ import app.inabah.android.core.settings.TranslationShadeSettings
 import app.inabah.android.core.settings.seedDebugAzkarHistory
 import app.inabah.android.feature.azkar.AzkarStore
 import app.inabah.android.feature.hadith.HadithStore
+import app.inabah.android.feature.makharij.ReadingStore
 import java.time.Instant
+import java.time.LocalDate
 import java.time.ZoneId
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -64,6 +68,9 @@ class AppServices(
     val hadithProgress: HadithProgress,
     val hadithFavorites: HadithFavorites,
     val hadithCollectionOrder: HadithCollectionOrder,
+    val readingStore: ReadingStore,
+    val readingProgress: ReadingProgress,
+    val clipPlayer: ClipPlayer,
     val appearanceSettings: AppearanceSettings,
     val parchmentSettings: ParchmentSettings,
     val translationShadeSettings: TranslationShadeSettings,
@@ -138,6 +145,8 @@ class AppContainer(context: Context) {
             }
             services.azkarStore.loadAll()
             services.hadithStore.loadAll()
+            services.readingStore.load()
+            services.clipPlayer.load()
             logContentFailures(services)
         }
     }
@@ -145,7 +154,8 @@ class AppContainer(context: Context) {
     /** Ошибка контента — дефект сборки (файлы ассетов): на экране «Повторить», в логе — причина. */
     private fun logContentFailures(services: AppServices) {
         val states = AzkarSection.entries.map { it.key to services.azkarStore.state(it).value } +
-            HadithCollection.entries.map { it.key to services.hadithStore.state(it) }
+            HadithCollection.entries.map { it.key to services.hadithStore.state(it) } +
+            listOf("reading" to services.readingStore.course.value)
         for ((name, state) in states) {
             if (state is Loadable.Failed) Log.e(TAG, "Не загружен контент «$name»", state.error)
         }
@@ -164,6 +174,8 @@ class AppContainer(context: Context) {
         val hadithProgress = HadithProgress(storage)
         val hadithCollectionOrder = HadithCollectionOrder(storage)
         val reminderSettings = ReminderSettings(storage)
+        val readingStore = ReadingStore(repository)
+        val readingProgress = ReadingProgress(storage) { LocalDate.now(ZoneId.systemDefault()) }
         val releaseNotes = ReleaseNotesSource(appContext.assets::open, contentLanguagePriority, Dispatchers.IO) { message, error ->
             Log.e(TAG, "История версий: $message", error)
         }
@@ -188,6 +200,9 @@ class AppContainer(context: Context) {
             hadithProgress = hadithProgress,
             hadithFavorites = HadithFavorites(storage),
             hadithCollectionOrder = hadithCollectionOrder,
+            readingStore = readingStore,
+            readingProgress = readingProgress,
+            clipPlayer = ClipPlayer(appContext, Dispatchers.IO),
             appearanceSettings = AppearanceSettings(storage),
             parchmentSettings = ParchmentSettings(storage),
             translationShadeSettings = TranslationShadeSettings(storage),
@@ -208,6 +223,8 @@ class AppContainer(context: Context) {
                 hadithStore = hadithStore,
                 hadithProgress = hadithProgress,
                 hadithOrder = hadithCollectionOrder,
+                readingStore = readingStore,
+                readingProgress = readingProgress,
                 texts = ReminderTextsSource(appContext.assets::open, contentLanguagePriority, Dispatchers.IO) { message, error ->
                     Log.e(TAG, "Тексты напоминаний: $message", error)
                 },

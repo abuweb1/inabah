@@ -36,24 +36,50 @@ struct AzkarWindowScheduleTests {
     private let evening = AzkarWindowSchedule(window: window(17, 2), calendar: berlin)
 
     @Test("Утренние 5:00–12:00: начало — уже окно, конец — уже промежуток", arguments: [
-        (date(2026, 10, 3, 4, 59), AzkarPeriod(kind: .gap, day: "2026-10-03", validUntil: date(2026, 10, 3, 5))),
+        (date(2026, 10, 3, 4, 59), AzkarPeriod(kind: .gap, day: "2026-10-03", validUntil: date(2026, 10, 3, 5), startedOn: "2026-10-02")),
         (date(2026, 10, 3, 5), AzkarPeriod(kind: .window, day: "2026-10-03", validUntil: date(2026, 10, 3, 12))),
         (date(2026, 10, 3, 11, 59), AzkarPeriod(kind: .window, day: "2026-10-03", validUntil: date(2026, 10, 3, 12))),
-        (date(2026, 10, 3, 12), AzkarPeriod(kind: .gap, day: "2026-10-04", validUntil: date(2026, 10, 4, 5))),
-        (date(2026, 10, 3, 23), AzkarPeriod(kind: .gap, day: "2026-10-04", validUntil: date(2026, 10, 4, 5))),
+        (date(2026, 10, 3, 12), AzkarPeriod(kind: .gap, day: "2026-10-04", validUntil: date(2026, 10, 4, 5), startedOn: "2026-10-03")),
+        (date(2026, 10, 3, 23), AzkarPeriod(kind: .gap, day: "2026-10-04", validUntil: date(2026, 10, 4, 5), startedOn: "2026-10-03")),
     ])
     func morningPeriods(now: Date, expected: AzkarPeriod) {
         #expect(morning.period(at: now) == expected)
     }
 
     @Test("Вечерние 17:00–02:00: прочитанное после полуночи относится к дате начала", arguments: [
-        (date(2026, 10, 3, 16, 59), AzkarPeriod(kind: .gap, day: "2026-10-03", validUntil: date(2026, 10, 3, 17))),
+        (date(2026, 10, 3, 16, 59), AzkarPeriod(kind: .gap, day: "2026-10-03", validUntil: date(2026, 10, 3, 17), startedOn: "2026-10-02")),
         (date(2026, 10, 3, 21), AzkarPeriod(kind: .window, day: "2026-10-03", validUntil: date(2026, 10, 4, 2))),
         (date(2026, 10, 4, 0, 30), AzkarPeriod(kind: .window, day: "2026-10-03", validUntil: date(2026, 10, 4, 2))),
-        (date(2026, 10, 4, 2), AzkarPeriod(kind: .gap, day: "2026-10-04", validUntil: date(2026, 10, 4, 17))),
+        (date(2026, 10, 4, 2), AzkarPeriod(kind: .gap, day: "2026-10-04", validUntil: date(2026, 10, 4, 17), startedOn: "2026-10-03")),
     ])
     func eveningPeriods(now: Date, expected: AzkarPeriod) {
         #expect(evening.period(at: now) == expected)
+    }
+
+    @Test("Счёт продолжается до начала следующего окна: окно → промежуток после него, но не новое окно")
+    func progressContinuesUntilNextStart() {
+        let inWindow = morning.period(at: date(2026, 10, 3, 8))
+        let afterEnd = morning.period(at: date(2026, 10, 3, 13))
+        let nextWindow = morning.period(at: date(2026, 10, 4, 5))
+        let nextGap = morning.period(at: date(2026, 10, 4, 13))
+
+        #expect(afterEnd.continuesProgress(inWindow))
+        #expect(!nextWindow.continuesProgress(afterEnd))
+        #expect(!nextGap.continuesProgress(afterEnd), "пропущенное окно целиком")
+    }
+
+    @Test("Без даты начала (сохранение до 2026-10-20) - прежнее правило: тот же вид и дата")
+    func legacyPeriodWithoutStart() throws {
+        let legacyWindow = try JSONDecoder().decode(
+            AzkarPeriod.self,
+            from: Data(#"{"kind":"window","day":"2026-10-03","validUntil":0}"#.utf8)
+        )
+        #expect(legacyWindow.startedOn == nil)
+        #expect(morning.period(at: date(2026, 10, 3, 8)).continuesProgress(legacyWindow))
+        #expect(!morning.period(at: date(2026, 10, 3, 13)).continuesProgress(legacyWindow))
+
+        let encoded = try JSONEncoder().encode(morning.period(at: date(2026, 10, 3, 13)))
+        #expect(String(decoding: encoded, as: UTF8.self).contains(#""started":"2026-10-03""#))
     }
 
     @Test("Ночь перевода часов на летнее время: 02:00 нет — окно до 03:00")
@@ -73,14 +99,14 @@ struct AzkarWindowScheduleTests {
         let afterEnd = evening.period(at: firstTwo)
         let repeatedTwo = evening.period(at: firstTwo.addingTimeInterval(60 * 60))
         #expect(afterEnd.kind == .gap)
-        #expect(repeatedTwo.isSameSpan(as: afterEnd))
+        #expect(repeatedTwo.continuesProgress(afterEnd))
     }
 
     @Test("Москва → Берлин внутри окна — то же окно")
     func sameWindowAcrossTimeZones() {
         let inMoscow = AzkarWindowSchedule(window: window(5, 12), calendar: moscow).period(at: moscowDate(2026, 10, 3, 8))
         let inBerlin = morning.period(at: date(2026, 10, 3, 9))
-        #expect(inBerlin.isSameSpan(as: inMoscow))
+        #expect(inBerlin.continuesProgress(inMoscow))
         #expect(inBerlin.validUntil == date(2026, 10, 3, 12))
     }
 
@@ -131,10 +157,10 @@ struct AzkarWindowSettingsTests {
         storage = try IsolatedDefaults("AzkarWindowSettingsTests")
     }
 
-    @Test("По умолчанию утренние — 5:00–12:00, вечерние — 17:00–02:00")
+    @Test("По умолчанию утренние — 6:00–11:30, вечерние — 17:00–02:00")
     func defaultWindows() {
         let settings = AzkarWindowSettings(defaults: defaults)
-        #expect(settings.window(for: .morning) == window(5, 12))
+        #expect(settings.window(for: .morning) == AzkarWindow(start: DayTime(hour: 6, minute: 0), end: DayTime(hour: 11, minute: 30)))
         #expect(settings.window(for: .evening) == window(17, 2))
     }
 
@@ -154,8 +180,8 @@ struct AzkarWindowSettingsTests {
         settings.set(window(12, 12), for: .morning)
 
         #expect(!window(12, 12).isValid)
-        #expect(settings.window(for: .morning) == window(5, 12))
-        #expect(AzkarWindowSettings(defaults: defaults).window(for: .morning) == window(5, 12))
+        #expect(settings.window(for: .morning) == AzkarWindowSettings.defaultWindow(for: .morning))
+        #expect(AzkarWindowSettings(defaults: defaults).window(for: .morning) == AzkarWindowSettings.defaultWindow(for: .morning))
     }
 
     @Test("Повторное сохранение того же окна не уведомляет наблюдателей")
@@ -168,7 +194,7 @@ struct AzkarWindowSettingsTests {
             notified.set()
         }
 
-        settings.set(window(5, 12), for: .morning)
+        settings.set(AzkarWindowSettings.defaultWindow(for: .morning), for: .morning)
 
         #expect(!notified.value)
     }
@@ -179,7 +205,7 @@ struct AzkarWindowSettingsTests {
 
         let settings = AzkarWindowSettings(defaults: defaults)
 
-        #expect(settings.window(for: .morning) == window(5, 12))
+        #expect(settings.window(for: .morning) == AzkarWindowSettings.defaultWindow(for: .morning))
         #expect(defaults.object(forKey: "azkar.reset.morning") == nil)
     }
 }
@@ -215,12 +241,20 @@ struct AzkarProgressPersistenceTests {
         let store = AzkarStore(
             repository: Self.repository,
             defaults: defaults,
-            windowSettings: windowSettings,
+            windowSettings: windowSettings ?? classicWindows(),
             now: { [clock] in clock.now },
             calendar: calendar
         )
         await store.load(section)
         return store
+    }
+
+    /// Механика проверяется на явном окне 5:00–12:00 (Android `classicMorningWindow`): числа не зависят
+    /// от умолчаний. Окно сохраняется в настройки - его видят и сторы, созданные без `makeStore`.
+    private func classicWindows() -> AzkarWindowSettings {
+        let settings = AzkarWindowSettings(defaults: defaults)
+        settings.set(window(5, 12), for: .morning)
+        return settings
     }
 
     private func complete(_ section: AzkarSection, in store: AzkarStore) {
@@ -243,8 +277,8 @@ struct AzkarProgressPersistenceTests {
         #expect(restored.sessions(in: .morning).map(\.count) == [1, 2])
     }
 
-    @Test("Конец окна — строгий сброс, пока приложение открыто: счёт и оверлей")
-    func strictResetAtWindowEnd() async {
+    @Test("Конец окна оставляет счёт и пометку оверлея до начала следующего, пока приложение открыто")
+    func windowEndKeepsProgress() async {
         let store = await makeStore()
         complete(.morning, in: store)
         store.acknowledgeCompletion(of: .morning)
@@ -253,20 +287,74 @@ struct AzkarProgressPersistenceTests {
         store.reconcile()
 
         #expect(!store.isInWindow(.morning))
-        #expect(store.progress(of: .morning).completed == 0)
+        #expect(store.progress(of: .morning).isFinished)
+        #expect(!store.shouldPresentCompletion(of: .morning))
         let reopened = await makeStore()
-        #expect(reopened.sessions(in: .morning).map(\.count) == [0, 0])
+        #expect(reopened.sessions(in: .morning).map(\.count) == [3, 3])
     }
 
-    @Test("После конца окна сохранённый счёт не восстанавливается")
-    func discardsAfterWindowBetweenLaunches() async {
+    @Test("После конца окна сохранённый счёт восстанавливается")
+    func restoresAfterWindowBetweenLaunches() async {
         let store = await makeStore()
         store.sessions(in: .morning)[0].increment()
 
-        clock.now = date(2026, 10, 3, 12, 1)
+        clock.now = date(2026, 10, 4, 4, 59)
         let restored = await makeStore()
 
+        #expect(!restored.isInWindow(.morning))
+        #expect(restored.sessions(in: .morning).map(\.count) == [1, 0])
+    }
+
+    @Test("Начало следующего окна обнуляет счёт и пометку оверлея - по таймеру и при запуске")
+    func nextWindowStartResets() async {
+        let store = await makeStore()
+        complete(.morning, in: store)
+        store.acknowledgeCompletion(of: .morning)
+        clock.now = date(2026, 10, 3, 12)
+        store.reconcile()
+
+        clock.now = date(2026, 10, 4, 5)
+        let launched = await makeStore()
+        #expect(launched.isInWindow(.morning))
+        #expect(launched.sessions(in: .morning).map(\.count) == [0, 0])
+
+        store.reconcile()
+        #expect(store.sessions(in: .morning).map(\.count) == [0, 0])
+        complete(.morning, in: store)
+        #expect(store.shouldPresentCompletion(of: .morning))
+    }
+
+    @Test("Пропущено окно целиком - счёт промежутка сбрасывается")
+    func skippedWindowResets() async {
+        let store = await makeStore()
+        store.sessions(in: .morning)[0].increment()
+
+        clock.now = date(2026, 10, 4, 13)
+        let restored = await makeStore()
+
+        #expect(!restored.isInWindow(.morning))
         #expect(restored.sessions(in: .morning).map(\.count) == [0, 0])
+    }
+
+    @Test("Сохранение до 2026-10-20 (без started) - прежнее правило: окно того же дня продолжается, после конца - сброс")
+    func legacySaveWithoutStart() async throws {
+        let store = await makeStore()
+        store.sessions(in: .morning)[0].increment()
+        let key = "azkar.progress.morning"
+        let saved = try #require(defaults.data(forKey: key))
+        var json = try #require(JSONSerialization.jsonObject(with: saved) as? [String: Any])
+        var period = try #require(json["period"] as? [String: Any])
+        #expect(period.removeValue(forKey: "started") != nil)
+        json["period"] = period
+        let legacy = try JSONSerialization.data(withJSONObject: json)
+
+        defaults.set(legacy, forKey: key)
+        clock.now = date(2026, 10, 3, 11)
+        #expect(await makeStore().sessions(in: .morning).map(\.count) == [1, 0])
+
+        defaults.set(legacy, forKey: key)
+        clock.now = date(2026, 10, 3, 13)
+        #expect(await makeStore().sessions(in: .morning).map(\.count) == [0, 0])
     }
 
     @Test("Счёт вне окна работает, сохраняется и обнуляется к началу окна")
@@ -313,12 +401,17 @@ struct AzkarProgressPersistenceTests {
 
         clock.now = date(2026, 10, 3, 12)
         restored.reconcile()
+        #expect(!restored.isInWindow(.morning))
+        #expect(restored.sessions(in: .morning)[0].count == 1)
+
+        clock.now = date(2026, 10, 4, 5)
+        restored.reconcile()
         #expect(restored.sessions(in: .morning)[0].count == 0)
     }
 
     @Test("Продлили окно (сохранённый черновик) — счёт остаётся до новой границы")
     func extendingWindowKeepsProgress() async {
-        let settings = AzkarWindowSettings(defaults: defaults)
+        let settings = classicWindows()
         let store = await makeStore(windowSettings: settings)
         store.sessions(in: .morning)[0].increment()
 
@@ -329,16 +422,18 @@ struct AzkarProgressPersistenceTests {
 
         clock.now = date(2026, 10, 3, 12, 30)
         store.reconcile()
+        #expect(store.isInWindow(.morning))
         #expect(store.sessions(in: .morning)[0].count == 1)
 
         clock.now = date(2026, 10, 3, 13)
         store.reconcile()
-        #expect(store.sessions(in: .morning)[0].count == 0)
+        #expect(!store.isInWindow(.morning))
+        #expect(store.sessions(in: .morning)[0].count == 1)
     }
 
-    @Test("Конец окна перенесли на уже прошедшее время — окно закончилось")
+    @Test("Конец окна перенесли на уже прошедшее время — окно закончилось, прочитанное остаётся")
     func shorteningWindowEndsIt() async {
-        let settings = AzkarWindowSettings(defaults: defaults)
+        let settings = classicWindows()
         let store = await makeStore(windowSettings: settings)
         store.sessions(in: .morning)[0].increment()
 
@@ -347,7 +442,7 @@ struct AzkarProgressPersistenceTests {
         store.reconcile()
 
         #expect(!store.isInWindow(.morning))
-        #expect(store.sessions(in: .morning)[0].count == 0)
+        #expect(store.sessions(in: .morning)[0].count == 1)
     }
 
     @Test("Сохранение версии 1.0.0 не восстанавливается")
@@ -437,6 +532,19 @@ struct AzkarProgressPersistenceTests {
         clock.now = date(2026, 10, 3, 12)
         store.reconcile()
         #expect(AzkarHistory(defaults: defaults).record(of: .morning, on: "2026-10-03")?.fraction == 0.5)
+    }
+
+    @Test("История: сброс карточки после конца окна запись дня не трогает")
+    func historyKeptByCardResetAfterWindow() async {
+        let store = await makeStore()
+        complete(.morning, in: store)
+
+        clock.now = date(2026, 10, 3, 13)
+        store.reconcile()
+        store.sessions(in: .morning)[0].reset()
+
+        #expect(store.sessions(in: .morning).map(\.count) == [0, 3])
+        #expect(AzkarHistory(defaults: defaults).record(of: .morning, on: "2026-10-03") == AzkarDayRecord(completed: 2, total: 2))
     }
 
     @Test("История: вечерние после полуночи — запись за дату начала окна")

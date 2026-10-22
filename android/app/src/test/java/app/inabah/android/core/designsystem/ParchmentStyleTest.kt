@@ -32,12 +32,27 @@ class ParchmentStyleTest {
     }
 
     @Test
+    fun `Выделенная буква в слове видна на каждом фоне и отличается от текста и рамки`() {
+        // Регрессия (телефон 2026-10-15): рамка как выделение пропадала на «Сепии» и «Дымчатом».
+        for (style in ParchmentStyle.entries) {
+            val mark = Contrast.luminance(style.colors.mark)
+            for (background in style.colors.backgrounds) {
+                val ratio = Contrast.ratio(mark, Contrast.luminance(background))
+                assertTrue(ratio >= MIN_ACCENT_CONTRAST, "${style.name}: выделение %.2f".format(ratio))
+            }
+            assertTrue(style.colors.mark != style.colors.text && style.colors.mark != style.colors.accent, style.name)
+        }
+    }
+
+    @Test
     fun `Пергамент по умолчанию — как раньше`() {
         val palette = Palette.Sections
         assertEquals(
             ParchmentColors(
                 palette.parchmentLight, palette.gold, palette.parchmentMid, palette.parchmentDeep, palette.parchmentInk,
                 accent = palette.successDeep,
+                // Фон рисунков руководств (2026-10-21) - кремовый цвет самих рисунков, не пергамент.
+                illustration = palette.parchmentIllustration,
             ),
             ParchmentStyle.Classic.colors,
         )

@@ -10,6 +10,10 @@ struct RootTabView: View {
     @Environment(WhatsNew.self) private var whatsNew
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.theme) private var theme
+    @Environment(\.chromeStyle) private var chromeStyle
+
+    /// Нижняя безопасная зона (полоска «домой») — от неё стоит своя панель вкладок.
+    @State private var safeAreaBottom: CGFloat = 0
 
     var body: some View {
         @Bindable var router = router
@@ -31,9 +35,11 @@ struct RootTabView: View {
                                 }
                             }
                             .interfaceTextSize()
+                            .floatingTabBarDestinationSpace(chromeStyle, safeAreaBottom: safeAreaBottom)
                         }
                 }
                 .tint(theme.palette.accentLight)
+                .floatingTabBarSpace(chromeStyle, safeAreaBottom: safeAreaBottom)
             }
             Tab("tab.hadith", image: "tabIconHadith", value: AppTab.hadith) {
                 NavigationStack(path: $router.hadithPath) {
@@ -49,17 +55,37 @@ struct RootTabView: View {
                                 }
                             }
                             .interfaceTextSize()
+                            .floatingTabBarDestinationSpace(chromeStyle, safeAreaBottom: safeAreaBottom)
                         }
                 }
                 .tint(theme.palette.accentLight)
+                .floatingTabBarSpace(chromeStyle, safeAreaBottom: safeAreaBottom)
             }
             // «ع» (айн) — гортанная буква, хрестоматийный пример махраджа.
             Tab("tab.makharij", image: "tabIconMakharij", value: AppTab.makharij) {
-                NavigationStack {
+                NavigationStack(path: $router.makharijPath) {
                     MakharijHomeView()
                         .interfaceTextSize()
+                        .navigationDestination(for: MakharijRoute.self) { route in
+                            Group {
+                                switch route {
+                                case .steps: ReadingStepsView()
+                                case .lesson(let number): ReadingLessonView(stepNumber: number)
+                                case .alphabet(let number): ReadingAlphabetView(stepNumber: number)
+                                case .extra(let number, let topic): ReadingExtraView(stepNumber: number, topic: topic)
+                                case .letterForms(let number, let letter): ReadingLetterFormsView(stepNumber: number, letter: letter)
+                                case .quiz(let number): ReadingQuizView(stepNumber: number)
+                                case .words(let number): ReadingWordsView(stepNumber: number)
+                                case .zikr(let number, let zikr): ReadingZikrView(stepNumber: number, zikrIndex: zikr)
+                                case .guide(let id): ReadingGuideView(guideID: id)
+                                }
+                            }
+                            .interfaceTextSize()
+                            .floatingTabBarDestinationSpace(chromeStyle, safeAreaBottom: safeAreaBottom)
+                        }
                 }
                 .tint(theme.palette.accentLight)
+                .floatingTabBarSpace(chromeStyle, safeAreaBottom: safeAreaBottom)
             }
             Tab("tab.settings", image: "tabIconSettings", value: AppTab.settings) {
                 NavigationStack(path: $router.settingsPath) {
@@ -72,23 +98,36 @@ struct RootTabView: View {
                                 case .azkar: AzkarSettingsView()
                                 case .hadith: HadithSettingsView()
                                 case .hadithOrder: HadithOrderSettingsView()
+                                case .makharij: MakharijSettingsView()
                                 case .appIcon: AppIconSettingsView()
                                 case .palette: PaletteSettingsView()
                                 case .textSize: TextSizeSettingsView()
                                 case .about: AboutView()
+                                case .licenses: LicensesView()
                                 case .license(let document): LicenseView(document: document)
                                 case .versionHistory: VersionHistoryView()
                                 }
                             }
                             .interfaceTextSize()
+                            .floatingTabBarDestinationSpace(chromeStyle, safeAreaBottom: safeAreaBottom)
                         }
                 }
                 .tint(theme.palette.accentLight)
+                .floatingTabBarSpace(chromeStyle, safeAreaBottom: safeAreaBottom)
             }
         }
         // Подсветка выбранной вкладки — в тон раздела; содержимому вкладок выше возвращён
         // общий акцент, чтобы оттенок таб-бара не перекрашивал кнопки и переключатели.
         .tint(router.selectedTab.tint(in: theme))
+        .overlay(alignment: .bottom) {
+            if chromeStyle == .custom {
+                FloatingTabBar(selection: router.selectedTab) { router.select($0) }
+                    .padding(.horizontal, FloatingTabBar.horizontalMargin)
+                    .padding(.bottom, FloatingTabBar.bottomOffset(safeAreaBottom: safeAreaBottom))
+                    .ignoresSafeArea(.keyboard)
+            }
+        }
+        .onGeometryChange(for: CGFloat.self) { $0.safeAreaInsets.bottom } action: { safeAreaBottom = $0 }
         // Под окном «Что нового» вкладки скрыты от VoiceOver; окно — поверх всех вкладок.
         .accessibilityHidden(whatsNew.pending != nil)
         .overlay { WhatsNewLayer() }
@@ -110,6 +149,7 @@ struct RootTabView: View {
             if phase == .active || phase == .background { reminderScheduler.reschedule() }
         }
         .background { ReminderCompletionWatcher() }
+        .background { ReadingReminderWatcher() }
     }
 
     /// Выбор вкладки проходит через роутер — повторный тап по активной вкладке возвращает к её корню.
@@ -133,6 +173,20 @@ private struct ReminderCompletionWatcher: View {
             .onChange(of: AzkarSection.allCases.map { ReminderPlan.isCompleted(azkarStore.progress(of: $0)) }) {
                 reminderScheduler.reschedule()
             }
+    }
+}
+
+/// «Пора на урок»: шаг пройден (сегодняшние снимаются, шаг в тексте - следующий), уроки сброшены или пройдены -
+/// план пересобирается. Не следит за прочитанными словами: они меняются на каждое касание, а шаг со словами
+/// пройден - это и есть новый день пройденного шага.
+private struct ReadingReminderWatcher: View {
+    @Environment(ReadingProgress.self) private var readingProgress
+    @Environment(ReminderScheduler.self) private var reminderScheduler
+
+    var body: some View {
+        Color.clear
+            .onChange(of: readingProgress.stepFinishedDay) { reminderScheduler.reschedule() }
+            .onChange(of: readingProgress.lessonsDone) { reminderScheduler.reschedule() }
     }
 }
 

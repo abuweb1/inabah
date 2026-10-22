@@ -36,6 +36,43 @@ sealed interface HadithRoute {
     data object Favorites : HadithRoute
 }
 
+/** «Учимся читать» (раздел «Махрадж», 2026-10-15); номер шага - 1…10. */
+@Serializable
+sealed interface MakharijRoute {
+    @Serializable
+    data object Steps : MakharijRoute
+
+    @Serializable
+    data class Lesson(val step: Int) : MakharijRoute
+
+    @Serializable
+    data class Quiz(val step: Int) : MakharijRoute
+
+    /** «Весь алфавит» с огласовками - из урока. */
+    @Serializable
+    data class Alphabet(val step: Int) : MakharijRoute
+
+    /** Справка к уроку (солнечные и лунные буквы) или тема урока по номеру ([topic]) - из урока. */
+    @Serializable
+    data class Extra(val step: Int, val topic: Int? = null) : MakharijRoute
+
+    /** Зикр итога «Читаем зикр» по номеру ([zikr] - 0, 1, …) - из урока итога. */
+    @Serializable
+    data class Zikr(val step: Int, val zikr: Int) : MakharijRoute
+
+    /** Карточка буквы - формы и слова-примеры (из таблицы форм урока). */
+    @Serializable
+    data class LetterForms(val step: Int, val letter: String) : MakharijRoute
+
+    /** «Читаем слова» шага. */
+    @Serializable
+    data class Words(val step: Int) : MakharijRoute
+
+    /** Руководство по произношению ([id] - `guides` в reading.json) - с урока, из листа и карточки буквы. */
+    @Serializable
+    data class Guide(val id: String) : MakharijRoute
+}
+
 @Serializable
 sealed interface SettingsRoute {
     @Serializable
@@ -43,6 +80,10 @@ sealed interface SettingsRoute {
 
     @Serializable
     data object Hadith : SettingsRoute
+
+    /** «Махрадж»: транскрипция, замки шагов и сброс прогресса «Учимся читать». */
+    @Serializable
+    data object Makharij : SettingsRoute
 
     /** Порядок сборников на главной хадисов (из настроек хадисов). */
     @Serializable
@@ -68,7 +109,11 @@ sealed interface SettingsRoute {
     @Serializable
     data object VersionHistory : SettingsRoute
 
-    /** Полный текст лицензии шрифта или значков (из «О приложении»). */
+    /** «Лицензии» - шрифты и значки одним списком (одна строка в «О приложении», 2026-10-19). */
+    @Serializable
+    data object Licenses : SettingsRoute
+
+    /** Полный текст лицензии шрифта или значков (из «Лицензий»). */
     @Serializable
     data class License(val document: LicenseDocument) : SettingsRoute
 }

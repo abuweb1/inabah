@@ -14,12 +14,33 @@ nonisolated enum ReminderKind: String, CaseIterable, Sendable {
     case morningStreak
     case eveningStreak
     case hadithOfDay
+    /// «Пора на урок» «Учимся читать» (Android-first 2026-10-20, `ReadingMorning` / `ReadingDay` / `ReadingEvening`).
+    case readingMorning
+    case readingDay
+    case readingEvening
 
     var section: AzkarSection? {
         switch self {
         case .morningStart, .morningUnfinished, .morningStreak: .morning
         case .eveningStart, .eveningUnfinished, .eveningStreak: .evening
-        case .hadithOfDay: nil
+        case .hadithOfDay, .readingMorning, .readingDay, .readingEvening: nil
+        }
+    }
+
+    var readingSlot: ReadingReminderSlot? {
+        switch self {
+        case .readingMorning: .morning
+        case .readingDay: .day
+        case .readingEvening: .evening
+        default: nil
+        }
+    }
+
+    static func reading(_ slot: ReadingReminderSlot) -> ReminderKind {
+        switch slot {
+        case .morning: .readingMorning
+        case .day: .readingDay
+        case .evening: .readingEvening
         }
     }
 
@@ -46,18 +67,46 @@ nonisolated struct ReminderPreferences: Hashable, Sendable {
     var azkarStreak = false
     var hadithOfDay = false
     var hadithTime = ReminderPreferences.defaultHadithTime
+    /// «Пора на урок»: включённые слоты и выбранное время (нет - `ReadingReminderSlot.defaultTime`).
+    var readingSlots: Set<ReadingReminderSlot> = []
+    var readingTimes: [ReadingReminderSlot: DayTime] = [:]
 
     static let defaultHadithTime = DayTime(hour: 20, minute: 0)
+
+    func readingTime(_ slot: ReadingReminderSlot) -> DayTime { readingTimes[slot] ?? slot.defaultTime }
+}
+
+/// Слот «Пора на урок» (Android `ReadingReminderSlot`): ключ настроек и время по умолчанию.
+nonisolated enum ReadingReminderSlot: String, CaseIterable, Hashable, Sendable {
+    case morning
+    case day
+    case evening
+
+    var defaultTime: DayTime {
+        switch self {
+        case .morning: DayTime(hour: 9, minute: 0)
+        case .day: DayTime(hour: 14, minute: 0)
+        case .evening: DayTime(hour: 19, minute: 0)
+        }
+    }
+}
+
+/// «Пора на урок» на момент планирования: шаг, к которому зовём, и пройден ли шаг сегодня. `nil` вместо входа -
+/// курс пройден (или не загрузился): напоминаний чтения нет.
+nonisolated struct ReadingReminderInput: Hashable, Sendable {
+    let step: Int
+    let finishedToday: Bool
 }
 
 /// Запланированное напоминание: `windowDay` — день окна азкаров (ключ истории), `hadithDay` — номер дня хадиса,
-/// `streak` — серия, которая прервётся (для текста «серия под угрозой»).
+/// `streak` — серия, которая прервётся (для текста «серия под угрозой»), `step` - шаг «Пора на урок».
 nonisolated struct PlannedReminder: Hashable, Sendable {
     let kind: ReminderKind
     let at: Date
     var windowDay: String?
     var hadithDay: Int?
     var streak: Int?
+    var step: Int?
 
     /// Постоянный идентификатор запроса: вид и момент — повтор плана даёт те же идентификаторы.
     var identifier: String {
@@ -67,8 +116,13 @@ nonisolated struct PlannedReminder: Hashable, Sendable {
 
 nonisolated enum ReminderPlan {
     static let identifierPrefix = "reminder."
-    /// На сколько дней вперёд ставятся уведомления: до 35 запросов при лимите iOS 64.
+    /// Стопка «Пора на урок» в Центре уведомлений (`threadIdentifier`): одно напоминание на все слоты.
+    static let readingThread = "reminder.reading"
+    /// На сколько дней вперёд ставятся уведомления.
     static let horizonDays = 7
+    /// Лимит iOS на запланированные уведомления приложения. Всё включённое на неделю - до 70 запросов: план
+    /// обрезается до ближайших, дальние ставятся при следующей пересборке (при каждом открытии и уходе в фон).
+    static let requestLimit = 64
     /// За сколько до конца окна — «ещё не прочитаны» (как на Android: там будильники неточные и запас нужен
     /// на опоздание; на iOS время точное, значение то же — одинаково на обеих платформах).
     static let unfinishedLead: TimeInterval = 2 * 60 * 60
@@ -83,6 +137,12 @@ nonisolated enum ReminderPlan {
     /// правило Android (`streakAtRisk`) считается для будущего момента по истории `history` как есть — будто
     /// дальше ничего не прочитают. Прочтение пересобирает план (и снимает оба напоминания), а без него серия
     /// прерывается — дальше уведомлений нет, как и на Android.
+    ///
+    /// «Пора на урок» (`reading`) — каждый включённый слот на каждый день; Android решает в момент срабатывания
+    /// (`readingReminderStep`), здесь — при планировании: шаг сегодня пройден — сегодняшних нет, курс пройден
+    /// (`reading == nil`) — нет совсем. Прохождение шага пересобирает план.
+    ///
+    /// Не больше `requestLimit` ближайших.
     static func plan(
         preferences: ReminderPreferences,
         windows: [AzkarSection: AzkarWindow],
@@ -90,6 +150,7 @@ nonisolated enum ReminderPlan {
         calendar: Calendar,
         days: Int = horizonDays,
         history: [AzkarCalendarDay: AzkarDay] = [:],
+        reading: ReadingReminderInput? = nil,
         isCompleted: (AzkarSection, String) -> Bool
     ) -> [PlannedReminder] {
         var result: [PlannedReminder] = []
@@ -130,7 +191,36 @@ nonisolated enum ReminderPlan {
                 at = clock.nextOccurrence(ofTime: preferences.hadithTime, after: at)
             }
         }
-        return result.sorted { $0.at < $1.at }
+        if let reading {
+            for slot in ReadingReminderSlot.allCases where preferences.readingSlots.contains(slot) {
+                result += readingMoments(slot: slot, time: preferences.readingTime(slot), reading: reading, now: now, calendar: calendar, days: days)
+            }
+        }
+        return Array(result.sorted { $0.at < $1.at }.prefix(requestLimit))
+    }
+
+    /// `days` ближайших наступлений времени слота (сегодняшнее прошло - с завтра), как у хадиса дня; шаг сегодня
+    /// пройден - сегодняшнее пропускается.
+    private static func readingMoments(
+        slot: ReadingReminderSlot,
+        time: DayTime,
+        reading: ReadingReminderInput,
+        now: Date,
+        calendar: Calendar,
+        days: Int
+    ) -> [PlannedReminder] {
+        // Время не зависит от окон: расписание - только ради правил календаря.
+        let anyWindow = AzkarWindow(start: time, end: DayTime(minutesSinceMidnight: time.minutesSinceMidnight + 1))
+        let clock = AzkarWindowSchedule(window: anyWindow, calendar: calendar)
+        var result: [PlannedReminder] = []
+        var at = clock.nextOccurrence(ofTime: time, after: now)
+        for _ in 0..<days {
+            if !(reading.finishedToday && calendar.isDate(at, inSameDayAs: now)) {
+                result.append(PlannedReminder(kind: .reading(slot), at: at, step: reading.step))
+            }
+            at = clock.nextOccurrence(ofTime: time, after: at)
+        }
+        return result
     }
 
     /// Напоминания `kind` за `lead` до конца ближайших `days` окон строго после `now`; окно короче `lead` —
@@ -259,19 +349,23 @@ nonisolated enum ReminderTarget: Hashable, Sendable {
     case azkarHome
     case azkar(AzkarSection)
     case hadith(HadithID)
+    /// Урок шага поверх списка шагов - «Пора на урок».
+    case readingLesson(Int)
 }
 
 nonisolated enum ReminderPayload {
     static let kindKey = "kind"
     static let collectionKey = "collection"
     static let numberKey = "number"
+    static let stepKey = "step"
 
-    static func userInfo(kind: ReminderKind, hadith: HadithID? = nil) -> [String: String] {
+    static func userInfo(kind: ReminderKind, hadith: HadithID? = nil, step: Int? = nil) -> [String: String] {
         var info = [kindKey: kind.rawValue]
         if let hadith {
             info[collectionKey] = hadith.collection.rawValue
             info[numberKey] = String(hadith.number)
         }
+        if let step { info[stepKey] = String(step) }
         return info
     }
 
@@ -280,6 +374,10 @@ nonisolated enum ReminderPayload {
         guard let kind = (userInfo[kindKey] as? String).flatMap(ReminderKind.init(rawValue:)) else { return nil }
         if kind == .morningStreak || kind == .eveningStreak { return .azkarHome }
         if let section = kind.section { return .azkar(section) }
+        if kind.readingSlot != nil {
+            guard let step = (userInfo[stepKey] as? String).flatMap(Int.init), step >= 1 else { return nil }
+            return .readingLesson(step)
+        }
         guard let collection = (userInfo[collectionKey] as? String).flatMap(HadithCollection.init(rawValue:)),
               let number = (userInfo[numberKey] as? String).flatMap(Int.init), number >= 1 else { return nil }
         return .hadith(HadithID(collection: collection, number: number))

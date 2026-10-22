@@ -16,8 +16,13 @@ struct AppEnvironment {
     let hadithProgress: HadithProgress
     let hadithFavorites: HadithFavorites
     let hadithCollectionOrder: HadithCollectionOrder
+    /// «Учимся читать» (раздел «Махрадж»): курс и прогресс (пройденные уроки, счёт слов, зикры итога).
+    let readingStore: ReadingStore
+    let readingProgress: ReadingProgress
     let appIconSettings: AppIconSettings
     let audioPlayer: AudioPlayerController
+    /// Короткие записи «Учимся читать»; с плеером азкаров - по очереди.
+    let clipPlayer: ClipPlayer
     /// Палитра оформления — тема в окружении берётся из неё (`themed()`).
     let appearanceSettings: AppearanceSettings
     /// Фон под арабским текстом — накладывается на тему палитры (`Theme.withParchment`).
@@ -40,6 +45,7 @@ struct AppEnvironment {
         repository: any ContentRepository = BundleContentRepository(),
         defaults: UserDefaults = .standard,
         audioPlayer: AudioPlayerController? = nil,
+        clipPlayer: ClipPlayer? = nil,
         appIconSwitcher: (any AppIconSwitching)? = nil,
         notificationCenter: (any NotificationCentering)? = nil,
         updateSource: any UpdateSource = NoUpdateSource()
@@ -62,12 +68,18 @@ struct AppEnvironment {
         hadithProgress = HadithProgress(defaults: defaults)
         hadithFavorites = HadithFavorites(defaults: defaults)
         hadithCollectionOrder = HadithCollectionOrder(defaults: defaults)
+        readingStore = ReadingStore(repository: repository)
+        readingProgress = ReadingProgress(defaults: defaults, calendar: azkarStore.calendar)
         appIconSettings = AppIconSettings(switcher: appIconSwitcher ?? SystemAppIconSwitcher())
         self.audioPlayer = audioPlayer ?? AudioPlayerController(
             engine: AVAudioEngineAdapter(),
             session: AudioSessionController(),
             nowPlaying: NowPlayingCoordinator()
         )
+        self.clipPlayer = clipPlayer ?? ClipPlayer()
+        // Звучит что-то одно (как аудиофокус на Android): запись курса - азкары на паузу, и наоборот.
+        self.clipPlayer.onWillPlay = { [weak player = self.audioPlayer] in player?.pause() }
+        self.audioPlayer.onWillStart = { [weak clips = self.clipPlayer] in clips?.stop() }
         appearanceSettings = AppearanceSettings(defaults: defaults)
         parchmentSettings = ParchmentSettings(defaults: defaults)
         translationShadeSettings = TranslationShadeSettings(defaults: defaults)
@@ -81,6 +93,7 @@ struct AppEnvironment {
             hadithStore: hadithStore,
             progress: hadithProgress,
             order: hadithCollectionOrder,
+            readingProgress: readingProgress,
             repository: repository,
             calendar: azkarStore.calendar
         )
@@ -101,6 +114,7 @@ struct AppEnvironment {
             repository: InMemoryContentRepository.preview,
             defaults: previewDefaults(),
             audioPlayer: AudioPlayerController(engine: AVAudioEngineAdapter()),
+            clipPlayer: ClipPlayer(session: nil),
             appIconSwitcher: PreviewAppIconSwitcher(),
             notificationCenter: InertNotificationCenter()
         )
@@ -126,6 +140,7 @@ private final class InertNotificationCenter: NotificationCentering {
     func pendingIdentifiers() async -> [String] { [] }
     func removePending(_ identifiers: [String]) {}
     func add(_ request: UNNotificationRequest) async throws {}
+    func removeDelivered(thread: String) async {}
 }
 
 /// Смена иконки для превью: выбор только запоминается, иконка процесса не меняется.
@@ -149,10 +164,13 @@ extension View {
             .environment(environment.azkarStore)
             .environment(environment.hadithStore)
             .environment(environment.hadithProgress)
+            .environment(environment.readingStore)
+            .environment(environment.readingProgress)
             .environment(environment.hadithFavorites)
             .environment(environment.hadithCollectionOrder)
             .environment(environment.appIconSettings)
             .environment(environment.audioPlayer)
+            .environment(environment.clipPlayer)
             .environment(environment.appearanceSettings)
             .environment(environment.parchmentSettings)
             .environment(environment.translationShadeSettings)

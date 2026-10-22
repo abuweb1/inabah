@@ -40,6 +40,25 @@ class ReadingSettingsTest {
     }
 
     @Test
+    fun `Подсказки «Учимся читать» - один раз на экран, увеличение запоминается, сброс возвращает всё`() = TestStorage.run { storage ->
+        val settings = ReadingSettings(storage.storage)
+        assertFalse(settings.introSeen("lesson.1"))
+        assertFalse(settings.zoomLearned.value)
+
+        settings.markIntroSeen("lesson.1")
+        settings.markZoomLearned()
+        val restarted = ReadingSettings(storage.restart())
+        assertTrue(restarted.introSeen("lesson.1"), "показанная подсказка не повторяется после перезапуска")
+        assertFalse(restarted.introSeen("lesson.2"), "у другого экрана - своя")
+        assertTrue(restarted.zoomLearned.value)
+
+        restarted.resetIntros()
+        assertFalse(restarted.introSeen("lesson.1"))
+        assertFalse(restarted.zoomLearned.value)
+        assertFalse(ReadingSettings(storage.restart()).introSeen("lesson.1"), "сброс сохранён")
+    }
+
+    @Test
     fun `Размер сохраняется между запусками`() = TestStorage.run { storage ->
         ReadingSettings(storage.storage).increaseArabicFontSize()
 

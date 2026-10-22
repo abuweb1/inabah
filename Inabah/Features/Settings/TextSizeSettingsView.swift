@@ -9,8 +9,8 @@ struct TextSizeSettingsView: View {
     @Environment(\.theme) private var theme
 
     var body: some View {
-        Form {
-            Section {
+        SettingsForm {
+            SettingsGroup {
                 TextSizeStepRow(
                     label: "settings.textSize.content.label",
                     steps: ContentTextSize.allCases,
@@ -19,13 +19,11 @@ struct TextSizeSettingsView: View {
                 ) { size in
                     withAnimation(Motion.fontSize) { settings.select(content: size) }
                 }
-                .settingsRow()
                 if let translation = sampleZikr?.translation {
                     ZikrTranslationView(translation: translation)
                         .padding(Spacing.l)
                         .surface(theme.palette.zikrCard, cornerRadius: Radius.box)
                         .padding(.vertical, Spacing.xs)
-                        .settingsRow()
                 }
             } header: {
                 Text("settings.textSize.content.header")
@@ -34,7 +32,7 @@ struct TextSizeSettingsView: View {
                     .foregroundStyle(theme.palette.onAccentSecondary)
             }
 
-            Section {
+            SettingsGroup {
                 // Смена размера интерфейса перестраивает всё дерево — без анимации.
                 TextSizeStepRow(
                     label: "settings.textSize.interface.label",
@@ -42,10 +40,8 @@ struct TextSizeSettingsView: View {
                     selection: settings.interface,
                     title: \.title
                 ) { settings.select(interface: $0) }
-                .settingsRow()
                 if let hadith = sampleHadith {
                     HadithRow(hadith: hadith, status: .read)
-                        .settingsRow()
                 }
             } header: {
                 Text("settings.textSize.interface.header")
@@ -55,6 +51,7 @@ struct TextSizeSettingsView: View {
             }
         }
         .settingsForm(background: theme.gradients.settingsBackground)
+        .glassBackButton(tint: theme.palette.tabSettings, header: nil)
         .navigationTitle(Text("settings.textSize.title"))
         .navigationBarTitleDisplayMode(.inline)
         .task { await azkarStore.load(.morning) }

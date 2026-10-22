@@ -7,7 +7,7 @@
 Вывод: Assets.xcassets/Palette/Parchment/<Вариант>/parchment<Вариант><Токен>.colorset.
 Значения — один в один из Android `core/designsystem/ParchmentStyle.kt` (решение пользователя
 2026-10-06: цвета как на Android). Вариант «Пергамент» (`classic`) использует нынешние ассеты
-(parchmentLight, gold, parchmentMid, parchmentDeep, parchmentInk, successDeep) и здесь не создаётся.
+(parchmentLight, gold, parchmentMid, parchmentDeep, parchmentInk, successDeep, parchmentMark) и здесь не создаётся.
 
 HEX живут только в ассетах и в этой таблице (правило CLAUDE.md). Токены и порядок — как
 в `ParchmentStyle.swift` (`ParchmentToken`).
@@ -19,22 +19,24 @@ import sys
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, 'Inabah', 'Resources', 'Assets.xcassets', 'Palette', 'Parchment')
 
-TOKENS = ['Light', 'Highlight', 'Mid', 'Deep', 'Text', 'Accent']
+TOKENS = ['Light', 'Highlight', 'Mid', 'Deep', 'Text', 'Accent', 'Mark', 'Illustration']
 
-# Вариант → light, highlight, mid, deep, текст, акцент (рамка, «✦», значок «N раз»).
+# Вариант → light, highlight, mid, deep, текст, акцент (рамка, «✦», значок «N раз»), выделение буквы в слове
+# («Учимся читать»: тёмно-красное на светлом, тёплое оранжевое на тёмном, голубое на янтарном; контраст ≥ 4,5),
+# фон рисунков руководства (2026-10-21, как Android: светлый тон варианта; у «Пергамента» - #FBEED1, цвет рисунков).
 VARIANTS = {
     # Тёплая старая бумага — к «Янтарной». Акцент темнее successDeep: на deep тот давал 4,35 < 4,5.
-    'Sepia':    ['E9D2AE', 'DEC39A', 'D9BD94', 'C9A97C', '2B1D10', '1F4A2A'],
+    'Sepia':    ['E9D2AE', 'DEC39A', 'D9BD94', 'C9A97C', '2B1D10', '1F4A2A', '80190F', 'E9D2AE'],
     # Приглушённый лиловый с золотой рамкой — к «Фиолетовой».
-    'Amethyst': ['4A3A6E', '54427C', '46376A', '3B2E5C', 'F3EEFA', 'ECC87B'],
+    'Amethyst': ['4A3A6E', '54427C', '46376A', '3B2E5C', 'F3EEFA', 'ECC87B', 'FFB45C', '4A3A6E'],
     # Глубокий зелёный с золотой рамкой — к «Изумрудной».
-    'Jade':     ['1C4D40', '21584A', '1B4A3D', '153D32', 'EDF7F2', 'ECC87B'],
+    'Jade':     ['1C4D40', '21584A', '1B4A3D', '153D32', 'EDF7F2', 'ECC87B', 'FFB45C', '1C4D40'],
     # Приглушённый медово-коричневый с золотой рамкой — к «Янтарной».
-    'Amber':    ['5A3818', '664020', '553415', '472B10', 'F8EEDF', 'ECC87B'],
+    'Amber':    ['5A3818', '664020', '553415', '472B10', 'F8EEDF', 'ECC87B', '8FD3FF', '5A3818'],
     # Дымчатый серо-голубой — к «Графиту».
-    'Smoky':    ['3A414F', '434B5B', '39404D', '2F3541', 'EEF1F6', 'B4CBF4'],
+    'Smoky':    ['3A414F', '434B5B', '39404D', '2F3541', 'EEF1F6', 'B4CBF4', 'FFB45C', '3A414F'],
     # Тёмный — к любой палитре, для чтения в темноте.
-    'Night':    ['2E2A40', '352F4C', '2B2640', '221E34', 'F0EAF8', '6DBF7E'],
+    'Night':    ['2E2A40', '352F4C', '2B2640', '221E34', 'F0EAF8', '6DBF7E', 'FFB45C', '2E2A40'],
 }
 
 INFO = {'author': 'xcode', 'version': 1}

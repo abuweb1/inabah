@@ -5,11 +5,11 @@ struct SettingsView: View {
     @Environment(\.theme) private var theme
 
     var body: some View {
-        List {
-            Section {
+        SettingsForm {
+            SettingsGroup {
                 rows(SettingsSection.content)
             }
-            Section {
+            SettingsGroup {
                 rows(SettingsSection.appearance)
             } header: {
                 Text("settings.appearance.header")
@@ -30,12 +30,13 @@ struct SettingsView: View {
     private func rows(_ sections: [SettingsSection]) -> some View {
         ForEach(sections, id: \.self) { section in
             NavigationLink(value: section.route) {
-                // Шаг интерфейса — у строк, а не у списка или экрана: крупный заголовок
-                // «Настройки» UIKit масштабирует по размеру списка, а заголовки не меняются.
-                SettingsSectionRow(section: section)
-                    .interfaceTextSize()
+                // Шаг интерфейса — у строк, а не у формы или экрана: крупный заголовок
+                // «Настройки» UIKit масштабирует по размеру содержимого, а заголовки не меняются.
+                SettingsLinkLabel {
+                    SettingsSectionRow(section: section)
+                }
+                .interfaceTextSize()
             }
-            .settingsRow()
         }
     }
 }
@@ -44,12 +45,13 @@ struct SettingsView: View {
 private enum SettingsSection {
     case azkar
     case hadith
+    case makharij
     case palette
     case textSize
     case appIcon
 
     /// Настройки разделов приложения.
-    static let content: [SettingsSection] = [.azkar, .hadith]
+    static let content: [SettingsSection] = [.azkar, .hadith, .makharij]
     /// Оформление.
     static let appearance: [SettingsSection] = [.palette, .textSize, .appIcon]
 
@@ -57,6 +59,7 @@ private enum SettingsSection {
         switch self {
         case .azkar: .azkar
         case .hadith: .hadith
+        case .makharij: .makharij
         case .palette: .palette
         case .textSize: .textSize
         case .appIcon: .appIcon
@@ -67,6 +70,7 @@ private enum SettingsSection {
         switch self {
         case .azkar: "settings.azkar.title"
         case .hadith: "settings.hadith.title"
+        case .makharij: "settings.makharij.title"
         case .palette: "settings.palette.title"
         case .textSize: "settings.textSize.title"
         case .appIcon: "settings.appIcon.title"
@@ -77,6 +81,7 @@ private enum SettingsSection {
         switch self {
         case .azkar: "settings.azkar.subtitle"
         case .hadith: "settings.hadith.subtitle"
+        case .makharij: "settings.makharij.subtitle"
         case .palette: "settings.palette.subtitle"
         case .textSize: "settings.textSize.subtitle"
         case .appIcon: "settings.appIcon.subtitle"
@@ -89,6 +94,7 @@ private enum SettingsSection {
         switch self {
         case .azkar: .asset("tabIconAzkar")
         case .hadith: .asset("tabIconHadith")
+        case .makharij: .asset("tabIconMakharij")
         case .palette: .symbol("paintpalette.fill")
         case .textSize: .symbol("textformat.size")
         case .appIcon: .symbol("app.badge.fill")
@@ -100,9 +106,18 @@ private enum SettingsSection {
         switch self {
         case .azkar: theme.gradients.morningCard
         case .hadith: theme.gradients.nawawiCard
+        case .makharij: theme.gradients.makharijBackground
         case .palette: theme.gradients.qudsiCard
         case .textSize: theme.gradients.ajurriCard
         case .appIcon: theme.gradients.eveningCard
+        }
+    }
+
+    /// Цвет значка: «ع» махраджа - цвета вкладки на её тёмном фоне (как Android), остальные - белые.
+    func glyphColor(in theme: Theme) -> Color {
+        switch self {
+        case .makharij: theme.palette.tabMakharij
+        case .azkar, .hadith, .palette, .textSize, .appIcon: theme.palette.onAccent
         }
     }
 }
@@ -139,7 +154,7 @@ private struct SettingsSectionRow: View {
     var body: some View {
         HStack(spacing: Spacing.m) {
             glyph
-                .foregroundStyle(theme.palette.onAccent)
+                .foregroundStyle(section.glyphColor(in: theme))
                 .frame(width: iconSize, height: iconSize)
                 .background(section.tint(in: theme).linear, in: .rect(cornerRadius: Radius.small))
                 .accessibilityHidden(true)

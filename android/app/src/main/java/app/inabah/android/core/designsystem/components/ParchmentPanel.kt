@@ -72,7 +72,7 @@ fun ParchmentPanel(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = Spacing.xxl, end = Spacing.xxl, top = Spacing.xxl, bottom = Spacing.l),
+                .padding(start = ParchmentHorizontalPadding, end = ParchmentHorizontalPadding, top = Spacing.xxl, bottom = Spacing.l),
             content = content,
         )
         // Поверх содержимого, как overlay в iOS.
@@ -90,3 +90,6 @@ private fun BoxScope.Ornaments(color: Color) {
 
 /** Видимый размер «✦» кеглем 11 — сам знак занимает около 0,8 кегля. */
 private val OrnamentSize = Size.ornament * 0.8f
+
+/** Отступ содержимого пергамента слева и справа - для расчёта ширины того, что внутри. */
+val ParchmentHorizontalPadding = Spacing.xxl

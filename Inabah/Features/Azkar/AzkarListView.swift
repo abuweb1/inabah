@@ -54,13 +54,20 @@ struct AzkarListView: View {
                     ShareButton(title: "reminder.action", iconSize: Self.reminderIconSize) {
                         section.reminderText
                     }
+                    .headerIconButtonStyle(tint: theme.palette.tabAzkar, header: section.headerColor(in: theme))
                     .fixedTextSize()
                 }
                 if #available(iOS 26, *) {
                     ToolbarSpacer(.fixed, placement: .topBarTrailing)
                 }
-                FontSizeControls(settings: settings, compact: true)
+                FontSizeControls(
+                    settings: settings,
+                    compact: true,
+                    tint: theme.palette.tabAzkar,
+                    header: section.headerColor(in: theme)
+                )
             }
+            .glassBackButton(tint: theme.palette.tabAzkar, header: section.headerColor(in: theme))
             .task { await store.load(section) }
     }
 
@@ -123,6 +130,9 @@ private struct AzkarFeed: View {
     /// Виден ли на экране верх каждой карточки. Не `@Observable`: меняется при прокрутке,
     /// а читается только в момент сворачивания — лента из-за него не перерисовывается.
     @State private var cardTops = CardTopVisibility()
+    /// Верх видимой части ленты в её координатах — тоже обычный класс: пишется на каждом кадре прокрутки.
+    @State private var visibleTop = FeedVisibleTop()
+    @State private var scrollPosition = ScrollPosition()
 
     private static let autoScrollCooldown = Duration.seconds(2)
 
@@ -137,9 +147,12 @@ private struct AzkarFeed: View {
                     ForEach(sessions) { session in
                         let trackID = session.zikr.audioTrackID
                         CardTopMarker(id: trackID, tops: cardTops)
-                        ZikrCardView(session: session, audio: player.audioState(of: session.zikr)) {
-                            revealCollapsed(trackID, proxy: proxy)
-                        }
+                        ZikrCardView(
+                            session: session,
+                            audio: player.audioState(of: session.zikr),
+                            onAutoCollapse: { revealCollapsed(trackID, proxy: proxy) },
+                            onHideTranslation: keepActionsInPlace
+                        )
                         .id(trackID)
                     }
                     // Записей нет — вместо «Прослушать все» заглушка «Аудио скоро».
@@ -153,6 +166,13 @@ private struct AzkarFeed: View {
                     .padding(.top, Spacing.l)
                 }
                 .padding([.horizontal, .bottom], Spacing.l)
+                .coordinateSpace(.azkarFeed)
+            }
+            .scrollPosition($scrollPosition)
+            .onScrollGeometryChange(for: CGFloat.self) { geometry in
+                geometry.contentOffset.y + geometry.contentInsets.top
+            } action: { _, top in
+                visibleTop.y = top
             }
             .onScrollPhaseChange { _, phase in
                 isUserScrolling = phase.isScrolling
@@ -182,6 +202,25 @@ private struct AzkarFeed: View {
         guard cardTops.isHidden(trackID) else { return }
         proxy.scrollTo(CardTopMarker.Anchor(trackID: trackID), anchor: .top)
     }
+
+    /// Скрыт перевод, начало которого уже за верхним краем экрана: без прокрутки кнопка «Аа» уезжала
+    /// вверх на высоту перевода, и под пальцем оказывались следующие карточки. Лента в той же
+    /// анимации поднимается на ту же высоту — «Аа» остаётся на месте. Перевод виден целиком — не трогаем.
+    private func keepActionsInPlace(_ translation: CGRect) {
+        let top = visibleTop.y
+        guard translation.minY < top else { return }
+        scrollPosition.scrollTo(y: max(0, top - translation.height))
+    }
+}
+
+/// Верх видимой части ленты (смещение прокрутки с учётом отступа под навбаром).
+private final class FeedVisibleTop {
+    var y: CGFloat = 0
+}
+
+extension CoordinateSpaceProtocol where Self == NamedCoordinateSpace {
+    /// Координаты содержимого ленты азкаров: не меняются при прокрутке.
+    nonisolated static var azkarFeed: NamedCoordinateSpace { .named("azkarFeed") }
 }
 
 /// Видимость верха карточек ленты — обычный класс: запись при прокрутке не перерисовывает ленту.

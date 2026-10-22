@@ -228,7 +228,9 @@ struct SectionNavCard: View {
     /// Название в оригинале после подписи через «·» (арабское название сборника — контент,
     /// не переводится и не хранится в каталоге строк).
     var metaOriginal: String?
-    let symbolName: String
+    /// Значок - SF Symbol или ассет-шаблон (`iconAsset`, например «ع» вкладки «Махрадж»).
+    var symbolName = ""
+    var iconAsset: String?
     let iconColor: Color
     let gradient: ThemeGradient
     let shadow: ShadowToken
@@ -257,8 +259,7 @@ struct SectionNavCard: View {
     var body: some View {
         HStack(alignment: .bottom) {
             VStack(alignment: .leading, spacing: Spacing.xxxs) {
-                Image(systemName: symbolName)
-                    .font(.system(size: iconSize))
+                icon
                     .foregroundStyle(iconColor)
                     .frame(width: iconFrame, height: iconFrame, alignment: .leading)
                     .accessibilityHidden(true)
@@ -314,6 +315,19 @@ struct SectionNavCard: View {
         .surface(gradient.linear, cornerRadius: Radius.navCard, border: theme.palette.divider, shadow: shadow)
         .contentShape(.rect(cornerRadius: Radius.navCard))
         .accessibilityElement(children: .combine)
+    }
+
+    @ViewBuilder private var icon: some View {
+        if let iconAsset {
+            Image(iconAsset)
+                .renderingMode(.template)
+                .resizable()
+                .scaledToFit()
+                .frame(width: iconSize, height: iconSize)
+        } else {
+            Image(systemName: symbolName)
+                .font(.system(size: iconSize))
+        }
     }
 
     private func metaText(_ meta: LocalizedStringResource) -> Text {

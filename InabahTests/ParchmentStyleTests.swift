@@ -1,4 +1,5 @@
 import Foundation
+import SwiftUI
 import Testing
 import UIKit
 @testable import Inabah
@@ -30,6 +31,33 @@ struct ParchmentStyleTests {
         }
     }
 
+    /// Буква в слове-примере («Учимся читать») - свой цвет, не текст и не рамка: цвет рамки на «Сепии» и
+    /// «Дымчатом» сливался (как Android `ParchmentStyleTest`).
+    @Test("Выделение буквы читается на каждом оттенке фона (≥ 4,5:1) и отличается от текста и рамки",
+          arguments: ParchmentStyle.allCases)
+    func markContrast(style: ParchmentStyle) throws {
+        for background in ParchmentToken.backgrounds {
+            let ratio = try Contrast.ratio(style.assetName(.mark), style.assetName(background))
+            #expect(ratio >= 4.5, "\(style.rawValue): выделение на \(background.rawValue) — \(ratio)")
+        }
+        let colors = style.colors
+        #expect(colors.mark != colors.text)
+        #expect(colors.mark != colors.accent)
+    }
+
+    /// Фон рисунков руководства (как Android): у «Пергамента» - исходный цвет рисунков, у остальных - `light`.
+    @Test("Фон рисунков: у «Пергамента» - цвет рисунков, у остальных - светлый тон варианта", arguments: ParchmentStyle.allCases)
+    func illustrationBackground(style: ParchmentStyle) throws {
+        let illustration = SRGBColor(Color(style.assetName(.illustration), bundle: .main))
+        if style == .classic {
+            #expect(abs(illustration.red - 0xFB / 255.0) < 0.002)
+            #expect(abs(illustration.green - 0xEE / 255.0) < 0.002)
+            #expect(abs(illustration.blue - 0xD1 / 255.0) < 0.002)
+        } else {
+            #expect(illustration == SRGBColor(Color(style.assetName(.light), bundle: .main)))
+        }
+    }
+
     @Test("«Пергамент» — прежний вид: тема по умолчанию не меняется")
     func classicKeepsDefaultTheme() {
         #expect(Theme.inabah.withParchment(.classic) == Theme.inabah)
@@ -57,6 +85,8 @@ struct ParchmentStyleTests {
             let theme = base.withParchment(.jade)
             #expect(theme.palette.parchmentText == jade.text)
             #expect(theme.palette.parchmentAccent == jade.accent)
+            #expect(theme.palette.parchmentMark == jade.mark)
+            #expect(theme.palette.parchmentIllustration == jade.illustration)
             #expect(theme.palette.background == base.palette.background)
             #expect(theme.palette.accent == base.palette.accent)
         }

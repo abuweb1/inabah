@@ -10,7 +10,7 @@ import kotlinx.serialization.json.Json
 /**
  * Навигация приложения (iOS `AppRouter`): выбранная вкладка и стек экранов каждой вкладки.
  * Состояние — снимки Compose: экраны (Navigation 3, этап 3) перерисовываются по последнему элементу стека.
- * «Махрадж» пока без стека — одна главная. Вызывать с главного потока.
+ * Вызывать с главного потока.
  */
 class AppRouter {
     var selectedTab by mutableStateOf(AppTab.Azkar)
@@ -18,10 +18,12 @@ class AppRouter {
 
     private val _azkarStack = mutableStateListOf<AzkarRoute>()
     private val _hadithStack = mutableStateListOf<HadithRoute>()
+    private val _makharijStack = mutableStateListOf<MakharijRoute>()
     private val _settingsStack = mutableStateListOf<SettingsRoute>()
 
     val azkarStack: List<AzkarRoute> get() = _azkarStack
     val hadithStack: List<HadithRoute> get() = _hadithStack
+    val makharijStack: List<MakharijRoute> get() = _makharijStack
     val settingsStack: List<SettingsRoute> get() = _settingsStack
 
     /** Выбор вкладки в панели: повторный выбор активной возвращает к её корню, другой — только переключает. */
@@ -34,10 +36,16 @@ class AppRouter {
         val stack = when (tab) {
             AppTab.Azkar -> _azkarStack
             AppTab.Hadith -> _hadithStack
-            AppTab.Makharij -> return
+            AppTab.Makharij -> _makharijStack
             AppTab.Settings -> _settingsStack
         }
         if (stack.isNotEmpty()) stack.clear()
+    }
+
+    /** Открыть главную вкладки из любого места: вкладка [tab], её стек — до корня. */
+    fun openRoot(tab: AppTab) {
+        selectedTab = tab
+        popToRoot(tab)
     }
 
     /** Открыть экран азкаров из любого места: вкладка «Азкары», стек — только этот экран. */
@@ -58,12 +66,35 @@ class AppRouter {
         _hadithStack.replaceWith(stack)
     }
 
+    /**
+     * Урок открывается поверх списка шагов, проверка - поверх своего урока: «назад» ведёт туда.
+     * «Следующий шаг» из проверки - тоже сюда: проверка и прошлый урок из стека уходят.
+     */
+    fun open(route: MakharijRoute) {
+        selectedTab = AppTab.Makharij
+        val stack = when (route) {
+            MakharijRoute.Steps -> listOf(route)
+            is MakharijRoute.Lesson -> listOf(MakharijRoute.Steps, route)
+            is MakharijRoute.Quiz -> listOf(MakharijRoute.Steps, MakharijRoute.Lesson(route.step), route)
+            is MakharijRoute.Words -> listOf(MakharijRoute.Steps, MakharijRoute.Lesson(route.step), route)
+            is MakharijRoute.Alphabet -> listOf(MakharijRoute.Steps, MakharijRoute.Lesson(route.step), route)
+            is MakharijRoute.Extra -> listOf(MakharijRoute.Steps, MakharijRoute.Lesson(route.step), route)
+            is MakharijRoute.LetterForms -> listOf(MakharijRoute.Steps, MakharijRoute.Lesson(route.step), route)
+            is MakharijRoute.Zikr -> listOf(MakharijRoute.Steps, MakharijRoute.Lesson(route.step), route)
+            // Руководство не привязано к шагу: открытое напрямую - поверх списка шагов.
+            is MakharijRoute.Guide -> listOf(MakharijRoute.Steps, route)
+        }
+        _makharijStack.replaceWith(stack)
+    }
+
     // Тот же экран поверх себя не кладётся: двойное касание во время перехода (уходящий экран ещё
     // принимает касания) иначе дало бы две записи с одним ключом.
 
     fun push(route: AzkarRoute) = _azkarStack.pushDistinct(route)
 
     fun push(route: HadithRoute) = _hadithStack.pushDistinct(route)
+
+    fun push(route: MakharijRoute) = _makharijStack.pushDistinct(route)
 
     fun push(route: SettingsRoute) = _settingsStack.pushDistinct(route)
 
@@ -72,7 +103,7 @@ class AppRouter {
         val stack = when (tab) {
             AppTab.Azkar -> _azkarStack
             AppTab.Hadith -> _hadithStack
-            AppTab.Makharij -> return
+            AppTab.Makharij -> _makharijStack
             AppTab.Settings -> _settingsStack
         }
         if (stack.isNotEmpty()) stack.removeAt(stack.lastIndex)
@@ -103,7 +134,9 @@ class AppRouter {
     /** Снимок вкладки и стеков — для восстановления после смерти процесса (`rememberSaveable`). */
     fun snapshot(): String = json.encodeToString(
         RouterState.serializer(),
-        RouterState(selectedTab, _azkarStack.toList(), _hadithStack.toList(), _settingsStack.toList()),
+        RouterState(
+            selectedTab, _azkarStack.toList(), _hadithStack.toList(), _settingsStack.toList(), _makharijStack.toList(),
+        ),
     )
 
     /** Восстановить снимок [snapshot]; повреждённый или устаревший формат — остаться в корнях. */
@@ -118,6 +151,7 @@ class AppRouter {
         _azkarStack.replaceWith(state.azkar)
         _hadithStack.replaceWith(state.hadith)
         _settingsStack.replaceWith(state.settings)
+        _makharijStack.replaceWith(state.makharij)
     }
 
     @Serializable
@@ -126,6 +160,8 @@ class AppRouter {
         val azkar: List<AzkarRoute>,
         val hadith: List<HadithRoute>,
         val settings: List<SettingsRoute>,
+        /** Снимки до «Учимся читать» поля не знают. */
+        val makharij: List<MakharijRoute> = emptyList(),
     )
 
     private companion object {
@@ -135,7 +171,7 @@ class AppRouter {
     private fun currentStack(): MutableList<out Any> = when (selectedTab) {
         AppTab.Azkar -> _azkarStack
         AppTab.Hadith -> _hadithStack
-        AppTab.Makharij -> mutableListOf()
+        AppTab.Makharij -> _makharijStack
         AppTab.Settings -> _settingsStack
     }
 

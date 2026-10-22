@@ -21,15 +21,19 @@ nonisolated enum SettingsRoute: Hashable, Codable, Sendable {
     case hadith
     /// Порядок сборников на главной хадисов (из настроек хадисов).
     case hadithOrder
+    /// «Махрадж»: транскрипция, «Открыть все шаги», сброс прогресса «Учимся читать».
+    case makharij
     /// Выбор иконки приложения.
     case appIcon
     /// Выбор палитры оформления.
     case palette
     /// Размер текста переводов и интерфейса.
     case textSize
-    /// «О приложении»: источники, лицензии, политика конфиденциальности.
+    /// «О приложении»: источники, политика конфиденциальности, строка «Лицензии».
     case about
-    /// Полный текст лицензии (из «О приложении»).
+    /// Список лицензий шрифта и значков (из «О приложении»).
+    case licenses
+    /// Полный текст лицензии (из «Лицензий»).
     case license(LicenseDocument)
     /// «История версий» (из «О приложении»).
     case versionHistory
@@ -45,6 +49,28 @@ nonisolated enum HadithRoute: Hashable, Codable, Sendable {
     case favorites
 }
 
+/// Экраны внутри вкладки «Махрадж» (курс «Учимся читать»). Номер шага - `ReadingStep.number`.
+nonisolated enum MakharijRoute: Hashable, Codable, Sendable {
+    /// Список шагов курса - из карточки на главной.
+    case steps
+    /// Урок шага - поверх списка шагов.
+    case lesson(Int)
+    /// «Весь алфавит» шага: все слоги или все закрытые слоги - поверх урока.
+    case alphabet(Int)
+    /// Справка к уроку (`topic == nil`) или тема урока «Особые случаи» по номеру - поверх урока.
+    case extra(step: Int, topic: Int?)
+    /// Карточка буквы из таблицы форм: формы и слова-примеры букв группы - поверх урока.
+    case letterForms(step: Int, letter: String)
+    /// «Проверить себя» - поверх урока.
+    case quiz(Int)
+    /// «Читаем слова» - поверх урока.
+    case words(Int)
+    /// Зикр итога «Читаем зикр» по номеру в шаге - поверх урока итога.
+    case zikr(step: Int, zikr: Int)
+    /// Руководство по произношению (`ReadingGuide.id`) - поверх урока, листа буквы или карточки буквы.
+    case guide(id: String)
+}
+
 /// Навигация приложения: выбранная вкладка и типизированный стек каждой вкладки.
 ///
 /// Типизированный путь вместо `NavigationPath` позволяет открыть любой экран из кода
@@ -54,6 +80,7 @@ final class AppRouter {
     var selectedTab: AppTab = .azkar
     var azkarPath: [AzkarRoute] = []
     var hadithPath: [HadithRoute] = []
+    var makharijPath: [MakharijRoute] = []
     var settingsPath: [SettingsRoute] = []
 
     /// Выбор вкладки из таб-бара. Повторный выбор активной вкладки возвращает к её корню.
@@ -75,8 +102,7 @@ final class AppRouter {
         case .hadith:
             if !hadithPath.isEmpty { hadithPath.removeAll() }
         case .makharij:
-            // Пока раздел — одна главная (заглушка), стека нет.
-            break
+            if !makharijPath.isEmpty { makharijPath.removeAll() }
         case .settings:
             if !settingsPath.isEmpty { settingsPath.removeAll() }
         }
@@ -101,6 +127,21 @@ final class AppRouter {
         }
     }
 
+    /// Урок открывается поверх списка шагов, экраны урока - поверх урока: «назад» ведёт туда, откуда
+    /// пришли бы в приложении (как Android `AppRouter.open`).
+    func open(_ route: MakharijRoute) {
+        selectedTab = .makharij
+        switch route {
+        case .steps:
+            makharijPath = [route]
+        case .lesson, .guide:
+            makharijPath = [.steps, route]
+        case .alphabet(let step), .quiz(let step), .words(let step),
+             .extra(let step, _), .letterForms(let step, _), .zikr(let step, _):
+            makharijPath = [.steps, .lesson(step), route]
+        }
+    }
+
     /// Нажатие на напоминание: главная азкаров, раздел азкаров или хадис.
     func open(_ target: ReminderTarget) {
         switch target {
@@ -111,6 +152,8 @@ final class AppRouter {
             open(AzkarRoute.list(section))
         case .hadith(let id):
             open(HadithRoute.detail(id))
+        case .readingLesson(let step):
+            open(MakharijRoute.lesson(step))
         }
     }
 }

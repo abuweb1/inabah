@@ -64,4 +64,39 @@ class ReminderSettingsTest {
         assertTrue(settings.offerAnswered.value)
         assertTrue(ReminderSettings(storage.restart()).preferences.value.azkarStreak)
     }
+
+    @Test
+    fun `Напоминания урока — выключены, время по умолчанию 9 14 19, выбор и время переживают перезапуск`() = TestStorage.run { storage ->
+        val settings = ReminderSettings(storage.storage)
+        assertEquals(emptySet(), settings.preferences.value.readingSlots)
+        assertEquals(
+            listOf(DayTime.of(9, 0), DayTime.of(14, 0), DayTime.of(19, 0)),
+            ReadingReminderSlot.entries.map(settings.preferences.value::readingTime),
+        )
+
+        settings.setReadingSlot(ReadingReminderSlot.Evening, true)
+        settings.setReadingTime(ReadingReminderSlot.Evening, DayTime.of(21, 15))
+
+        val restarted = ReminderSettings(storage.restart()).preferences.value
+        assertEquals(setOf(ReadingReminderSlot.Evening), restarted.readingSlots)
+        assertEquals(DayTime.of(21, 15), restarted.readingTime(ReadingReminderSlot.Evening))
+        assertEquals(DayTime.of(9, 0), restarted.readingTime(ReadingReminderSlot.Morning))
+        assertTrue(restarted.isAnyEnabled)
+    }
+
+    @Test
+    fun `Напоминание урока отвечает на своё предложение, не на предложение азкаров`() = TestStorage.run { storage ->
+        val settings = ReminderSettings(storage.storage)
+        assertFalse(settings.readingOfferAnswered.value)
+
+        settings.setReadingSlot(ReadingReminderSlot.Morning, true)
+
+        assertTrue(settings.readingOfferAnswered.value)
+        assertFalse(settings.offerAnswered.value, "карточка азкаров остаётся")
+        val restarted = ReminderSettings(storage.restart())
+        assertTrue(restarted.readingOfferAnswered.value, "после перезапуска")
+
+        restarted.setHadithOfDay(true)
+        assertTrue(restarted.offerAnswered.value)
+    }
 }

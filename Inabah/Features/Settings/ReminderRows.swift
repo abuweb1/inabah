@@ -36,7 +36,7 @@ struct ReminderToggleRow: View {
                 }
             }
         }
-        .tint(tint)
+        .choiceToggleStyle(tint: tint)
     }
 }
 

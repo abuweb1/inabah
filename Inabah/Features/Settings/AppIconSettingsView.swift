@@ -10,8 +10,8 @@ struct AppIconSettingsView: View {
     var body: some View {
         @Bindable var settings = settings
 
-        Form {
-            Section {
+        SettingsForm {
+            SettingsGroup {
                 LazyVGrid(columns: SelectionGrid.columns(for: dynamicTypeSize), spacing: Spacing.xlPlus) {
                     ForEach(AppIconOption.allCases) { option in
                         AppIconTile(option: option, isSelected: option == settings.current) {
@@ -21,13 +21,13 @@ struct AppIconSettingsView: View {
                 }
                 .padding(.vertical, Spacing.m)
                 .disabled(!settings.isSupported || settings.isChanging)
-                .settingsRow()
             } footer: {
                 Text(settings.isSupported ? "settings.appIcon.footer" : "settings.appIcon.unsupported")
                     .foregroundStyle(theme.palette.onAccentSecondary)
             }
         }
         .settingsForm(background: theme.gradients.settingsBackground)
+        .glassBackButton(tint: theme.palette.tabSettings, header: nil)
         .navigationTitle(Text("settings.appIcon.title"))
         .navigationBarTitleDisplayMode(.inline)
         .onAppear { settings.refresh() }

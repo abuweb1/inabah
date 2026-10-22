@@ -387,6 +387,25 @@ struct AudioPlayerControllerTests {
         #expect(engine.isPlaying)
     }
 
+    @Test("Любой старт - ▶, продолжение, после ошибки - сначала onWillStart (записи курса замолкают)")
+    func willStartOnEveryStart() async {
+        var calls = 0
+        player.onWillStart = { calls += 1 }
+
+        engine.failingFiles = ["morning_1.mp3"]
+        await play(1)
+        #expect(calls == 1)
+
+        engine.failingFiles = []
+        player.resume()
+        await player.waitForLoading()
+        #expect(calls == 2)
+
+        player.pause()
+        player.resume()
+        #expect(calls == 3)
+    }
+
     @Test("Запись не запустилась — ошибка, а не «играет» без звука")
     func playbackRefused() async {
         engine.refusesToPlay = true

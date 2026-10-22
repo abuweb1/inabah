@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.update
 
 /**
  * Время азкаров «с — до» для каждого раздела (iOS `AzkarWindowSettings`): по умолчанию утренние —
- * 5:00–12:00, вечерние — 17:00–02:00. Хранится в минутах от полуночи.
+ * 6:00–11:30, вечерние — 17:00–02:00. Хранится в минутах от полуночи.
  *
  * Экран настроек правит черновик и сохраняет его целиком ([set]) при уходе с экрана или в фон, затем
  * сверяет прогресс (`AzkarStore.reconcile`): сверка по таймеру или при возврате в приложение не увидит
@@ -52,7 +52,7 @@ class AzkarWindowSettings(private val storage: PreferencesStorage) {
 
     companion object {
         fun defaultWindow(section: AzkarSection): AzkarWindow = when (section) {
-            AzkarSection.Morning -> AzkarWindow(DayTime.of(hour = 5, minute = 0), DayTime.of(hour = 12, minute = 0))
+            AzkarSection.Morning -> AzkarWindow(DayTime.of(hour = 6, minute = 0), DayTime.of(hour = 11, minute = 30))
             AzkarSection.Evening -> AzkarWindow(DayTime.of(hour = 17, minute = 0), DayTime.of(hour = 2, minute = 0))
         }
 

@@ -88,6 +88,9 @@ enum PressFeedback {
     static let wideOpacity: Double = 0.8
     /// Неактивная кнопка.
     static let disabledOpacity: Double = 0.4
+    /// Удержание для увеличения плитки слова (у Android - 0,4 с). Удержание и касание плитки - одним жестом
+    /// (`exclusively`), иначе удержание ждёт отказа касания и запаздывает.
+    static let zoomHold: Double = 0.2
 }
 
 /// Длительности анимаций — единые для всего приложения.
@@ -118,6 +121,23 @@ enum Motion {
     static let fontSize = Animation.smooth(duration: 0.3)
     /// Полоса прогресса раздела.
     static let progress = Animation.easeInOut(duration: 0.5)
+    /// «Дыхание» текущего шага курса: ×1,08 и обратно, 1,1 с в одну сторону (Android `FastOutSlowIn`).
+    static let breathe = Animation.timingCurve(0.4, 0, 0.2, 1, duration: 1.1).repeatForever(autoreverses: true)
+    /// Вспышка звёздочек (открытие шага, верный ответ - 0,7 с; окно «Машаа Аллах» - дольше).
+    static func sparkleBurst(duration: Double) -> Animation {
+        .timingCurve(0.4, 0, 0.2, 1, duration: duration)
+    }    /// Замок открывшегося шага «отщёлкивается»: пауза 0,4 с, затем 0,8 с.
+    static let unlock = Animation.timingCurve(0.4, 0, 0.2, 1, duration: 0.8).delay(0.4)
+    /// Увеличение плитки долгим нажатием и обратно (Android `Motion.zoom`).
+    static let zoom = Animation.timingCurve(0.4, 0, 0.2, 1, duration: 0.3)
+    /// Вспышка касания ячейки курса: круг от точки касания растёт и гаснет (своя замена ripple Android).
+    static let tapFlash = Animation.easeOut(duration: 0.5)
+    /// Название над звучащей буквой «Послушать алфавит» появляется.
+    static let nameBubble = Animation.easeOut(duration: 0.25)
+    /// Подсказка транскрипции по лампочке.
+    static let transliterationHint = Duration.milliseconds(700)
+    /// Сколько показывать открытие шага, прежде чем запомнить, что его видели.
+    static let unlockSeenDelay = Duration.milliseconds(1200)
     /// Пауза между заполнением счётчика и сворачиванием карточки (вспышка «готово»).
     static let collapseDelay = Duration.milliseconds(550)
     /// Пауза перед показом оверлея «Машаа Аллах!» после последнего зикра.

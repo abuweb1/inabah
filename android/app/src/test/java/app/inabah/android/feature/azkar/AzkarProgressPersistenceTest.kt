@@ -9,6 +9,7 @@ import app.inabah.android.core.settings.AzkarWindowSettings
 import app.inabah.android.core.settings.DayTime
 import app.inabah.android.core.settings.TestStorage
 import app.inabah.android.core.settings.berlin
+import app.inabah.android.core.settings.classicMorningWindow
 import app.inabah.android.core.settings.date
 import app.inabah.android.core.settings.moscow
 import app.inabah.android.core.settings.moscowDate
@@ -34,7 +35,7 @@ class AzkarProgressPersistenceTest {
     /** Текущее время и пояс устройства — меняются тестом. */
     private class Clock(var now: Instant, var zone: ZoneId = berlin)
 
-    // 08:00 — утреннее окно 5:00–12:00.
+    // 08:00 — утреннее окно 5:00–12:00 (задаётся тестом: умолчание с 2026-10-20 — 6:00–11:30).
     private val clock = Clock(date(2026, 10, 3, 8))
     private val morning = AzkarSection.Morning
     private val evening = AzkarSection.Evening
@@ -56,7 +57,7 @@ class AzkarProgressPersistenceTest {
     /** Новый стор — как после запуска приложения; [load] — загрузить [section]. */
     private suspend fun makeStore(
         storage: TestStorage,
-        settings: AzkarWindowSettings = AzkarWindowSettings(storage.storage),
+        settings: AzkarWindowSettings = classicSettings(storage),
         load: Boolean = true,
         section: AzkarSection = morning,
         now: () -> Instant = { clock.now },
@@ -72,6 +73,10 @@ class AzkarProgressPersistenceTest {
             onUnreadableProgress = { section, _ -> unreadable += section },
         ).also { if (load) it.load(section) }
     }
+
+    /** Настройки с утренними 5:00–12:00 — на них рассчитаны времена тестов. */
+    private fun classicSettings(storage: TestStorage) =
+        AzkarWindowSettings(storage.storage).also { it.set(classicMorningWindow, morning) }
 
     private fun AzkarStore.counts() = sessions(morning).map { it.count }
 
@@ -110,7 +115,7 @@ class AzkarProgressPersistenceTest {
     }
 
     @Test
-    fun `Конец окна — строгий сброс, пока приложение открыто, счёт и оверлей`() = TestStorage.run { storage ->
+    fun `Конец окна — счёт и пометка оверлея остаются до начала следующего окна`() = TestStorage.run { storage ->
         val store = makeStore(storage)
         store.completeAll()
         store.acknowledgeCompletion(morning)
@@ -118,25 +123,57 @@ class AzkarProgressPersistenceTest {
         clock.now = date(2026, 10, 3, 12, 0)
         store.reconcile()
 
-        assertEquals(listOf(0, 0), store.counts())
+        assertEquals(listOf(3, 3), store.counts(), "прочитанное видно и после окна")
         assertFalse(store.isInWindow(morning).value)
-        // Пометка снята, но вне окна оверлея нет; к началу окна — новое прохождение поздравит.
-        store.completeAll()
         assertFalse(store.shouldPresentCompletion(morning))
+
         clock.now = date(2026, 10, 4, 5, 0)
         store.reconcile()
+        assertEquals(listOf(0, 0), store.counts(), "сброс — в начале окна")
+        assertTrue(store.isInWindow(morning).value)
         store.completeAll()
-        assertTrue(store.shouldPresentCompletion(morning))
+        assertTrue(store.shouldPresentCompletion(morning), "новое прохождение поздравит снова")
     }
 
     @Test
-    fun `После конца окна сохранённый счёт не восстанавливается`() = TestStorage.run { storage ->
+    fun `После конца окна сохранённый счёт восстанавливается, в начале следующего — нет`() = TestStorage.run { storage ->
         makeStore(storage).sessions(morning)[0].increment()
 
         clock.now = date(2026, 10, 3, 12, 1)
         storage.restart()
+        val afterWindow = makeStore(storage)
+        assertEquals(listOf(1, 0), afterWindow.counts())
+        assertFalse(afterWindow.isInWindow(morning).value)
+
+        clock.now = date(2026, 10, 4, 5, 0)
+        storage.restart()
+        assertEquals(listOf(0, 0), makeStore(storage).counts())
+    }
+
+    @Test
+    fun `Пропущенное окно целиком — при запуске счёт обнулён`() = TestStorage.run { storage ->
+        makeStore(storage).sessions(morning)[0].increment()
+
+        clock.now = date(2026, 10, 4, 13)
+        storage.restart()
 
         assertEquals(listOf(0, 0), makeStore(storage).counts())
+    }
+
+    @Test
+    fun `Сохранение без даты начала окна — восстанавливается по прежнему правилу`() = TestStorage.run { storage ->
+        // Промежуток после окна 3 октября, записанный до 2026-10-20: поля started нет.
+        val gap = date(2026, 10, 4, 5).toEpochMilli()
+        val legacy = """{"period":{"kind":"gap","day":"2026-10-04","validUntil":$gap},"counts":{"1":2}}"""
+        storage.seed { it[stringPreferencesKey("azkar.progress.morning")] = legacy }
+
+        clock.now = date(2026, 10, 3, 20)
+        assertEquals(listOf(2, 0), makeStore(storage).counts())
+
+        clock.now = date(2026, 10, 4, 5)
+        storage.restart()
+        assertEquals(listOf(0, 0), makeStore(storage).counts())
+        assertTrue(unreadable.isEmpty())
     }
 
     @Test
@@ -181,15 +218,18 @@ class AzkarProgressPersistenceTest {
         val restored = makeStore(storage)
         assertEquals(1, restored.sessions(morning)[0].count)
 
+        assertTrue(restored.isInWindow(morning).value)
+
         clock.now = date(2026, 10, 3, 12)
         restored.reconcile()
-        assertEquals(0, restored.sessions(morning)[0].count)
+        assertFalse(restored.isInWindow(morning).value, "12:00 по Берлину — окно кончилось")
+        assertEquals(1, restored.sessions(morning)[0].count)
     }
 
     @Test
     fun `Смена времени — сверка видит только сохранённое окно`() =
         TestStorage.run { storage ->
-            val settings = AzkarWindowSettings(storage.storage)
+            val settings = classicSettings(storage)
             val store = makeStore(storage, settings)
             store.sessions(morning)[0].increment()
 
@@ -200,20 +240,21 @@ class AzkarProgressPersistenceTest {
 
             clock.now = date(2026, 10, 3, 11)
             store.reconcile()
-            assertEquals(0, store.sessions(morning)[0].count, "окно закончилось в новые 11:00")
+            assertFalse(store.isInWindow(morning).value, "окно закончилось в новые 11:00")
+            assertEquals(1, store.sessions(morning)[0].count)
         }
 
     @Test
     fun `Конец окна перенесли на уже прошедшее время — окно закончилось`() = TestStorage.run { storage ->
-        val settings = AzkarWindowSettings(storage.storage)
+        val settings = classicSettings(storage)
         val store = makeStore(storage, settings)
         store.sessions(morning)[0].increment()
 
         settings.set(settings.window(morning).copy(end = DayTime.of(7, 30)), morning)
         store.reconcile()
 
-        assertEquals(0, store.sessions(morning)[0].count)
         assertFalse(store.isInWindow(morning).value)
+        assertEquals(1, store.sessions(morning)[0].count, "окно то же — счёт остаётся до следующего")
     }
 
     @Test
@@ -307,6 +348,18 @@ class AzkarProgressPersistenceTest {
     }
 
     @Test
+    fun `История — сброс карточки после конца окна не трогает запись дня`() = TestStorage.run { storage ->
+        val store = makeStore(storage)
+        store.completeAll()
+
+        clock.now = date(2026, 10, 3, 13)
+        store.reconcile()
+        store.sessions(morning)[0].reset()
+
+        assertEquals(AzkarDayRecord(2, 2), history.record(morning, october3))
+    }
+
+    @Test
     fun `История — вечерние после полуночи, запись за дату начала окна`() = TestStorage.run { storage ->
         clock.now = date(2026, 10, 4, 0, 30)
         val store = makeStore(storage, section = evening)
@@ -339,13 +392,17 @@ class AzkarProgressPersistenceTest {
     // Хвост этапа 3: «Сбросить» в настройках не гасла после обнуления по времени при частичном счёте —
     // поток прогресса не менялся (ни один зикр не был выполнен).
     @Test
-    fun `Конец окна при частичном счёте — прогресс раздела сообщает, что сбрасывать нечего`() =
+    fun `Новое окно при частичном счёте — прогресс раздела сообщает, что сбрасывать нечего`() =
         TestStorage.run { storage ->
             val store = makeStore(storage)
             store.sessions(morning)[0].increment()
             assertTrue(store.progress(morning).value.isStarted)
 
             clock.now = date(2026, 10, 3, 12)
+            store.reconcile()
+            assertTrue(store.hasProgress(morning), "после конца окна прочитанное ещё на месте")
+
+            clock.now = date(2026, 10, 4, 5)
             store.reconcile()
 
             assertFalse(store.progress(morning).value.isStarted)
@@ -424,7 +481,7 @@ class AzkarProgressPersistenceTest {
     }
 
     @Test
-    fun `Таймер обнуляет раздел на каждой границе`() = TestStorage.run { storage ->
+    fun `Таймер — конец окна оставляет счёт, начало следующего обнуляет`() = TestStorage.run { storage ->
         val virtual = VirtualClock(this, date(2026, 10, 3, 8))
         val store = makeStore(storage, now = virtual::now)
         backgroundScope.launch { store.runBoundaryTimer() }
@@ -432,14 +489,14 @@ class AzkarProgressPersistenceTest {
 
         advanceTimeBy(4.hours - 1.minutes)
         runCurrent()
-        assertEquals(1, store.sessions(morning)[0].count, "до 12:00 счёт на месте")
+        assertTrue(store.isInWindow(morning).value, "до 12:00 — окно")
 
         advanceTimeBy(2.minutes)
         runCurrent()
-        assertEquals(0, store.sessions(morning)[0].count, "в 12:00 — конец окна")
-        assertFalse(store.isInWindow(morning).value)
+        assertFalse(store.isInWindow(morning).value, "в 12:00 — конец окна")
+        assertEquals(1, store.sessions(morning)[0].count, "счёт на месте")
 
-        // Перепланирован на начало следующего окна: счёт вне окна обнулится в 05:00.
+        // Перепланирован на начало следующего окна: счёт обнулится в 05:00.
         store.sessions(morning)[0].increment()
         advanceTimeBy(17.hours)
         runCurrent()
@@ -462,7 +519,7 @@ class AzkarProgressPersistenceTest {
             advanceTimeBy(6.minutes)
             runCurrent()
 
-            assertEquals(0, store.sessions(morning)[0].count, "конец окна в 12:00 по часам устройства")
+            assertFalse(store.isInWindow(morning).value, "конец окна в 12:00 по часам устройства")
         }
 
     @Test
@@ -479,16 +536,16 @@ class AzkarProgressPersistenceTest {
             store.reconcile()
             advanceTimeBy(4.hours + 30.minutes)
             runCurrent()
-            assertEquals(1, store.sessions(morning)[0].count, "12:00 МСК прошло, берлинское — ещё нет")
+            assertTrue(store.isInWindow(morning).value, "12:00 МСК прошло, берлинское — ещё нет")
 
             advanceTimeBy(31.minutes)
             runCurrent()
-            assertEquals(0, store.sessions(morning)[0].count, "12:00 по Берлину")
+            assertFalse(store.isInWindow(morning).value, "12:00 по Берлину")
         }
 
     // Аудит 2026-10-06: таймер проверялся только с одним разделом.
     @Test
-    fun `Таймер с двумя разделами — каждый обнуляется на своей границе, другой не трогается`() =
+    fun `Таймер с двумя разделами — каждый на своей границе, другой не трогается`() =
         TestStorage.run { storage ->
             val virtual = VirtualClock(this, date(2026, 10, 3, 8))
             val store = makeStore(storage, now = virtual::now)
@@ -499,7 +556,7 @@ class AzkarProgressPersistenceTest {
 
             advanceTimeBy(4.hours + 1.minutes)
             runCurrent()
-            assertEquals(0, store.sessions(morning)[0].count, "12:00 — конец утреннего окна")
+            assertFalse(store.isInWindow(morning).value, "12:00 — конец утреннего окна")
             assertEquals(1, store.sessions(evening)[0].count, "у вечерних граница ещё не наступила")
 
             advanceTimeBy(5.hours)

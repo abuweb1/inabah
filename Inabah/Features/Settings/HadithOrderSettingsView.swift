@@ -34,18 +34,32 @@ struct HadithOrderSettingsView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
-                Button {
+                RestoreOrderButton(isDefault: order.isDefault) {
                     withAnimation(Motion.highlight) { order.restoreDefault() }
-                } label: {
-                    // Значком: текстовая кнопка обрезала заголовок «Порядок сборников».
-                    Image(systemName: "arrow.counterclockwise")
                 }
-                .disabled(order.isDefault)
-                .accessibilityLabel(Text("settings.hadith.order.restore"))
-                .fixedTextSize()
             }
         }
+        .glassBackButton(tint: theme.palette.tabHadith, header: nil)
         .audioPlayerInset()
+    }
+}
+
+/// «↺» — значком: текстовая кнопка обрезала заголовок «Порядок сборников».
+private struct RestoreOrderButton: View {
+    let isDefault: Bool
+    let action: () -> Void
+
+    @Environment(\.theme) private var theme
+
+    var body: some View {
+        Button(action: action) {
+            Image(systemName: "arrow.counterclockwise")
+                .fontWeight(.medium)
+        }
+        .headerIconButtonStyle(tint: theme.palette.tabHadith, header: nil)
+        .disabled(isDefault)
+        .accessibilityLabel(Text("settings.hadith.order.restore"))
+        .fixedTextSize()
     }
 }
 

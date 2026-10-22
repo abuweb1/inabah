@@ -75,10 +75,13 @@ class ShareTextTest {
     }
 
     @Test
-    fun `Ссылки на приложение — одна без подписи, две — с названиями магазинов`() {
-        assertEquals(links, storeLinksBlock())
-        assertEquals("https://g", storeLinksBlock(appStore = null, googlePlay = "https://g"))
-        assertEquals("App Store: https://a\nGoogle Play: https://g", storeLinksBlock(appStore = "https://a", googlePlay = "https://g"))
+    fun `Ссылки на приложение — две под подписями платформ через пустую строку, одна — без подписи`() {
+        assertEquals(
+            "Для iPhone\n${StoreLinks.APP_STORE}\n\nДля Android\n${StoreLinks.GOOGLE_PLAY}",
+            storeLinksBlock("Для iPhone", "Для Android"),
+        )
+        assertEquals("https://g", storeLinksBlock("Для iPhone", "Для Android", appStore = null, googlePlay = "https://g"))
+        assertEquals("https://a", storeLinksBlock("Для iPhone", "Для Android", appStore = "https://a", googlePlay = null))
     }
 
     @Test

@@ -5,11 +5,12 @@ import app.inabah.android.core.content.model.Hadith
 import app.inabah.android.core.content.model.HadithCollection
 import app.inabah.android.core.content.model.HadithId
 import app.inabah.android.core.settings.AzkarWindow
-import app.inabah.android.core.settings.AzkarWindowSettings
 import app.inabah.android.core.settings.DayTime
+import app.inabah.android.core.settings.ReadingReminderSlot
 import app.inabah.android.core.settings.ReminderPreferences
 import app.inabah.android.core.settings.berlin
 import app.inabah.android.core.settings.date
+import app.inabah.android.core.settings.testWindows
 import java.time.Instant
 import java.time.LocalDate
 import kotlin.test.assertEquals
@@ -17,9 +18,9 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import org.junit.Test
 
-/** «Напоминания»: когда срабатывает каждое (окна азкаров — по умолчанию 05:00–12:00 и 17:00–02:00). */
+/** «Напоминания»: когда срабатывает каждое (окна азкаров — `testWindows`: 05:00–12:00 и 17:00–02:00). */
 class ReminderPlannerTest {
-    private val windows = AzkarSection.entries.associateWith { AzkarWindowSettings.defaultWindow(it) }
+    private val windows = testWindows
     private val all = ReminderPreferences(azkarStart = AzkarSection.entries.toSet(), azkarUnfinished = true, hadithOfDay = true)
 
     private fun plan(preferences: ReminderPreferences, now: java.time.Instant, windows: Map<AzkarSection, AzkarWindow> = this.windows) =
@@ -149,5 +150,31 @@ class ReminderPlannerTest {
         assertEquals(date(2026, 10, 10, 11), planned.getValue(ReminderKind.MorningStreak).at)
         assertEquals(date(2026, 10, 11, 0), planned.getValue(ReminderKind.EveningUnfinished).at)
         assertEquals(date(2026, 10, 11, 1), planned.getValue(ReminderKind.EveningStreak).at)
+    }
+
+    @Test
+    fun `Пора на урок — у каждого включённого слота своё время, прошедшее — завтра`() {
+        val preferences = ReminderPreferences(
+            readingSlots = setOf(ReadingReminderSlot.Morning, ReadingReminderSlot.Evening),
+            readingTimes = mapOf(ReadingReminderSlot.Evening to DayTime.of(21, 30)),
+        )
+        val planned = plan(preferences, date(2026, 10, 10, 12))
+
+        assertEquals(date(2026, 10, 11, 9), planned.getValue(ReminderKind.ReadingMorning).at, "9:00 уже прошло - завтра")
+        assertEquals(date(2026, 10, 10, 21, 30), planned.getValue(ReminderKind.ReadingEvening).at)
+        assertNull(planned[ReminderKind.ReadingDay], "днём выключено")
+    }
+
+    @Test
+    fun `Напоминания урока — свой канал и одно уведомление на всех`() {
+        val reading = ReminderKind.entries.filter { it.readingSlot != null }
+
+        assertEquals(ReadingReminderSlot.entries, reading.map { it.readingSlot })
+        reading.forEach { kind ->
+            assertEquals(ReminderChannels.READING, kind.channel)
+            assertEquals(ReminderKind.ReadingMorning.notificationId, kind.notificationId)
+        }
+        assertEquals(ReminderKind.entries.size, ReminderKind.entries.map { it.requestCode }.toSet().size, "будильники - у каждого вида свой")
+        assertEquals(ReminderChannels.HADITH, ReminderKind.HadithOfDay.channel)
     }
 }

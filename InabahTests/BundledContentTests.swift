@@ -46,15 +46,19 @@ struct BundledContentTests {
         }
     }
 
-    @Test("Все записи — AAC .m4a и читаются плеером; MP3 нет")
+    @Test("Все записи — AAC .m4a и читаются плеером; MP3 нет; азкаров — 20")
     func audioFilesPlay() throws {
         let files = Bundle.main.urls(forResourcesWithExtension: "m4a", subdirectory: nil) ?? []
+        // Записи курса «Учимся читать» (`reading_*`) - в том же Bundle, но не азкары.
+        let azkar = files.filter { url in ["morning_", "evening_"].contains { url.lastPathComponent.hasPrefix($0) } }
 
-        #expect(files.count == 20)
+        #expect(azkar.count == 20)
         #expect(Bundle.main.urls(forResourcesWithExtension: "mp3", subdirectory: nil) ?? [] == [])
         for url in files {
             let player = try AVAudioPlayer(contentsOf: url)
-            #expect(player.duration > 1, "\(url.lastPathComponent)")
+            // Зикр длиннее секунды; слог курса короче (0,8-0,9 с) - достаточно, что запись не пустая.
+            let isAzkar = azkar.contains(url)
+            #expect(player.duration > (isAzkar ? 1 : 0), "\(url.lastPathComponent)")
         }
     }
 
@@ -114,6 +118,9 @@ struct BundledContentTests {
         #expect(texts.streakAtRisk.values.allSatisfy { $0.title.contains("{streak}") })
         let hadith = try #require(texts.hadithOfDay)
         #expect(hadith.title.contains("{collection}"))
+        let lesson = try #require(texts.readingLesson)
+        #expect(lesson.title == "Пора на урок")
+        #expect(lesson.body.contains("{step}"))
     }
 
     /// Сноски появляются во всех сборниках по мере правки данных (аль-Аджурри — 2026-10-11), поэтому

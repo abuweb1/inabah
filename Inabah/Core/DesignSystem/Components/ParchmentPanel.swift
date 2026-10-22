@@ -31,22 +31,24 @@ struct ParchmentPanel<Content: View>: View {
             .frame(maxWidth: .infinity)
             .background { background }
             .overlay { ornaments }
-            .clipShape(shape)
             .overlay { shape.strokeBorder(theme.palette.parchmentAccent, lineWidth: Size.parchmentBorder) }
     }
 
+    /// Каждый слой - заливка самой формы, без `clipShape`: обрезка формой накладывала маску на каждый слой внутри
+    /// (текст и фон всех ячеек) - ~230 закадровых проходов на кадр в «Весь алфавит», рывки при любой анимации
+    /// экрана (замер 2026-10-20). Содержимое и так внутри отступов.
     private var background: some View {
-        ZStack(alignment: .top) {
-            theme.gradients.parchment.linear
+        ZStack {
+            shape.fill(theme.gradients.parchment.linear)
             // Блик в левом верхнем углу, как в прототипе.
-            RadialGradient(
+            shape.fill(RadialGradient(
                 colors: [theme.palette.parchmentGlow, .clear],
                 center: ParchmentMetrics.highlightCenter,
                 startRadius: 0,
                 endRadius: ParchmentMetrics.highlightRadius
-            )
-            theme.gradients.parchmentStripe.linear
-                .frame(height: Size.accentStripe)
+            ))
+            ShapeBand(base: shape, edge: .top, points: Size.accentStripe)
+                .fill(theme.gradients.parchmentStripe.linear)
         }
     }
 

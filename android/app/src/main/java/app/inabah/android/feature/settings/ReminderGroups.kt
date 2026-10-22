@@ -21,6 +21,7 @@ import app.inabah.android.core.designsystem.components.SwitchRow
 import app.inabah.android.core.reminders.ReminderChannels
 import app.inabah.android.core.settings.AzkarWindow
 import app.inabah.android.core.settings.DayTime
+import app.inabah.android.core.settings.ReadingReminderSlot
 import app.inabah.android.core.settings.ReminderSettings
 import app.inabah.android.feature.azkar.rememberDayTimeFormatter
 import app.inabah.android.feature.azkar.title
@@ -154,6 +155,79 @@ internal fun HadithOfDayGroup(
         },
     )
 }
+
+/**
+ * «Напоминания» в настройках «Махраджа» (решения пользователя 2026-10-20): «Пора на урок» утром, днём и вечером —
+ * у каждого свой переключатель и время; приходят, пока сегодня не пройден шаг. Время правится черновиком и
+ * сохраняется при уходе с экрана ([timeDrafts] / [onTimeChange] — у экрана, как хадис дня). [courseDone] — курс
+ * пройден: напоминания не приходят, подпись говорит об этом.
+ */
+@Composable
+internal fun ReadingReminderGroup(
+    settings: ReminderSettings,
+    timeDrafts: Map<ReadingReminderSlot, DayTime>,
+    editingSlot: ReadingReminderSlot?,
+    onEditSlot: (ReadingReminderSlot?) -> Unit,
+    onTimeChange: (ReadingReminderSlot, DayTime) -> Unit,
+    courseDone: Boolean,
+    tint: Color,
+) {
+    val preferences by settings.preferences.collectAsStateWithLifecycle()
+    val permission = rememberNotificationPermission(ReminderChannels.READING)
+    var denied by remember { mutableStateOf(false) }
+    val palette = InabahTheme.palette
+    val blocked = !permission.allowed && (denied || preferences.readingSlots.isNotEmpty())
+    SettingsGroup(
+        header = stringResource(R.string.settings_reminders_header),
+        footer = stringResource(if (courseDone) R.string.settings_makharij_reminders_footer_done else R.string.settings_makharij_reminders_footer),
+        notice = if (blocked) stringResource(R.string.settings_reminders_blocked) else null,
+        rows = buildList {
+            ReadingReminderSlot.entries.forEach { slot ->
+                val label = stringResource(slot.title)
+                val enabled = slot in preferences.readingSlots && permission.allowed
+                add {
+                    SettingsRow {
+                        SwitchRow(
+                            label = label,
+                            checked = enabled,
+                            onCheckedChange = { on ->
+                                if (!on) settings.setReadingSlot(slot, false)
+                                else permission.request { granted -> if (granted) settings.setReadingSlot(slot, true) else denied = true }
+                            },
+                            tint = tint,
+                            labelColor = palette.onAccent,
+                        )
+                    }
+                }
+                if (enabled) {
+                    add {
+                        SettingsRow(trailing = {
+                            WindowTimeChip(
+                                time = timeDrafts[slot] ?: preferences.readingTime(slot),
+                                description = stringResource(R.string.settings_makharij_reminder_time_description, label),
+                                isEditing = editingSlot == slot,
+                                tint = tint,
+                                onEdit = { onEditSlot(slot) },
+                                onChange = { onTimeChange(slot, it) },
+                                onDismiss = { onEditSlot(null) },
+                            )
+                        }) {
+                            SettingsRowText(stringResource(R.string.settings_makharij_reminder_time))
+                        }
+                    }
+                }
+            }
+            if (blocked) add { OpenNotificationSettingsRow(permission) }
+        },
+    )
+}
+
+private val ReadingReminderSlot.title: Int
+    get() = when (this) {
+        ReadingReminderSlot.Morning -> R.string.settings_makharij_reminder_morning
+        ReadingReminderSlot.Day -> R.string.settings_makharij_reminder_day
+        ReadingReminderSlot.Evening -> R.string.settings_makharij_reminder_evening
+    }
 
 /** «Открыть настройки» — уведомления (или канал раздела) выключены в системе или в разрешении отказано. */
 @Composable

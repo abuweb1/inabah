@@ -36,8 +36,9 @@ data class SectionProgress(val completed: Int, val total: Int, val isStarted: Bo
  * Счёт азкаров обоих разделов на всё время работы приложения (iOS `AzkarStore`).
  *
  * Прогресс живёт во **времени азкаров** из [windowSettings] (docs/android/03-domain-logic.md, 3.3):
- * у раздела хранится отрезок — окно или промежуток до него; на каждой границе счётчики обнуляются,
- * вне окна счёт не идёт ни в отметку, ни в оверлей, ни в [history]. Сверка с расписанием —
+ * у раздела хранится отрезок — окно или промежуток до него; счётчики обнуляются в начале окна, а после
+ * его конца прочитанное остаётся видно до следующего; вне окна счёт не идёт ни в отметку, ни в оверлей,
+ * ни в [history]. Сверка с расписанием —
  * [reconcile] (возврат приложения, смена времени и пояса системы, уход с экрана настроек) и таймер
  * [runBoundaryTimer], который запускает владелец стора. Вызывать с главного потока.
  */
@@ -146,9 +147,10 @@ class AzkarStore(
     }
 
     /**
-     * Сверяет отрезок каждого загруженного раздела с расписанием на сейчас. Тот же отрезок (окно или
-     * промежуток с той же датой) — счёт сохраняется, обновляется только граница; другой — счётчики
-     * и пометка оверлея обнуляются.
+     * Сверяет отрезок каждого загруженного раздела с расписанием на сейчас. Окно с тех пор не начиналось
+     * заново ([AzkarPeriod.continuesProgress]: тот же отрезок или промежуток после этого окна) — счёт
+     * сохраняется, обновляются граница и признак окна; началось новое окно — счётчики и пометка оверлея
+     * обнуляются.
      *
      * Вызывается таймером на границе, при возврате приложения, при смене системного времени или пояса
      * и при уходе с экрана настроек азкаров — прокрутка колеса времени ничего не стирает, результат
@@ -160,7 +162,7 @@ class AzkarStore(
             val expected = schedule(section).period(instant)
             if (expected == loaded) continue
             adopt(expected, section)
-            if (!expected.isSameSpan(loaded)) {
+            if (!expected.continuesProgress(loaded)) {
                 sessions(section).forEach(ZikrSession::discardProgress)
                 acknowledgedCompletions -= section
                 updateProgress(section)
@@ -176,7 +178,7 @@ class AzkarStore(
             progressBySection.getValue(section).value.isFinished &&
             section !in acknowledgedCompletions
 
-    /** Оверлей показан — запомнить до конца окна (сохраняется: после перезапуска не показывать снова). */
+    /** Оверлей показан — запомнить до начала следующего окна (сохраняется: после перезапуска не показывать снова). */
     fun acknowledgeCompletion(section: AzkarSection) {
         if (acknowledgedCompletions.add(section)) save(section)
     }
@@ -246,11 +248,11 @@ class AzkarStore(
         val needsSave: Boolean = true,
     )
 
-    /** Сохранение того же отрезка — восстановить счёт; нет, не читается или отрезок другой — пустой счёт. */
+    /** Окно с сохранения не начиналось заново — восстановить счёт; нет, не читается или новое окно — пустой счёт. */
     private fun restoredProgress(section: AzkarSection): RestoredProgress {
         val expected = schedule(section).period(now())
         val stored = readStored(section)
-        if (stored == null || !stored.period.isSameSpan(expected)) return RestoredProgress(expected)
+        if (stored == null || !expected.continuesProgress(stored.period)) return RestoredProgress(expected)
         return RestoredProgress(
             period = expected,
             counts = stored.counts,
@@ -299,16 +301,27 @@ class AzkarStore(
     )
 
     /**
-     * Отрезок: вид (`window` / `gap`), дата начала окна (`yyyy-MM-dd`), граница — миллисекунды эпохи UTC.
+     * Отрезок: вид (`window` / `gap`), дата начала окна (`yyyy-MM-dd`), граница — миллисекунды эпохи UTC,
+     * дата последнего начала окна `started` (с 2026-10-20; раньше её не было — `null`).
      * Без вида и даты — сохранение версии 1.0.0 (`scheduledReset`, `timeZone`): у него другой смысл.
      */
     @Serializable
-    private data class StoredPeriod(val kind: String? = null, val day: String? = null, val validUntil: Long) {
+    private data class StoredPeriod(
+        val kind: String? = null,
+        val day: String? = null,
+        val validUntil: Long,
+        val started: String? = null,
+    ) {
         /** Формат 1.0.0 — `null`; неизвестный вид — [IllegalArgumentException], неверная дата — [DateTimeException]. */
         fun toPeriod(): AzkarPeriod? {
             if (kind == null || day == null) return null
             val parsedKind = requireNotNull(AzkarPeriod.Kind.fromKey(kind)) { "Неизвестный вид отрезка: $kind" }
-            return AzkarPeriod(parsedKind, LocalDate.parse(day), Instant.ofEpochMilli(validUntil))
+            return AzkarPeriod(
+                parsedKind,
+                LocalDate.parse(day),
+                Instant.ofEpochMilli(validUntil),
+                startedOn = started?.let(LocalDate::parse),
+            )
         }
 
         companion object {
@@ -316,6 +329,7 @@ class AzkarStore(
                 kind = period.kind.key,
                 day = period.day.toString(),
                 validUntil = period.validUntil.toEpochMilli(),
+                started = period.startedOn?.toString(),
             )
         }
     }

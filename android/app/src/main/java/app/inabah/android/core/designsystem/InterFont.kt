@@ -43,7 +43,17 @@ private val Styles = listOf(FontStyle.Normal, FontStyle.Italic)
 @Immutable
 class InabahFonts(val text: FontFamily, val display: FontFamily) {
     companion object {
-        fun from(resources: Resources): InabahFonts = try {
+        /**
+         * Собранные шрифты - одни на процесс: файлы шрифтов в APK не меняются, а сборка 32 начертаний
+         * занимает десятки МБ вне кучи (в UI-тестах каждая тема собирала их заново - память кончалась).
+         */
+        @Volatile
+        private var shared: InabahFonts? = null
+
+        fun from(resources: Resources): InabahFonts =
+            shared ?: synchronized(this) { shared ?: build(resources).also { shared = it } }
+
+        private fun build(resources: Resources): InabahFonts = try {
             InabahFonts(
                 text = interWithArabicFallback(resources, TEXT_OPTICAL_SIZE),
                 display = interWithArabicFallback(resources, DISPLAY_OPTICAL_SIZE),

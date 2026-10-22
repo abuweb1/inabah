@@ -62,6 +62,8 @@ nonisolated struct Palette: Hashable, Sendable {
     var successLight: Color
     var successDeep: Color
     var successDim: Color
+    /// Разрушительное действие (красная кнопка «Сбросить» в подтверждении) — как Android `destructive`.
+    var destructive: Color
     /// Подложка и рамка зелёных плашек на пергаменте (бейдж «✦ N раз»).
     var successTint: Color
     var successBorder: Color
@@ -105,6 +107,10 @@ nonisolated struct Palette: Hashable, Sendable {
     var parchmentAccentBorder: Color
     /// Тёмные «чернила» на золотых кнопках (счётчик, плеер) — от фона пергамента не зависят.
     var parchmentInk: Color
+    /// Выделение буквы в слове на пергаменте («Учимся читать»): своё у каждого фона, контраст ≥ 4,5.
+    var parchmentMark: Color = .clear
+    /// Фон рисунков руководства «Учимся читать» - светлый тон пергамента (2026-10-21).
+    var parchmentIllustration: Color = .clear
 
     // Фон перевода — сдвигается ползунком «Фон перевода» (`Theme.withTranslationShade`). Задаются
     // при сборке темы (`Palette.inabah`, `Theme.unified`), как цвета пергамента.
@@ -126,6 +132,8 @@ nonisolated extension Palette {
         parchmentAccent = colors.accent
         parchmentAccentTint = colors.accent.opacity(0.1)
         parchmentAccentBorder = colors.accent.opacity(0.25)
+        parchmentMark = colors.mark
+        parchmentIllustration = colors.illustration
     }
 }
 
@@ -190,6 +198,7 @@ nonisolated extension Palette {
             successLight: Color(asset: .successLight),
             successDeep: successDeep,
             successDim: Color(asset: .successDim),
+            destructive: Color(asset: .destructive),
             successTint: successDeep.opacity(0.1),
             successBorder: successDeep.opacity(0.25),
             statusRead: statusRead,

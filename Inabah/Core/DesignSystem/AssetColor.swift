@@ -14,11 +14,11 @@ nonisolated enum AssetColor: String, CaseIterable, Sendable {
     // Accent
     case accentPurple, accentPurpleLight, accentPurpleDim, shadowPurple
     // Status
-    case success, successLight, successDeep, successDim, statusRead, statusMemorized
+    case success, successLight, successDeep, successDim, statusRead, statusMemorized, destructive
     // Gold
     case gold, goldLight, goldDeep, sunRays
     // Parchment
-    case parchmentLight, parchmentMid, parchmentDeep, parchmentInk
+    case parchmentLight, parchmentMid, parchmentDeep, parchmentInk, parchmentMark, parchmentIllustration
     // Gradients
     case azkarBackgroundTop, azkarBackgroundMid, azkarBackgroundBottom
     case morningCardStart, morningCardMid, morningCardEnd

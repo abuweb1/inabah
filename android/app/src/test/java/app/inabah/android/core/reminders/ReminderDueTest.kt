@@ -3,9 +3,9 @@ package app.inabah.android.core.reminders
 import app.inabah.android.core.content.model.AzkarSection
 import app.inabah.android.core.settings.AzkarDay
 import app.inabah.android.core.settings.AzkarDayRecord
-import app.inabah.android.core.settings.AzkarWindowSettings
 import app.inabah.android.core.settings.berlin
 import app.inabah.android.core.settings.date
+import app.inabah.android.core.settings.testWindows
 import java.time.Instant
 import java.time.LocalDate
 import kotlin.test.assertEquals
@@ -15,12 +15,12 @@ import kotlin.test.assertTrue
 import org.junit.Test
 
 /**
- * Сработавшее напоминание азкаров — показывать ли (аудит 2026-10-10, Т1). Окна по умолчанию: 05:00–12:00 и
+ * Сработавшее напоминание азкаров — показывать ли (аудит 2026-10-10, Т1). Окна тестов (`testWindows`): 05:00–12:00 и
  * 17:00–02:00, Берлин.
  */
 class ReminderDueTest {
     private fun due(kind: ReminderKind, now: Instant, record: (LocalDate) -> AzkarDayRecord? = { null }) =
-        isAzkarReminderDue(kind, AzkarWindowSettings.defaultWindow(kind.section!!), now, berlin, record)
+        isAzkarReminderDue(kind, testWindows.getValue(kind.section!!), now, berlin, record)
 
     @Test
     fun `Начало окна — показывается, пока окно открыто`() {
@@ -70,7 +70,7 @@ class ReminderDueTest {
     }
 
     // «Серия под угрозой» (решения пользователя 2026-10-11).
-    private val windows = AzkarSection.entries.associateWith { AzkarWindowSettings.defaultWindow(it) }
+    private val windows = testWindows
     private val full = AzkarDay(AzkarDayRecord(16, 16), AzkarDayRecord(16, 16))
     private val october10: LocalDate = LocalDate.of(2026, 10, 10)
     private fun twoFullDaysBefore(day: LocalDate) = mapOf(day.minusDays(1) to full, day.minusDays(2) to full)

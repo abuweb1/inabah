@@ -63,6 +63,17 @@ struct AppRouterTests {
         #expect(router.hadithPath == [.list(.qudsi), .detail(id)])
     }
 
+    @Test("«Пора на урок» открывает урок шага поверх списка шагов")
+    func reminderOpensReadingLesson() {
+        let router = AppRouter()
+        router.select(.settings)
+
+        router.open(ReminderTarget.readingLesson(4))
+
+        #expect(router.selectedTab == .makharij)
+        #expect(router.makharijPath == [.steps, .lesson(4)])
+    }
+
     @Test("«Календарь азкаров» открывается с главной азкаров и переживает кодирование маршрута")
     func openCalendar() throws {
         let router = AppRouter()
@@ -110,9 +121,11 @@ struct AppRouterTests {
     @Test("Повторный выбор вкладки «Настройки» возвращает к списку разделов", arguments: [
         [SettingsRoute.hadith],
         [.hadith, .hadithOrder],
+        [.makharij],
         [.appIcon],
         [.palette],
         [.about, .versionHistory],
+        [.about, .licenses, .license(.scheherazade)],
     ])
     func reselectSettingsPopsToRoot(path: [SettingsRoute]) {
         let router = AppRouter()
@@ -136,6 +149,56 @@ struct AppRouterTests {
         #expect(router.selectedTab == .makharij)
         #expect(router.azkarPath == [.list(.evening)])
         #expect(router.settingsPath == [.appIcon])
+    }
+
+    @Test("Урок шага открывается поверх списка шагов «Махраджа»")
+    func openLesson() {
+        let router = AppRouter()
+
+        router.open(MakharijRoute.lesson(3))
+
+        #expect(router.selectedTab == .makharij)
+        #expect(router.makharijPath == [.steps, .lesson(3)])
+    }
+
+    @Test("Руководство по произношению, открытое напрямую, - поверх списка шагов")
+    func openGuide() {
+        let router = AppRouter()
+
+        router.open(MakharijRoute.guide(id: "articulation"))
+
+        #expect(router.selectedTab == .makharij)
+        #expect(router.makharijPath == [.steps, .guide(id: "articulation")])
+    }
+
+    @Test("Экраны урока открываются поверх урока своего шага", arguments: [
+        MakharijRoute.alphabet(2),
+        .extra(step: 2, topic: nil),
+        .extra(step: 2, topic: 1),
+        .letterForms(step: 2, letter: "ب"),
+        .quiz(2),
+        .words(2),
+        .zikr(step: 2, zikr: 1),
+    ])
+    func openLessonScreen(route: MakharijRoute) {
+        let router = AppRouter()
+
+        router.open(route)
+
+        #expect(router.selectedTab == .makharij)
+        #expect(router.makharijPath == [.steps, .lesson(2), route])
+    }
+
+    @Test("Повторный выбор вкладки «Махрадж» возвращает к главной, другие вкладки не задеты")
+    func reselectMakharijPopsToRoot() {
+        let router = AppRouter()
+        router.hadithPath = [.favorites]
+        router.open(MakharijRoute.lesson(2))
+
+        router.select(.makharij)
+
+        #expect(router.makharijPath.isEmpty)
+        #expect(router.hadithPath == [.favorites])
     }
 
     @Test("Повторный выбор вкладки «Хадисы» возвращает к главной хадисов")

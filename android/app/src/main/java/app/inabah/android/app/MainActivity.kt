@@ -4,9 +4,6 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Color
 import androidx.lifecycle.lifecycleScope
-import app.inabah.android.core.content.model.AzkarSection
-import app.inabah.android.core.content.model.HadithCollection
-import app.inabah.android.core.content.model.HadithId
 import app.inabah.android.feature.azkar.azkarSectionOf
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
@@ -74,27 +71,25 @@ class MainActivity : ComponentActivity() {
 
     /**
      * Нажатие на уведомление: медиа — раздел звучащей записи с открытым плеером; напоминание азкаров —
-     * список раздела; хадис дня — этот хадис (поверх списка своего сборника).
+     * список раздела, «серия под угрозой» — главная «Азкаров»; хадис дня — этот хадис (поверх списка своего
+     * сборника); «пора на урок» — урок шага поверх списка шагов. Цель — [notificationTarget].
      */
     private fun handleIntent(intent: Intent?) {
-        val action = intent?.action ?: return
-        if (action !in HANDLED_ACTIONS) return
+        val target = intent?.notificationTarget() ?: return
         val container = (application as InabahApplication).container
         lifecycleScope.launch {
             val services = container.services.filterNotNull().first()
-            when (action) {
-                ACTION_OPEN_PLAYER -> {
+            val router = services.router
+            when (target) {
+                NotificationTarget.Player -> {
                     val player = services.audioPlayer
-                    player.state.value.track?.id?.let(::azkarSectionOf)?.let { services.router.open(AzkarRoute.SectionList(it)) }
+                    player.state.value.track?.id?.let(::azkarSectionOf)?.let { router.open(AzkarRoute.SectionList(it)) }
                     player.showPanel()
                 }
-                ACTION_OPEN_AZKAR -> AzkarSection.entries.firstOrNull { it.key == intent.getStringExtra(EXTRA_SECTION) }
-                    ?.let { services.router.open(AzkarRoute.SectionList(it)) }
-                ACTION_OPEN_HADITH -> {
-                    val collection = HadithCollection.fromKey(intent.getStringExtra(EXTRA_COLLECTION).orEmpty())
-                    val number = intent.getIntExtra(EXTRA_NUMBER, 0)
-                    if (collection != null && number >= 1) services.router.open(HadithRoute.Detail(HadithId(collection, number)))
-                }
+                NotificationTarget.AzkarHome -> router.openRoot(AppTab.Azkar)
+                is NotificationTarget.AzkarList -> router.open(AzkarRoute.SectionList(target.section))
+                is NotificationTarget.Hadith -> router.open(HadithRoute.Detail(target.id))
+                is NotificationTarget.ReadingLesson -> router.open(MakharijRoute.Lesson(target.step))
             }
         }
     }
@@ -102,11 +97,12 @@ class MainActivity : ComponentActivity() {
     companion object {
         const val ACTION_OPEN_PLAYER = "app.inabah.android.action.OPEN_PLAYER"
         const val ACTION_OPEN_AZKAR = "app.inabah.android.action.OPEN_AZKAR"
+        const val ACTION_OPEN_AZKAR_HOME = "app.inabah.android.action.OPEN_AZKAR_HOME"
         const val ACTION_OPEN_HADITH = "app.inabah.android.action.OPEN_HADITH"
+        const val ACTION_OPEN_READING = "app.inabah.android.action.OPEN_READING"
         const val EXTRA_SECTION = "section"
         const val EXTRA_COLLECTION = "collection"
         const val EXTRA_NUMBER = "number"
-
-        private val HANDLED_ACTIONS = setOf(ACTION_OPEN_PLAYER, ACTION_OPEN_AZKAR, ACTION_OPEN_HADITH)
+        const val EXTRA_STEP = "step"
     }
 }

@@ -32,6 +32,19 @@ class AppRouterTest {
     }
 
     @Test
+    fun `openRoot — вкладка азкаров и её стек до корня, другие стеки целы`() {
+        val router = AppRouter()
+        router.open(AzkarRoute.SectionList(AzkarSection.Evening))
+        router.open(HadithRoute.Detail(HadithId(HadithCollection.Nawawi, 3)))
+
+        router.openRoot(AppTab.Azkar)
+
+        assertEquals(AppTab.Azkar, router.selectedTab)
+        assertTrue(router.azkarStack.isEmpty())
+        assertEquals(2, router.hadithStack.size)
+    }
+
+    @Test
     fun `open переключает на вкладку азкаров и открывает экран`() {
         val router = AppRouter()
         router.select(AppTab.Settings)
@@ -87,6 +100,8 @@ class AppRouterTest {
         val paths = listOf(
             listOf(SettingsRoute.Hadith),
             listOf(SettingsRoute.Hadith, SettingsRoute.HadithOrder),
+            listOf(SettingsRoute.Makharij),
+            listOf(SettingsRoute.About, SettingsRoute.Licenses),
             listOf(SettingsRoute.AppIcon),
             listOf(SettingsRoute.Palette),
         )
@@ -195,5 +210,62 @@ class AppRouterTest {
         assertEquals(AppTab.Azkar, router.selectedTab)
         assertTrue(router.azkarStack.isEmpty())
         assertTrue(router.settingsStack.isEmpty())
+    }
+
+    @Test
+    fun `«Учимся читать» — урок поверх списка шагов, проверка поверх своего урока, «Следующий шаг» заменяет их`() {
+        val router = AppRouter()
+
+        router.open(MakharijRoute.Quiz(4))
+        assertEquals(AppTab.Makharij, router.selectedTab)
+        assertEquals(
+            listOf(MakharijRoute.Steps, MakharijRoute.Lesson(4), MakharijRoute.Quiz(4)),
+            router.makharijStack.toList(),
+        )
+
+        router.open(MakharijRoute.Lesson(5))
+        assertEquals(listOf(MakharijRoute.Steps, MakharijRoute.Lesson(5)), router.makharijStack.toList())
+
+        router.select(AppTab.Makharij)
+        assertTrue(router.makharijStack.isEmpty(), "повторный выбор вкладки — к главной")
+    }
+
+    @Test
+    fun `Снимок восстанавливает стек «Махраджа», снимок без него читается`() {
+        val source = AppRouter()
+        source.open(MakharijRoute.Lesson(1))
+
+        val restored = AppRouter()
+        restored.restore(source.snapshot())
+        assertEquals(listOf(MakharijRoute.Steps, MakharijRoute.Lesson(1)), restored.makharijStack.toList())
+        assertTrue(restored.goBack())
+        assertEquals(listOf<MakharijRoute>(MakharijRoute.Steps), restored.makharijStack.toList())
+
+        val old = AppRouter()
+        old.restore("{\"selectedTab\":\"Makharij\",\"azkar\":[],\"hadith\":[],\"settings\":[]}")
+        assertEquals(AppTab.Makharij, old.selectedTab)
+        assertTrue(old.makharijStack.isEmpty())
+    }
+
+    @Test
+    fun `Экраны урока - тема, справка, буква, зикр, слова, алфавит - поверх урока и переживают смерть процесса`() {
+        val routes = listOf(
+            12 to MakharijRoute.Extra(12, topic = 2),
+            10 to MakharijRoute.Extra(10),
+            3 to MakharijRoute.LetterForms(3, "ب"),
+            13 to MakharijRoute.Zikr(13, 3),
+            5 to MakharijRoute.Words(5),
+            4 to MakharijRoute.Alphabet(4),
+        )
+        for ((step, route) in routes) {
+            val source = AppRouter()
+            source.open(route)
+            val stack = listOf(MakharijRoute.Steps, MakharijRoute.Lesson(step), route)
+            assertEquals(stack, source.makharijStack.toList(), "$route")
+
+            val restored = AppRouter()
+            restored.restore(source.snapshot())
+            assertEquals(stack, restored.makharijStack.toList(), "$route после восстановления")
+        }
     }
 }

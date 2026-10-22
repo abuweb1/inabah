@@ -19,6 +19,7 @@ struct CollectionAboutView: View {
             .toolbarBackground(theme.palette.hadithHeader, for: .navigationBar)
             .toolbarBackgroundVisibility(.visible, for: .navigationBar)
             .toolbarColorScheme(.dark, for: .navigationBar)
+            .glassBackButton(tint: theme.palette.tabHadith, header: theme.palette.hadithHeader)
             .task { await load() }
     }
 
@@ -60,17 +61,16 @@ private struct CollectionAboutForm: View {
     @Environment(\.theme) private var theme
 
     var body: some View {
-        Form {
-            Section {
+        // Шапка — сразу под навбаром, как на Android: без верхнего поля формы.
+        SettingsForm(topPadding: 0) {
+            SettingsGroup(card: false) {
                 CollectionAboutHeader(collection: collection, total: total)
-                    .listRowBackground(Color.clear)
             }
 
             if !info.authors.isEmpty {
-                Section {
+                SettingsGroup {
                     ForEach(info.authors, id: \.self) { author in
                         CollectionAuthorRow(author: author)
-                            .settingsRow()
                     }
                 } header: {
                     // Каталог не допускает plural без числа в тексте — две строки (на Android — plural).
@@ -79,23 +79,19 @@ private struct CollectionAboutForm: View {
             }
 
             if !info.about.isEmpty {
-                Section {
+                SettingsGroup {
                     CollectionAboutText(paragraphs: info.about, language: info.language)
-                        .settingsRow()
                 } header: {
                     Text("hadith.about.book")
                 }
             }
 
-            Section {
+            SettingsGroup {
                 CollectionAboutProgress(collection: collection, total: total)
-                    .settingsRow()
             } header: {
                 Text("hadith.about.hadiths")
             }
         }
-        // Шапка — сразу под навбаром, как на Android: без верхнего поля списка.
-        .contentMargins(.top, 0, for: .scrollContent)
         .settingsForm(background: theme.gradients.hadithBackground)
     }
 }
