@@ -312,7 +312,7 @@ struct ReadingContentTests {
         let equal = try #require(step.formulasBlocks.only)
         #expect(equal.items.count == 9)
         #expect([0, 6, 8].map { equal.items[$0].transliteration } == ["ъабба", "джиддан", "роббун"])
-        #expect(equal.items.allSatisfy { $0.audio == nil }, "примеры шадды ещё не записаны")
+        #expect(equal.items.map(\.audio) == (1...9).map { "reading_s09_0\($0).m4a" })
         let words = step.quiz.compactMap(\.word)
         #expect(words.count == step.quiz.count)
         let first = try #require(words.first)
