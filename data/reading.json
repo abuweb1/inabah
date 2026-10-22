@@ -503,7 +503,8 @@
         "dammatan": "reading_13_dammatan.m4a",
         "closedFatha": "reading_13_closed_fatha.m4a",
         "closedKasra": "reading_13_closed_kasra.m4a",
-        "closedDamma": "reading_13_closed_damma.m4a"
+        "closedDamma": "reading_13_closed_damma.m4a",
+        "kasratan": "reading_13_kasratan.m4a"
       },
       "translations": {
         "ru": {
@@ -534,7 +535,8 @@
         "dammatan": "reading_14_dammatan.m4a",
         "closedFatha": "reading_14_closed_fatha.m4a",
         "closedKasra": "reading_14_closed_kasra.m4a",
-        "closedDamma": "reading_14_closed_damma.m4a"
+        "closedDamma": "reading_14_closed_damma.m4a",
+        "kasratan": "reading_14_kasratan.m4a"
       },
       "translations": {
         "ru": {
@@ -7959,7 +7961,7 @@
                   "translit": "ъабба"
                 }
               },
-              "audio": null
+              "audio": "reading_s09_01.m4a"
             },
             {
               "parts": [
@@ -7971,7 +7973,7 @@
                   "translit": "ъабби"
                 }
               },
-              "audio": null
+              "audio": "reading_s09_02.m4a"
             },
             {
               "parts": [
@@ -7983,7 +7985,7 @@
                   "translit": "ъакку"
                 }
               },
-              "audio": null
+              "audio": "reading_s09_03.m4a"
             },
             {
               "parts": [
@@ -7995,7 +7997,7 @@
                   "translit": "ъуммаа"
                 }
               },
-              "audio": null
+              "audio": "reading_s09_04.m4a"
             },
             {
               "parts": [
@@ -8007,7 +8009,7 @@
                   "translit": "ъиттии"
                 }
               },
-              "audio": null
+              "audio": "reading_s09_05.m4a"
             },
             {
               "parts": [
@@ -8019,7 +8021,7 @@
                   "translit": "бассуу"
                 }
               },
-              "audio": null
+              "audio": "reading_s09_06.m4a"
             },
             {
               "parts": [
@@ -8031,7 +8033,7 @@
                   "translit": "джиддан"
                 }
               },
-              "audio": null
+              "audio": "reading_s09_07.m4a"
             },
             {
               "parts": [
@@ -8043,7 +8045,7 @@
                   "translit": "ъашшин"
                 }
               },
-              "audio": null
+              "audio": "reading_s09_08.m4a"
             },
             {
               "parts": [
@@ -8055,7 +8057,7 @@
                   "translit": "роббун"
                 }
               },
-              "audio": null
+              "audio": "reading_s09_09.m4a"
             }
           ]
         },
