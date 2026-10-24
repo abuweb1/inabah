@@ -231,6 +231,7 @@ internal fun AboutFooterLink(onClick: () -> Unit, modifier: Modifier = Modifier)
 internal val LicenseDocument.title: Int
     get() = when (this) {
         LicenseDocument.Scheherazade -> R.string.about_license_scheherazade_title
+        LicenseDocument.MushafHafs -> R.string.about_license_mushaf_title
         LicenseDocument.MaterialSymbols -> R.string.about_license_material_title
         LicenseDocument.Inter -> R.string.about_license_inter_title
     }
@@ -239,6 +240,7 @@ internal val LicenseDocument.title: Int
 private val LicenseDocument.subtitle: Int
     get() = when (this) {
         LicenseDocument.Scheherazade -> R.string.about_license_scheherazade_subtitle
+        LicenseDocument.MushafHafs -> R.string.about_license_mushaf_subtitle
         LicenseDocument.MaterialSymbols -> R.string.about_license_material_subtitle
         LicenseDocument.Inter -> R.string.about_license_inter_subtitle
     }

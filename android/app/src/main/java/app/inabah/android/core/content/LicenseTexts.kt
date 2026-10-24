@@ -14,6 +14,12 @@ enum class LicenseDocument(val assetName: String) {
     /** Арабский шрифт Scheherazade New — SIL Open Font License 1.1 (копирует `copySharedContent` из iOS). */
     Scheherazade("ScheherazadeNew-OFL.txt"),
 
+    /**
+     * Шрифт мусхафа KFGQPC Uthmanic Script HAFS — суры и аяты Корана в азкарах (2026-10-25): бесплатно использовать,
+     * копировать и распространять вместе с лицензией, без изменений и не на продажу (файл встроен как есть).
+     */
+    MushafHafs("KFGQPC-Hafs-LICENSE.txt"),
+
     /** Значки Material Symbols — Apache License 2.0. */
     MaterialSymbols("MaterialSymbols-LICENSE.txt"),
 

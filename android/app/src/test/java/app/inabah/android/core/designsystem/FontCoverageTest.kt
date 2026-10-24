@@ -15,7 +15,7 @@ import org.junit.Test
 /**
  * Каждый символ текстов приложения есть во встроенных шрифтах: иначе Android подставил бы
  * системный шрифт (а его пользователь мог заменить), и вид зависел бы от устройства.
- * Интерфейс — Inter + подстановка Scheherazade (InterFont.kt), арабский текст — Scheherazade.
+ * Интерфейс — Inter + подстановка Scheherazade (InterFont.kt), арабский текст — Scheherazade, суры и аяты Корана в азкарах — Hafs.
  */
 class FontCoverageTest {
     private val fontDir = File("src/main/res/font")
@@ -60,6 +60,20 @@ class FontCoverageTest {
         val text = buildString { appendData { key -> key == "arabic" } }
         assertTrue(text.isNotEmpty())
         assertEquals(emptyList(), missing(text, scheherazade))
+    }
+
+    @Test
+    fun `Суры и аяты Корана в азкарах покрыты шрифтом мусхафа`() {
+        // Зикры с `quran: true` карточка рисует Hafs (2026-10-25); свёрнутая строка и превью — по-прежнему Scheherazade.
+        val hafs = codepoints(File(fontDir, "kfgqpc_uthmanic_hafs.otf"))
+        val azkar = Json.parseToJsonElement(File(assetsDir, "data/azkar.json").readText()) as JsonObject
+        val text = azkar.values.flatMap { (it as JsonArray).map { zikr -> zikr as JsonObject } }
+            .filter { (it["quran"] as? JsonPrimitive)?.content == "true" }
+            .joinToString("\n") { (it["arabic"] as JsonPrimitive).content }
+        assertTrue(text.isNotEmpty())
+        // Неразрывный пробел перед номером аята (так в тексте QPC: номер не отрывается от слова) — в Hafs его нет,
+        // это невидимый пробел: ширину даёт подстановка, вид не меняется.
+        assertEquals(emptyList(), missing(text, hafs + NO_BREAK_SPACE))
     }
 
     /** Символы без глифа: «U+XXXX символ». Пробелы и управляющие не считаются. */
@@ -115,4 +129,8 @@ class FontCoverageTest {
     }
 
     private fun Short.toUShortInt(): Int = toInt() and 0xFFFF
+
+    private companion object {
+        const val NO_BREAK_SPACE = 0x00A0
+    }
 }

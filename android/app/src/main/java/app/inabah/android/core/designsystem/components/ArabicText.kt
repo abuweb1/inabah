@@ -34,8 +34,20 @@ val ScheherazadeNew = FontFamily(
 @Composable
 internal fun fixedSp(points: Float): TextUnit = with(LocalDensity.current) { points.dp.toSp() }
 
+/**
+ * KFGQPC Uthmanic Script HAFS — шрифт Мединского мусхафа для сур и аятов Корана в азкарах (решение пользователя
+ * 2026-10-25; лицензия — `assets/licenses/KFGQPC-Hafs-LICENSE.txt`, файл встроен без изменений). Жирного нет.
+ */
+val MushafHafs = FontFamily(Font(R.font.kfgqpc_uthmanic_hafs))
+
+/** Hafs при том же кегле мельче Scheherazade: ×1,2 — буквы той же высоты (проба `docs/design/mushaf-font.html`). */
+const val MUSHAF_SCALE = 1.2f
+
 /** Собственная высота строки Scheherazade New (hhea: (2750 + 1427) / 2048 ≈ 2,04 кегля). */
 private const val NATURAL_LINE_HEIGHT = 2.04f
+
+/** Собственная высота строки Hafs (hhea: (2400 + 1200) / 2048 ≈ 1,76 кегля). */
+private const val MUSHAF_NATURAL_LINE_HEIGHT = 1.76f
 
 /** Добавочный межстрочный интервал, как `lineSpacing = кегль × 0,3` в iOS. */
 private const val EXTRA_LINE_SPACING = 0.3f
@@ -54,7 +66,9 @@ fun ArabicText(
     bold: Boolean = false,
     textAlign: TextAlign = TextAlign.Start,
     maxLines: Int = Int.MAX_VALUE,
-) = ArabicText(AnnotatedString(text), size, color, modifier, bold, textAlign, maxLines)
+    /** Текст Корана — шрифтом мусхафа ([MushafHafs]), кегль × [MUSHAF_SCALE]. */
+    mushaf: Boolean = false,
+) = ArabicText(AnnotatedString(text), size, color, modifier, bold, textAlign, maxLines, mushaf)
 
 /** То же с выделением частей текста (цвет буквы в слове-примере). */
 @Composable
@@ -66,8 +80,9 @@ fun ArabicText(
     bold: Boolean = false,
     textAlign: TextAlign = TextAlign.Start,
     maxLines: Int = Int.MAX_VALUE,
+    mushaf: Boolean = false,
 ) {
-    val style = arabicTextStyle(size, bold, textAlign)
+    val style = arabicTextStyle(size, bold, textAlign, mushaf)
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
         Text(
             text = text,
@@ -85,14 +100,18 @@ fun ArabicText(
  * размер совпал с нарисованным (ширина плиток «Читаем слова», 2026-10-16).
  */
 @Composable
-fun arabicTextStyle(size: Float, bold: Boolean = false, textAlign: TextAlign = TextAlign.Start): TextStyle = TextStyle(
-    fontFamily = ScheherazadeNew,
-    fontWeight = if (bold) FontWeight.Bold else FontWeight.Normal,
-    fontSize = fixedSp(size),
-    lineHeight = fixedSp(size * (NATURAL_LINE_HEIGHT + EXTRA_LINE_SPACING)),
-    textAlign = textAlign,
-    textDirection = TextDirection.Rtl,
-)
+fun arabicTextStyle(size: Float, bold: Boolean = false, textAlign: TextAlign = TextAlign.Start, mushaf: Boolean = false): TextStyle {
+    val points = if (mushaf) size * MUSHAF_SCALE else size
+    val naturalLineHeight = if (mushaf) MUSHAF_NATURAL_LINE_HEIGHT else NATURAL_LINE_HEIGHT
+    return TextStyle(
+        fontFamily = if (mushaf) MushafHafs else ScheherazadeNew,
+        fontWeight = if (bold && !mushaf) FontWeight.Bold else FontWeight.Normal,
+        fontSize = fixedSp(points),
+        lineHeight = fixedSp(points * (naturalLineHeight + EXTRA_LINE_SPACING)),
+        textAlign = textAlign,
+        textDirection = TextDirection.Rtl,
+    )
+}
 
 /**
  * Начало арабского текста для свёрнутой строки (зикр, хадис): первые [words] слов и «…»; короче —
