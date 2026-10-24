@@ -38,6 +38,7 @@ import app.inabah.android.core.designsystem.InterfaceTextScale
 import app.inabah.android.core.designsystem.LocalInabahTheme
 import app.inabah.android.core.designsystem.components.bottomOnly
 import app.inabah.android.core.audio.ui.AudioPlayerHost
+import app.inabah.android.feature.qibla.QiblaScreen
 import app.inabah.android.feature.azkar.AzkarCalendarScreen
 import app.inabah.android.feature.azkar.AzkarHomeScreen
 import app.inabah.android.feature.azkar.AzkarListScreen
@@ -196,7 +197,12 @@ private fun TabScreens(tab: AppTab, services: AppServices, contentPadding: Paddi
                     services.updateSource,
                     onOpenSection = { router.push(AzkarRoute.SectionList(it)) },
                     onOpenCalendar = { router.push(AzkarRoute.Calendar) },
+                    onOpenQibla = { router.push(AzkarRoute.Qibla) },
                     contentPadding = contentPadding,
+                    qiblaHint = services.qiblaEntryHint,
+                    // Подсказка у «Къиблы» ждёт, пока закроют «Что нового» (после обновления до 1.3.0 оно первое).
+                    hintBlocked = !services.whatsNew.checked.collectAsStateWithLifecycle().value ||
+                        services.whatsNew.pending.collectAsStateWithLifecycle().value != null,
                 )
             }
             entry<AzkarRoute.Calendar> {
@@ -205,6 +211,15 @@ private fun TabScreens(tab: AppTab, services: AppServices, contentPadding: Paddi
                     store = services.azkarStore,
                     onBack = { router.pop(AppTab.Azkar) },
                     contentPadding = contentPadding.bottomOnly(),
+                )
+            }
+            entry<AzkarRoute.Qibla> {
+                QiblaScreen(
+                    model = services.qibla,
+                    onBack = { router.pop(AppTab.Azkar) },
+                    contentPadding = contentPadding.bottomOnly(),
+                    helpHint = services.qiblaHelpHint,
+                    locationAsked = services.qiblaLocationAsked,
                 )
             }
             entry<AzkarRoute.SectionList> { route ->

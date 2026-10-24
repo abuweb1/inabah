@@ -7,6 +7,8 @@ import androidx.datastore.core.handlers.ReplaceFileCorruptionHandler
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.preferencesDataStoreFile
+import app.inabah.android.core.qibla.QiblaModel
+import app.inabah.android.core.qibla.QiblaTuning
 import app.inabah.android.core.audio.AudioPlayerController
 import app.inabah.android.core.audio.ClipPlayer
 import app.inabah.android.core.audio.MediaControllerEngine
@@ -36,6 +38,7 @@ import app.inabah.android.core.settings.PackageManagerAppIconSwitcher
 import app.inabah.android.core.settings.ParchmentSettings
 import app.inabah.android.core.settings.PlaylistSettings
 import app.inabah.android.core.settings.PreferencesStorage
+import app.inabah.android.core.settings.OnceFlag
 import app.inabah.android.core.settings.ReadingProgress
 import app.inabah.android.core.settings.ReadingSettings
 import app.inabah.android.core.settings.ReminderSettings
@@ -83,6 +86,10 @@ class AppServices(
     val releaseNotes: ReleaseNotesSource,
     val whatsNew: WhatsNew,
     val updateSource: UpdateSource,
+    val qibla: QiblaModel,
+    val qiblaEntryHint: OnceFlag,
+    val qiblaHelpHint: OnceFlag,
+    val qiblaLocationAsked: OnceFlag,
 )
 
 /**
@@ -241,6 +248,15 @@ class AppContainer(context: Context) {
             } else {
                 NoUpdateSource
             },
+            qibla = QiblaModel(
+                location = AndroidLocationSource(appContext, QiblaTuning.Default.locationTimeoutMillis),
+                heading = AndroidHeadingSource(appContext),
+                magnetic = AndroidMagneticModel,
+                now = ::qiblaClock,
+            ),
+            qiblaEntryHint = OnceFlag(storage, OnceFlag.QIBLA_ENTRY_HINT),
+            qiblaHelpHint = OnceFlag(storage, OnceFlag.QIBLA_HELP_HINT),
+            qiblaLocationAsked = OnceFlag(storage, OnceFlag.QIBLA_LOCATION_ASKED),
         )
     }
 
