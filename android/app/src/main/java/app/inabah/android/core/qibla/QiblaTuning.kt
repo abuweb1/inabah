@@ -18,6 +18,9 @@ package app.inabah.android.core.qibla
  * @property tiltExitDegrees …и меньше которого телефон снова «лежит ровно» (гистерезис: держат в руке около 30°).
  * @property headingAccuracyMaxDegrees оценка точности датчика, хуже которой - «Компас неточен»…
  * @property headingAccuracyExitDegrees …и лучше которой компас снова точен.
+ * @property turnFarDegrees дальше - «Поверните направо», ближе - «Правее»…
+ * @property turnNearDegrees …ближе - «Немного правее» (набросок `qibla-v2.html`, решение пользователя 2026-10-24).
+ * @property turnHysteresisDegrees запас у этих границ: надпись не мигает от дрожания.
  * @property locationStaleMillis координаты старше - «Местоположение устарело» с кнопкой «Обновить».
  * @property locationTimeoutMillis сколько ждать свежих координат, прежде чем показать ошибку.
  */
@@ -32,6 +35,9 @@ data class QiblaTuning(
     val tiltExitDegrees: Double = 25.0,
     val headingAccuracyMaxDegrees: Double = 20.0,
     val headingAccuracyExitDegrees: Double = 15.0,
+    val turnFarDegrees: Double = 45.0,
+    val turnNearDegrees: Double = 15.0,
+    val turnHysteresisDegrees: Double = 2.0,
     val locationStaleMillis: Long = 30 * 60 * 1_000L,
     val locationTimeoutMillis: Long = 30 * 1_000L,
 ) {

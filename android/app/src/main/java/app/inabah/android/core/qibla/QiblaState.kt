@@ -79,9 +79,9 @@ sealed interface QiblaGuidance {
 
     data object LowAccuracy : QiblaGuidance
 
-    data class Tilted(val side: TurnSide) : QiblaGuidance
+    data class Tilted(val side: TurnSide, val amount: TurnAmount) : QiblaGuidance
 
-    data class Turn(val side: TurnSide) : QiblaGuidance
+    data class Turn(val side: TurnSide, val amount: TurnAmount) : QiblaGuidance
 
     data object Aligned : QiblaGuidance
 }
@@ -149,9 +149,9 @@ fun qiblaUiState(
     if (pointer == null) return QiblaUiState.Compass(bearing, note, pointer = null, QiblaGuidance.Waiting)
     val guidance = when {
         pointer.lowAccuracy -> QiblaGuidance.LowAccuracy
-        pointer.tilted -> QiblaGuidance.Tilted(pointer.side)
+        pointer.tilted -> QiblaGuidance.Tilted(pointer.side, pointer.amount)
         pointer.aligned -> QiblaGuidance.Aligned
-        else -> QiblaGuidance.Turn(pointer.side)
+        else -> QiblaGuidance.Turn(pointer.side, pointer.amount)
     }
     return QiblaUiState.Compass(bearing, note, pointer, guidance)
 }

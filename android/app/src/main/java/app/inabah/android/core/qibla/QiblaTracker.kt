@@ -6,6 +6,9 @@ import kotlin.math.exp
 /** В какую сторону поворачиваться к Къибле. */
 enum class TurnSide { Left, Right }
 
+/** Насколько: «Поверните направо» / «Правее» / «Немного правее». */
+enum class TurnAmount { Far, Mid, Near }
+
 /**
  * Метка Къиблы на кольце относительно указателя (верха телефона).
  *
@@ -13,6 +16,7 @@ enum class TurnSide { Left, Right }
  * @property angle тот же угол без перескока через 0°/360°: копится по кратчайшим поворотам,
  *   поэтому анимация к нему никогда не делает полный оборот.
  * @property side сторона поворота; около 180° держится прежней ([QiblaTuning.flipZoneDegrees]).
+ * @property amount насколько поворачиваться - с запасом у границ [QiblaTuning.turnFarDegrees] / [QiblaTuning.turnNearDegrees].
  * @property tilted телефон наклонён (с гистерезисом [QiblaTuning.tiltMaxDegrees] / [QiblaTuning.tiltExitDegrees]).
  * @property lowAccuracy компас неточен: статус датчика или оценка точности (с гистерезисом).
  * @property aligned направление найдено - с гистерезисом и только при надёжном показании.
@@ -27,6 +31,7 @@ data class QiblaPointer(
     val alignedEntries: Int,
     val tilted: Boolean = false,
     val lowAccuracy: Boolean = false,
+    val amount: TurnAmount = TurnAmount.Far,
 )
 
 /**
@@ -42,6 +47,7 @@ class QiblaTracker(private val tuning: QiblaTuning = QiblaTuning.Default) {
     private var entries = 0
     private var tilted = false
     private var inaccurate = false
+    private var amount = TurnAmount.Far
 
     /**
      * Новое показание [sample]: метка должна стоять на [target] градусов от указателя (направление на Каабу
@@ -78,7 +84,20 @@ class QiblaTracker(private val tuning: QiblaTuning = QiblaTuning.Default) {
             alignedEndedMillis = at
         }
         aligned = nowAligned
-        return QiblaPointer(offset, next, side, aligned, entries, tilted, inaccurate)
+        amount = turnAmount(distance)
+        return QiblaPointer(offset, next, side, aligned, entries, tilted, inaccurate, amount)
+    }
+
+    /** Степень поворота: граница сдвигается на запас в сторону прежней степени - надпись не мигает. */
+    private fun turnAmount(distance: Double): TurnAmount {
+        val margin = tuning.turnHysteresisDegrees
+        val far = tuning.turnFarDegrees + if (amount == TurnAmount.Far) -margin else margin
+        val near = tuning.turnNearDegrees + if (amount == TurnAmount.Near) margin else -margin
+        return when {
+            distance > far -> TurnAmount.Far
+            distance > near -> TurnAmount.Mid
+            else -> TurnAmount.Near
+        }
     }
 
     /** Доля пути к новому показанию за [elapsed] мс: экспоненциальное сглаживание, не зависит от частоты датчика. */

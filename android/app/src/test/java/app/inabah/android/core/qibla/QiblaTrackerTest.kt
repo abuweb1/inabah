@@ -126,6 +126,20 @@ class QiblaTrackerTest {
     }
 
     @Test
+    fun `Степень поворота - Поверните, Правее, Немного правее - не мигает у границ`() {
+        val feed = Feed(QiblaTracker(instant))
+        assertEquals(TurnAmount.Far, feed.next(60.0).amount)
+        assertEquals(TurnAmount.Far, feed.next(44.0).amount, "у 45° - запас 2°")
+        assertEquals(TurnAmount.Mid, feed.next(42.0).amount)
+        assertEquals(TurnAmount.Mid, feed.next(46.0).amount, "назад - тоже с запасом")
+        assertEquals(TurnAmount.Mid, feed.next(-30.0).amount, "слева - те же границы")
+        assertEquals(TurnAmount.Mid, feed.next(14.0).amount)
+        assertEquals(TurnAmount.Near, feed.next(12.0).amount)
+        assertEquals(TurnAmount.Near, feed.next(16.0).amount)
+        assertEquals(TurnAmount.Mid, feed.next(18.0).amount)
+    }
+
+    @Test
     fun `Около противоположного направления сторона не скачет`() {
         val feed = Feed(QiblaTracker(instant))
         assertEquals(TurnSide.Right, feed.next(160.0).side)

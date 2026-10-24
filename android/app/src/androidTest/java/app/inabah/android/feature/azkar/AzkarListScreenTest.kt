@@ -24,7 +24,7 @@ import androidx.compose.ui.test.onAllNodesWithText
 import app.inabah.android.core.audio.AudioPlayerController
 import app.inabah.android.core.audio.TestAudioEngine
 import app.inabah.android.core.audio.ui.AudioPlayerHost
-import app.inabah.android.core.settings.QiblaEntryHint
+import app.inabah.android.core.settings.OneTimeHint
 import app.inabah.android.core.settings.PlaylistSettings
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -343,7 +343,7 @@ class AzkarListScreenTest {
     @Test
     fun homeQiblaHintWaitsForOverlayAndShowsOnce() {
         val store = store(1, 3)
-        val hint = QiblaEntryHint(storage)
+        val hint = OneTimeHint(storage, OneTimeHint.QIBLA_ENTRY)
         var blocked by mutableStateOf(true)
         compose.setContent {
             InabahTheme {

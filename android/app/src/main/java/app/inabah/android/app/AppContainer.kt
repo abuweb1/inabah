@@ -38,7 +38,7 @@ import app.inabah.android.core.settings.PackageManagerAppIconSwitcher
 import app.inabah.android.core.settings.ParchmentSettings
 import app.inabah.android.core.settings.PlaylistSettings
 import app.inabah.android.core.settings.PreferencesStorage
-import app.inabah.android.core.settings.QiblaEntryHint
+import app.inabah.android.core.settings.OneTimeHint
 import app.inabah.android.core.settings.ReadingProgress
 import app.inabah.android.core.settings.ReadingSettings
 import app.inabah.android.core.settings.ReminderSettings
@@ -87,7 +87,8 @@ class AppServices(
     val whatsNew: WhatsNew,
     val updateSource: UpdateSource,
     val qibla: QiblaModel,
-    val qiblaEntryHint: QiblaEntryHint,
+    val qiblaEntryHint: OneTimeHint,
+    val qiblaHelpHint: OneTimeHint,
 )
 
 /**
@@ -252,7 +253,8 @@ class AppContainer(context: Context) {
                 declination = GeomagneticDeclination,
                 now = ::qiblaClock,
             ),
-            qiblaEntryHint = QiblaEntryHint(storage),
+            qiblaEntryHint = OneTimeHint(storage, OneTimeHint.QIBLA_ENTRY),
+            qiblaHelpHint = OneTimeHint(storage, OneTimeHint.QIBLA_HELP),
         )
     }
 

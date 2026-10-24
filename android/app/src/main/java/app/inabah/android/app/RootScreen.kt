@@ -217,6 +217,7 @@ private fun TabScreens(tab: AppTab, services: AppServices, contentPadding: Paddi
                     model = services.qibla,
                     onBack = { router.pop(AppTab.Azkar) },
                     contentPadding = contentPadding.bottomOnly(),
+                    helpHint = services.qiblaHelpHint,
                 )
             }
             entry<AzkarRoute.SectionList> { route ->

@@ -1,7 +1,7 @@
 package app.inabah.android.feature.azkar
 
 import kotlinx.coroutines.delay
-import app.inabah.android.core.settings.QiblaEntryHint
+import app.inabah.android.core.settings.OneTimeHint
 import app.inabah.android.core.designsystem.components.HintBubble
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.boundsInRoot
@@ -82,7 +82,7 @@ fun AzkarHomeScreen(
     contentPadding: PaddingValues,
     modifier: Modifier = Modifier,
     /** `null` - без подсказки у «Къиблы» (тесты других частей главной). */
-    qiblaHint: QiblaEntryHint? = null,
+    qiblaHint: OneTimeHint? = null,
     /** Поверх открыто окно («Что нового») - подсказка ждёт. */
     hintBlocked: Boolean = false,
 ) {

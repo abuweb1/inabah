@@ -21,6 +21,7 @@ import app.inabah.android.core.qibla.LocationNote
 import app.inabah.android.core.qibla.QiblaGuidance
 import app.inabah.android.core.qibla.QiblaPointer
 import app.inabah.android.core.qibla.QiblaUiState
+import app.inabah.android.core.qibla.TurnAmount
 import app.inabah.android.core.qibla.TurnSide
 import java.util.Locale
 import org.junit.Before
@@ -53,12 +54,12 @@ class QiblaScreenTest {
         compose.enableAccessibilityChecks()
     }
 
-    private fun show(state: QiblaUiState, dialog: Boolean = false, help: Boolean = false) {
+    private fun show(state: QiblaUiState, dialog: Boolean = false, help: Boolean = false, helpHint: Boolean = false) {
         compose.setContent {
             // Приложение подставляет русский интерфейс (uiLocaleOverride в MainActivity); тестовая активность - нет.
             val configuration = Configuration(LocalConfiguration.current).apply { setLocale(Locale.forLanguageTag("ru")) }
             CompositionLocalProvider(LocalConfiguration provides configuration) {
-                InabahTheme { QiblaContent(remember { mutableStateOf(state) }, dialog, help, actions, PaddingValues()) }
+                InabahTheme { QiblaContent(remember { mutableStateOf(state) }, dialog, help, actions, PaddingValues(), helpHintVisible = helpHint) }
             }
         }
     }
@@ -98,14 +99,14 @@ class QiblaScreenTest {
 
     @Test
     fun turnStateDescribesSideAndDegreesForTalkBack() {
-        show(compass(-42.0, QiblaGuidance.Turn(TurnSide.Left)))
+        show(compass(-42.0, QiblaGuidance.Turn(TurnSide.Left, TurnAmount.Far)))
         compose.onNodeWithText("Поверните налево").assertIsDisplayed()
         compose.onNodeWithContentDescription("Къибла слева, поверните на 40°").assertIsDisplayed()
     }
 
     @Test
     fun restartButtonRestartsCompass() {
-        show(compass(20.0, QiblaGuidance.Turn(TurnSide.Right)))
+        show(compass(20.0, QiblaGuidance.Turn(TurnSide.Right, TurnAmount.Far)))
         compose.onNodeWithContentDescription("Перезапустить компас").performClick()
         compose.runOnIdle { check(calls == listOf("restart")) }
     }
@@ -119,19 +120,32 @@ class QiblaScreenTest {
 
     @Test
     fun staleLocationOffersRefresh() {
-        show(compass(20.0, QiblaGuidance.Turn(TurnSide.Right), LocationNote(approximate = false, stale = true)))
+        show(compass(20.0, QiblaGuidance.Turn(TurnSide.Right, TurnAmount.Far), LocationNote(approximate = false, stale = true)))
         compose.onNodeWithText("Местоположение устарело").assertIsDisplayed()
         compose.onNodeWithText("Обновить").performClick()
         compose.runOnIdle { check(calls == listOf("refresh")) }
     }
 
     @Test
-    fun lowAccuracyOffersHelp() {
+    fun lowAccuracyAndInfoButtonOpensHelp() {
         show(compass(20.0, QiblaGuidance.LowAccuracy))
         compose.onNodeWithText("Компас неточен").assertIsDisplayed()
-        compose.onAllNodesWithText("Как повысить точность").assertCountEquals(2) // кнопка карточки и кнопка внизу
-        compose.onAllNodesWithText("Как повысить точность")[0].performClick()
+        compose.onNodeWithText("Вдали от металлических предметов").assertIsDisplayed()
+        compose.onNodeWithContentDescription("Как повысить точность").performScrollTo().performClick()
         compose.runOnIdle { check(calls == listOf("help")) }
+    }
+
+    @Test
+    fun turnWordingFollowsAmount() {
+        show(compass(-30.0, QiblaGuidance.Turn(TurnSide.Left, TurnAmount.Mid)))
+        compose.onNodeWithText("Левее").assertIsDisplayed()
+    }
+
+    @Test
+    fun nearTurnAndHelpHintBubble() {
+        show(compass(8.0, QiblaGuidance.Turn(TurnSide.Right, TurnAmount.Near)), helpHint = true)
+        compose.onNodeWithText("Немного правее").assertIsDisplayed()
+        compose.onNodeWithText("Как повысить точность").assertIsDisplayed() // пузырь у ⓘ
     }
 
     @Test

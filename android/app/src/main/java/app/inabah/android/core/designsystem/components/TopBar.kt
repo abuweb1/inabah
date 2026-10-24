@@ -580,8 +580,6 @@ fun GlassCapsuleButton(
     tint: Color,
     modifier: Modifier = Modifier,
     onClickLabel: String? = null,
-    /** Стекло во всю ширину [modifier], содержимое по центру («Как повысить точность» на «Къибле»). */
-    fillWidth: Boolean = false,
     content: @Composable RowScope.() -> Unit,
 ) {
     val interaction = remember { MutableInteractionSource() }
@@ -595,7 +593,6 @@ fun GlassCapsuleButton(
     ) {
         Row(
             modifier = Modifier
-                .then(if (fillWidth) Modifier.fillMaxWidth() else Modifier)
                 .graphicsLayer {
                     val scale = 1f + (CAPSULE_PRESS_SCALE - 1f) * pressed.value
                     scaleX = scale
@@ -616,7 +613,7 @@ fun GlassCapsuleButton(
                     drawContent()
                     drawRect(colors.pressedIcon, alpha = pressed.value.coerceIn(0f, 1f), blendMode = BlendMode.SrcAtop)
                 },
-            horizontalArrangement = Arrangement.spacedBy(Spacing.xs, Alignment.CenterHorizontally),
+            horizontalArrangement = Arrangement.spacedBy(Spacing.xs),
             verticalAlignment = Alignment.CenterVertically,
             content = content,
         )

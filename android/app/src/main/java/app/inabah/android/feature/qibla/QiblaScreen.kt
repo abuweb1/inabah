@@ -1,5 +1,24 @@
 package app.inabah.android.feature.qibla
 
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.StrokeJoin
+import androidx.compose.ui.graphics.Path
+import kotlinx.coroutines.delay
+import app.inabah.android.core.settings.OneTimeHint
+import app.inabah.android.core.qibla.TurnAmount
+import app.inabah.android.core.designsystem.components.HintBubble
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.layout
+import androidx.compose.ui.layout.boundsInRoot
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.Canvas
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.AnimatedVisibility
 import androidx.activity.compose.BackHandler
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
@@ -35,7 +54,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -63,7 +81,6 @@ import app.inabah.android.core.designsystem.Radius
 import app.inabah.android.core.designsystem.ShadowToken
 import app.inabah.android.core.designsystem.Size
 import app.inabah.android.core.designsystem.Spacing
-import app.inabah.android.core.designsystem.components.GlassCapsuleButton
 import app.inabah.android.core.designsystem.components.GlassIconButton
 import app.inabah.android.core.designsystem.components.InabahTopBar
 import app.inabah.android.core.designsystem.components.PrimaryButton
@@ -92,15 +109,33 @@ import kotlin.math.roundToInt
 private val DialMaxSize = 360.dp
 private const val DIAL_HEIGHT_FRACTION = 0.46f
 
-/** Карточка состояния одной высоты во всех состояниях без кнопки - экран не прыгает. */
-private val CardMinHeight = 88.dp
-private const val CARD_ALPHA = 0.82f
+// Низ экрана (картинка пользователя и набросок `qibla-v2.html`, 2026-10-24): знак поворота, надпись, две плитки, строка.
+/** Знак поворота под кольцом: стрелка 104 × 20 (линия, промежуток, уголок), подтянут к кольцу. */
+private val MarkHeight = 26.dp
+private val MarkLift = 18.dp
+private val ArrowWidth = 104.dp
+private val ArrowHeight = 20.dp
+private val ArrowStroke = 2.4.dp
+private val ChevronStroke = 3.dp
+private const val ARROW_LINE_END = 0.74f
 
-/** Значок карточки и строк - в `sp`: растёт с текстом интерфейса. */
-private const val CARD_ICON_SP = 34
-private const val ROW_ICON_SP = 20
-private val SpinnerStroke = 3.dp
-private val RowSpinnerStroke = 2.dp
+/** Уголок: ширина и половина высоты - доли высоты знака (как на картинке пользователя: невысокий, широкий изгиб). */
+private const val CHEVRON_WIDTH = 0.42f
+private const val CHEVRON_HALF = 0.4f
+
+/** Плитки: полупрозрачная поверхность, одна высота. */
+private val TileMinHeight = 60.dp
+private const val TILE_ALPHA = 0.55f
+
+/** Значки - в `sp`: растут с текстом интерфейса. */
+private const val DIALOG_ICON_SP = 34
+private const val MARK_ICON_SP = 30
+private const val TILE_ICON_SP = 24
+private val SpinnerStroke = 2.5.dp
+
+/** Подсказка у ⓘ: через 0,6 с после открытия, 4 с - как в «Учимся читать». */
+private const val HELP_HINT_DELAY_MILLIS = 600L
+private const val HELP_HINT_MILLIS = 4_000L
 
 /** Шаг округления градусов для TalkBack: точнее датчик не знает, и озвучка не меняется на каждый градус. */
 private const val SPOKEN_STEP = 5
@@ -125,7 +160,14 @@ private val DialogBlur = HazeBlurStyle {
  * Доступ к местоположению спрашивается при открытии - сначала наше пояснение, потом окно Android.
  */
 @Composable
-fun QiblaScreen(model: QiblaModel, onBack: () -> Unit, contentPadding: PaddingValues, modifier: Modifier = Modifier) {
+fun QiblaScreen(
+    model: QiblaModel,
+    onBack: () -> Unit,
+    contentPadding: PaddingValues,
+    modifier: Modifier = Modifier,
+    /** Подсказка у ⓘ «Как повысить точность» - один раз; `null` - без неё. */
+    helpHint: OneTimeHint? = null,
+) {
     val permission = rememberLocationPermission()
     // «Перезапустить компас» (решение пользователя 2026-10-24): новая подписка - координаты заново, метка без сглаживания.
     var session by rememberSaveable { mutableIntStateOf(0) }
@@ -136,6 +178,18 @@ fun QiblaScreen(model: QiblaModel, onBack: () -> Unit, contentPadding: PaddingVa
     var helpVisible by rememberSaveable { mutableStateOf(false) }
 
     QiblaHaptics(state, session)
+
+    val dialogVisible = !dialogDismissed && permission.access == LocationAccess.NotGranted
+    var helpHintVisible by remember { mutableStateOf(false) }
+    // Подсказка у ⓘ - после окна доступа, один раз (решение пользователя 2026-10-24).
+    LaunchedEffect(helpHint, dialogVisible) {
+        if (helpHint == null || helpHint.seen || dialogVisible) return@LaunchedEffect
+        delay(HELP_HINT_DELAY_MILLIS)
+        helpHint.markSeen()
+        helpHintVisible = true
+        delay(HELP_HINT_MILLIS)
+        helpHintVisible = false
+    }
 
     val actions = remember(model, permission.access, onBack) {
         QiblaActions(
@@ -149,18 +203,23 @@ fun QiblaScreen(model: QiblaModel, onBack: () -> Unit, contentPadding: PaddingVa
             onOpenAppSettings = permission.openAppSettings,
             onOpenLocationSettings = permission.openLocationSettings,
             onRefreshLocation = model::refreshLocation,
-            onOpenHelp = { helpVisible = true },
+            onOpenHelp = {
+                helpHintVisible = false
+                helpHint?.markSeen()
+                helpVisible = true
+            },
             onCloseHelp = { helpVisible = false },
             onRestart = { session++ },
         )
     }
     QiblaContent(
         state = state,
-        dialogVisible = !dialogDismissed && permission.access == LocationAccess.NotGranted,
+        dialogVisible = dialogVisible,
         helpVisible = helpVisible,
         actions = actions,
         contentPadding = contentPadding,
         modifier = modifier,
+        helpHintVisible = helpHintVisible,
     )
 }
 
@@ -217,6 +276,8 @@ fun QiblaContent(
     actions: QiblaActions,
     contentPadding: PaddingValues,
     modifier: Modifier = Modifier,
+    /** Подсказка «Как повысить точность» у ⓘ (один раз, решение пользователя 2026-10-24). */
+    helpHintVisible: Boolean = false,
 ) {
     val theme = LocalInabahTheme.current
     val palette = theme.palette
@@ -228,7 +289,9 @@ fun QiblaContent(
         }
     }
     val backdrop = rememberHazeState()
-    Box(modifier.fillMaxSize()) {
+    var hostBounds by remember { mutableStateOf(Rect.Zero) }
+    var infoBounds by remember { mutableStateOf(Rect.Zero) }
+    Box(modifier.fillMaxSize().onGloballyPositioned { hostBounds = it.boundsInRoot() }) {
         Column(
             Modifier
                 .fillMaxSize()
@@ -259,24 +322,39 @@ fun QiblaContent(
                         .verticalScroll(rememberScrollState())
                         .padding(horizontal = Spacing.xl)
                         .padding(top = Spacing.xs, bottom = Spacing.xl + contentPadding.calculateBottomPadding()),
-                    verticalArrangement = Arrangement.spacedBy(Spacing.m),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
                     val compass = screen as? QiblaUiState.Compass
-                    val card = cardText(screen, actions)
+                    val headline = headline(screen, actions)
                     QiblaDial(
                         pointer = { (state.value as? QiblaUiState.Compass)?.pointer },
                         aligned = compass?.guidance == QiblaGuidance.Aligned,
                         dimmed = compass?.guidance.let { it == QiblaGuidance.LowAccuracy || it is QiblaGuidance.Tilted },
                         searching = screen == QiblaUiState.Locating || compass?.guidance == QiblaGuidance.Waiting,
-                        description = dialDescription(screen, spokenTurn, card.title),
+                        description = dialDescription(screen, spokenTurn, headline.title),
                         modifier = Modifier.widthIn(max = dialSize),
                     )
-                    StatusCard(card)
-                    InfoRows(screen, actions)
-                    HelpButton(actions.onOpenHelp)
+                    HeadlineBlock(headline)
+                    Column(
+                        Modifier.fillMaxWidth().padding(top = Spacing.xlPlus),
+                        verticalArrangement = Arrangement.spacedBy(Spacing.m),
+                    ) {
+                        LocationTile(screen, actions)
+                        AdviceTile(actions.onOpenHelp, onInfoPlaced = { infoBounds = it })
+                    }
+                    val tilted = compass?.guidance is QiblaGuidance.Tilted
+                    Text(
+                        stringResource(if (tilted) R.string.qibla_tilted else R.string.qibla_hold_flat),
+                        color = if (tilted) palette.goldLight else palette.onAccentSecondary,
+                        style = InabahType.footnote,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.padding(top = Spacing.xlPlus),
+                    )
                 }
             }
+        }
+        AnimatedVisibility(helpHintVisible, enter = fadeIn(), exit = fadeOut()) {
+            HintBubble(stringResource(R.string.qibla_help), infoBounds, hostBounds, palette.tabAzkar, palette.background)
         }
         if (dialogVisible) PermissionDialog(backdrop, actions)
         SlideUpSheet(
@@ -313,179 +391,226 @@ private fun dialDescription(state: QiblaUiState, turn: Int?, fallback: String): 
     else -> fallback
 }
 
-/** Значок карточки: картинка цвета [tint] или крутящийся индикатор. */
-private sealed interface CardIcon {
-    data class Picture(@DrawableRes val res: Int, val tint: Color, val mirrored: Boolean = false) : CardIcon
-    data object Spinner : CardIcon
+/** Знак под кольцом: стрелка в сторону поворота, галочка совпадения, ожидание или ничего (место остаётся). */
+private sealed interface Mark {
+    data class Arrow(val side: TurnSide) : Mark
+    data object Check : Mark
+    data object Spinner : Mark
+    data object None : Mark
 }
 
-private class CardText(val icon: CardIcon, val title: String, val hint: String, val action: String? = null, val onAction: () -> Unit = {})
+/** Цвет надписи: золото - поворот и проблемы компаса, зелёный - найдено, белый - ожидание и доступ. */
+private enum class Tone { Gold, Ok, Plain }
+
+private class Headline(
+    val mark: Mark,
+    val title: String,
+    val hint: String,
+    val tone: Tone,
+    val action: String? = null,
+    val onAction: () -> Unit = {},
+)
 
 @Composable
-private fun cardText(state: QiblaUiState, actions: QiblaActions): CardText {
+private fun headline(state: QiblaUiState, actions: QiblaActions): Headline = when (state) {
+    QiblaUiState.Loading -> Headline(Mark.Spinner, stringResource(R.string.qibla_loading), stringResource(R.string.qibla_loading_hint), Tone.Plain)
+    is QiblaUiState.NeedsPermission -> if (state.forever) {
+        Headline(
+            Mark.None, stringResource(R.string.qibla_denied_title), stringResource(R.string.qibla_denied_hint), Tone.Plain,
+            stringResource(R.string.qibla_open_settings), actions.onOpenAppSettings,
+        )
+    } else {
+        Headline(
+            Mark.None, stringResource(R.string.qibla_permission_title), stringResource(R.string.qibla_permission_hint), Tone.Plain,
+            stringResource(R.string.qibla_permission_allow), actions.onRequestPermission,
+        )
+    }
+    QiblaUiState.LocationOff -> Headline(
+        Mark.None, stringResource(R.string.qibla_location_off_title), stringResource(R.string.qibla_location_off_hint), Tone.Plain,
+        stringResource(R.string.qibla_open_settings), actions.onOpenLocationSettings,
+    )
+    QiblaUiState.Locating -> Headline(Mark.Spinner, stringResource(R.string.qibla_locating_title), stringResource(R.string.qibla_locating_hint), Tone.Plain)
+    QiblaUiState.LocationFailed -> Headline(
+        Mark.None, stringResource(R.string.qibla_failed_title), stringResource(R.string.qibla_failed_hint), Tone.Plain,
+        stringResource(R.string.qibla_retry), actions.onRefreshLocation,
+    )
+    is QiblaUiState.NoCompass -> Headline(
+        Mark.None, stringResource(R.string.qibla_no_compass_title),
+        stringResource(R.string.qibla_no_compass_hint, state.bearing.roundToInt() % FULL_TURN), Tone.Plain,
+    )
+    is QiblaUiState.Compass -> when (val guidance = state.guidance) {
+        QiblaGuidance.Waiting -> Headline(Mark.Spinner, stringResource(R.string.qibla_waiting), stringResource(R.string.qibla_waiting_hint), Tone.Plain)
+        QiblaGuidance.LowAccuracy -> Headline(Mark.None, stringResource(R.string.qibla_low_accuracy_title), stringResource(R.string.qibla_low_accuracy_hint), Tone.Gold)
+        is QiblaGuidance.Tilted -> Headline(Mark.Arrow(guidance.side), turnTitle(guidance.side, guidance.amount), stringResource(R.string.qibla_tilted_hint), Tone.Gold)
+        is QiblaGuidance.Turn -> Headline(Mark.Arrow(guidance.side), turnTitle(guidance.side, guidance.amount), stringResource(R.string.qibla_turn_hint), Tone.Gold)
+        QiblaGuidance.Aligned -> Headline(Mark.Check, stringResource(R.string.qibla_found), stringResource(R.string.qibla_found_hint), Tone.Ok)
+    }
+}
+
+private const val FULL_TURN = 360
+
+/** «Поверните направо» (> 45°), «Правее» (15-45°), «Немного правее» (< 15°) - степень с запасом считает трекер. */
+@Composable
+private fun turnTitle(side: TurnSide, amount: TurnAmount) = stringResource(
+    when (amount) {
+        TurnAmount.Far -> if (side == TurnSide.Right) R.string.qibla_turn_right else R.string.qibla_turn_left
+        TurnAmount.Mid -> if (side == TurnSide.Right) R.string.qibla_turn_right_mid else R.string.qibla_turn_left_mid
+        TurnAmount.Near -> if (side == TurnSide.Right) R.string.qibla_turn_right_near else R.string.qibla_turn_left_near
+    },
+)
+
+/** Знак, крупная надпись, подпись и кнопка действия (если есть). Знак подтянут к кольцу: под кольцом пустое поле. */
+@Composable
+private fun HeadlineBlock(headline: Headline) {
     val palette = InabahTheme.palette
-    val gold = palette.gold
-    fun picture(res: Int, mirrored: Boolean = false) = CardIcon.Picture(res, gold, mirrored)
-    return when (state) {
-        QiblaUiState.Loading -> CardText(CardIcon.Spinner, stringResource(R.string.qibla_loading), stringResource(R.string.qibla_loading_hint))
-        is QiblaUiState.NeedsPermission -> if (state.forever) {
-            CardText(
-                picture(R.drawable.ic_location_off), stringResource(R.string.qibla_denied_title), stringResource(R.string.qibla_denied_hint),
-                stringResource(R.string.qibla_open_settings), actions.onOpenAppSettings,
-            )
-        } else {
-            CardText(
-                picture(R.drawable.ic_location_off), stringResource(R.string.qibla_permission_title), stringResource(R.string.qibla_permission_hint),
-                stringResource(R.string.qibla_permission_allow), actions.onRequestPermission,
-            )
-        }
-        QiblaUiState.LocationOff -> CardText(
-            picture(R.drawable.ic_location_off), stringResource(R.string.qibla_location_off_title), stringResource(R.string.qibla_location_off_hint),
-            stringResource(R.string.qibla_open_settings), actions.onOpenLocationSettings,
+    val color = when (headline.tone) {
+        Tone.Gold -> palette.goldLight
+        Tone.Ok -> palette.successLight
+        Tone.Plain -> palette.onAccent
+    }
+    Column(Modifier.fillMaxWidth().pullUp(MarkLift), horizontalAlignment = Alignment.CenterHorizontally) {
+        DirectionMark(headline.mark)
+        Text(
+            headline.title,
+            color = color,
+            style = InabahType.title2.copy(fontWeight = FontWeight.Bold),
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(top = Spacing.xxs).semantics { heading() },
         )
-        QiblaUiState.Locating -> CardText(picture(R.drawable.ic_location_on), stringResource(R.string.qibla_locating_title), stringResource(R.string.qibla_locating_hint))
-        QiblaUiState.LocationFailed -> CardText(
-            picture(R.drawable.ic_location_off), stringResource(R.string.qibla_failed_title), stringResource(R.string.qibla_failed_hint),
-            stringResource(R.string.qibla_retry), actions.onRefreshLocation,
+        Text(
+            headline.hint,
+            color = palette.onAccentSecondary,
+            style = InabahType.subheadline,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(top = Spacing.xs),
         )
-        is QiblaUiState.NoCompass -> CardText(
-            picture(R.drawable.ic_explore_off), stringResource(R.string.qibla_no_compass_title),
-            stringResource(R.string.qibla_no_compass_hint, state.bearing.roundToInt() % 360),
-            stringResource(R.string.qibla_help), actions.onOpenHelp,
-        )
-        is QiblaUiState.Compass -> when (val guidance = state.guidance) {
-            QiblaGuidance.Waiting -> CardText(CardIcon.Spinner, stringResource(R.string.qibla_waiting), stringResource(R.string.qibla_waiting_hint))
-            QiblaGuidance.LowAccuracy -> CardText(
-                picture(R.drawable.ic_all_inclusive), stringResource(R.string.qibla_low_accuracy_title), stringResource(R.string.qibla_low_accuracy_hint),
-                stringResource(R.string.qibla_help), actions.onOpenHelp,
-            )
-            is QiblaGuidance.Tilted -> CardText(picture(R.drawable.ic_turn_right, guidance.side == TurnSide.Left), turnTitle(guidance.side), stringResource(R.string.qibla_tilted_hint))
-            is QiblaGuidance.Turn -> CardText(picture(R.drawable.ic_turn_right, guidance.side == TurnSide.Left), turnTitle(guidance.side), stringResource(R.string.qibla_turn_hint))
-            QiblaGuidance.Aligned -> CardText(
-                CardIcon.Picture(R.drawable.ic_check_circle, palette.successLight), stringResource(R.string.qibla_found), stringResource(R.string.qibla_found_hint),
-            )
+        headline.action?.let {
+            PrimaryButton(onClick = headline.onAction, text = it, modifier = Modifier.fillMaxWidth().padding(top = Spacing.l))
         }
     }
 }
 
-@Composable
-private fun turnTitle(side: TurnSide) =
-    stringResource(if (side == TurnSide.Right) R.string.qibla_turn_right else R.string.qibla_turn_left)
+/** Поднимает элемент на [lift] и забирает это место у раскладки (не просто сдвиг отрисовки). */
+private fun Modifier.pullUp(lift: Dp) = layout { measurable, constraints ->
+    val placeable = measurable.measure(constraints)
+    val shift = lift.roundToPx()
+    layout(placeable.width, (placeable.height - shift).coerceAtLeast(0)) { placeable.place(0, -shift) }
+}
 
-/** Карточка состояния: значок и заголовок в ряд; кнопка - во всю ширину, в одну строку (набросок 2026-10-24). */
 @Composable
-private fun StatusCard(text: CardText) {
+private fun DirectionMark(mark: Mark) {
     val palette = InabahTheme.palette
-    val iconSize = with(LocalDensity.current) { CARD_ICON_SP.sp.toDp() }
-    Column(
-        Modifier
-            .fillMaxWidth()
-            .heightIn(min = CardMinHeight)
-            .surface(palette.card.copy(alpha = CARD_ALPHA), Radius.navCard, border = palette.hairline)
-            .padding(horizontal = Spacing.xl, vertical = Spacing.l),
-        verticalArrangement = Arrangement.spacedBy(Spacing.m, Alignment.CenterVertically),
-    ) {
-        Row(
-            Modifier.fillMaxWidth().semantics(mergeDescendants = true) {},
-            horizontalArrangement = Arrangement.spacedBy(Spacing.l),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Box(Modifier.size(iconSize), contentAlignment = Alignment.Center) {
-                when (val icon = text.icon) {
-                    CardIcon.Spinner -> CircularProgressIndicator(Modifier.size(iconSize), color = palette.gold, strokeWidth = SpinnerStroke, trackColor = palette.track)
-                    is CardIcon.Picture -> Icon(
-                        painterResource(icon.res),
-                        contentDescription = null,
-                        tint = icon.tint,
-                        modifier = Modifier
-                            .size(iconSize)
-                            .graphicsLayer { if (icon.mirrored) scaleX = -1f },
-                    )
+    val iconSize = with(LocalDensity.current) { MARK_ICON_SP.sp.toDp() }
+    Box(Modifier.height(MarkHeight).fillMaxWidth(), contentAlignment = Alignment.Center) {
+        when (mark) {
+            is Mark.Arrow -> {
+                val gold = palette.gold
+                Canvas(
+                    Modifier
+                        .size(ArrowWidth, ArrowHeight)
+                        .graphicsLayer { if (mark.side == TurnSide.Left) scaleX = -1f },
+                ) {
+                    // Как на картинке пользователя: линия, промежуток, отдельный уголок - одной линией со скруглённым изгибом.
+                    val stroke = ArrowStroke.toPx()
+                    val chevron = ChevronStroke.toPx()
+                    val midY = size.height / 2
+                    drawLine(gold, Offset(stroke, midY), Offset(size.width * ARROW_LINE_END, midY), stroke, StrokeCap.Round)
+                    val tipX = size.width - chevron
+                    val backX = tipX - size.height * CHEVRON_WIDTH
+                    val half = size.height * CHEVRON_HALF
+                    val corner = Path().apply {
+                        moveTo(backX, midY - half)
+                        lineTo(tipX, midY)
+                        lineTo(backX, midY + half)
+                    }
+                    drawPath(corner, gold, style = Stroke(chevron, cap = StrokeCap.Round, join = StrokeJoin.Round))
                 }
             }
-            Column(Modifier.weight(1f)) {
-                Text(text.title, color = palette.onAccent, style = InabahType.headline.copy(fontWeight = FontWeight.Bold), modifier = Modifier.semantics { heading() })
-                Text(text.hint, color = palette.onAccentSecondary, style = InabahType.footnote)
-            }
+            Mark.Check -> Icon(painterResource(R.drawable.ic_check_circle), null, tint = palette.successLight, modifier = Modifier.size(iconSize))
+            Mark.Spinner -> CircularProgressIndicator(Modifier.size(iconSize * 0.75f), color = palette.gold, strokeWidth = SpinnerStroke, trackColor = palette.track)
+            Mark.None -> Unit
         }
-        text.action?.let { PrimaryButton(onClick = text.onAction, text = it, modifier = Modifier.fillMaxWidth()) }
     }
 }
 
-/** Строки под карточкой: местоположение и «держите ровно»; проблема - золотом. */
+/** Плитка: значок (или ожидание) слева, текст, справа - действие. Проблема - текст золотом. */
 @Composable
-private fun InfoRows(state: QiblaUiState, actions: QiblaActions) {
+private fun QiblaTile(
+    @DrawableRes icon: Int?,
+    text: String,
+    warn: Boolean,
+    trailing: (@Composable () -> Unit)? = null,
+) {
+    val palette = InabahTheme.palette
+    val iconSize = with(LocalDensity.current) { TILE_ICON_SP.sp.toDp() }
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .heightIn(min = TileMinHeight)
+            .surface(palette.card.copy(alpha = TILE_ALPHA), Radius.card, border = palette.hairline)
+            .padding(start = Spacing.xl, end = Spacing.s, top = Spacing.xs, bottom = Spacing.xs),
+        horizontalArrangement = Arrangement.spacedBy(Spacing.l),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        if (icon == null) {
+            CircularProgressIndicator(Modifier.size(iconSize * 0.85f), color = palette.gold, strokeWidth = SpinnerStroke, trackColor = palette.track)
+        } else {
+            Icon(painterResource(icon), contentDescription = null, tint = palette.gold, modifier = Modifier.size(iconSize))
+        }
+        Text(
+            text,
+            color = if (warn) palette.goldLight else palette.onAccent,
+            style = InabahType.subheadline,
+            modifier = Modifier.weight(1f).padding(vertical = Spacing.s),
+        )
+        trailing?.invoke()
+    }
+}
+
+/** Местоположение: определено / приблизительное / устарело + «Обновить» / определяем / нет доступа. */
+@Composable
+private fun LocationTile(state: QiblaUiState, actions: QiblaActions) {
     val palette = InabahTheme.palette
     val note = when (state) {
         is QiblaUiState.Compass -> state.location
         is QiblaUiState.NoCompass -> state.location
         else -> null
     }
-    Column(Modifier.fillMaxWidth()) {
-        when {
-            state is QiblaUiState.NeedsPermission -> InfoRow(R.drawable.ic_location_off, stringResource(R.string.qibla_location_none), warn = true)
-            state == QiblaUiState.LocationOff -> InfoRow(R.drawable.ic_location_off, stringResource(R.string.qibla_location_off_row), warn = true)
-            state == QiblaUiState.LocationFailed -> InfoRow(R.drawable.ic_location_off, stringResource(R.string.qibla_failed_title), warn = true)
-            state == QiblaUiState.Loading || state == QiblaUiState.Locating ->
-                InfoRow(null, stringResource(R.string.qibla_location_searching), warn = false)
-            note?.stale == true -> InfoRow(
-                R.drawable.ic_location_on, stringResource(R.string.qibla_location_stale), warn = true,
-                action = stringResource(R.string.qibla_location_refresh), onAction = actions.onRefreshLocation,
-            )
-            note?.approximate == true -> InfoRow(R.drawable.ic_location_on, stringResource(R.string.qibla_location_approximate), warn = false)
-            else -> InfoRow(R.drawable.ic_location_on, stringResource(R.string.qibla_location_found), warn = false)
-        }
-        Box(Modifier.fillMaxWidth().padding(horizontal = Spacing.xxs).heightIn(min = Size.hairline).background(palette.divider))
-        val tilted = (state as? QiblaUiState.Compass)?.guidance is QiblaGuidance.Tilted
-        InfoRow(
-            R.drawable.ic_smartphone,
-            stringResource(if (tilted) R.string.qibla_tilted else R.string.qibla_hold_flat),
-            warn = tilted,
-        )
-    }
-}
-
-/** [icon] `null` - крутящийся индикатор («Определяем местоположение…»). */
-@Composable
-private fun InfoRow(@DrawableRes icon: Int?, text: String, warn: Boolean, action: String? = null, onAction: () -> Unit = {}) {
-    val palette = InabahTheme.palette
-    val iconSize = with(LocalDensity.current) { ROW_ICON_SP.sp.toDp() }
-    val color = if (warn) palette.goldLight else palette.onAccent
-    Row(
-        Modifier
-            .fillMaxWidth()
-            .heightIn(min = Size.minTapTarget)
-            .padding(horizontal = Spacing.xs, vertical = Spacing.xs),
-        horizontalArrangement = Arrangement.spacedBy(Spacing.l),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        if (icon == null) {
-            CircularProgressIndicator(Modifier.size(iconSize), color = palette.gold, strokeWidth = RowSpinnerStroke, trackColor = palette.track)
-        } else {
-            Icon(painterResource(icon), contentDescription = null, tint = if (warn) palette.gold else palette.tabAzkar, modifier = Modifier.size(iconSize))
-        }
-        Text(text, color = color, style = InabahType.subheadline, modifier = Modifier.weight(1f))
-        if (action != null) {
+    when {
+        state is QiblaUiState.NeedsPermission -> QiblaTile(R.drawable.ic_location_off, stringResource(R.string.qibla_location_none), warn = true)
+        state == QiblaUiState.LocationOff -> QiblaTile(R.drawable.ic_location_off, stringResource(R.string.qibla_location_off_row), warn = true)
+        state == QiblaUiState.LocationFailed -> QiblaTile(R.drawable.ic_location_off, stringResource(R.string.qibla_failed_title), warn = true)
+        state == QiblaUiState.Loading || state == QiblaUiState.Locating ->
+            QiblaTile(null, stringResource(R.string.qibla_location_searching), warn = false)
+        note?.stale == true -> QiblaTile(R.drawable.ic_location_on, stringResource(R.string.qibla_location_stale), warn = true) {
             Text(
-                action,
+                stringResource(R.string.qibla_location_refresh),
                 color = palette.gold,
                 style = InabahType.subheadline.copy(fontWeight = FontWeight.SemiBold),
                 modifier = Modifier
                     .clip(RoundedCornerShape(Radius.control))
-                    .clickable(onClick = onAction)
+                    .clickable(onClick = actions.onRefreshLocation)
                     .heightIn(min = Size.minTapTarget)
                     .padding(horizontal = Spacing.s, vertical = Spacing.m),
             )
         }
+        note?.approximate == true -> QiblaTile(R.drawable.ic_location_on, stringResource(R.string.qibla_location_approximate), warn = false)
+        else -> QiblaTile(R.drawable.ic_location_on, stringResource(R.string.qibla_location_found), warn = false)
     }
 }
 
+/** Совет «Вдали от металлических предметов»: золотой компас слева, ⓘ «Как повысить точность» справа. */
 @Composable
-private fun HelpButton(onClick: () -> Unit) {
+private fun AdviceTile(onOpenHelp: () -> Unit, onInfoPlaced: (Rect) -> Unit) {
     val palette = InabahTheme.palette
-    GlassCapsuleButton(onClick = onClick, tint = palette.tabAzkar, modifier = Modifier.fillMaxWidth(), fillWidth = true) {
-        Icon(painterResource(R.drawable.ic_info), contentDescription = null, tint = palette.onAccent, modifier = Modifier.size(with(LocalDensity.current) { ROW_ICON_SP.sp.toDp() }))
-        Text(stringResource(R.string.qibla_help), color = palette.onAccent, style = InabahType.subheadline)
+    QiblaTile(R.drawable.ic_compass, stringResource(R.string.qibla_advice_metal), warn = false) {
+        GlassIconButton(
+            onClick = onOpenHelp,
+            iconRes = R.drawable.ic_info,
+            contentDescription = stringResource(R.string.qibla_help),
+            tint = palette.tabAzkar,
+            modifier = Modifier.onGloballyPositioned { onInfoPlaced(it.boundsInRoot()) },
+        )
     }
 }
 
@@ -499,7 +624,7 @@ private fun PermissionDialog(backdrop: HazeState?, actions: QiblaActions) {
     val shape = RoundedCornerShape(DialogRadius)
     val glass = lerp(palette.background, palette.tabAzkar, DIALOG_GLASS_TINT)
         .copy(alpha = if (backdrop != null) DIALOG_GLASS_ALPHA else DIALOG_GLASS_ALPHA_NO_BLUR)
-    val iconSize = with(LocalDensity.current) { CARD_ICON_SP.sp.toDp() }
+    val iconSize = with(LocalDensity.current) { DIALOG_ICON_SP.sp.toDp() }
     val title = stringResource(R.string.qibla_dialog_title)
     Box(
         Modifier

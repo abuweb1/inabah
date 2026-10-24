@@ -285,7 +285,12 @@
     <string name="qibla_subtitle">Направление молитвы</string>
     <string name="qibla_turn_right">Поверните направо</string>
     <string name="qibla_turn_left">Поверните налево</string>
-    <string name="qibla_turn_hint">Совместите золотую метку с указателем</string>
+    <string name="qibla_turn_hint">Совместите метку с указателем</string>
+    <string name="qibla_turn_right_mid">Правее</string>
+    <string name="qibla_turn_left_mid">Левее</string>
+    <string name="qibla_turn_right_near">Немного правее</string>
+    <string name="qibla_turn_left_near">Немного левее</string>
+    <string name="qibla_advice_metal">Вдали от металлических предметов</string>
     <string name="qibla_tilted_hint">Сначала положите телефон ровно</string>
     <string name="qibla_found">Направление найдено</string>
     <string name="qibla_found_hint">Вы направлены к Къибле</string>

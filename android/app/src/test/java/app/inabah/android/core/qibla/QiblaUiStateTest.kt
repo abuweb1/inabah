@@ -55,13 +55,13 @@ class QiblaUiStateTest {
     fun `Низкая точность и наклон - подсказка вместо подтверждения`() {
         // Трекер сам не засчитывает совпадение при них; подсказка берёт его флаги (с гистерезисом).
         assertEquals(QiblaGuidance.LowAccuracy, guidance(state(pointer = pointer(aligned = false, lowAccuracy = true))))
-        assertEquals(QiblaGuidance.Tilted(TurnSide.Left), guidance(state(pointer = pointer(aligned = false, side = TurnSide.Left, tilted = true))))
+        assertEquals(QiblaGuidance.Tilted(TurnSide.Left, TurnAmount.Far), guidance(state(pointer = pointer(aligned = false, side = TurnSide.Left, tilted = true))))
         assertEquals(QiblaGuidance.LowAccuracy, guidance(state(pointer = pointer(aligned = false, tilted = true, lowAccuracy = true))), "точность важнее")
     }
 
     @Test
     fun `Надёжно - поворот или найдено`() {
-        assertEquals(QiblaGuidance.Turn(TurnSide.Left), guidance(state(pointer = pointer(false, TurnSide.Left))))
+        assertEquals(QiblaGuidance.Turn(TurnSide.Left, TurnAmount.Far), guidance(state(pointer = pointer(false, TurnSide.Left))))
         assertEquals(QiblaGuidance.Aligned, guidance(state(pointer = pointer(aligned = true))))
     }
 
