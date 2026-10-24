@@ -56,6 +56,28 @@
         }
       }
     },
+    "about.license.mushaf.subtitle" : {
+      "comment" : "О приложении: лицензия шрифта мусхафа — подпись",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Суры и аяты Корана · Комплекс имени короля Фахда по изданию Корана · свободное распространение"
+          }
+        }
+      }
+    },
+    "about.license.mushaf.title" : {
+      "comment" : "О приложении: лицензия шрифта мусхафа — заголовок",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "KFGQPC Uthmanic Script HAFS"
+          }
+        }
+      }
+    },
     "about.license.scheherazade.subtitle" : {
       "comment" : "О приложении: лицензия арабского шрифта — подпись",
       "localizations" : {

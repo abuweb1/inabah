@@ -21,6 +21,8 @@ nonisolated struct ZikrDTO: Decodable, Sendable {
     let max: Int
     /// Имя аудиофайла в Bundle; поле необязательное — сейчас записей нет (с 2026-10-06).
     let audio: String?
+    /// Сура или аят Корана (текст QPC Hafs); поле необязательное, нет — `false`.
+    let quran: Bool?
     let translations: [String: ZikrTranslationDTO]
 }
 
