@@ -61,8 +61,8 @@ private const val VERSE_ARABIC = "وَأَنِيبُوا إِلَىٰ رَبِّ
 private const val PLAY_STORE_URL = "https://play.google.com/store/apps/details?id="
 private val UpdateDotSize = 10.dp
 
-/** Кааба в кнопке «Къибла» (решение пользователя 2026-10-24: 28 dp в круге 40). */
-private val QiblaIconSize = 28.dp
+/** Кааба в кнопке «Къибла» (решение пользователя 2026-10-25: 24 dp в круге 40; было 28 - слишком крупно). */
+private val QiblaIconSize = 24.dp
 
 /** Подсказка у «Къиблы»: через полсекунды после открытия главной, 4 с - как в «Учимся читать». */
 private const val QIBLA_HINT_DELAY_MILLIS = 500L
