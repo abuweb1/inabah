@@ -26,7 +26,8 @@ const VERBOSE = process.argv.includes('--verbose');
 
 const EXPECTED = { morning: 21, evening: 22, nawawi: 50, qudsi: 42, ajurri: 40 };
 
-const AZKAR_KEYS = ['id', 'arabic', 'max', 'audio', 'translations'];
+// `optional: true` — зикр не входит в набор по умолчанию («Состав азкаров», 2026-10-24); иначе поля нет.
+const AZKAR_KEYS = ['id', 'arabic', 'max', 'optional', 'audio', 'translations'];
 const HADITH_KEYS = ['id', 'arabic', 'translations'];
 const AZKAR_TRANSLATION_KEYS = ['translit', 'text', 'source', 'rawi'];
 const HADITH_TRANSLATION_KEYS = ['rawi', 'text', 'source', 'notes'];
@@ -971,6 +972,7 @@ const data = loadAll();
 for (const type of ['morning', 'evening']) {
   for (const item of data.azkar[type] ?? []) {
     checkStructure(`${type} id ${item.id ?? '?'}`, item, AZKAR_KEYS, AZKAR_TRANSLATION_KEYS);
+    if ('optional' in item && item.optional !== true) error(`${type} id ${item.id}`, `optional - только true (без поля - в наборе по умолчанию): ${item.optional}`);
   }
 }
 for (const [type, list] of Object.entries(data.hadith)) {

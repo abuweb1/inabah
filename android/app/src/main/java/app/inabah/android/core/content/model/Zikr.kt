@@ -19,6 +19,8 @@ data class Zikr(
     /** Файл записи в `assets/audio/`; записей пока нет (2026-10-06) — `null`, на экране «Аудио скоро». */
     val audioFileName: String? = null,
     val translation: ZikrTranslation?,
+    /** Не входит в набор по умолчанию: пользователь добавляет его сам в «Составе азкаров». */
+    val optional: Boolean = false,
 ) {
     val section: AzkarSection get() = id.section
 
