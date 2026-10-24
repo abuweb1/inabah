@@ -40,6 +40,14 @@ class ReadingSettingsTest {
     }
 
     @Test
+    fun `Подсказка у кнопки «Къибла» - один раз, и после перезапуска`() = TestStorage.run { storage ->
+        val hint = QiblaEntryHint(storage.storage)
+        assertFalse(hint.seen)
+        hint.markSeen()
+        assertTrue(QiblaEntryHint(storage.restart()).seen)
+    }
+
+    @Test
     fun `Подсказки «Учимся читать» - один раз на экран, увеличение запоминается, сброс возвращает всё`() = TestStorage.run { storage ->
         val settings = ReadingSettings(storage.storage)
         assertFalse(settings.introSeen("lesson.1"))

@@ -199,6 +199,9 @@ private fun TabScreens(tab: AppTab, services: AppServices, contentPadding: Paddi
                     onOpenCalendar = { router.push(AzkarRoute.Calendar) },
                     onOpenQibla = { router.push(AzkarRoute.Qibla) },
                     contentPadding = contentPadding,
+                    qiblaHint = services.qiblaEntryHint,
+                    // Подсказка у «Къиблы» ждёт, пока закроют «Что нового» (после обновления до 1.3.0 оно первое).
+                    hintBlocked = services.whatsNew.pending.collectAsStateWithLifecycle().value != null,
                 )
             }
             entry<AzkarRoute.Calendar> {

@@ -1,5 +1,17 @@
 package app.inabah.android.feature.azkar
 
+import kotlinx.coroutines.delay
+import app.inabah.android.core.settings.QiblaEntryHint
+import app.inabah.android.core.designsystem.components.HintBubble
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.boundsInRoot
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -52,6 +64,10 @@ private val UpdateDotSize = 10.dp
 /** Кааба в кнопке «Къибла» (решение пользователя 2026-10-24: 28 dp в круге 40). */
 private val QiblaIconSize = 28.dp
 
+/** Подсказка у «Къиблы»: через полсекунды после открытия главной, 4 с - как в «Учимся читать». */
+private const val QIBLA_HINT_DELAY_MILLIS = 500L
+private const val QIBLA_HINT_MILLIS = 4_000L
+
 /** Главная «Азкары» (iOS `AzkarHomeView`): бренд, аят Аз-Зумар 39:54, серия дней, карточки разделов. */
 @Composable
 fun AzkarHomeScreen(
@@ -65,49 +81,74 @@ fun AzkarHomeScreen(
     onOpenQibla: () -> Unit,
     contentPadding: PaddingValues,
     modifier: Modifier = Modifier,
+    /** `null` - без подсказки у «Къиблы» (тесты других частей главной). */
+    qiblaHint: QiblaEntryHint? = null,
+    /** Поверх открыто окно («Что нового») - подсказка ждёт. */
+    hintBlocked: Boolean = false,
 ) {
     val theme = LocalInabahTheme.current
     // До 1.2.0 в релизе обновления «нет» всегда (NoUpdateSource) — значка не видно.
     val update by produceState<AvailableUpdate?>(null, updateSource) { value = updateSource.availableUpdate() }
-    SectionHomeLayout(
-        background = theme.gradients.azkarBackground,
-        brand = SectionBrand(
-            arabicName = BRAND_ARABIC,
-            tagline = stringResource(R.string.home_brand_tagline),
-            latinName = stringResource(R.string.home_brand_latin),
-        ),
-        verse = FeaturedVerse(
-            arabic = VERSE_ARABIC,
-            translation = stringResource(R.string.home_verse_translation),
-            reference = stringResource(R.string.home_verse_reference),
-        ),
-        contentPadding = contentPadding,
-        modifier = modifier,
-        leadingAction = update?.let { available -> { UpdateButton(available) } },
-        // «Къибла» (1.3.0, набросок docs/design/qibla-entry.html): Кааба в своих цветах, стекло - цвета раздела.
-        topAction = {
-            GlassIconButton(
-                onClick = onOpenQibla,
-                iconRes = R.drawable.qibla_kaaba_icon,
-                contentDescription = stringResource(R.string.qibla_title),
-                tint = theme.palette.tabAzkar,
-                iconSize = QiblaIconSize,
-                tinted = false,
-            )
-        },
-    ) {
-        val today by store.streakDay.collectAsStateWithLifecycle()
-        val days by history.days.collectAsStateWithLifecycle()
-        // До загрузки вечерних «сегодня» неизвестно — капсулы нет, чтобы не мелькнул ноль.
-        today?.let { day ->
-            val streak = remember(days, day) { azkarStreak(days, day) }
-            AzkarStreakCapsule(streak.current, onClick = onOpenCalendar, modifier = Modifier.align(Alignment.CenterHorizontally))
+    // Подсказка у кнопки «Къибла» - один раз, как в «Учимся читать» (решение пользователя 2026-10-24).
+    var hostBounds by remember { mutableStateOf(Rect.Zero) }
+    var qiblaBounds by remember { mutableStateOf(Rect.Zero) }
+    var hintVisible by remember { mutableStateOf(false) }
+    LaunchedEffect(qiblaHint, hintBlocked) {
+        if (qiblaHint == null || qiblaHint.seen || hintBlocked) return@LaunchedEffect
+        delay(QIBLA_HINT_DELAY_MILLIS)
+        qiblaHint.markSeen()
+        hintVisible = true
+        delay(QIBLA_HINT_MILLIS)
+        hintVisible = false
+    }
+    Box(modifier.onGloballyPositioned { hostBounds = it.boundsInRoot() }) {
+        SectionHomeLayout(
+            background = theme.gradients.azkarBackground,
+            brand = SectionBrand(
+                arabicName = BRAND_ARABIC,
+                tagline = stringResource(R.string.home_brand_tagline),
+                latinName = stringResource(R.string.home_brand_latin),
+            ),
+            verse = FeaturedVerse(
+                arabic = VERSE_ARABIC,
+                translation = stringResource(R.string.home_verse_translation),
+                reference = stringResource(R.string.home_verse_reference),
+            ),
+            contentPadding = contentPadding,
+            leadingAction = update?.let { available -> { UpdateButton(available) } },
+            // «Къибла» (1.3.0, набросок docs/design/qibla-entry.html): Кааба в своих цветах, стекло - цвета раздела.
+            topAction = {
+                GlassIconButton(
+                    onClick = {
+                        hintVisible = false
+                        qiblaHint?.markSeen()
+                        onOpenQibla()
+                    },
+                    iconRes = R.drawable.qibla_kaaba_icon,
+                    contentDescription = stringResource(R.string.qibla_title),
+                    tint = theme.palette.tabAzkar,
+                    iconSize = QiblaIconSize,
+                    tinted = false,
+                    modifier = Modifier.onGloballyPositioned { qiblaBounds = it.boundsInRoot() },
+                )
+            },
+        ) {
+            val today by store.streakDay.collectAsStateWithLifecycle()
+            val days by history.days.collectAsStateWithLifecycle()
+            // До загрузки вечерних «сегодня» неизвестно — капсулы нет, чтобы не мелькнул ноль.
+            today?.let { day ->
+                val streak = remember(days, day) { azkarStreak(days, day) }
+                AzkarStreakCapsule(streak.current, onClick = onOpenCalendar, modifier = Modifier.align(Alignment.CenterHorizontally))
+            }
+            AzkarSection.entries.forEach { section ->
+                AzkarSectionCard(store, windowSettings, section, onClick = { onOpenSection(section) })
+            }
+            val offerAnswered by reminderSettings.offerAnswered.collectAsStateWithLifecycle()
+            if (!offerAnswered) ReminderOfferCard(reminderSettings)
         }
-        AzkarSection.entries.forEach { section ->
-            AzkarSectionCard(store, windowSettings, section, onClick = { onOpenSection(section) })
+        AnimatedVisibility(hintVisible, enter = fadeIn(), exit = fadeOut()) {
+            HintBubble(stringResource(R.string.azkar_qibla_hint), qiblaBounds, hostBounds, theme.palette.tabAzkar, theme.palette.background, below = true)
         }
-        val offerAnswered by reminderSettings.offerAnswered.collectAsStateWithLifecycle()
-        if (!offerAnswered) ReminderOfferCard(reminderSettings)
     }
 }
 

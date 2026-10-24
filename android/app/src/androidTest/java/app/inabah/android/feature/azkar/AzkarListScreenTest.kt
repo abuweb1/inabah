@@ -24,6 +24,7 @@ import androidx.compose.ui.test.onAllNodesWithText
 import app.inabah.android.core.audio.AudioPlayerController
 import app.inabah.android.core.audio.TestAudioEngine
 import app.inabah.android.core.audio.ui.AudioPlayerHost
+import app.inabah.android.core.settings.QiblaEntryHint
 import app.inabah.android.core.settings.PlaylistSettings
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -73,6 +74,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 
+private const val QIBLA_HINT = "Нажмите, чтобы узнать направление Къиблы"
 private const val TIMEOUT_MILLIS = 5_000L
 private const val LONG_ZIKR_REPEATS = 80
 private const val NEXT_ZIKR_ARABIC = "لَا إِلَٰهَ إِلَّا اللَّهُ"
@@ -335,6 +337,30 @@ class AzkarListScreenTest {
         }
         compose.onNodeWithContentDescription("Къибла").assertHasClickAction().performClick()
         compose.runOnIdle { check(opened == 1) }
+    }
+
+    // Подсказка у «Къиблы» (2026-10-24): ждёт, пока закроют «Что нового», показывается один раз.
+    @Test
+    fun homeQiblaHintWaitsForOverlayAndShowsOnce() {
+        val store = store(1, 3)
+        val hint = QiblaEntryHint(storage)
+        var blocked by mutableStateOf(true)
+        compose.setContent {
+            InabahTheme {
+                AzkarHomeScreen(
+                    store, AzkarHistory(storage) { throw AssertionError(it) }, windowSettings, ReminderSettings(storage), NoUpdateSource,
+                    onOpenSection = {}, onOpenCalendar = {}, onOpenQibla = {}, contentPadding = PaddingValues(),
+                    qiblaHint = hint, hintBlocked = blocked,
+                )
+            }
+        }
+        compose.mainClock.advanceTimeBy(1_500)
+        compose.onAllNodesWithText(QIBLA_HINT).assertCountEquals(0)
+        compose.runOnIdle { check(!hint.seen) { "под окном подсказка не тратится" } }
+
+        blocked = false
+        compose.waitUntil(TIMEOUT_MILLIS) { compose.onAllNodesWithText(QIBLA_HINT).fetchSemanticsNodes().isNotEmpty() }
+        compose.runOnIdle { check(hint.seen) }
     }
 
     // «Обновить» (2026-10-10): в релизе обновления нет — значка нет; есть (подделка) — значок с номером для TalkBack.
