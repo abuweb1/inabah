@@ -108,9 +108,9 @@ private struct HadithNoteBubble: View {
                     Text(verbatim: note.term)
                 }
             }
-            .font(.content(.transliteration, scale: scale, weight: .semibold))
+            .font(.content(.footnote, scale: scale, weight: .semibold))
             Text(verbatim: note.text)
-                .font(.content(.transliteration, scale: scale))
+                .font(.content(.footnote, scale: scale))
         }
         .foregroundStyle(theme.palette.noteText)
         .translationBubble(fill: theme.palette.noteFill, stripe: theme.palette.noteStripe)

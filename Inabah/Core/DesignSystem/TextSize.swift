@@ -5,8 +5,10 @@ import SwiftUI
 nonisolated enum ContentTextStyle: Sendable {
     /// Перевод зикра и хадиса.
     case translation
-    /// Транскрипция зикра (курсив).
+    /// Транскрипция зикра (курсив; 16 с 2026-10-24, было 15).
     case transliteration
+    /// Сноски хадиса (курсив, прежний размер транскрипции; Android - `contentFootnote`).
+    case footnote
     /// Источник и передатчик.
     case note
 
@@ -14,10 +16,13 @@ nonisolated enum ContentTextStyle: Sendable {
     var baseSize: Double {
         switch self {
         case .translation: 17
-        case .transliteration: 15
+        case .transliteration: 16
+        case .footnote: 15
         case .note: 13
         }
     }
+
+    var isItalic: Bool { self == .transliteration || self == .footnote }
 
     /// Дополнительный межстрочный интервал перевода — растёт вместе с текстом.
     static let translationLineSpacing: Double = 4
@@ -32,7 +37,7 @@ nonisolated extension Font {
     /// Шрифт переводов: фиксированный размер, на него не влияет системный размер текста.
     static func content(_ style: ContentTextStyle, scale: Double, weight: Font.Weight = .regular) -> Font {
         let font = Font.system(size: style.baseSize * scale, weight: weight)
-        return style == .transliteration ? font.italic() : font
+        return style.isItalic ? font.italic() : font
     }
 }
 
