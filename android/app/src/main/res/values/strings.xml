@@ -4,6 +4,8 @@
     <string name="about_app_footer">Без рекламы, регистрации и сбора данных. Приложение работает без интернета.</string>
     <string name="about_app_header">Приложение</string>
     <string name="about_app_name">Inabah</string>
+    <string name="about_license_mushaf_subtitle">Суры и аяты Корана · Комплекс имени короля Фахда по изданию Корана · свободное распространение</string>
+    <string name="about_license_mushaf_title">KFGQPC Uthmanic Script HAFS</string>
     <string name="about_license_inter_subtitle">Шрифт интерфейса · Rasmus Andersson · SIL Open Font License 1.1</string>
     <string name="about_license_inter_title">Inter</string>
     <!-- Своё значение на Android (в iOS «Значки вкладок»): здесь Material Symbols — почти все значки приложения. -->
