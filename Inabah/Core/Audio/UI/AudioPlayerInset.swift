@@ -6,11 +6,16 @@ import SwiftUI
 /// экраны ниже в стеке навигации (главная под списком) и на неактивных вкладках остаются
 /// в иерархии, и без этого флага у каждого из них работала бы своя невидимая панель
 /// с обновлением позиции и анимацией бегунка.
+///
+/// На внутреннем экране вкладки панель вкладок компактная — плеер опускается вместе с её верхом
+/// (`FloatingTabBar.compactDrop`), только сдвигом отрисовки: отступ содержимого прежний (как Android).
 private struct AudioPlayerInsetModifier: ViewModifier {
     @Environment(AudioPlayerController.self) private var player
+    @Environment(AppRouter.self) private var router
     @State private var isOnScreen = false
 
     func body(content: Content) -> some View {
+        let isCompact = !router.isOnTabRoot
         content
             .safeAreaInset(edge: .bottom, spacing: 0) {
                 // Анимация — только у самой панели, а не у всего экрана: иначе в неё попадает
@@ -22,6 +27,8 @@ private struct AudioPlayerInsetModifier: ViewModifier {
                     }
                 }
                 .animation(Motion.collapse, value: player.isPanelVisible)
+                .offset(y: isCompact ? FloatingTabBar.compactDrop : 0)
+                .animation(FloatingTabBar.compactAnimation, value: isCompact)
             }
             .onAppear { isOnScreen = true }
             .onDisappear { isOnScreen = false }
