@@ -1,5 +1,10 @@
 package app.inabah.android.feature.qibla
 
+import app.inabah.android.core.settings.OnceFlag
+import app.inabah.android.core.qibla.classifyDenial
+import app.inabah.android.core.qibla.DenialOutcome
+import androidx.compose.runtime.mutableLongStateOf
+import android.os.SystemClock
 import android.Manifest
 import android.app.Activity
 import android.content.ActivityNotFoundException
@@ -14,7 +19,6 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -33,6 +37,8 @@ private val LOCATION_PERMISSIONS = arrayOf(Manifest.permission.ACCESS_FINE_LOCAT
  */
 class LocationPermissionState internal constructor(
     val access: LocationAccess,
+    /** Идёт запрос: окно Android на экране (подсказки ждут). */
+    val requesting: Boolean,
     /** Системное окно Android с точным и приблизительным местоположением. */
     val request: () -> Unit,
     /** Сведения о приложении - когда спросить уже нельзя. */
@@ -41,34 +47,36 @@ class LocationPermissionState internal constructor(
     val openLocationSettings: () -> Unit,
 )
 
+/**
+ * [asked] - «уже спрашивали, и пользователь ответил» (хранится, аудит 2026-10-24): не выдано + спрашивали + Android
+ * не предлагает пояснения = «больше не спрашивать» - сразу «Открыть настройки», без мёртвых нажатий «Разрешить».
+ */
 @Composable
-fun rememberLocationPermission(): LocationPermissionState {
+fun rememberLocationPermission(asked: OnceFlag?): LocationPermissionState {
     val context = LocalContext.current
-    // «Больше не спрашивать» Android не сообщает прямо (ревью 2026-10-24): до первого запроса пояснение тоже
-    // не предлагается, а закрытое «Назад» окно - не отказ. Навсегда - когда пояснение было до запроса и пропало
-    // после, или когда два запроса подряд закончились без окна.
-    var forever by rememberSaveable { mutableStateOf(false) }
-    var silentDenials by rememberSaveable { mutableIntStateOf(0) }
-    var rationaleBefore by remember { mutableStateOf(false) }
-    var access by remember { mutableStateOf(context.locationAccess(forever)) }
+    var requesting by remember { mutableStateOf(false) }
+    var rationaleBefore by rememberSaveable { mutableStateOf(false) }
+    var startedAt by rememberSaveable { mutableLongStateOf(0L) }
+    var access by remember { mutableStateOf(context.locationAccess(asked?.isSet == true)) }
     LifecycleResumeEffect(context) {
-        access = context.locationAccess(forever)
+        access = context.locationAccess(asked?.isSet == true)
         onPauseOrDispose {}
     }
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
+        requesting = false
         if (!context.locationGranted()) {
-            val rationaleNow = context.locationRationale()
-            when {
-                rationaleBefore && !rationaleNow -> forever = true
-                !rationaleBefore && !rationaleNow -> if (++silentDenials >= SILENT_DENIALS_FOREVER) forever = true
-            }
+            val outcome = classifyDenial(rationaleBefore, context.locationRationale(), SystemClock.elapsedRealtime() - startedAt)
+            if (outcome != DenialOutcome.Dismissed) asked?.set()
         }
-        access = context.locationAccess(forever)
+        access = context.locationAccess(asked?.isSet == true)
     }
     return LocationPermissionState(
         access = access,
+        requesting = requesting,
         request = {
             rationaleBefore = context.locationRationale()
+            startedAt = SystemClock.elapsedRealtime()
+            requesting = true
             launcher.launch(LOCATION_PERMISSIONS)
         },
         openAppSettings = {
@@ -77,9 +85,6 @@ fun rememberLocationPermission(): LocationPermissionState {
         openLocationSettings = { context.openSettings(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)) },
     )
 }
-
-/** Сколько запросов подряд без окна и без пояснения считаются отказом навсегда. */
-private const val SILENT_DENIALS_FOREVER = 2
 
 private fun Context.granted(permission: String) =
     ContextCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED
@@ -91,10 +96,10 @@ private fun Context.locationRationale(): Boolean {
     return LOCATION_PERMISSIONS.any { ActivityCompat.shouldShowRequestPermissionRationale(activity, it) }
 }
 
-private fun Context.locationAccess(forever: Boolean): LocationAccess = when {
+private fun Context.locationAccess(asked: Boolean): LocationAccess = when {
     granted(Manifest.permission.ACCESS_FINE_LOCATION) -> LocationAccess.Precise
     granted(Manifest.permission.ACCESS_COARSE_LOCATION) -> LocationAccess.Approximate
-    forever -> LocationAccess.DeniedForever
+    asked && !locationRationale() -> LocationAccess.DeniedForever
     else -> LocationAccess.NotGranted
 }
 
@@ -113,6 +118,9 @@ private fun Context.openSettings(intent: Intent) {
             return
         } catch (error: ActivityNotFoundException) {
             Log.w("Inabah", "Нет экрана настроек: ${candidate.action}", error)
+        } catch (error: SecurityException) {
+            // Редкие прошивки закрывают экран настроек для чужих приложений - не падаем (аудит 2026-10-24).
+            Log.w("Inabah", "Экран настроек закрыт: ${candidate.action}", error)
         }
     }
 }

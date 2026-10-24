@@ -22,6 +22,9 @@ enum class TurnAmount { Far, Mid, Near }
  * @property aligned направление найдено - с гистерезисом и только при надёжном показании.
  * @property alignedEntries сколько раз метка входила в совпадение после настоящего ухода из него
  *   ([QiblaTuning.alignRearmMillis]): по росту счёта экран даёт один виброотклик.
+ * @property generation номер подписки (трекера): у новой подписки счёт входов с нуля - экран сравнивает счёт
+ *   только внутри одного номера (аудит 2026-10-24: после ↻ отклик был в момент нажатия).
+ * @property heldByLocation метка у указателя и показание надёжно, но координатам нельзя доверить подтверждение.
  */
 data class QiblaPointer(
     val offset: Double,
@@ -32,13 +35,15 @@ data class QiblaPointer(
     val tilted: Boolean = false,
     val lowAccuracy: Boolean = false,
     val amount: TurnAmount = TurnAmount.Far,
+    val generation: Int = 0,
+    val heldByLocation: Boolean = false,
 )
 
 /**
  * Сглаживает показания датчика и решает, найдено ли направление. Своё состояние - между показаниями;
  * один трекер на подписку экрана, время показаний - монотонное (мс).
  */
-class QiblaTracker(private val tuning: QiblaTuning = QiblaTuning.Default) {
+class QiblaTracker(private val tuning: QiblaTuning = QiblaTuning.Default, private val generation: Int = 0) {
     private var angle: Double? = null
     private var lastMillis = 0L
     private var side = TurnSide.Right
@@ -47,13 +52,15 @@ class QiblaTracker(private val tuning: QiblaTuning = QiblaTuning.Default) {
     private var entries = 0
     private var tilted = false
     private var inaccurate = false
+    private var interference = false
     private var amount = TurnAmount.Far
 
     /**
      * Новое показание [sample]: метка должна стоять на [target] градусов от указателя (направление на Каабу
-     * минус направление телефона, любой угол).
+     * минус направление телефона, любой угол). [locationConfirmable] - координатам можно доверить подтверждение
+     * ([LocationNote.confirmable]).
      */
-    fun update(target: Double, sample: HeadingSample): QiblaPointer {
+    fun update(target: Double, sample: HeadingSample, locationConfirmable: Boolean = true): QiblaPointer {
         val at = sample.timeMillis
         val current = angle
         val elapsed = at - lastMillis
@@ -71,12 +78,14 @@ class QiblaTracker(private val tuning: QiblaTuning = QiblaTuning.Default) {
             side = if (offset > 0) TurnSide.Right else TurnSide.Left
         }
         tilted = sample.tiltDegrees > (if (tilted) tuning.tiltExitDegrees else tuning.tiltMaxDegrees)
+        interference = interferenceFrom(sample)
         val estimate = sample.accuracyDegrees
-        inaccurate = sample.lowAccuracy ||
+        inaccurate = sample.lowAccuracy || interference ||
             (estimate != null && estimate > (if (inaccurate) tuning.headingAccuracyExitDegrees else tuning.headingAccuracyMaxDegrees))
 
         val limit = if (aligned) tuning.alignExitDegrees else tuning.alignEnterDegrees
-        val nowAligned = !tilted && !inaccurate && distance <= limit
+        val onTarget = !tilted && !inaccurate && distance <= limit
+        val nowAligned = onTarget && locationConfirmable
         if (nowAligned && !aligned) {
             val ended = alignedEndedMillis
             if (ended == null || at - ended >= tuning.alignRearmMillis) entries++
@@ -85,7 +94,15 @@ class QiblaTracker(private val tuning: QiblaTuning = QiblaTuning.Default) {
         }
         aligned = nowAligned
         amount = turnAmount(distance)
-        return QiblaPointer(offset, next, side, aligned, entries, tilted, inaccurate, amount)
+        return QiblaPointer(offset, next, side, aligned, entries, tilted, inaccurate, amount, generation, heldByLocation = onTarget && !locationConfirmable)
+    }
+
+    /** Помеха: сила поля далеко от ожидаемой в этой точке; гистерезис - флаг не мигает у края. */
+    private fun interferenceFrom(sample: HeadingSample): Boolean {
+        val field = sample.fieldMicroTesla ?: return false
+        val expected = sample.expectedFieldMicroTesla?.takeIf { it > 0 } ?: return false
+        val deviation = abs(field / expected - 1)
+        return deviation > if (interference) tuning.interferenceExitRatio else tuning.interferenceEnterRatio
     }
 
     /** Степень поворота: граница сдвигается на запас в сторону прежней степени - надпись не мигает. */

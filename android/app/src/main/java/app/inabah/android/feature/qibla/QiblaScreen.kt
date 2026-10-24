@@ -1,10 +1,16 @@
 package app.inabah.android.feature.qibla
 
+import app.inabah.android.core.qibla.spokenTurnDegrees
+import androidx.compose.ui.semantics.Role
+import kotlinx.coroutines.flow.first
+import app.inabah.android.core.qibla.AlignmentHaptics
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.Lifecycle
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.Path
 import kotlinx.coroutines.delay
-import app.inabah.android.core.settings.OneTimeHint
+import app.inabah.android.core.settings.OnceFlag
 import app.inabah.android.core.qibla.TurnAmount
 import app.inabah.android.core.designsystem.components.HintBubble
 import androidx.compose.ui.unit.Dp
@@ -99,7 +105,6 @@ import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.rememberHazeState
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.snapshotFlow
-import androidx.lifecycle.compose.LifecycleStartEffect
 import app.inabah.android.core.qibla.LocationAccess
 import kotlinx.coroutines.flow.filterNotNull
 import kotlin.math.abs
@@ -133,12 +138,13 @@ private const val MARK_ICON_SP = 30
 private const val TILE_ICON_SP = 24
 private val SpinnerStroke = 2.5.dp
 
+/** Спиннер - доля значка: под знаком и в плитке он визуально крупнее значка той же величины. */
+private const val MARK_SPINNER_FRACTION = 0.75f
+private const val TILE_SPINNER_FRACTION = 0.85f
+
 /** Подсказка у ⓘ: через 0,6 с после открытия, 4 с - как в «Учимся читать». */
 private const val HELP_HINT_DELAY_MILLIS = 600L
 private const val HELP_HINT_MILLIS = 4_000L
-
-/** Шаг округления градусов для TalkBack: точнее датчик не знает, и озвучка не меняется на каждый градус. */
-private const val SPOKEN_STEP = 5
 
 // Диалог доступа (решение пользователя 2026-10-24): стекло - размыто только то, что под окном.
 private val DialogMaxWidth = 340.dp
@@ -166,9 +172,11 @@ fun QiblaScreen(
     contentPadding: PaddingValues,
     modifier: Modifier = Modifier,
     /** Подсказка у ⓘ «Как повысить точность» - один раз; `null` - без неё. */
-    helpHint: OneTimeHint? = null,
+    helpHint: OnceFlag? = null,
+    /** «Доступ уже спрашивали» - отличить «больше не спрашивать» сразу при входе; `null` - не хранить. */
+    locationAsked: OnceFlag? = null,
 ) {
-    val permission = rememberLocationPermission()
+    val permission = rememberLocationPermission(locationAsked)
     // «Перезапустить компас» (решение пользователя 2026-10-24): новая подписка - координаты заново, метка без сглаживания.
     var session by rememberSaveable { mutableIntStateOf(0) }
     val flow = remember(model, permission.access, session) { model.state(permission.access) }
@@ -176,16 +184,21 @@ fun QiblaScreen(
     val state = flow.collectAsStateWithLifecycle(QiblaUiState.Loading)
     var dialogDismissed by rememberSaveable { mutableStateOf(false) }
     var helpVisible by rememberSaveable { mutableStateOf(false) }
+    val haptic = LocalHapticFeedback.current
 
-    QiblaHaptics(state, session)
+    QiblaHaptics(state)
 
     val dialogVisible = !dialogDismissed && permission.access == LocationAccess.NotGranted
     var helpHintVisible by remember { mutableStateOf(false) }
-    // Подсказка у ⓘ - после окна доступа, один раз (решение пользователя 2026-10-24).
-    LaunchedEffect(helpHint, dialogVisible) {
-        if (helpHint == null || helpHint.seen || dialogVisible) return@LaunchedEffect
+    val lifecycle = LocalLifecycleOwner.current.lifecycle
+    // Подсказка у ⓘ - один раз, когда на экране ничего поверх: ни нашего окна, ни окна Android (аудит 2026-10-24).
+    LaunchedEffect(helpHint, dialogVisible, permission.requesting) {
+        if (helpHint == null || helpHint.isSet || dialogVisible || permission.requesting) return@LaunchedEffect
+        lifecycle.currentStateFlow.first { it.isAtLeast(Lifecycle.State.RESUMED) }
         delay(HELP_HINT_DELAY_MILLIS)
-        helpHint.markSeen()
+        // Пока ждали, ⓘ могли нажать или экран ушёл в паузу.
+        if (helpHint.isSet || !lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) return@LaunchedEffect
+        helpHint.set()
         helpHintVisible = true
         delay(HELP_HINT_MILLIS)
         helpHintVisible = false
@@ -194,7 +207,7 @@ fun QiblaScreen(
     val actions = remember(model, permission.access, onBack) {
         QiblaActions(
             onBack = onBack,
-            // Наше окно - один раз: после ответа в окне Android спрашивает кнопка карточки.
+            // Наше окно - один раз: после ответа в окне Android спрашивает кнопка.
             onRequestPermission = {
                 dialogDismissed = true
                 permission.request()
@@ -205,11 +218,15 @@ fun QiblaScreen(
             onRefreshLocation = model::refreshLocation,
             onOpenHelp = {
                 helpHintVisible = false
-                helpHint?.markSeen()
+                helpHint?.set()
                 helpVisible = true
             },
             onCloseHelp = { helpVisible = false },
-            onRestart = { session++ },
+            // Отклик - как у счётчика азкаров (решение пользователя 2026-10-24).
+            onRestart = {
+                haptic.performHapticFeedback(HapticFeedbackType.ContextClick)
+                session++
+            },
         )
     }
     QiblaContent(
@@ -224,26 +241,17 @@ fun QiblaScreen(
 }
 
 /**
- * Один лёгкий отклик на каждый новый вход в совпадение: счёт входов растёт в [QiblaTracker] (дрожание и короткие
- * провалы его не увеличивают). Состояния без метки (поиск координат) счёт не сбрасывают; новая подписка
- * после возврата на экран начинает трекер с нуля - и запомненный счёт тоже.
+ * Один отклик на каждый новый вход в совпадение ([AlignmentHaptics]: счёт входов - внутри одной подписки; после ↻
+ * и возврата на экран старое значение отклика не даёт, первый вход новой подписки - даёт).
  */
 @Composable
-private fun QiblaHaptics(state: State<QiblaUiState>, session: Int) {
+private fun QiblaHaptics(state: State<QiblaUiState>) {
     val haptic = LocalHapticFeedback.current
-    var heard by remember { mutableIntStateOf(0) }
-    LifecycleStartEffect(Unit) {
-        heard = 0
-        onStopOrDispose {}
-    }
-    LaunchedEffect(state, session) {
-        heard = 0
-        snapshotFlow { (state.value as? QiblaUiState.Compass)?.pointer?.alignedEntries }
+    val gate = remember { AlignmentHaptics() }
+    LaunchedEffect(state) {
+        snapshotFlow { (state.value as? QiblaUiState.Compass)?.pointer }
             .filterNotNull()
-            .collect { entries ->
-                if (entries > heard) haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                heard = entries
-            }
+            .collect { pointer -> if (gate.shouldVibrate(pointer)) haptic.performHapticFeedback(HapticFeedbackType.LongPress) }
     }
 }
 
@@ -283,10 +291,11 @@ fun QiblaContent(
     val palette = theme.palette
     // Без угла метки: меняется только при смене состояния или подсказки.
     val screen by remember(state) { derivedStateOf { state.value.withoutPointer() } }
-    val spokenTurn by remember(state) {
-        derivedStateOf {
-            (state.value as? QiblaUiState.Compass)?.pointer?.let { roundTo(abs(it.offset), SPOKEN_STEP) }
-        }
+    // Градусы для TalkBack - с запасом у границ шага: озвучка не прыгает и экран не перестраивается от дрожания.
+    var spokenTurn by remember { mutableStateOf<Int?>(null) }
+    LaunchedEffect(state) {
+        snapshotFlow { (state.value as? QiblaUiState.Compass)?.pointer?.offset }
+            .collect { offset -> spokenTurn = offset?.let { spokenTurnDegrees(abs(it), spokenTurn) } }
     }
     val backdrop = rememberHazeState()
     var hostBounds by remember { mutableStateOf(Rect.Zero) }
@@ -369,8 +378,6 @@ fun QiblaContent(
 private fun QiblaUiState.withoutPointer(): QiblaUiState =
     if (this is QiblaUiState.Compass && pointer != null) copy(pointer = null) else this
 
-private fun roundTo(value: Double, step: Int): Int = (value / step).roundToInt() * step
-
 /** Описание кольца для TalkBack; без компаса - то же, что заголовок карточки ([fallback]). */
 @Composable
 private fun dialDescription(state: QiblaUiState, turn: Int?, fallback: String): String = when {
@@ -444,6 +451,18 @@ private fun headline(state: QiblaUiState, actions: QiblaActions): Headline = whe
         is QiblaGuidance.Tilted -> Headline(Mark.Arrow(guidance.side), turnTitle(guidance.side, guidance.amount), stringResource(R.string.qibla_tilted_hint), Tone.Gold)
         is QiblaGuidance.Turn -> Headline(Mark.Arrow(guidance.side), turnTitle(guidance.side, guidance.amount), stringResource(R.string.qibla_turn_hint), Tone.Gold)
         QiblaGuidance.Aligned -> Headline(Mark.Check, stringResource(R.string.qibla_found), stringResource(R.string.qibla_found_hint), Tone.Ok)
+        // Метка у указателя, но координатам нельзя доверить подтверждение (решение пользователя 2026-10-24, (б)+(в)).
+        QiblaGuidance.LocationUnconfirmed -> if (state.location.nearKaaba) {
+            Headline(
+                Mark.None, stringResource(R.string.qibla_near_kaaba_title), stringResource(R.string.qibla_near_kaaba_hint), Tone.Gold,
+                stringResource(R.string.qibla_open_settings), actions.onOpenAppSettings,
+            )
+        } else {
+            Headline(
+                Mark.None, stringResource(R.string.qibla_stale_title), stringResource(R.string.qibla_stale_hint), Tone.Gold,
+                stringResource(R.string.qibla_location_refresh), actions.onRefreshLocation,
+            )
+        }
     }
 }
 
@@ -527,7 +546,7 @@ private fun DirectionMark(mark: Mark) {
                 }
             }
             Mark.Check -> Icon(painterResource(R.drawable.ic_check_circle), null, tint = palette.successLight, modifier = Modifier.size(iconSize))
-            Mark.Spinner -> CircularProgressIndicator(Modifier.size(iconSize * 0.75f), color = palette.gold, strokeWidth = SpinnerStroke, trackColor = palette.track)
+            Mark.Spinner -> CircularProgressIndicator(Modifier.size(iconSize * MARK_SPINNER_FRACTION), color = palette.gold, strokeWidth = SpinnerStroke, trackColor = palette.track)
             Mark.None -> Unit
         }
     }
@@ -553,7 +572,7 @@ private fun QiblaTile(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         if (icon == null) {
-            CircularProgressIndicator(Modifier.size(iconSize * 0.85f), color = palette.gold, strokeWidth = SpinnerStroke, trackColor = palette.track)
+            CircularProgressIndicator(Modifier.size(iconSize * TILE_SPINNER_FRACTION), color = palette.gold, strokeWidth = SpinnerStroke, trackColor = palette.track)
         } else {
             Icon(painterResource(icon), contentDescription = null, tint = palette.gold, modifier = Modifier.size(iconSize))
         }
@@ -589,12 +608,13 @@ private fun LocationTile(state: QiblaUiState, actions: QiblaActions) {
                 style = InabahType.subheadline.copy(fontWeight = FontWeight.SemiBold),
                 modifier = Modifier
                     .clip(RoundedCornerShape(Radius.control))
-                    .clickable(onClick = actions.onRefreshLocation)
+                    .clickable(role = Role.Button, onClick = actions.onRefreshLocation)
                     .heightIn(min = Size.minTapTarget)
                     .padding(horizontal = Spacing.s, vertical = Spacing.m),
             )
         }
-        note?.approximate == true -> QiblaTile(R.drawable.ic_location_on, stringResource(R.string.qibla_location_approximate), warn = false)
+        // У Мекки «приблизительное» - проблема (решение пользователя 2026-10-24), в остальном мире - только пометка.
+        note?.approximate == true -> QiblaTile(R.drawable.ic_location_on, stringResource(R.string.qibla_location_approximate), warn = note.nearKaaba)
         else -> QiblaTile(R.drawable.ic_location_on, stringResource(R.string.qibla_location_found), warn = false)
     }
 }
@@ -676,7 +696,7 @@ private fun PermissionDialog(backdrop: HazeState?, actions: QiblaActions) {
                     style = InabahType.subheadline,
                     modifier = Modifier
                         .clip(RoundedCornerShape(Radius.control))
-                        .clickable(onClick = actions.onDialogLater)
+                        .clickable(role = Role.Button, onClick = actions.onDialogLater)
                         .heightIn(min = Size.minTapTarget)
                         .padding(horizontal = Spacing.xl, vertical = Spacing.m),
                 )

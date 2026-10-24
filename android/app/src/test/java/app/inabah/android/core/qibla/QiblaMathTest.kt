@@ -1,7 +1,6 @@
 package app.inabah.android.core.qibla
 
 import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 import org.junit.Test
 
 /**
@@ -43,7 +42,7 @@ class QiblaMathTest {
         assertEquals(-2.0, signedDelta(1.0, 359.0), 1e-9, "через север против часовой")
         assertEquals(-90.0, signedDelta(90.0, 0.0), 1e-9)
         assertEquals(180.0, signedDelta(0.0, 180.0), 1e-9, "противоположное - +180")
-        assertTrue(signedDelta(10.0, 200.0) in -180.0..180.0)
+        assertEquals(-170.0, signedDelta(10.0, 200.0), 1e-9)
     }
 
     private fun assertBearing(expected: Double, latitude: Double, longitude: Double, city: String) =

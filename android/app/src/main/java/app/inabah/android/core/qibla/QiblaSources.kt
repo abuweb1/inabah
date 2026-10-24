@@ -16,6 +16,8 @@ interface LocationSource {
  * Показание датчика до поправки на склонение.
  *
  * @property magneticAzimuth куда смотрит верх телефона, градусы от магнитного севера.
+ * @property lowAccuracy датчик сам сообщил о низкой точности ([sensorReportsLowAccuracy]).
+ * @property fieldMicroTesla сила поля у телефона (магнитометр); `null` - магнитометра нет.
  * @property timeMillis монотонное время показания.
  */
 data class MagneticHeading(
@@ -24,16 +26,24 @@ data class MagneticHeading(
     val lowAccuracy: Boolean,
     val tiltDegrees: Double,
     val timeMillis: Long,
+    val fieldMicroTesla: Double? = null,
 )
 
-/** Датчик направления: подписка - пока поток собирают, отмена снимает слушатель. */
+/**
+ * Датчик направления: подписка - пока поток собирают, отмена снимает слушатель. Не удалось подписаться - поток
+ * завершается ошибкой (экран покажет «Компаса нет», а не вечное «Настраиваем компас»).
+ */
 interface HeadingSource {
     val available: Boolean
 
     fun headings(): Flow<MagneticHeading>
 }
 
-/** Магнитное склонение в точке, градусы (восточное - плюс): истинный азимут = магнитный + склонение. */
-fun interface MagneticDeclination {
-    fun at(fix: LocationFix): Double
+/** Магнитное поле Земли в точке по мировой модели (без сети). */
+interface MagneticModel {
+    /** Склонение, градусы (восточное - плюс): истинный азимут = магнитный + склонение. */
+    fun declination(fix: LocationFix): Double
+
+    /** Сила поля, мкТл - с ней сравнивается магнитометр (помехи). */
+    fun fieldMicroTesla(fix: LocationFix): Double
 }

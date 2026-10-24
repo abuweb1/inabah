@@ -1,6 +1,7 @@
 package app.inabah.android.core.qibla
 
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertTrue
 import org.junit.Test
@@ -66,13 +67,30 @@ class QiblaUiStateTest {
     }
 
     @Test
-    fun `Приблизительные и устаревшие координаты - пометки, направление остаётся`() {
+    fun `Приблизительные и устаревшие координаты - пометки`() {
         val approximate = assertIs<QiblaUiState.Compass>(state(access = LocationAccess.Approximate))
-        assertEquals(LocationNote(approximate = true, stale = false), approximate.location)
+        assertEquals(LocationNote(approximate = true, stale = false, nearKaaba = false), approximate.location)
+        assertTrue(approximate.location.confirmable, "в Грозном приблизительное направление верное")
         val old = LocationStatus.Found(grozny.copy(timeMillis = now - tuning.locationStaleMillis - 1))
-        val stale = assertIs<QiblaUiState.Compass>(state(location = old, pointer = pointer(aligned = true)))
+        val stale = assertIs<QiblaUiState.Compass>(state(location = old))
         assertTrue(stale.location.stale)
-        assertEquals(QiblaGuidance.Aligned, stale.guidance, "старые координаты почти не меняют направление")
+        assertFalse(stale.location.confirmable, "устаревшие - без подтверждения (решение пользователя 2026-10-24)")
+    }
+
+    @Test
+    fun `Приблизительное у самой Мекки - нужно точное`() {
+        val mecca = LocationStatus.Found(LocationFix(21.45, 39.85, 0.0, timeMillis = now))
+        val near = assertIs<QiblaUiState.Compass>(state(access = LocationAccess.Approximate, location = mecca))
+        assertTrue(near.location.nearKaaba)
+        assertFalse(near.location.confirmable)
+        val precise = assertIs<QiblaUiState.Compass>(state(access = LocationAccess.Precise, location = mecca))
+        assertTrue(precise.location.confirmable, "точное у Мекки - можно")
+    }
+
+    @Test
+    fun `На месте, но координатам нельзя доверить - отдельная подсказка`() {
+        val held = QiblaPointer(1.0, 1.0, TurnSide.Right, aligned = false, alignedEntries = 0, heldByLocation = true)
+        assertEquals(QiblaGuidance.LocationUnconfirmed, guidance(state(pointer = held)))
     }
 
     private fun guidance(state: QiblaUiState) = assertIs<QiblaUiState.Compass>(state).guidance

@@ -1,7 +1,7 @@
 package app.inabah.android.feature.azkar
 
 import kotlinx.coroutines.delay
-import app.inabah.android.core.settings.OneTimeHint
+import app.inabah.android.core.settings.OnceFlag
 import app.inabah.android.core.designsystem.components.HintBubble
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.boundsInRoot
@@ -82,8 +82,8 @@ fun AzkarHomeScreen(
     contentPadding: PaddingValues,
     modifier: Modifier = Modifier,
     /** `null` - без подсказки у «Къиблы» (тесты других частей главной). */
-    qiblaHint: OneTimeHint? = null,
-    /** Поверх открыто окно («Что нового») - подсказка ждёт. */
+    qiblaHint: OnceFlag? = null,
+    /** Поверх открыто окно («Что нового») или его проверка ещё идёт - подсказка ждёт. */
     hintBlocked: Boolean = false,
 ) {
     val theme = LocalInabahTheme.current
@@ -94,9 +94,11 @@ fun AzkarHomeScreen(
     var qiblaBounds by remember { mutableStateOf(Rect.Zero) }
     var hintVisible by remember { mutableStateOf(false) }
     LaunchedEffect(qiblaHint, hintBlocked) {
-        if (qiblaHint == null || qiblaHint.seen || hintBlocked) return@LaunchedEffect
+        if (qiblaHint == null || qiblaHint.isSet || hintBlocked) return@LaunchedEffect
         delay(QIBLA_HINT_DELAY_MILLIS)
-        qiblaHint.markSeen()
+        // Пока ждали, кнопку могли нажать.
+        if (qiblaHint.isSet) return@LaunchedEffect
+        qiblaHint.set()
         hintVisible = true
         delay(QIBLA_HINT_MILLIS)
         hintVisible = false
@@ -121,7 +123,7 @@ fun AzkarHomeScreen(
                 GlassIconButton(
                     onClick = {
                         hintVisible = false
-                        qiblaHint?.markSeen()
+                        qiblaHint?.set()
                         onOpenQibla()
                     },
                     iconRes = R.drawable.qibla_kaaba_icon,

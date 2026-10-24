@@ -11,12 +11,11 @@ import androidx.core.content.ContextCompat
 import app.inabah.android.core.qibla.LocationFix
 import app.inabah.android.core.qibla.LocationSource
 import app.inabah.android.core.qibla.LocationStatus
-import app.inabah.android.core.qibla.MagneticDeclination
+import app.inabah.android.core.qibla.MagneticModel
+import app.inabah.android.core.qibla.locateFlow
 import kotlin.coroutines.resume
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.suspendCancellableCoroutine
-import kotlinx.coroutines.withTimeoutOrNull
 
 /**
  * Координаты через `LocationManager` - без Google Play Services и сети (решение 2026-10-24). Вызывается
@@ -27,19 +26,12 @@ class AndroidLocationSource(context: Context, private val timeoutMillis: Long) :
     private val manager = appContext.getSystemService(LocationManager::class.java)
 
     @SuppressLint("MissingPermission") // экран запускает поиск только с доступом (QiblaModel.state)
-    override fun locate(): Flow<LocationStatus> = flow {
-        if (manager == null || !manager.isLocationEnabled) {
-            emit(LocationStatus.Off)
-            return@flow
-        }
-        val last = runCatchingSecurity { lastKnown() }
-        emit(last?.let { LocationStatus.Found(it.toFix()) } ?: LocationStatus.Searching)
-        val fresh = withTimeoutOrNull(timeoutMillis) { runCatchingSecurity { current() } }
-        when {
-            fresh != null -> emit(LocationStatus.Found(fresh.toFix()))
-            last == null -> emit(LocationStatus.Failed)
-        }
-    }
+    override fun locate(): Flow<LocationStatus> = locateFlow(
+        enabled = { manager?.isLocationEnabled == true },
+        lastKnown = { runCatchingSecurity { lastKnown() }?.toFix() },
+        current = { runCatchingSecurity { current() }?.toFix() },
+        timeoutMillis = timeoutMillis,
+    )
 
     /** Самые свежие из последних известных по всем включённым источникам. */
     @SuppressLint("MissingPermission")
@@ -80,14 +72,20 @@ private fun Location.toFix() = LocationFix(
 
 private const val NANOS_IN_MILLI = 1_000_000L
 
-/** Склонение по мировой магнитной модели, встроенной в Android (без сети). */
-val GeomagneticDeclination = MagneticDeclination { fix ->
-    GeomagneticField(
+/** Поле Земли по мировой магнитной модели, встроенной в Android (без сети): склонение и сила поля. */
+object AndroidMagneticModel : MagneticModel {
+    override fun declination(fix: LocationFix): Double = field(fix).declination.toDouble()
+
+    override fun fieldMicroTesla(fix: LocationFix): Double = field(fix).fieldStrength / NANO_IN_MICRO
+
+    private fun field(fix: LocationFix) = GeomagneticField(
         fix.latitude.toFloat(),
         fix.longitude.toFloat(),
         fix.altitudeMeters.toFloat(),
         System.currentTimeMillis(),
-    ).declination.toDouble()
+    )
+
+    private const val NANO_IN_MICRO = 1_000.0
 }
 
 /** Монотонные часы экрана «Къибла»: время координат и показаний датчика. */

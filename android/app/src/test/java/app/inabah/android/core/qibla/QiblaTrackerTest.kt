@@ -47,6 +47,18 @@ class QiblaTrackerTest {
     }
 
     @Test
+    fun `Через 180 метка идёт коротким путём - за спиной, а не через указатель`() {
+        val feed = Feed(QiblaTracker(tuning))
+        feed.next(170.0)
+        feed.next(170.0)
+        repeat(50) {
+            val offset = feed.next(-170.0).offset
+            assertTrue(abs(offset) >= 169.9, "метка за спиной, не у указателя: $offset")
+        }
+        assertEquals(-170.0, feed.next(-170.0).offset, 0.5)
+    }
+
+    @Test
     fun `Сглаживание не зависит от частоты датчика`() {
         val slow = Feed(QiblaTracker(tuning), stepMillis = 100)
         val fast = Feed(QiblaTracker(tuning), stepMillis = 20)
@@ -137,6 +149,34 @@ class QiblaTrackerTest {
         assertEquals(TurnAmount.Near, feed.next(12.0).amount)
         assertEquals(TurnAmount.Near, feed.next(16.0).amount)
         assertEquals(TurnAmount.Mid, feed.next(18.0).amount)
+    }
+
+    @Test
+    fun `Помехи - сила поля далеко от ожидаемой в точке, с гистерезисом`() {
+        val tracker = QiblaTracker(instant)
+        var t = 0L
+        fun at(field: Double, expected: Double = 50.0) =
+            tracker.update(0.0, sample(t++).copy(fieldMicroTesla = field, expectedFieldMicroTesla = expected))
+        assertTrue(at(50.0).aligned)
+        assertTrue(at(70.0).lowAccuracy, "+40% - металл или магнит рядом")
+        assertTrue(at(64.0).lowAccuracy, "+28% - ещё помеха (снимается ниже 25%)")
+        assertFalse(at(58.0).lowAccuracy, "+16% - чисто")
+        assertFalse(at(23.0, expected = 23.0).lowAccuracy, "слабое поле Южной Атлантики - не помеха")
+        assertFalse(at(80.0, expected = 0.0).lowAccuracy, "ожидаемое неизвестно - не судим")
+    }
+
+    @Test
+    fun `Координатам нельзя доверить - на месте, но без подтверждения и отклика`() {
+        val tracker = QiblaTracker(instant, generation = 7)
+        var pointer = tracker.update(0.0, sample(0), locationConfirmable = false)
+        assertFalse(pointer.aligned)
+        assertTrue(pointer.heldByLocation)
+        assertEquals(0, pointer.alignedEntries)
+        assertEquals(7, pointer.generation)
+        pointer = tracker.update(0.0, sample(1), locationConfirmable = true)
+        assertTrue(pointer.aligned, "координаты обновились - подтверждение")
+        assertEquals(1, pointer.alignedEntries)
+        assertFalse(pointer.heldByLocation)
     }
 
     @Test

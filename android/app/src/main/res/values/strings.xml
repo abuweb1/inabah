@@ -293,6 +293,10 @@
     <string name="qibla_advice_metal">Вдали от металлических предметов</string>
     <string name="qibla_tilted_hint">Сначала положите телефон ровно</string>
     <string name="qibla_found">Направление найдено</string>
+    <string name="qibla_stale_title">Обновите местоположение</string>
+    <string name="qibla_stale_hint">Координаты устарели - направление может быть неточным</string>
+    <string name="qibla_near_kaaba_title">Нужно точное местоположение</string>
+    <string name="qibla_near_kaaba_hint">Рядом с Каабой приблизительные координаты сдвигают направление</string>
     <string name="qibla_found_hint">Вы направлены к Къибле</string>
     <string name="qibla_loading">Подготовка</string>
     <string name="qibla_loading_hint">Проверяем доступ к местоположению</string>

@@ -24,7 +24,7 @@ import androidx.compose.ui.test.onAllNodesWithText
 import app.inabah.android.core.audio.AudioPlayerController
 import app.inabah.android.core.audio.TestAudioEngine
 import app.inabah.android.core.audio.ui.AudioPlayerHost
-import app.inabah.android.core.settings.OneTimeHint
+import app.inabah.android.core.settings.OnceFlag
 import app.inabah.android.core.settings.PlaylistSettings
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -343,7 +343,7 @@ class AzkarListScreenTest {
     @Test
     fun homeQiblaHintWaitsForOverlayAndShowsOnce() {
         val store = store(1, 3)
-        val hint = OneTimeHint(storage, OneTimeHint.QIBLA_ENTRY)
+        val hint = OnceFlag(storage, OnceFlag.QIBLA_ENTRY_HINT)
         var blocked by mutableStateOf(true)
         compose.setContent {
             InabahTheme {
@@ -356,11 +356,28 @@ class AzkarListScreenTest {
         }
         compose.mainClock.advanceTimeBy(1_500)
         compose.onAllNodesWithText(QIBLA_HINT).assertCountEquals(0)
-        compose.runOnIdle { check(!hint.seen) { "под окном подсказка не тратится" } }
+        compose.runOnIdle { check(!hint.isSet) { "под окном подсказка не тратится" } }
 
         blocked = false
         compose.waitUntil(TIMEOUT_MILLIS) { compose.onAllNodesWithText(QIBLA_HINT).fetchSemanticsNodes().isNotEmpty() }
-        compose.runOnIdle { check(hint.seen) }
+        compose.runOnIdle { check(hint.isSet) }
+    }
+
+    @Test
+    fun homeQiblaHintNotRepeatedOnceSeen() {
+        val store = store(1, 3)
+        val hint = OnceFlag(storage, OnceFlag.QIBLA_ENTRY_HINT).apply { set() }
+        compose.setContent {
+            InabahTheme {
+                AzkarHomeScreen(
+                    store, AzkarHistory(storage) { throw AssertionError(it) }, windowSettings, ReminderSettings(storage), NoUpdateSource,
+                    onOpenSection = {}, onOpenCalendar = {}, onOpenQibla = {}, contentPadding = PaddingValues(),
+                    qiblaHint = hint,
+                )
+            }
+        }
+        compose.mainClock.advanceTimeBy(1_500)
+        compose.onAllNodesWithText(QIBLA_HINT).assertCountEquals(0)
     }
 
     // «Обновить» (2026-10-10): в релизе обновления нет — значка нет; есть (подделка) — значок с номером для TalkBack.

@@ -21,7 +21,14 @@ package app.inabah.android.core.qibla
  * @property turnFarDegrees дальше - «Поверните направо», ближе - «Правее»…
  * @property turnNearDegrees …ближе - «Немного правее» (набросок `qibla-v2.html`, решение пользователя 2026-10-24).
  * @property turnHysteresisDegrees запас у этих границ: надпись не мигает от дрожания.
- * @property locationStaleMillis координаты старше - «Местоположение устарело» с кнопкой «Обновить».
+ * @property interferenceEnterRatio сила магнитного поля отличается от ожидаемой в этой точке (мировая модель) больше
+ *   этой доли - металл или магнит рядом, «Компас неточен» (аудит 2026-10-24: абсолютные 22-70 мкТл не годились
+ *   для мест со слабым полем - Южная Атлантика ~22-25 мкТл)…
+ * @property interferenceExitRatio …и снова чисто - меньше этой.
+ * @property approximateNearKm ближе к Каабе «приблизительное» местоположение (размытие 1-3 км) сдвигает направление
+ *   на десятки градусов - подтверждения нет, просим точное (решение пользователя 2026-10-24).
+ * @property locationStaleMillis координаты старше - «Местоположение устарело» с кнопкой «Обновить»; направление не
+ *   подтверждается, пока не обновятся (решение пользователя 2026-10-24).
  * @property locationTimeoutMillis сколько ждать свежих координат, прежде чем показать ошибку.
  */
 data class QiblaTuning(
@@ -38,6 +45,9 @@ data class QiblaTuning(
     val turnFarDegrees: Double = 45.0,
     val turnNearDegrees: Double = 15.0,
     val turnHysteresisDegrees: Double = 2.0,
+    val interferenceEnterRatio: Double = 0.35,
+    val interferenceExitRatio: Double = 0.25,
+    val approximateNearKm: Double = 50.0,
     val locationStaleMillis: Long = 30 * 60 * 1_000L,
     val locationTimeoutMillis: Long = 30 * 1_000L,
 ) {

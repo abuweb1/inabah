@@ -49,6 +49,8 @@ sealed interface LocationStatus {
  * @property accuracyDegrees оценка точности от датчика; `null` - датчик её не даёт.
  * @property lowAccuracy датчик сам сообщил о низкой точности (нужна калибровка).
  * @property tiltDegrees наклон экрана от горизонтали.
+ * @property fieldMicroTesla сила магнитного поля у телефона; `null` - магнитометра нет.
+ * @property expectedFieldMicroTesla сила поля Земли в этой точке по мировой модели; `null` - неизвестна.
  */
 data class HeadingSample(
     val trueHeading: Double,
@@ -56,6 +58,8 @@ data class HeadingSample(
     val lowAccuracy: Boolean,
     val tiltDegrees: Double,
     val timeMillis: Long,
+    val fieldMicroTesla: Double? = null,
+    val expectedFieldMicroTesla: Double? = null,
 )
 
 /** Что известно о направлении телефона. */
@@ -69,8 +73,24 @@ sealed interface HeadingStatus {
     data class Reading(val sample: HeadingSample) : HeadingStatus
 }
 
-/** Пометки строки местоположения. */
-data class LocationNote(val approximate: Boolean, val stale: Boolean)
+/**
+ * Пометки плитки местоположения. [nearKaaba] - выбрано «приблизительное», а до Каабы ближе
+ * [QiblaTuning.approximateNearKm]: нужно точное.
+ */
+data class LocationNote(val approximate: Boolean, val stale: Boolean, val nearKaaba: Boolean = false) {
+    /** Координатам можно доверить «Направление найдено» (решение пользователя 2026-10-24, (б)+(в)). */
+    val confirmable: Boolean get() = !stale && !nearKaaba
+}
+
+/** Пометки координат [fix] при доступе [access] на момент [nowMillis]. */
+fun locationNote(access: LocationAccess, fix: LocationFix, nowMillis: Long, tuning: QiblaTuning = QiblaTuning.Default): LocationNote {
+    val approximate = access == LocationAccess.Approximate
+    return LocationNote(
+        approximate = approximate,
+        stale = nowMillis - fix.timeMillis > tuning.locationStaleMillis,
+        nearKaaba = approximate && distanceToKaabaKm(fix.latitude, fix.longitude) <= tuning.approximateNearKm,
+    )
+}
 
 /** Что подсказать в карточке, когда компас работает. */
 sealed interface QiblaGuidance {
@@ -82,6 +102,9 @@ sealed interface QiblaGuidance {
     data class Tilted(val side: TurnSide, val amount: TurnAmount) : QiblaGuidance
 
     data class Turn(val side: TurnSide, val amount: TurnAmount) : QiblaGuidance
+
+    /** Метка у указателя, но координатам нельзя доверить подтверждение: устарели или приблизительные у Мекки. */
+    data object LocationUnconfirmed : QiblaGuidance
 
     data object Aligned : QiblaGuidance
 }
@@ -137,10 +160,7 @@ fun qiblaUiState(
         is LocationStatus.Found -> location.fix
     }
     val bearing = qiblaBearing(fix.latitude, fix.longitude)
-    val note = LocationNote(
-        approximate = access == LocationAccess.Approximate,
-        stale = nowMillis - fix.timeMillis > tuning.locationStaleMillis,
-    )
+    val note = locationNote(access, fix, nowMillis, tuning)
     when (heading) {
         HeadingStatus.NoSensor -> return QiblaUiState.NoCompass(bearing, note)
         HeadingStatus.Waiting -> return QiblaUiState.Compass(bearing, note, pointer = null, QiblaGuidance.Waiting)
@@ -151,6 +171,7 @@ fun qiblaUiState(
         pointer.lowAccuracy -> QiblaGuidance.LowAccuracy
         pointer.tilted -> QiblaGuidance.Tilted(pointer.side, pointer.amount)
         pointer.aligned -> QiblaGuidance.Aligned
+        pointer.heldByLocation -> QiblaGuidance.LocationUnconfirmed
         else -> QiblaGuidance.Turn(pointer.side, pointer.amount)
     }
     return QiblaUiState.Compass(bearing, note, pointer, guidance)

@@ -9,6 +9,7 @@ import android.os.SystemClock
 import app.inabah.android.core.qibla.HeadingSource
 import app.inabah.android.core.qibla.MagneticHeading
 import app.inabah.android.core.qibla.normalizeDegrees
+import app.inabah.android.core.qibla.sensorReportsLowAccuracy
 import kotlin.math.acos
 import kotlin.math.sqrt
 import kotlinx.coroutines.channels.awaitClose
@@ -30,17 +31,15 @@ class AndroidHeadingSource(context: Context) : HeadingSource {
     override fun headings(): Flow<MagneticHeading> = callbackFlow {
         val rotation = FloatArray(MATRIX_SIZE)
         val orientation = FloatArray(ORIENTATION_SIZE)
-        // Магнитометр - сигнал калибровки и помех (2026-10-24, телефон пользователя: у датчика направления Xiaomi
-        // оценки точности нет, values[4] = -1, статус не меняется). Колбэки обоих датчиков - на главном потоке.
-        var magnetStatus = SensorManager.SENSOR_STATUS_ACCURACY_HIGH
-        var interference = false
+        // Магнитометр - сигнал калибровки и сила поля для помех (2026-10-24, телефон пользователя: у датчика
+        // направления Xiaomi оценки точности нет, values[4] = -1). Колбэки обоих датчиков - на главном потоке.
+        var magnetStatus: Int? = null
+        var field: Double? = null
         val magnetListener = object : SensorEventListener {
             override fun onSensorChanged(event: SensorEvent) {
                 magnetStatus = event.accuracy
                 val (x, y, z) = event.values
-                val field = sqrt(x * x + y * y + z * z)
-                // Поле Земли - примерно 25-65 мкТл; дальше - металл или магнит рядом. Гистерезис - флаг не мигает у края.
-                interference = if (interference) field !in FIELD_CLEAR_MIN..FIELD_CLEAR_MAX else field !in FIELD_MIN..FIELD_MAX
+                field = sqrt(x * x + y * y + z * z).toDouble()
             }
 
             override fun onAccuracyChanged(sensor: Sensor, accuracy: Int) = Unit
@@ -58,14 +57,11 @@ class AndroidHeadingSource(context: Context) : HeadingSource {
                         magneticAzimuth = normalizeDegrees(Math.toDegrees(orientation[0].toDouble())),
                         accuracyDegrees = accuracy,
                         // Статус - из самого показания: onAccuracyChanged при старте может не прийти (ревью 2026-10-24).
-                        // «Низкий» у датчика направления - только без оценки в градусах: часть телефонов держит его всегда.
-                        lowAccuracy = event.accuracy == SensorManager.SENSOR_STATUS_UNRELIABLE ||
-                            (accuracy == null && event.accuracy == SensorManager.SENSOR_STATUS_ACCURACY_LOW) ||
-                            magnetStatus <= SensorManager.SENSOR_STATUS_ACCURACY_LOW ||
-                            interference,
+                        lowAccuracy = sensorReportsLowAccuracy(event.accuracy, hasEstimate = accuracy != null, magnet = magnetStatus),
                         // Угол между осью экрана и вертикалью: 0 - лежит экраном вверх.
                         tiltDegrees = Math.toDegrees(acos(rotation[Z_OF_Z].coerceIn(-1f, 1f).toDouble())),
                         timeMillis = SystemClock.elapsedRealtime(),
+                        fieldMicroTesla = field,
                     ),
                 )
             }
@@ -73,7 +69,8 @@ class AndroidHeadingSource(context: Context) : HeadingSource {
             override fun onAccuracyChanged(sensor: Sensor, accuracy: Int) = Unit
         }
         val registered = sensor != null && manager.registerListener(listener, sensor, SensorManager.SENSOR_DELAY_GAME)
-        if (!registered) close()
+        // Не подписались - ошибка: экран покажет «Компаса нет», а не вечное «Настраиваем компас» (аудит 2026-10-24).
+        if (!registered) close(IllegalStateException("Датчик направления недоступен"))
         magnet?.let { manager.registerListener(magnetListener, it, SensorManager.SENSOR_DELAY_UI) }
         awaitClose {
             manager?.unregisterListener(listener)
@@ -86,11 +83,5 @@ class AndroidHeadingSource(context: Context) : HeadingSource {
         const val ORIENTATION_SIZE = 3
         const val HEADING_ACCURACY_INDEX = 4
         const val Z_OF_Z = 8
-
-        /** Сила поля, мкТл: вне - помеха; снова чисто - только внутри более узких границ. */
-        const val FIELD_MIN = 22f
-        const val FIELD_MAX = 70f
-        const val FIELD_CLEAR_MIN = 25f
-        const val FIELD_CLEAR_MAX = 65f
     }
 }

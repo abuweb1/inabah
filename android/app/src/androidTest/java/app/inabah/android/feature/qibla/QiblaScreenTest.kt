@@ -112,6 +112,23 @@ class QiblaScreenTest {
     }
 
     @Test
+    fun staleLocationHoldsConfirmationAndOffersRefresh() {
+        show(compass(1.0, QiblaGuidance.LocationUnconfirmed, LocationNote(approximate = false, stale = true)))
+        compose.onNodeWithText("Обновите местоположение").assertIsDisplayed()
+        compose.onAllNodesWithText("Направление найдено").assertCountEquals(0)
+        compose.onAllNodesWithText("Обновить")[0].performClick() // кнопка под надписью
+        compose.runOnIdle { check(calls == listOf("refresh")) }
+    }
+
+    @Test
+    fun approximateNearKaabaAsksForPreciseLocation() {
+        show(compass(1.0, QiblaGuidance.LocationUnconfirmed, LocationNote(approximate = true, stale = false, nearKaaba = true)))
+        compose.onNodeWithText("Нужно точное местоположение").assertIsDisplayed()
+        compose.onNodeWithText("Открыть настройки").performClick()
+        compose.runOnIdle { check(calls == listOf("appSettings")) }
+    }
+
+    @Test
     fun alignedShowsConfirmation() {
         show(compass(1.0, QiblaGuidance.Aligned))
         compose.onNodeWithText("Вы направлены к Къибле").assertIsDisplayed()

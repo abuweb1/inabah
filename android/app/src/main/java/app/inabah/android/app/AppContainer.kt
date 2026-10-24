@@ -38,7 +38,7 @@ import app.inabah.android.core.settings.PackageManagerAppIconSwitcher
 import app.inabah.android.core.settings.ParchmentSettings
 import app.inabah.android.core.settings.PlaylistSettings
 import app.inabah.android.core.settings.PreferencesStorage
-import app.inabah.android.core.settings.OneTimeHint
+import app.inabah.android.core.settings.OnceFlag
 import app.inabah.android.core.settings.ReadingProgress
 import app.inabah.android.core.settings.ReadingSettings
 import app.inabah.android.core.settings.ReminderSettings
@@ -87,8 +87,9 @@ class AppServices(
     val whatsNew: WhatsNew,
     val updateSource: UpdateSource,
     val qibla: QiblaModel,
-    val qiblaEntryHint: OneTimeHint,
-    val qiblaHelpHint: OneTimeHint,
+    val qiblaEntryHint: OnceFlag,
+    val qiblaHelpHint: OnceFlag,
+    val qiblaLocationAsked: OnceFlag,
 )
 
 /**
@@ -250,11 +251,12 @@ class AppContainer(context: Context) {
             qibla = QiblaModel(
                 location = AndroidLocationSource(appContext, QiblaTuning.Default.locationTimeoutMillis),
                 heading = AndroidHeadingSource(appContext),
-                declination = GeomagneticDeclination,
+                magnetic = AndroidMagneticModel,
                 now = ::qiblaClock,
             ),
-            qiblaEntryHint = OneTimeHint(storage, OneTimeHint.QIBLA_ENTRY),
-            qiblaHelpHint = OneTimeHint(storage, OneTimeHint.QIBLA_HELP),
+            qiblaEntryHint = OnceFlag(storage, OnceFlag.QIBLA_ENTRY_HINT),
+            qiblaHelpHint = OnceFlag(storage, OnceFlag.QIBLA_HELP_HINT),
+            qiblaLocationAsked = OnceFlag(storage, OnceFlag.QIBLA_LOCATION_ASKED),
         )
     }
 

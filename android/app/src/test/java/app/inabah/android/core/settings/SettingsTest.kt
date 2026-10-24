@@ -41,12 +41,12 @@ class ReadingSettingsTest {
 
     @Test
     fun `Подсказка у кнопки «Къибла» - один раз, и после перезапуска`() = TestStorage.run { storage ->
-        val hint = OneTimeHint(storage.storage, OneTimeHint.QIBLA_ENTRY)
-        assertFalse(hint.seen)
-        hint.markSeen()
+        val hint = OnceFlag(storage.storage, OnceFlag.QIBLA_ENTRY_HINT)
+        assertFalse(hint.isSet)
+        hint.set()
         val restarted = storage.restart()
-        assertTrue(OneTimeHint(restarted, OneTimeHint.QIBLA_ENTRY).seen)
-        assertFalse(OneTimeHint(restarted, OneTimeHint.QIBLA_HELP).seen, "у подсказки ⓘ - свой признак")
+        assertTrue(OnceFlag(restarted, OnceFlag.QIBLA_ENTRY_HINT).isSet)
+        assertFalse(OnceFlag(restarted, OnceFlag.QIBLA_HELP_HINT).isSet, "у подсказки ⓘ - свой признак")
     }
 
     @Test

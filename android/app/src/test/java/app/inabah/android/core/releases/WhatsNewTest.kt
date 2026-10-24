@@ -5,6 +5,8 @@ import app.inabah.android.core.content.ContentLanguagePriority
 import app.inabah.android.core.settings.PreferencesStorage
 import app.inabah.android.core.settings.TestStorage
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
+import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -36,6 +38,15 @@ class WhatsNewTest {
         val afterRestart = whatsNew(test.restart()).apply { check() }
         assertNull(afterRestart.pending.value)
         assertEquals("1.1.1", test.persisted()[WhatsNew.KEY])
+    }
+
+    @Test
+    fun `Проверка закончена - видно и когда показывать нечего`() = TestStorage.run { test ->
+        val fresh = whatsNew(test.storage, isFreshInstall = true)
+        assertFalse(fresh.checked.value, "до проверки null в pending ещё не значит «нечего»")
+        fresh.check()
+        assertTrue(fresh.checked.value)
+        assertNull(fresh.pending.value)
     }
 
     @Test
