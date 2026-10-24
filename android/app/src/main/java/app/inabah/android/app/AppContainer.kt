@@ -7,6 +7,8 @@ import androidx.datastore.core.handlers.ReplaceFileCorruptionHandler
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.preferencesDataStoreFile
+import app.inabah.android.core.qibla.QiblaModel
+import app.inabah.android.core.qibla.QiblaTuning
 import app.inabah.android.core.audio.AudioPlayerController
 import app.inabah.android.core.audio.ClipPlayer
 import app.inabah.android.core.audio.MediaControllerEngine
@@ -83,6 +85,7 @@ class AppServices(
     val releaseNotes: ReleaseNotesSource,
     val whatsNew: WhatsNew,
     val updateSource: UpdateSource,
+    val qibla: QiblaModel,
 )
 
 /**
@@ -241,6 +244,12 @@ class AppContainer(context: Context) {
             } else {
                 NoUpdateSource
             },
+            qibla = QiblaModel(
+                location = AndroidLocationSource(appContext, QiblaTuning.Default.locationTimeoutMillis),
+                heading = AndroidHeadingSource(appContext),
+                declination = GeomagneticDeclination,
+                now = ::qiblaClock,
+            ),
         )
     }
 
