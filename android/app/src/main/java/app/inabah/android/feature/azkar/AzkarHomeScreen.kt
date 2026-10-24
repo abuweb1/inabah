@@ -49,6 +49,9 @@ private const val VERSE_ARABIC = "وَأَنِيبُوا إِلَىٰ رَبِّ
 private const val PLAY_STORE_URL = "https://play.google.com/store/apps/details?id="
 private val UpdateDotSize = 10.dp
 
+/** Кааба в кнопке «Къибла» (решение пользователя 2026-10-24: 28 dp в круге 40). */
+private val QiblaIconSize = 28.dp
+
 /** Главная «Азкары» (iOS `AzkarHomeView`): бренд, аят Аз-Зумар 39:54, серия дней, карточки разделов. */
 @Composable
 fun AzkarHomeScreen(
@@ -59,6 +62,7 @@ fun AzkarHomeScreen(
     updateSource: UpdateSource,
     onOpenSection: (AzkarSection) -> Unit,
     onOpenCalendar: () -> Unit,
+    onOpenQibla: () -> Unit,
     contentPadding: PaddingValues,
     modifier: Modifier = Modifier,
 ) {
@@ -80,6 +84,17 @@ fun AzkarHomeScreen(
         contentPadding = contentPadding,
         modifier = modifier,
         leadingAction = update?.let { available -> { UpdateButton(available) } },
+        // «Къибла» (1.3.0, набросок docs/design/qibla-entry.html): Кааба в своих цветах, стекло - цвета раздела.
+        topAction = {
+            GlassIconButton(
+                onClick = onOpenQibla,
+                iconRes = R.drawable.qibla_kaaba_icon,
+                contentDescription = stringResource(R.string.qibla_title),
+                tint = theme.palette.tabAzkar,
+                iconSize = QiblaIconSize,
+                tinted = false,
+            )
+        },
     ) {
         val today by store.streakDay.collectAsStateWithLifecycle()
         val days by history.days.collectAsStateWithLifecycle()

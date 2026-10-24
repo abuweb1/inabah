@@ -3,6 +3,7 @@ package app.inabah.android.feature.azkar
 import android.text.format.DateFormat
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
@@ -313,7 +314,7 @@ class AzkarListScreenTest {
         val store = store(1, 3)
         compose.runOnIdle { runBlocking { store.loadAll() } }
         compose.setContent {
-            InabahTheme { AzkarHomeScreen(store, AzkarHistory(storage) { throw AssertionError(it) }, windowSettings, ReminderSettings(storage), NoUpdateSource, onOpenSection = {}, onOpenCalendar = {}, contentPadding = PaddingValues()) }
+            InabahTheme { AzkarHomeScreen(store, AzkarHistory(storage) { throw AssertionError(it) }, windowSettings, ReminderSettings(storage), NoUpdateSource, onOpenSection = {}, onOpenCalendar = {}, onOpenQibla = {}, contentPadding = PaddingValues()) }
         }
 
         // 13:00 — вне окна оба раздела: у утренних время окна (в любом формате системы есть «12:00»),
@@ -324,13 +325,25 @@ class AzkarListScreenTest {
         compose.onAllNodesWithContentDescription("Выполнено на", substring = true).assertCountEquals(0)
     }
 
+    // «Къибла» (1.3.0): круглая кнопка с Каабой справа вверху открывает экран направления.
+    @Test
+    fun homeQiblaButtonOpensQibla() {
+        val store = store(1, 3)
+        var opened = 0
+        compose.setContent {
+            InabahTheme { AzkarHomeScreen(store, AzkarHistory(storage) { throw AssertionError(it) }, windowSettings, ReminderSettings(storage), NoUpdateSource, onOpenSection = {}, onOpenCalendar = {}, onOpenQibla = { opened++ }, contentPadding = PaddingValues()) }
+        }
+        compose.onNodeWithContentDescription("Къибла").assertHasClickAction().performClick()
+        compose.runOnIdle { check(opened == 1) }
+    }
+
     // «Обновить» (2026-10-10): в релизе обновления нет — значка нет; есть (подделка) — значок с номером для TalkBack.
     @Test
     fun homeShowsUpdateButtonOnlyWhenUpdateIsAvailable() {
         val store = store(1, 3)
         var source by mutableStateOf<UpdateSource>(NoUpdateSource)
         compose.setContent {
-            InabahTheme { AzkarHomeScreen(store, AzkarHistory(storage) { throw AssertionError(it) }, windowSettings, ReminderSettings(storage), source, onOpenSection = {}, onOpenCalendar = {}, contentPadding = PaddingValues()) }
+            InabahTheme { AzkarHomeScreen(store, AzkarHistory(storage) { throw AssertionError(it) }, windowSettings, ReminderSettings(storage), source, onOpenSection = {}, onOpenCalendar = {}, onOpenQibla = {}, contentPadding = PaddingValues()) }
         }
         compose.waitForIdle()
         compose.onAllNodesWithContentDescription("Доступна версия", substring = true).assertCountEquals(0)

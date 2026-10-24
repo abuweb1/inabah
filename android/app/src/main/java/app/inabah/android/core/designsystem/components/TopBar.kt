@@ -405,6 +405,7 @@ fun TopBarSubtitle(text: String) {
 /**
  * Круглая «стеклянная» кнопка навбара: круг 40 (зона касания 48). [iconSize] — значок Material:
  * обычные значки (↺ «Восстановить») — [GlassSymbolSize]; у «‹» поля шире — она передаёт [GlassChevronSize].
+ * [tinted] `false` — картинка в своих цветах (Кааба на главной «Азкаров»), перекрашивается только стекло.
  */
 @Composable
 fun GlassIconButton(
@@ -415,6 +416,7 @@ fun GlassIconButton(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     iconSize: Dp = GlassSymbolSize,
+    tinted: Boolean = true,
 ) {
     val interaction = remember { MutableInteractionSource() }
     val pressed = rememberPressProgress(interaction, glassPressSpec(), glassReleaseSpec())
@@ -442,18 +444,22 @@ fun GlassIconButton(
                 },
             contentAlignment = Alignment.Center,
         ) {
-            // Цвет значка читается при отрисовке: нажатие не перестраивает кнопку каждый кадр.
-            Icon(
-                painterResource(iconRes),
-                contentDescription,
-                modifier = Modifier
-                    .size(iconSize)
-                    .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
-                    .drawWithContent {
-                        drawContent()
-                        drawRect(lerp(colors.icon, colors.pressedIcon, pressed.value.coerceIn(0f, 1f)), blendMode = BlendMode.SrcIn)
-                    },
-            )
+            if (!tinted) {
+                Icon(painterResource(iconRes), contentDescription, Modifier.size(iconSize), tint = Color.Unspecified)
+            } else {
+                // Цвет значка читается при отрисовке: нажатие не перестраивает кнопку каждый кадр.
+                Icon(
+                    painterResource(iconRes),
+                    contentDescription,
+                    modifier = Modifier
+                        .size(iconSize)
+                        .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
+                        .drawWithContent {
+                            drawContent()
+                            drawRect(lerp(colors.icon, colors.pressedIcon, pressed.value.coerceIn(0f, 1f)), blendMode = BlendMode.SrcIn)
+                        },
+                )
+            }
         }
     }
 }
@@ -574,6 +580,8 @@ fun GlassCapsuleButton(
     tint: Color,
     modifier: Modifier = Modifier,
     onClickLabel: String? = null,
+    /** Стекло во всю ширину [modifier], содержимое по центру («Как повысить точность» на «Къибле»). */
+    fillWidth: Boolean = false,
     content: @Composable RowScope.() -> Unit,
 ) {
     val interaction = remember { MutableInteractionSource() }
@@ -587,6 +595,7 @@ fun GlassCapsuleButton(
     ) {
         Row(
             modifier = Modifier
+                .then(if (fillWidth) Modifier.fillMaxWidth() else Modifier)
                 .graphicsLayer {
                     val scale = 1f + (CAPSULE_PRESS_SCALE - 1f) * pressed.value
                     scaleX = scale
@@ -607,7 +616,7 @@ fun GlassCapsuleButton(
                     drawContent()
                     drawRect(colors.pressedIcon, alpha = pressed.value.coerceIn(0f, 1f), blendMode = BlendMode.SrcAtop)
                 },
-            horizontalArrangement = Arrangement.spacedBy(Spacing.xs),
+            horizontalArrangement = Arrangement.spacedBy(Spacing.xs, Alignment.CenterHorizontally),
             verticalAlignment = Alignment.CenterVertically,
             content = content,
         )

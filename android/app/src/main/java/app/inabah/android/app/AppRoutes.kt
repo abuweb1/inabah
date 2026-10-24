@@ -17,6 +17,10 @@ sealed interface AzkarRoute {
     /** «Календарь азкаров» — из капсулы серии дней на главной. */
     @Serializable
     data object Calendar : AzkarRoute
+
+    /** «Къибла» - из круглой кнопки с Каабой справа вверху на главной (1.3.0). */
+    @Serializable
+    data object Qibla : AzkarRoute
 }
 
 @Serializable
