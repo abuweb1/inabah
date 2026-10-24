@@ -32,7 +32,8 @@ nonisolated struct TranslationColors: Hashable, Sendable {
 }
 
 /// Блок перевода зикра и хадиса (решение пользователя 2026-10-10, `docs/analysis/2026-10-10-shared-translation-block.md`;
-/// на Android — `TranslationBlock`): передатчик (как в данных, без подписи), транскрипция, перевод (в пузыре или просто текстом),
+/// на Android — `TranslationBlock`): транскрипция, линия под ней (если дальше передатчик, 2026-10-24),
+/// передатчик (как в данных, без подписи) — сразу перед переводом, перевод (в пузыре или просто текстом),
 /// `belowText` (сноски хадиса), источник и справа от него — `sourceTrailing` (действия хадиса) на уровне
 /// последней строки. Сворачивает блок не он, а экран. Язык — язык перевода (переносы); шрифты — переводов
 /// (растут с «Размером переводов»).
@@ -62,22 +63,24 @@ struct TranslationBlock<Below: View, Trailing: View>: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: Spacing.s) {
-            if let narrator {
-                Text(verbatim: narrator)
-                    .font(.content(.note, scale: scale, weight: .semibold))
-                    .foregroundStyle(colors.lead)
-                    .environment(\.locale, contentLocale)
-                if narratorDivider {
-                    Rectangle()
-                        .fill(theme.palette.hairline)
-                        .frame(height: Size.hairline)
-                }
-            }
             if let transliteration {
                 Text(verbatim: transliteration)
                     .font(.content(.transliteration, scale: scale))
                     .foregroundStyle(colors.lead)
                     .environment(\.locale, contentLocale)
+            }
+            if let narrator {
+                // Линия под транскрипцией — видно, где она кончается (решение пользователя 2026-10-24).
+                if transliteration != nil {
+                    hairline
+                }
+                Text(verbatim: narrator)
+                    .font(.content(.note, scale: scale, weight: .semibold))
+                    .foregroundStyle(colors.lead)
+                    .environment(\.locale, contentLocale)
+                if narratorDivider {
+                    hairline
+                }
             }
             translation
             belowText
@@ -89,6 +92,12 @@ struct TranslationBlock<Below: View, Trailing: View>: View {
     /// Язык перевода — только для текстов контента (переносы): подписи интерфейса внутри блока
     /// (закладка, «Сноски: N», VoiceOver) остаются на языке интерфейса (аудит iOS 1.1.1, А6).
     private var contentLocale: Locale { Locale(identifier: language.rawValue) }
+
+    private var hairline: some View {
+        Rectangle()
+            .fill(theme.palette.hairline)
+            .frame(height: Size.hairline)
+    }
 
     @ViewBuilder
     private var translation: some View {

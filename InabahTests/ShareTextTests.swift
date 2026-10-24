@@ -57,14 +57,14 @@ struct ShareTextTests {
         ])
     }
 
-    @Test("Зикр с передатчиком: как в данных, без «Передал:» — после «N раз», перед транскрипцией")
+    @Test("Зикр с передатчиком: как в данных, без «Передал:» — после транскрипции, перед переводом")
     func zikrWithNarrator() {
         let zikr = Self.zikr(translation: ZikrTranslation(
             language: .base, text: "Пречист Аллах", transliteration: "Субхана-Ллах", source: nil, narrator: "Абу Хурайра"
         ))
 
         #expect(zikr.shareText.components(separatedBy: ShareText.blockSeparator) == [
-            "Утренние азкары", "سُبْحَانَ اللَّهِ", "100 раз", "Абу Хурайра", "Субхана-Ллах", "Пречист Аллах", Self.iphone, Self.android,
+            "Утренние азкары", "سُبْحَانَ اللَّهِ", "100 раз", "Субхана-Ллах", "Абу Хурайра", "Пречист Аллах", Self.iphone, Self.android,
         ])
     }
 
