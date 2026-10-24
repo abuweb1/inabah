@@ -8,9 +8,12 @@ import Testing
 struct BundledContentTests {
     let repository = BundleContentRepository(languages: ContentLanguagePriority(languages: [.base]))
 
+    /// Записаны первые 16 зикров раздела; новые (с 2026-10-24, утро 17-21, вечер 17-22) - пока без записи.
+    private static let recordedAzkar = 16
+
     @Test("Азкары раздела загружаются", arguments: [
-        (AzkarSection.morning, 16),
-        (AzkarSection.evening, 16),
+        (AzkarSection.morning, 21),
+        (AzkarSection.evening, 22),
     ])
     func azkarLoad(section: AzkarSection, expectedCount: Int) async throws {
         let azkar = try await repository.azkar(in: section)
@@ -22,14 +25,17 @@ struct BundledContentTests {
         #expect(azkar.allSatisfy { $0.repetitions >= 1 })
     }
 
-    /// Свои записи (2026-10-12, `docs/process/audio.md`): у каждого зикра — файл в Bundle.
-    @Test("Записи азкаров: у каждого зикра есть файл в Bundle", arguments: AzkarSection.allCases)
+    /// Свои записи (2026-10-12, `docs/process/audio.md`): у записанных зикров — файл в Bundle, у новых — записи нет.
+    @Test("Записи азкаров: у записанных зикров есть файл в Bundle", arguments: AzkarSection.allCases)
     @MainActor
     func everyZikrHasAudio(section: AzkarSection) async throws {
         let azkar = try await repository.azkar(in: section)
 
-        for zikr in azkar {
+        for zikr in azkar.prefix(Self.recordedAzkar) {
             #expect(zikr.audioTrack() != nil, "\(section) \(zikr.number): нет файла \(zikr.audioFileName ?? "—")")
+        }
+        for zikr in azkar.dropFirst(Self.recordedAzkar) {
+            #expect(zikr.audioTrack() == nil, "\(section) \(zikr.number): запись появилась - поправить recordedAzkar")
         }
     }
 
@@ -38,7 +44,8 @@ struct BundledContentTests {
     @Test("Общая запись утреннего и вечернего — только при одинаковом арабском")
     func sharedAudioMatchesText() async throws {
         let all = try await repository.azkar(in: .morning) + repository.azkar(in: .evening)
-        let shared = Dictionary(grouping: all) { $0.audioFileName ?? "" }.filter { $0.value.count > 1 }
+        let recorded = all.filter(\.hasAudio)
+        let shared = Dictionary(grouping: recorded) { $0.audioFileName ?? "" }.filter { $0.value.count > 1 }
 
         #expect(shared.count == 12)
         for (file, azkar) in shared {
