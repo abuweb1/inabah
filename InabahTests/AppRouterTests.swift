@@ -15,6 +15,23 @@ struct AppRouterTests {
         #expect(router.azkarPath.isEmpty)
     }
 
+    @Test("Главный экран вкладки — по пути выбранной вкладки")
+    func onTabRoot() {
+        let router = AppRouter()
+        #expect(router.isOnTabRoot)
+
+        router.open(.list(.morning))
+        #expect(!router.isOnTabRoot)
+
+        router.select(.hadith)
+        #expect(router.isOnTabRoot)
+
+        router.select(.azkar)
+        #expect(!router.isOnTabRoot)
+        router.select(.azkar)
+        #expect(router.isOnTabRoot)
+    }
+
     @Test("Выбор другой вкладки не трогает путь")
     func selectOtherTabKeepsPath() {
         let router = AppRouter()

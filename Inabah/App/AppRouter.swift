@@ -87,6 +87,17 @@ final class AppRouter {
     var makharijPath: [MakharijRoute] = []
     var settingsPath: [SettingsRoute] = []
 
+    /// Выбранная вкладка на своём главном экране (стек пуст) — панель вкладок полная; на внутреннем экране
+    /// она компактная (Android-first 2026-10-24, `AppRouter.isOnTabRoot`).
+    var isOnTabRoot: Bool {
+        switch selectedTab {
+        case .azkar: azkarPath.isEmpty
+        case .hadith: hadithPath.isEmpty
+        case .makharij: makharijPath.isEmpty
+        case .settings: settingsPath.isEmpty
+        }
+    }
+
     /// Выбор вкладки из таб-бара. Повторный выбор активной вкладки возвращает к её корню.
     /// `TabView` вызывает установку выбора и во время отрисовки (при запуске) — поэтому
     /// состояние меняется, только если действительно есть что менять: иначе SwiftUI
