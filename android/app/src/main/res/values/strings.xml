@@ -86,6 +86,19 @@
     <string name="azkar_completion_title">Машаа Аллах!</string>
     <string name="azkar_completion_verse_reference">Къуран · аль-Ахзаб 33:41–42</string>
     <string name="azkar_completion_verse_translation">«О те, которые уверовали! Поминайте Аллаха (сердцем, устами и в делах) многократным поминанием, и восславляйте Его по утрам и по вечерам!»</string>
+    <!-- «Состав азкаров» (Android-first 2026-10-24): docs/android/06-screens.md, «Состав азкаров». -->
+    <string name="azkar_composition_add">Добавить</string>
+    <string name="azkar_composition_available">Можно добавить · %1$d</string>
+    <string name="azkar_composition_hint">Уберите лишние зикры и добавьте нужные из списка ниже. Порядок - перетаскиванием за ручку справа. Изменения применятся, когда вы уйдёте с экрана.</string>
+    <string name="azkar_composition_in_set">В наборе · %1$d</string>
+    <string name="azkar_composition_move_down">Ниже</string>
+    <string name="azkar_composition_move_up">Выше</string>
+    <string name="azkar_composition_remove">Убрать</string>
+    <string name="azkar_composition_repetitions">×%1$d</string>
+    <string name="azkar_composition_restore">Вернуть набор по умолчанию</string>
+    <string name="azkar_composition_restore_action">Вернуть</string>
+    <string name="azkar_composition_restore_message">Набор и порядок зикров станут такими, как изначально.</string>
+    <string name="azkar_composition_restore_title">Вернуть набор по умолчанию?</string>
     <string name="azkar_evening_subtitle">После намаза Аср</string>
     <string name="azkar_evening_title">Вечерние азкары</string>
     <string name="azkar_morning_subtitle">После намаза Фаджр</string>
@@ -363,7 +376,10 @@
     <string name="settings_app_icon_title">Иконка приложения</string>
     <string name="settings_app_icon_unsupported" tools:ignore="UnusedResources">Смена иконки недоступна на этом устройстве.</string>
     <string name="settings_appearance_header">Оформление</string>
-    <string name="settings_azkar_subtitle">Время азкаров и сброс прогресса</string>
+    <string name="settings_azkar_subtitle">Время, состав и сброс прогресса</string>
+    <string name="settings_azkar_composition_count">%1$d из %2$d</string>
+    <string name="settings_azkar_composition_footer">Какие зикры читать и в каком порядке. По умолчанию - основной набор.</string>
+    <string name="settings_azkar_composition_header">Состав азкаров</string>
     <string name="settings_azkar_history_footer">По ней строятся календарь азкаров и серия дней подряд. Счётчики разделов не обнуляются.</string>
     <string name="settings_azkar_history_header">История азкаров</string>
     <string name="settings_azkar_history_reset">Сбросить историю</string>

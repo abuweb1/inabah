@@ -65,6 +65,7 @@ import app.inabah.android.feature.settings.AboutScreen
 import app.inabah.android.feature.settings.AppIconSettingsScreen
 import app.inabah.android.feature.settings.LicenseScreen
 import app.inabah.android.feature.settings.LicensesScreen
+import app.inabah.android.feature.settings.AzkarCompositionScreen
 import app.inabah.android.feature.settings.AzkarSettingsScreen
 import app.inabah.android.feature.settings.HadithOrderSettingsScreen
 import app.inabah.android.feature.settings.HadithSettingsScreen
@@ -251,6 +252,16 @@ private fun TabScreens(tab: AppTab, services: AppServices, contentPadding: Paddi
                     playlistSettings = services.playlistSettings,
                     onBack = { router.pop(AppTab.Azkar) },
                     onGoHome = { router.popToRoot(AppTab.Azkar) },
+                    contentPadding = contentPadding.bottomOnly(),
+                    onOpenComposition = { router.push(AzkarRoute.Composition(route.section)) },
+                )
+            }
+            entry<AzkarRoute.Composition> { route ->
+                AzkarCompositionScreen(
+                    section = route.section,
+                    store = services.azkarStore,
+                    composition = services.azkarComposition,
+                    onBack = { router.pop(AppTab.Azkar) },
                     contentPadding = contentPadding.bottomOnly(),
                 )
             }
@@ -449,6 +460,16 @@ private fun TabScreens(tab: AppTab, services: AppServices, contentPadding: Paddi
                     history = services.azkarHistory,
                     windowSettings = services.azkarWindowSettings,
                     reminderSettings = services.reminderSettings,
+                    onBack = { router.pop(AppTab.Settings) },
+                    contentPadding = contentPadding.bottomOnly(),
+                    onOpenComposition = { router.push(SettingsRoute.AzkarComposition(it)) },
+                )
+            }
+            entry<SettingsRoute.AzkarComposition> { route ->
+                AzkarCompositionScreen(
+                    section = route.section,
+                    store = services.azkarStore,
+                    composition = services.azkarComposition,
                     onBack = { router.pop(AppTab.Settings) },
                     contentPadding = contentPadding.bottomOnly(),
                 )

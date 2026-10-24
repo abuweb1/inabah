@@ -128,6 +128,8 @@ fun AzkarListScreen(
     onGoHome: () -> Unit,
     contentPadding: PaddingValues,
     modifier: Modifier = Modifier,
+    /** «Состав азкаров» этого раздела (кнопка «⇅» в шапке); `null` — кнопки нет. */
+    onOpenComposition: (() -> Unit)? = null,
 ) {
     val theme = LocalInabahTheme.current
     val state by store.state(section).collectAsStateWithLifecycle()
@@ -162,6 +164,15 @@ fun AzkarListScreen(
                 contentDescription = stringResource(R.string.reminder_action),
                 tint = theme.palette.tabAzkar,
             )
+            // «Состав азкаров» — быстрый вход из списка (решение пользователя 2026-10-24).
+            onOpenComposition?.let {
+                GlassIconButton(
+                    onClick = it,
+                    iconRes = R.drawable.ic_swap_vert,
+                    contentDescription = stringResource(R.string.settings_azkar_composition_header),
+                    tint = theme.palette.tabAzkar,
+                )
+            }
             FontSizeControls(
                 canDecrease = ReadingSettings.canDecrease(fontSize),
                 canIncrease = ReadingSettings.canIncrease(fontSize),
