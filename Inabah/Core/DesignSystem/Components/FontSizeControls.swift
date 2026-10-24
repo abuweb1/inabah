@@ -65,17 +65,18 @@ struct FontSizeControls: ToolbarContent {
 /// «А− А+» одной стеклянной капсулой из двух половин — Android `FontSizeControls` (`TopBar.kt`):
 /// нажатая половина светит от своего края (ярко у пальца, к другому краю темнее), обводка разгорается,
 /// капсула подаётся вперёд ×1.16. Высота — как у кругов навбара (36: навбар 44 обрезает всё выше).
-private struct GlassFontSizeCapsule: View {
+/// Шапка списка азкаров ставит её сама и на iOS 26–27 (`headerActions`) — там навбар выше, и `height` крупнее.
+struct GlassFontSizeCapsule: View {
     let settings: ReadingSettings
     let tint: Color
     let header: Color
+    var height = GlassIconButtonStyle.navigationBarDiameter
 
     @Environment(\.theme) private var theme
     @State private var decreasePressed = false
     @State private var increasePressed = false
 
     private static let halfWidth: CGFloat = 44
-    private static let height = GlassIconButtonStyle.navigationBarDiameter
     private static let pressScale: CGFloat = 1.16
     /// На границе яркой части (`glowSolid`) свет уже на 30 % ушёл к цвету дальнего края.
     private static let glowMid = 0.3
@@ -101,7 +102,7 @@ private struct GlassFontSizeCapsule: View {
                 settings.increaseArabicFontSize()
             }
         }
-        .frame(height: Self.height)
+        .frame(height: height)
         .background {
             ZStack {
                 Capsule().fill(colors.fill.color)

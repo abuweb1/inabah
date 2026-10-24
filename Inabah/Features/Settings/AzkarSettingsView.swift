@@ -45,6 +45,8 @@ struct AzkarSettingsView: View {
                 }
             }
 
+            compositionSection
+
             remindersSection
 
             SettingsGroup {
@@ -95,6 +97,32 @@ struct AzkarSettingsView: View {
         .onChange(of: scenePhase) { _, phase in
             if phase == .background { commitDrafts() }
         }
+    }
+
+    /// «Состав азкаров» (Android-first 2026-10-24, снимок `70`): по строке на раздел — «16 из 21» (в наборе / всего).
+    private var compositionSection: some View {
+        SettingsGroup {
+            ForEach(AzkarSection.allCases, id: \.self) { section in
+                NavigationLink(value: SettingsRoute.azkarComposition(section)) {
+                    SettingsLinkLabel {
+                        Text(section.title)
+                        Spacer(minLength: Spacing.s)
+                        let total = store.catalog(of: section).count
+                        if total > 0 {
+                            Text("settings.azkar.composition.count \(store.sessions(in: section).count) \(total)")
+                                .foregroundStyle(theme.palette.onAccentSecondary)
+                        }
+                    }
+                }
+            }
+        } header: {
+            Text("settings.azkar.composition.header")
+        } footer: {
+            Text("settings.azkar.composition.footer")
+                .foregroundStyle(theme.palette.onAccentSecondary)
+        }
+        // Счёт «из N» — по данным раздела: настройки могли открыть раньше списка азкаров.
+        .task { await store.loadAll() }
     }
 
     /// «История азкаров» (Android-first 2026-10-11, снимок `14a`): одна строка сброса, неактивна при пустой

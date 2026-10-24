@@ -902,6 +902,138 @@
         }
       }
     },
+    "azkar.composition.add" : {
+      "comment" : "Состав азкаров: кнопка «+» и действие VoiceOver",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Добавить"
+          }
+        }
+      }
+    },
+    "azkar.composition.available %lld" : {
+      "comment" : "Состав азкаров: заголовок группы зикров, которые можно добавить",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Можно добавить · %lld"
+          }
+        }
+      }
+    },
+    "azkar.composition.hint" : {
+      "comment" : "Состав азкаров: подпись под набором",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Уберите лишние зикры и добавьте нужные из списка ниже. Порядок - перетаскиванием за ручку справа. Изменения применятся, когда вы уйдёте с экрана."
+          }
+        }
+      }
+    },
+    "azkar.composition.inSet %lld" : {
+      "comment" : "Состав азкаров: заголовок группы набора с числом зикров",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "В наборе · %lld"
+          }
+        }
+      }
+    },
+    "azkar.composition.moveDown" : {
+      "comment" : "Состав азкаров: действие VoiceOver - ниже",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ниже"
+          }
+        }
+      }
+    },
+    "azkar.composition.moveUp" : {
+      "comment" : "Состав азкаров: действие VoiceOver - выше",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Выше"
+          }
+        }
+      }
+    },
+    "azkar.composition.remove" : {
+      "comment" : "Состав азкаров: кнопка «−» и действие VoiceOver",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Убрать"
+          }
+        }
+      }
+    },
+    "azkar.composition.repetitions %lld" : {
+      "comment" : "Состав азкаров: сколько раз читать зикр",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "×%lld"
+          }
+        }
+      }
+    },
+    "azkar.composition.restore" : {
+      "comment" : "Состав азкаров: кнопка «↺» в навбаре (VoiceOver)",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вернуть набор по умолчанию"
+          }
+        }
+      }
+    },
+    "azkar.composition.restore.action" : {
+      "comment" : "Состав азкаров: подтверждение «↺» - кнопка",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вернуть"
+          }
+        }
+      }
+    },
+    "azkar.composition.restore.message" : {
+      "comment" : "Состав азкаров: подтверждение «↺» - пояснение",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Набор и порядок зикров станут такими, как изначально."
+          }
+        }
+      }
+    },
+    "azkar.composition.restore.title" : {
+      "comment" : "Состав азкаров: подтверждение «↺» - заголовок",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вернуть набор по умолчанию?"
+          }
+        }
+      }
+    },
     "azkar.evening.meta %lld" : {
       "comment" : "Подпись карточки вечерних азкаров",
       "localizations" : {
@@ -3428,6 +3560,39 @@
         }
       }
     },
+    "settings.azkar.composition.count %lld %lld" : {
+      "comment" : "Настройки азкаров: в наборе / всего зикров раздела",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld из %2$lld"
+          }
+        }
+      }
+    },
+    "settings.azkar.composition.footer" : {
+      "comment" : "Настройки азкаров: подпись группы «Состав азкаров»",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Какие зикры читать и в каком порядке. По умолчанию - основной набор."
+          }
+        }
+      }
+    },
+    "settings.azkar.composition.header" : {
+      "comment" : "Настройки азкаров: заголовок группы «Состав азкаров»; подпись кнопки в шапке списка азкаров",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Состав азкаров"
+          }
+        }
+      }
+    },
     "settings.azkar.history.footer" : {
       "comment" : "Настройки азкаров: пояснение к сбросу истории",
       "localizations" : {
@@ -3489,7 +3654,7 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Время азкаров и сброс прогресса"
+            "value" : "Время, состав и сброс прогресса"
           }
         }
       }

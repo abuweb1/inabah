@@ -15,9 +15,6 @@ struct AzkarListView: View {
 
     @State private var showsCompletion = false
 
-    private static let reminderIconSize: CGFloat = 20
-    private static let titleSize: CGFloat = 16
-
     var body: some View {
         content
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -34,40 +31,13 @@ struct AzkarListView: View {
             // плейлиста может ещё звучать.
             .audioPlayerInset()
             .background { AzkarCompletionWatcher(section: section, showsCompletion: $showsCompletion) }
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbarBackground(section.headerColor(in: theme), for: .navigationBar)
-            .toolbarBackgroundVisibility(.visible, for: .navigationBar)
-            .toolbarColorScheme(.dark, for: .navigationBar)
-            .toolbar {
-                // Заголовок — слева, сразу за «назад» (решение пользователя 2026-10-04, как в Android):
-                // по центру между «назад» и А−/А+ ему тесно. Без стеклянной подложки элемента.
-                if #available(iOS 26, *) {
-                    ToolbarItem(placement: .topBarLeading) { titleView }
-                        .sharedBackgroundVisibility(.hidden)
-                } else {
-                    ToolbarItem(placement: .topBarLeading) { titleView }
-                }
-                // «Сделать напоминание» — отдельной круглой кнопкой слева от «А− А+» (решение
-                // пользователя 2026-10-06). Чтобы на узких iPhone (390 pt) «А− А+» не уходили
-                // в меню «…», их капсула компактная, а заголовок — чуть меньше `headline`.
-                ToolbarItem(placement: .topBarTrailing) {
-                    ShareButton(title: "reminder.action", iconSize: Self.reminderIconSize) {
-                        section.reminderText
-                    }
-                    .headerIconButtonStyle(tint: theme.palette.tabAzkar, header: section.headerColor(in: theme))
-                    .fixedTextSize()
-                }
-                if #available(iOS 26, *) {
-                    ToolbarSpacer(.fixed, placement: .topBarTrailing)
-                }
-                FontSizeControls(
-                    settings: settings,
-                    compact: true,
-                    tint: theme.palette.tabAzkar,
-                    header: section.headerColor(in: theme)
-                )
+            // Шапка своя на всех iOS, как Android `InabahTopBar` (решение пользователя 2026-10-25): в системном
+            // навбаре iOS 26–27 сливал кнопки в одну капсулу и уводил их в меню «…», а не обрезал заголовок.
+            // Свайп «назад» от края работает и без навбара (`UINavigationController` в `GlassBackButton.swift`).
+            .safeAreaInset(edge: .top, spacing: 0) {
+                AzkarHeaderBar(section: section, settings: settings)
             }
-            .glassBackButton(tint: theme.palette.tabAzkar, header: section.headerColor(in: theme))
+            .toolbar(.hidden, for: .navigationBar)
             .task { await store.load(section) }
     }
 
@@ -95,22 +65,86 @@ struct AzkarListView: View {
                 }
         }
     }
+}
+
+/// Шапка списка азкаров — как Android `InabahTopBar` (`centerTitle = false`): «‹», заголовок с подзаголовком
+/// (не хватает места — многоточие) и справа «Сделать напоминание» (решение пользователя 2026-10-06),
+/// «Состав азкаров» (2026-10-24) и «А− А+» — стеклянные круги и капсула своего размера.
+private struct AzkarHeaderBar: View {
+    let section: AzkarSection
+    let settings: ReadingSettings
+
+    @Environment(\.theme) private var theme
+    @Environment(\.dismiss) private var dismiss
+
+    /// Как Android: строка 56, круги и капсула 40.
+    private static let barHeight: CGFloat = 56
+    private static let diameter = GlassIconButtonStyle.screenDiameter
+    private static let reminderIconSize: CGFloat = 20
+    private static let compositionIconSize: CGFloat = 20
+    private static let titleSize: CGFloat = 16
+
+    var body: some View {
+        HStack(spacing: Spacing.s) {
+            Button {
+                dismiss()
+            } label: {
+                Image(systemName: "chevron.backward")
+                    .font(.body.weight(.semibold))
+            }
+            .buttonStyle(glass)
+            .accessibilityLabel(Text("navigation.back"))
+            titleView
+                .frame(maxWidth: .infinity, alignment: .leading)
+            actions
+                .fixedSize()
+        }
+        .padding(.horizontal, Spacing.xl)
+        .frame(height: Self.barHeight)
+        .background { section.headerColor(in: theme).ignoresSafeArea(edges: .top) }
+        // Шапка не меняется с размером интерфейса.
+        .fixedTextSize()
+    }
+
+    private var glass: GlassIconButtonStyle {
+        GlassIconButtonStyle(tint: theme.palette.tabAzkar, header: section.headerColor(in: theme), diameter: Self.diameter)
+    }
+
+    private var actions: some View {
+        // Зона касания 44 у круга 40 даёт зазор 4 — добавка до видимых 12 (решение пользователя 2026-10-25).
+        HStack(spacing: Spacing.s) {
+            ShareButton(title: "reminder.action", iconSize: Self.reminderIconSize) {
+                section.reminderText
+            }
+            .buttonStyle(glass)
+            NavigationLink(value: AzkarRoute.composition(section)) {
+                Image(.compositionIcon)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: Self.compositionIconSize, height: Self.compositionIconSize)
+            }
+            .buttonStyle(glass)
+            .accessibilityLabel(Text("settings.azkar.composition.header"))
+            GlassFontSizeCapsule(
+                settings: settings,
+                tint: theme.palette.tabAzkar,
+                header: section.headerColor(in: theme),
+                height: Self.diameter
+            )
+        }
+    }
 
     private var titleView: some View {
         VStack(alignment: .leading, spacing: 0) {
-            // Чуть меньше `headline` (17): рядом с «Сделать напоминание» и «А− А+» на узких
-            // iPhone (390 pt) иначе «А− А+» уходят в меню «…» (решение пользователя 2026-10-06).
             Text(section.title)
                 .font(.system(size: Self.titleSize, weight: .semibold))
+                .lineLimit(1)
             Text(section.subtitle)
                 .font(.caption2)
                 .foregroundStyle(theme.palette.onAccentSecondary)
+                .lineLimit(1)
         }
         .foregroundStyle(theme.palette.onAccent)
-        // Элемент слева навбар сжимает до многоточия — заголовку нужна его натуральная ширина.
-        .fixedSize()
-        // Заголовок экрана не меняется с размером интерфейса.
-        .fixedTextSize()
         .accessibilityElement(children: .combine)
         .accessibilityAddTraits(.isHeader)
     }

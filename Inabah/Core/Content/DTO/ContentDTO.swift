@@ -23,6 +23,8 @@ nonisolated struct ZikrDTO: Decodable, Sendable {
     let audio: String?
     /// Сура или аят Корана (текст QPC Hafs); поле необязательное, нет — `false`.
     let quran: Bool?
+    /// Не входит в набор по умолчанию («Состав азкаров»); поле необязательное, нет — `false`.
+    let optional: Bool?
     let translations: [String: ZikrTranslationDTO]
 }
 
