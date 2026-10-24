@@ -44,6 +44,7 @@ class QiblaScreenTest {
         onRefreshLocation = { calls += "refresh" },
         onOpenHelp = { calls += "help" },
         onCloseHelp = { calls += "closeHelp" },
+        onRestart = { calls += "restart" },
     )
     private val fine = LocationNote(approximate = false, stale = false)
 
@@ -100,6 +101,13 @@ class QiblaScreenTest {
         show(compass(-42.0, QiblaGuidance.Turn(TurnSide.Left)))
         compose.onNodeWithText("Поверните налево").assertIsDisplayed()
         compose.onNodeWithContentDescription("Къибла слева, поверните на 40°").assertIsDisplayed()
+    }
+
+    @Test
+    fun restartButtonRestartsCompass() {
+        show(compass(20.0, QiblaGuidance.Turn(TurnSide.Right)))
+        compose.onNodeWithContentDescription("Перезапустить компас").performClick()
+        compose.runOnIdle { check(calls == listOf("restart")) }
     }
 
     @Test

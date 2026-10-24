@@ -64,6 +64,7 @@ import app.inabah.android.core.designsystem.ShadowToken
 import app.inabah.android.core.designsystem.Size
 import app.inabah.android.core.designsystem.Spacing
 import app.inabah.android.core.designsystem.components.GlassCapsuleButton
+import app.inabah.android.core.designsystem.components.GlassIconButton
 import app.inabah.android.core.designsystem.components.InabahTopBar
 import app.inabah.android.core.designsystem.components.PrimaryButton
 import app.inabah.android.core.designsystem.components.SlideUpSheet
@@ -126,13 +127,15 @@ private val DialogBlur = HazeBlurStyle {
 @Composable
 fun QiblaScreen(model: QiblaModel, onBack: () -> Unit, contentPadding: PaddingValues, modifier: Modifier = Modifier) {
     val permission = rememberLocationPermission()
-    val flow = remember(model, permission.access) { model.state(permission.access) }
+    // «Перезапустить компас» (решение пользователя 2026-10-24): новая подписка - координаты заново, метка без сглаживания.
+    var session by rememberSaveable { mutableIntStateOf(0) }
+    val flow = remember(model, permission.access, session) { model.state(permission.access) }
     // Поток показаний (~50 в секунду) здесь не читается: экран перестраивается только по смене состояния (ревью 2026-10-24).
     val state = flow.collectAsStateWithLifecycle(QiblaUiState.Loading)
     var dialogDismissed by rememberSaveable { mutableStateOf(false) }
     var helpVisible by rememberSaveable { mutableStateOf(false) }
 
-    QiblaHaptics(state)
+    QiblaHaptics(state, session)
 
     val actions = remember(model, permission.access, onBack) {
         QiblaActions(
@@ -148,6 +151,7 @@ fun QiblaScreen(model: QiblaModel, onBack: () -> Unit, contentPadding: PaddingVa
             onRefreshLocation = model::refreshLocation,
             onOpenHelp = { helpVisible = true },
             onCloseHelp = { helpVisible = false },
+            onRestart = { session++ },
         )
     }
     QiblaContent(
@@ -166,18 +170,19 @@ fun QiblaScreen(model: QiblaModel, onBack: () -> Unit, contentPadding: PaddingVa
  * после возврата на экран начинает трекер с нуля - и запомненный счёт тоже.
  */
 @Composable
-private fun QiblaHaptics(state: State<QiblaUiState>) {
+private fun QiblaHaptics(state: State<QiblaUiState>, session: Int) {
     val haptic = LocalHapticFeedback.current
     var heard by remember { mutableIntStateOf(0) }
     LifecycleStartEffect(Unit) {
         heard = 0
         onStopOrDispose {}
     }
-    LaunchedEffect(state) {
+    LaunchedEffect(state, session) {
+        heard = 0
         snapshotFlow { (state.value as? QiblaUiState.Compass)?.pointer?.alignedEntries }
             .filterNotNull()
             .collect { entries ->
-                if (entries > heard) haptic.performHapticFeedback(HapticFeedbackType.Confirm)
+                if (entries > heard) haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                 heard = entries
             }
     }
@@ -193,9 +198,10 @@ class QiblaActions(
     val onRefreshLocation: () -> Unit,
     val onOpenHelp: () -> Unit,
     val onCloseHelp: () -> Unit,
+    val onRestart: () -> Unit,
 ) {
     companion object {
-        val None = QiblaActions({}, {}, {}, {}, {}, {}, {}, {})
+        val None = QiblaActions({}, {}, {}, {}, {}, {}, {}, {}, {})
     }
 }
 
@@ -236,6 +242,14 @@ fun QiblaContent(
                 tint = palette.tabAzkar,
                 onBack = actions.onBack,
                 subtitle = { TopBarSubtitle(stringResource(R.string.qibla_subtitle)) },
+                actions = {
+                    GlassIconButton(
+                        onClick = actions.onRestart,
+                        iconRes = R.drawable.ic_replay,
+                        contentDescription = stringResource(R.string.qibla_restart),
+                        tint = palette.tabAzkar,
+                    )
+                },
             )
             BoxWithConstraints(Modifier.fillMaxSize()) {
                 val dialSize = min(min(maxWidth - Spacing.xl * 2, maxHeight * DIAL_HEIGHT_FRACTION), DialMaxSize)

@@ -305,6 +305,7 @@
     <string name="qibla_failed_title">Местоположение не найдено</string>
     <string name="qibla_failed_hint">Выйдите на улицу или подойдите к окну</string>
     <string name="qibla_retry">Повторить</string>
+    <string name="qibla_restart">Перезапустить компас</string>
     <string name="qibla_low_accuracy_title">Компас неточен</string>
     <string name="qibla_low_accuracy_hint">Поводите телефоном восьмёркой, вдали от металла</string>
     <string name="qibla_no_compass_title">Компаса нет</string>
