@@ -154,6 +154,16 @@ class AzkarListScreenTest {
     }
 
     @Test
+    fun compositionButtonInTopBarOpensComposition() {
+        var opened = 0
+        val store = store(1, 3)
+        compose.setContent { Screen(store, onOpenComposition = { opened++ }) }
+
+        compose.onNodeWithContentDescription("Состав азкаров").performClick()
+        compose.runOnIdle { check(opened == 1) }
+    }
+
+    @Test
     fun playOnCardOpensPlayerAndCloseReturnsPlayButton() {
         val player = AudioPlayerController(TestAudioEngine())
         showWithPlayer(store(1, 3), player)
@@ -600,18 +610,21 @@ class AzkarListScreenTest {
             }
         }
 
-        // «Утренние азкары» — и в строке времени, и в строке сброса: нужна строка-кнопка.
-        val resetRow = compose.onNode(hasText("Утренние азкары") and hasClickAction() and SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Button))
+        // «Утренние азкары» — в строке времени, в строке состава («2 из 2») и в строке сброса: нужна кнопка сброса.
+        val resetRow = compose.onNode(
+            hasText("Утренние азкары") and hasClickAction() and SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Button) and
+                !hasText("из", substring = true),
+        )
 
-        // Закрыли подтверждение «Назад» — прогресс на месте.
-        resetRow.performClick()
+        // Закрыли подтверждение «Назад» — прогресс на месте. Строка сброса — ниже «Состава азкаров», за краем экрана.
+        resetRow.performScrollTo().performClick()
         compose.onNodeWithText("Сбросить").assertExists()
         Espresso.pressBack()
         compose.onNodeWithText("Сбросить").assertDoesNotExist()
         compose.runOnIdle { check(store.hasProgress(AzkarSection.Morning)) }
 
         // Подтвердили — счёт обнулён, строка выключена.
-        resetRow.performClick()
+        resetRow.performScrollTo().performClick()
         compose.onNodeWithText("Сбросить").performClick()
         compose.runOnIdle { check(!store.hasProgress(AzkarSection.Morning)) }
         resetRow.assertIsNotEnabled()
@@ -641,6 +654,7 @@ class AzkarListScreenTest {
         store: AzkarStore,
         reading: ReadingSettings = defaultReading,
         player: AudioPlayerController = defaultPlayer,
+        onOpenComposition: (() -> Unit)? = null,
     ) {
         InabahTheme {
             AzkarListScreen(
@@ -654,6 +668,7 @@ class AzkarListScreenTest {
                 onBack = {},
                 onGoHome = {},
                 contentPadding = PaddingValues(),
+                onOpenComposition = onOpenComposition,
             )
         }
     }

@@ -21,6 +21,10 @@ sealed interface AzkarRoute {
     /** «Къибла» - из круглой кнопки с Каабой справа вверху на главной (1.3.0). */
     @Serializable
     data object Qibla : AzkarRoute
+
+    /** «Состав азкаров» раздела - из кнопки в шапке списка (тот же экран, что из настроек, без смены вкладки). */
+    @Serializable
+    data class Composition(val section: AzkarSection) : AzkarRoute
 }
 
 @Serializable
@@ -88,6 +92,10 @@ sealed interface SettingsRoute {
     /** «Махрадж»: транскрипция, замки шагов и сброс прогресса «Учимся читать». */
     @Serializable
     data object Makharij : SettingsRoute
+
+    /** «Состав азкаров» раздела (из настроек азкаров). */
+    @Serializable
+    data class AzkarComposition(val section: AzkarSection) : SettingsRoute
 
     /** Порядок сборников на главной хадисов (из настроек хадисов). */
     @Serializable

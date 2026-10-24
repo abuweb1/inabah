@@ -38,6 +38,8 @@ class AssetContentRepositoryTest {
             val azkar = repository.azkar(section)
 
             assertEquals((1..expected.getValue(section)).toList(), azkar.map { it.number }, "раздел $section")
+            // Набор по умолчанию - прежние 16, добавленные - по желанию («Состав азкаров»).
+            assertEquals((RECORDED_AZKAR + 1..expected.getValue(section)).toList(), azkar.filter { it.optional }.map { it.number })
             assertTrue(azkar.all { it.section == section })
             assertTrue(azkar.all { it.translation?.language == ContentLanguage.Base })
             assertTrue(azkar.all { it.repetitions >= 1 })

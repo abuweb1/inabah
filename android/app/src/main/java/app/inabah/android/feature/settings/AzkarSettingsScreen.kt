@@ -36,6 +36,7 @@ import app.inabah.android.core.designsystem.PressFeedback
 import app.inabah.android.core.designsystem.Spacing
 import app.inabah.android.core.designsystem.components.ConfirmationPopover
 import app.inabah.android.core.designsystem.components.InabahTopBar
+import app.inabah.android.core.designsystem.components.SettingsChevron
 import app.inabah.android.core.designsystem.components.SettingsGroup
 import app.inabah.android.core.designsystem.components.SettingsRow
 import app.inabah.android.core.designsystem.components.SettingsRowText
@@ -66,6 +67,8 @@ fun AzkarSettingsScreen(
     onBack: () -> Unit,
     contentPadding: PaddingValues,
     modifier: Modifier = Modifier,
+    /** «Состав азкаров» раздела — экран набора и порядка зикров. */
+    onOpenComposition: (AzkarSection) -> Unit = {},
 ) {
     val theme = LocalInabahTheme.current
     val tint = theme.palette.tabAzkar
@@ -139,6 +142,32 @@ fun AzkarSettingsScreen(
                                 )
                             }
                         }
+                    }
+                }
+            },
+        )
+        SettingsGroup(
+            header = stringResource(R.string.settings_azkar_composition_header),
+            footer = stringResource(R.string.settings_azkar_composition_footer),
+            rows = AzkarSection.entries.mapIndexed { index, section ->
+                {
+                    // «16 из 21»: в наборе - число зикров раздела, всего - вместе с теми, что можно добавить.
+                    val inSet = progress[index].total
+                    val all = store.catalog(section).size
+                    SettingsRow(
+                        onClick = { onOpenComposition(section) },
+                        trailing = {
+                            if (all > 0) {
+                                Text(
+                                    stringResource(R.string.settings_azkar_composition_count, inSet, all),
+                                    color = theme.palette.onAccentSecondary,
+                                    style = InabahType.subheadline,
+                                )
+                            }
+                            SettingsChevron()
+                        },
+                    ) {
+                        SettingsRowText(stringResource(section.title))
                     }
                 }
             },

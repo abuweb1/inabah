@@ -17,6 +17,8 @@ data class ZikrDto(
     val id: Int,
     val arabic: String,
     val max: Int,
+    /** `true` — не входит в набор по умолчанию («Состав азкаров», 2026-10-24); нет поля — входит. */
+    val optional: Boolean = false,
     /** Необязательное: записей пока нет (2026-10-06), свои подключатся этим полем. */
     val audio: String? = null,
     val translations: Map<String, ZikrTranslationDto>,
