@@ -131,7 +131,7 @@ private fun HadithNotesToggle(count: Int, expanded: Boolean, onToggle: () -> Uni
 private fun HadithNoteBubble(note: HadithNote, quoted: Boolean, locale: LocaleList) {
     val palette = InabahTheme.palette
     val stripeColor = palette.noteStripe
-    val style = InabahType.contentTransliteration.copy(localeList = locale)
+    val style = InabahType.contentFootnote.copy(localeList = locale)
     Column(
         modifier = Modifier.translationBubble(palette.noteFill, stripeColor),
         verticalArrangement = Arrangement.spacedBy(Spacing.xxs),
