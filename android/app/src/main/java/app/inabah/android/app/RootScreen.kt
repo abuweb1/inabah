@@ -6,6 +6,9 @@ import androidx.compose.animation.Crossfade
 import app.inabah.android.core.designsystem.Motion
 import androidx.compose.animation.ContentTransform
 import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -25,6 +28,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.scene.Scene
@@ -86,6 +90,7 @@ fun RootScreen(services: AppServices, modifier: Modifier = Modifier) {
     RootContent(
         selectedTab = router.selectedTab,
         canGoBack = router.canGoBack,
+        compactTabBar = !router.isOnTabRoot,
         onSelectTab = router::select,
         onBack = { router.goBack() },
         modifier = modifier,
@@ -115,6 +120,8 @@ fun RootContent(
     onSelectTab: (AppTab) -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
+    /** Внутренний экран вкладки: панель вкладок компактная, мини-плеер опускается вместе с ней. */
+    compactTabBar: Boolean = false,
     /** Мини-плеер над панелью вкладок; его высота входит в нижний отступ содержимого. */
     player: @Composable () -> Unit = {},
     /**
@@ -130,6 +137,7 @@ fun RootContent(
     val tabStates = rememberSaveableStateHolder()
     // Экран вкладки (вместе с фоном) — источник размытия под панелью вкладок, как стекло iOS.
     val backdrop = rememberHazeState()
+    val compactness = animateFloatAsState(if (compactTabBar) 1f else 0f, TabBarCompactSpring, label = "compactTabBar")
     Box(modifier.fillMaxSize()) {
         Scaffold(
             modifier = if (overlay != null) Modifier.clearAndSetSemantics {} else Modifier,
@@ -137,8 +145,15 @@ fun RootContent(
             bottomBar = {
                 // Панель вкладок — после плеера: рисуется поверх, плеер при скрытии уезжает под неё.
                 Column {
-                    player()
-                    FloatingTabBar(selectedTab = selectedTab, onSelect = onSelectTab, backdrop = backdrop)
+                    Box(Modifier.graphicsLayer { translationY = CompactBarDrop.toPx() * compactness.value }) {
+                        player()
+                    }
+                    FloatingTabBar(
+                        selectedTab = selectedTab,
+                        onSelect = onSelectTab,
+                        backdrop = backdrop,
+                        compactness = { compactness.value },
+                    )
                 }
             },
         ) { innerPadding ->
@@ -160,6 +175,9 @@ fun RootContent(
         overlay?.invoke(backdrop)
     }
 }
+
+/** Сжатие и возврат панели вкладок - мягкая пружина без отскока. */
+private val TabBarCompactSpring = spring<Float>(dampingRatio = 0.85f, stiffness = Spring.StiffnessMediumLow)
 
 /**
  * Экраны, где горизонтальный свайп листает содержимое (страницы хадисов, группы слов, буквы группы,
