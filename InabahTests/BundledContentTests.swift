@@ -64,6 +64,16 @@ struct BundledContentTests {
         #expect(evening.filter(\.isQuran).map(\.number) == [13, 14, 15, 16, 17])
     }
 
+    /// Набор по умолчанию — прежние 16 + 16 (2026-10-24): новые зикры добавляются в «Составе азкаров».
+    @Test("Новые зикры — не в наборе по умолчанию")
+    func newAzkarOptional() async throws {
+        let morning = try await repository.azkar(in: .morning)
+        let evening = try await repository.azkar(in: .evening)
+
+        #expect(morning.filter(\.isOptional).map(\.number) == Array(17...21))
+        #expect(evening.filter(\.isOptional).map(\.number) == Array(17...22))
+    }
+
     /// Карточка рисует их шрифтом мусхафа: символа без глифа там быть не должно — иначе подставится
     /// системный шрифт посреди аята. Неразрывный пробел перед номером аята (так в тексте QPC) в Hafs
     /// не нарисован, но он невидимый — как на Android (`FontCoverageTest`).

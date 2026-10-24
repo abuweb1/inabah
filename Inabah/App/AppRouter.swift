@@ -13,11 +13,15 @@ nonisolated enum AzkarRoute: Hashable, Codable, Sendable {
     case list(AzkarSection)
     /// «Календарь азкаров» — из капсулы серии на главной.
     case calendar
+    /// «Состав азкаров» раздела — из кнопки в шапке списка.
+    case composition(AzkarSection)
 }
 
 /// Экраны внутри вкладки «Настройки».
 nonisolated enum SettingsRoute: Hashable, Codable, Sendable {
     case azkar
+    /// «Состав азкаров» раздела (из настроек азкаров).
+    case azkarComposition(AzkarSection)
     case hadith
     /// Порядок сборников на главной хадисов (из настроек хадисов).
     case hadithOrder

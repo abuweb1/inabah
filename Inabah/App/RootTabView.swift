@@ -32,6 +32,7 @@ struct RootTabView: View {
                                 switch route {
                                 case .list(let section): AzkarListView(section: section)
                                 case .calendar: AzkarCalendarView()
+                                case .composition(let section): AzkarCompositionView(section: section)
                                 }
                             }
                             .interfaceTextSize()
@@ -96,6 +97,7 @@ struct RootTabView: View {
                             Group {
                                 switch route {
                                 case .azkar: AzkarSettingsView()
+                                case .azkarComposition(let section): AzkarCompositionView(section: section)
                                 case .hadith: HadithSettingsView()
                                 case .hadithOrder: HadithOrderSettingsView()
                                 case .makharij: MakharijSettingsView()

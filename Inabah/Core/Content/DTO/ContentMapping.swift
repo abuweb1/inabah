@@ -16,7 +16,8 @@ nonisolated extension Zikr {
                     narrator: t.rawi.nonEmpty
                 )
             },
-            isQuran: dto.quran ?? false
+            isQuran: dto.quran ?? false,
+            isOptional: dto.optional ?? false
         )
     }
 }
