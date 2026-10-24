@@ -42,7 +42,7 @@ internal fun MacrobenchmarkScope.playFirstZikr() {
 
 /** Хадисы → ан-Навави → первый хадис → листание страниц. */
 internal fun MacrobenchmarkScope.browseHadith() {
-    waitFor(By.text("Хадисы")).click()
+    waitFor(By.desc("Хадисы")).click() // вкладка панели - описание, подпись только рисунок
     waitFor(By.text("40 хадисов ан-Навави")).click()
     waitFor(By.descStartsWith("Хадис 1,")).click()
     repeat(2) {

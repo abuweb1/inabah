@@ -31,15 +31,20 @@ class AppRouter {
         if (tab == selectedTab) popToRoot(tab) else selectedTab = tab
     }
 
+    /** На главном экране выбранной вкладки (её стек пуст): панель вкладок - полного размера, иначе компактная. */
+    val isOnTabRoot: Boolean get() = stackOf(selectedTab).isEmpty()
+
     /** Стек меняется, только если есть что снимать: запись того же значения тоже будит наблюдателей. */
     fun popToRoot(tab: AppTab) {
-        val stack = when (tab) {
-            AppTab.Azkar -> _azkarStack
-            AppTab.Hadith -> _hadithStack
-            AppTab.Makharij -> _makharijStack
-            AppTab.Settings -> _settingsStack
-        }
+        val stack = stackOf(tab)
         if (stack.isNotEmpty()) stack.clear()
+    }
+
+    private fun stackOf(tab: AppTab): MutableList<out Any> = when (tab) {
+        AppTab.Azkar -> _azkarStack
+        AppTab.Hadith -> _hadithStack
+        AppTab.Makharij -> _makharijStack
+        AppTab.Settings -> _settingsStack
     }
 
     /** Открыть главную вкладки из любого места: вкладка [tab], её стек — до корня. */

@@ -27,6 +27,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -43,9 +44,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.input.pointer.positionChange
 import androidx.compose.ui.input.pointer.util.VelocityTracker
 import androidx.compose.ui.platform.LocalDensity
@@ -53,6 +56,8 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selected
@@ -84,6 +89,15 @@ private val BarHorizontalMargin = 21.dp
 private val BarBottomMargin = 4.dp
 private val PillInset = 4.dp
 private val TabIconSize = 26.dp
+
+// Компактная панель на внутренних экранах (решение пользователя 2026-10-24, вариант «В» наброска
+// docs/design/tab-bar-compact.html): ×0,7 от нижнего края, ниже на 8 dp, без подписей - только значки.
+// Меняется только отрисовка (слой), вёрстка и нижний отступ содержимого те же - переход без рывков.
+private const val COMPACT_SCALE = 0.7f
+private val CompactExtraDrop = 8.dp
+
+/** На сколько опускается верх панели в компактном виде - на столько же едет мини-плеер над ней. */
+internal val CompactBarDrop = BarHeight * (1f - COMPACT_SCALE) + CompactExtraDrop
 
 /** Кегль подписи (medium, как `UITabBarAppearance` iOS); панель не растёт ни с системным шрифтом, ни с шагом интерфейса. */
 private const val LABEL_SIZE = 10f
@@ -178,6 +192,8 @@ fun FloatingTabBar(
     modifier: Modifier = Modifier,
     /** Экран под панелью — размывается под капсулой (Android 12+); `null` — без размытия. */
     backdrop: HazeState? = null,
+    /** 0 - полная панель (главные экраны), 1 - компактная (внутренние); читается только при отрисовке. */
+    compactness: () -> Float = { 0f },
 ) {
     val theme = LocalInabahTheme.current
     val palette = theme.palette
@@ -209,54 +225,152 @@ fun FloatingTabBar(
     val rimColor = palette.onAccent
     // Невыбранные — не белые, а белый в тон раздела (снимки iOS android/docs/navbar).
     val idleColor = lerp(palette.onAccent, tint, IDLE_TINT)
-    Box(
+    BoxWithConstraints(
         modifier
+            // Опускается вся панель вместе со своей рамкой - касания у нижнего края капсулы тоже доходят.
+            .graphicsLayer { translationY = CompactExtraDrop.toPx() * compactness() }
             .fillMaxWidth()
             .windowInsetsPadding(WindowInsets.navigationBars)
             .padding(start = BarHorizontalMargin, end = BarHorizontalMargin, bottom = BarBottomMargin)
-            .graphicsLayer {
-                val scale = 1f + BAR_LIFT_SCALE * lift.value
-                scaleX = scale
-                scaleY = scale
-            }
             .height(BarHeight),
     ) {
-    // Размытое содержимое под капсулой — как у стекла iOS: пергамент под панелью становится мягким
-    // пятном, подписи читаются. Отдельный слой позади: обрезка по капсуле не задевает каплю,
-    // которая выступает за панель. Поверх — то же светлое стекло, что и без размытия.
-    if (backdrop != null) {
+        val density = LocalDensity.current
+        val itemWidthPx = with(density) { (maxWidth - PillInset * 2).toPx() } / count
+        val rimWidth = with(density) { LensRimWidth.toPx() }
+        val insetPx = with(density) { PillInset.toPx() }
+        // Вкладка под пальцем — в долях вкладки, в пределах панели ([x] — от края капсулы, с отступом пилюль).
+        fun slotAt(x: Float) = ((x - insetPx) / itemWidthPx - 0.5f).coerceIn(0f, (count - 1).toFloat())
+
+        // Видимая панель: в компактном виде сжимается к нижнему краю.
         Box(
             Modifier
                 .matchParentSize()
-                .clip(RoundedCornerShape(BarHeight / 2))
-                .hazeBlur(HazeInput.Sources(backdrop), BarBlur),
-        )
-    }
-    BoxWithConstraints(
-        modifier = Modifier
-            .matchParentSize()
-            .surface(
-                palette.onAccent.copy(alpha = BAR_FILL_ALPHA).compositeOver(tint.copy(alpha = BAR_TINT_ALPHA)),
-                BarHeight / 2,
-                border = tint.copy(alpha = BAR_RIM_ALPHA),
-                shadow = ShadowToken.card(palette),
-            )
-            .drawBehind {
-                val l = lift.value.coerceIn(0f, 1f)
-                if (l > 0f) drawRoundRect(tint.copy(alpha = BAR_GLOW_ALPHA * l), cornerRadius = CornerRadius(size.height / 2))
+                .graphicsLayer {
+                    val c = compactness()
+                    val scale = 1f - (1f - COMPACT_SCALE) * c
+                    scaleX = scale
+                    scaleY = scale
+                    transformOrigin = TransformOrigin(0.5f, 1f)
+                }
+                .graphicsLayer {
+                    val scale = 1f + BAR_LIFT_SCALE * lift.value
+                    scaleX = scale
+                    scaleY = scale
+                },
+        ) {
+            // Размытое содержимое под капсулой — как у стекла iOS: пергамент под панелью становится мягким
+            // пятном, подписи читаются. Отдельный слой позади: обрезка по капсуле не задевает каплю,
+            // которая выступает за панель. Поверх — то же светлое стекло, что и без размытия.
+            if (backdrop != null) {
+                Box(
+                    Modifier
+                        .matchParentSize()
+                        .clip(RoundedCornerShape(BarHeight / 2))
+                        .hazeBlur(HazeInput.Sources(backdrop), BarBlur),
+                )
             }
-            .padding(PillInset),
-    ) {
-        val density = LocalDensity.current
-        val itemWidthPx = with(density) { maxWidth.toPx() } / count
-        val rimWidth = with(density) { LensRimWidth.toPx() }
-        // Вкладка под пальцем — в долях вкладки, в пределах панели.
-        fun slotAt(x: Float) = (x / itemWidthPx - 0.5f).coerceIn(0f, (count - 1).toFloat())
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .surface(
+                        palette.onAccent.copy(alpha = BAR_FILL_ALPHA).compositeOver(tint.copy(alpha = BAR_TINT_ALPHA)),
+                        BarHeight / 2,
+                        border = tint.copy(alpha = BAR_RIM_ALPHA),
+                        shadow = ShadowToken.card(palette),
+                    )
+                    .drawBehind {
+                        val l = lift.value.coerceIn(0f, 1f)
+                        if (l > 0f) drawRoundRect(tint.copy(alpha = BAR_GLOW_ALPHA * l), cornerRadius = CornerRadius(size.height / 2))
+                    }
+                    .padding(PillInset),
+            ) {
+                Box(
+                    Modifier
+                        .fillMaxSize()
+                        .graphicsLayer {
+                            // Преломление содержимого под линзой (Android 13+).
+                            val l = lift.value
+                            renderEffect = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && lensShader != null && l > 0.001f) {
+                                val s = stretch()
+                                val halfW = itemWidthPx / 2 * (1f + LENS_SCALE_X * l) * (1f + s)
+                                val halfH = size.height / 2 * (1f + LENS_SCALE_Y * l) * (1f - STRETCH_SQUASH * s)
+                                lensShader.effect((position.value + 0.5f) * itemWidthPx, size.height / 2, halfW, halfH, l.coerceIn(0f, 1f), tint)
+                            } else {
+                                null
+                            }
+                        },
+                ) {
+                    // Цветная пилюля выбранной вкладки — гаснет, пока раскрыта линза.
+                    Box(
+                        Modifier
+                            .fillMaxSize()
+                            .drawBehind {
+                                val l = lift.value.coerceIn(0f, 1f)
+                                if (l < 1f) {
+                                    drawRoundRect(
+                                        tint.copy(alpha = PILL_ALPHA * (1f - l)),
+                                        topLeft = Offset(position.value * itemWidthPx, 0f),
+                                        size = Size(itemWidthPx, size.height),
+                                        cornerRadius = CornerRadius(size.height / 2),
+                                    )
+                                }
+                            },
+                    )
+                    // Только рисунок: касания и TalkBack — у слоя вкладок ниже.
+                    Row(Modifier.fillMaxSize().clearAndSetSemantics {}) {
+                        AppTab.entries.forEach { tab ->
+                            TabItem(
+                                tab = tab,
+                                color = if (tab == selectedTab) tint else idleColor,
+                                compactness = compactness,
+                                magnification = {
+                                    if (lensShader != null) {
+                                        1f
+                                    } else {
+                                        val near = (1f - abs(position.value - tab.ordinal)).coerceIn(0f, 1f)
+                                        1f + ICON_MAGNIFY * lift.value * near
+                                    }
+                                },
+                                modifier = Modifier.weight(1f).fillMaxHeight(),
+                            )
+                        }
+                    }
+                }
+                // Блик по краю линзы — поверх, без преломления, может выходить за панель.
+                Box(
+                    Modifier
+                        .fillMaxSize()
+                        .drawBehind {
+                            val l = lift.value.coerceIn(0f, 1f)
+                            if (l <= 0f) return@drawBehind
+                            val s = stretch()
+                            val w = itemWidthPx * (1f + LENS_SCALE_X * l) * (1f + s)
+                            val h = size.height * (1f + LENS_SCALE_Y * l) * (1f - STRETCH_SQUASH * s)
+                            val left = (position.value + 0.5f) * itemWidthPx - w / 2
+                            val top = (size.height - h) / 2
+                            val rim = Brush.linearGradient(
+                                0f to rimColor.copy(alpha = LENS_RIM_BRIGHT * l),
+                                0.45f to rimColor.copy(alpha = LENS_RIM_DIM * l),
+                                0.55f to rimColor.copy(alpha = LENS_RIM_DIM * l),
+                                1f to rimColor.copy(alpha = LENS_RIM_BRIGHT * l),
+                                start = Offset(left, top),
+                                end = Offset(left + w, top + h),
+                            )
+                            drawRoundRect(rim, Offset(left, top), Size(w, h), CornerRadius(h / 2), style = Stroke(rimWidth))
+                        },
+                )
+            }
+        }
 
-        Box(
+        // Слой вкладок для касаний и TalkBack: сжимается только по ширине — в компактном виде зона касания
+        // остаётся во всю высоту панели (не меньше 48 dp), хотя капсула ниже. Координаты пальца — в тех же
+        // долях вкладки, что и рисунок: масштаб слоя действует и на касания.
+        Row(
             Modifier
-                .fillMaxSize()
-                .pointerInput(count, itemWidthPx) {
+                .matchParentSize()
+                .graphicsLayer { scaleX = 1f - (1f - COMPACT_SCALE) * compactness() }
+                // Касания - по всей капсуле, включая её края; вкладки - во всю высоту.
+                .pointerInput(count, itemWidthPx, insetPx) {
                     awaitEachGesture {
                         val down = awaitFirstDown()
                         isDragging = true
@@ -307,116 +421,66 @@ fun FloatingTabBar(
                         }
                     }
                 }
-                .graphicsLayer {
-                    // Преломление содержимого под линзой (Android 13+).
-                    val l = lift.value
-                    renderEffect = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && lensShader != null && l > 0.001f) {
-                        val s = stretch()
-                        val halfW = itemWidthPx / 2 * (1f + LENS_SCALE_X * l) * (1f + s)
-                        val halfH = size.height / 2 * (1f + LENS_SCALE_Y * l) * (1f - STRETCH_SQUASH * s)
-                        lensShader.effect((position.value + 0.5f) * itemWidthPx, size.height / 2, halfW, halfH, l.coerceIn(0f, 1f), tint)
-                    } else {
-                        null
-                    }
-                },
+                .padding(horizontal = PillInset)
+                .selectableGroup(),
         ) {
-            // Цветная пилюля выбранной вкладки — гаснет, пока раскрыта линза.
-            Box(
-                Modifier
-                    .fillMaxSize()
-                    .drawBehind {
-                        val l = lift.value.coerceIn(0f, 1f)
-                        if (l < 1f) {
-                            drawRoundRect(
-                                tint.copy(alpha = PILL_ALPHA * (1f - l)),
-                                topLeft = Offset(position.value * itemWidthPx, 0f),
-                                size = Size(itemWidthPx, size.height),
-                                cornerRadius = CornerRadius(size.height / 2),
-                            )
-                        }
-                    },
-            )
-            Row(Modifier.fillMaxSize().selectableGroup()) {
-                AppTab.entries.forEach { tab ->
-                    TabItem(
-                        tab = tab,
-                        selected = tab == selectedTab,
-                        color = if (tab == selectedTab) tint else idleColor,
-                        onClick = { onSelect(tab) },
-                        magnification = {
-                            if (lensShader != null) {
-                                1f
-                            } else {
-                                val near = (1f - abs(position.value - tab.ordinal)).coerceIn(0f, 1f)
-                                1f + ICON_MAGNIFY * lift.value * near
+            AppTab.entries.forEach { tab ->
+                val label = stringResource(tab.label)
+                Box(
+                    Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                        .semantics {
+                            contentDescription = label
+                            role = Role.Tab
+                            selected = tab == selectedTab
+                            onClick {
+                                onSelect(tab)
+                                true
                             }
                         },
-                        modifier = Modifier.weight(1f).fillMaxHeight(),
-                    )
-                }
+                )
             }
         }
-        // Блик по краю линзы — поверх, без преломления, может выходить за панель.
-        Box(
-            Modifier
-                .fillMaxSize()
-                .drawBehind {
-                    val l = lift.value.coerceIn(0f, 1f)
-                    if (l <= 0f) return@drawBehind
-                    val s = stretch()
-                    val w = itemWidthPx * (1f + LENS_SCALE_X * l) * (1f + s)
-                    val h = size.height * (1f + LENS_SCALE_Y * l) * (1f - STRETCH_SQUASH * s)
-                    val left = (position.value + 0.5f) * itemWidthPx - w / 2
-                    val top = (size.height - h) / 2
-                    val rim = Brush.linearGradient(
-                        0f to rimColor.copy(alpha = LENS_RIM_BRIGHT * l),
-                        0.45f to rimColor.copy(alpha = LENS_RIM_DIM * l),
-                        0.55f to rimColor.copy(alpha = LENS_RIM_DIM * l),
-                        1f to rimColor.copy(alpha = LENS_RIM_BRIGHT * l),
-                        start = Offset(left, top),
-                        end = Offset(left + w, top + h),
-                    )
-                    drawRoundRect(rim, Offset(left, top), Size(w, h), CornerRadius(h / 2), style = Stroke(rimWidth))
-                },
-        )
-    }
     }
 }
 
+/** Рисунок вкладки: значок и подпись; в компактном виде подпись гаснет, значок встаёт в центр капсулы. */
 @Composable
 private fun TabItem(
     tab: AppTab,
-    selected: Boolean,
     color: Color,
-    onClick: () -> Unit,
+    compactness: () -> Float,
     magnification: () -> Float,
     modifier: Modifier = Modifier,
 ) {
-    // Касания ведёт панель (линза, ведение пальцем); вкладка — только для TalkBack.
+    // Без подписи значок опускается в центр капсулы: на половину высоты подписи с промежутком.
+    var labelHeight by remember { mutableIntStateOf(0) }
     Column(
-        modifier = modifier
-            .semantics(mergeDescendants = true) {
-                role = Role.Tab
-                this.selected = selected
-                onClick {
-                    onClick()
-                    true
-                }
-            }
-            .graphicsLayer {
-                val scale = magnification()
-                scaleX = scale
-                scaleY = scale
-            },
+        modifier = modifier.graphicsLayer {
+            val scale = magnification()
+            scaleX = scale
+            scaleY = scale
+        },
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(Spacing.xxxs, Alignment.CenterVertically),
     ) {
-        Icon(painterResource(tab.icon), contentDescription = null, tint = color, modifier = Modifier.size(TabIconSize))
+        Icon(
+            painterResource(tab.icon),
+            contentDescription = null,
+            tint = color,
+            modifier = Modifier
+                .size(TabIconSize)
+                .graphicsLayer { translationY = (labelHeight + Spacing.xxxs.toPx()) / 2 * compactness() },
+        )
         Text(
             stringResource(tab.label),
             color = color,
             maxLines = 1,
             style = InabahType.caption2.copy(fontSize = fixedSp(LABEL_SIZE), fontWeight = FontWeight.Medium),
+            modifier = Modifier
+                .onSizeChanged { labelHeight = it.height }
+                .graphicsLayer { alpha = 1f - compactness() },
         )
     }
 }
