@@ -12,7 +12,8 @@ fun zikrShareText(zikr: Zikr, sectionTitle: String, repetitions: String, narrato
     val translation = zikr.translation
     return shareBlocks(
         sectionTitle, zikr.arabic, repetitions,
-        narratorLine, translation?.transliteration, translation?.text, translation?.source,
+        // Как на экране: транскрипция, «Передаётся от…» сразу перед переводом.
+        translation?.transliteration, narratorLine, translation?.text, translation?.source,
         storeLinks,
     )
 }
