@@ -202,9 +202,9 @@ private fun ZikrFullContent(
     isUnderHeader: Boolean,
     isAudioActive: Boolean,
     onPlay: () -> Unit,
-    translationModifier: Modifier,
     onHideTranslation: () -> Unit,
     modifier: Modifier = Modifier,
+    translationModifier: Modifier = Modifier,
 ) {
     val palette = InabahTheme.palette
     val zikr = session.zikr
