@@ -1,4 +1,5 @@
 import AVFoundation
+import CoreText
 import Foundation
 import Testing
 @testable import Inabah
@@ -51,6 +52,40 @@ struct BundledContentTests {
         for (file, azkar) in shared {
             #expect(Set(azkar.map { Self.bare($0.arabic) }).count == 1, "\(file): разный арабский текст")
         }
+    }
+
+    /// Суры и аяты Корана (`quran: true`, 2026-10-25): аль-Ихлас, аль-Фалак, ан-Нас, аят аль-Курси, «Амана-р-расулю».
+    @Test("Суры и аяты Корана отмечены, обычные зикры — нет")
+    func quranAzkarMarked() async throws {
+        let morning = try await repository.azkar(in: .morning)
+        let evening = try await repository.azkar(in: .evening)
+
+        #expect(morning.filter(\.isQuran).map(\.number) == [14, 15, 16, 17])
+        #expect(evening.filter(\.isQuran).map(\.number) == [13, 14, 15, 16, 17])
+    }
+
+    /// Карточка рисует их шрифтом мусхафа: символа без глифа там быть не должно — иначе подставится
+    /// системный шрифт посреди аята. Неразрывный пробел перед номером аята (так в тексте QPC) в Hafs
+    /// не нарисован, но он невидимый — как на Android (`FontCoverageTest`).
+    @Test("Суры и аяты Корана покрыты шрифтом мусхафа")
+    func quranAzkarCoveredByMushafFont() async throws {
+        AppFont.registerBundledFonts()
+        let font = CTFontCreateWithName(AppFont.mushaf as CFString, 20, nil)
+        #expect(CTFontCopyPostScriptName(font) as String == AppFont.mushaf)
+
+        let azkar = try await repository.azkar(in: .morning) + repository.azkar(in: .evening)
+        let text = azkar.filter(\.isQuran).map(\.arabic).joined(separator: "\n")
+        #expect(!text.isEmpty)
+
+        let scalars = Set(text.unicodeScalars).filter {
+            !$0.properties.isWhitespace && $0.properties.generalCategory != .format
+        }
+        let missing = scalars.filter { scalar in
+            var units = Array(String(scalar).utf16)
+            var glyphs = [CGGlyph](repeating: 0, count: units.count)
+            return !CTFontGetGlyphsForCharacters(font, &units, &glyphs, units.count)
+        }
+        #expect(missing.isEmpty, "нет в Hafs: \(missing.map { String(format: "U+%04X", $0.value) }.sorted())")
     }
 
     @Test("Все записи — AAC .m4a и читаются плеером; MP3 нет; азкаров — 20")

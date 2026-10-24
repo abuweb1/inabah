@@ -114,7 +114,8 @@ struct ZikrCardView: View {
                     ArabicText(
                         text: session.zikr.arabic,
                         size: settings.arabicFontSize,
-                        color: theme.palette.parchmentText
+                        color: theme.palette.parchmentText,
+                        mushaf: session.zikr.isQuran
                     )
                     repetitionsBadge
                 }

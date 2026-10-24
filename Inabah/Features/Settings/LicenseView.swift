@@ -4,6 +4,8 @@ import SwiftUI
 nonisolated enum LicenseDocument: String, CaseIterable, Identifiable, Hashable, Codable, Sendable {
     /// Арабский шрифт Scheherazade New — SIL Open Font License 1.1.
     case scheherazade
+    /// Шрифт мусхафа KFGQPC Uthmanic Script HAFS (суры и аяты в азкарах) — лицензия Комплекса имени короля Фахда.
+    case mushafHafs
     /// Значки вкладок Material Symbols — Apache License 2.0.
     case materialSymbols
 
@@ -13,6 +15,7 @@ nonisolated enum LicenseDocument: String, CaseIterable, Identifiable, Hashable, 
     var resourceName: String {
         switch self {
         case .scheherazade: "ScheherazadeNew-OFL"
+        case .mushafHafs: "KFGQPC-Hafs-LICENSE"
         case .materialSymbols: "MaterialSymbols-LICENSE"
         }
     }
@@ -20,6 +23,7 @@ nonisolated enum LicenseDocument: String, CaseIterable, Identifiable, Hashable, 
     var title: LocalizedStringResource {
         switch self {
         case .scheherazade: "about.license.scheherazade.title"
+        case .mushafHafs: "about.license.mushaf.title"
         case .materialSymbols: "about.license.material.title"
         }
     }
@@ -27,6 +31,7 @@ nonisolated enum LicenseDocument: String, CaseIterable, Identifiable, Hashable, 
     var subtitle: LocalizedStringResource {
         switch self {
         case .scheherazade: "about.license.scheherazade.subtitle"
+        case .mushafHafs: "about.license.mushaf.subtitle"
         case .materialSymbols: "about.license.material.subtitle"
         }
     }
