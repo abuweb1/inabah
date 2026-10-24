@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Строки интерфейса (ru — язык по умолчанию). Источник: docs/android/07-resources.md ← iOS Localizable.xcstrings. -->
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <string name="about_app_footer">Без рекламы, регистрации и сбора данных. Приложение работает без интернета.</string>
     <string name="about_app_header">Приложение</string>
     <string name="about_app_name">Inabah</string>
@@ -277,7 +277,6 @@
     <string name="parchment_night">Ночной</string>
     <string name="parchment_sepia">Сепия</string>
     <string name="parchment_smoky">Дымчатый</string>
-    <string name="placeholder_soon">Скоро</string>
     <string name="playback_notification_channel">Воспроизведение</string>
     <string name="progress_fraction">%1$d/%2$d</string>
     <!-- «Къибла» (1.3.0, Android-first 2026-10-24): docs/android/06-screens.md, «Къибла». -->
@@ -357,11 +356,12 @@
     <string name="section_progress_percent">Выполнено на %d %%</string>
     <string name="settings_about_footer">Inabah %1$s · О приложении</string>
     <string name="settings_app_icon_error">Не удалось сменить иконку</string>
-    <string name="settings_app_icon_error_ok">Понятно</string>
+    <!-- Только iOS (там у смены иконки окно ошибки и проверка поддержки); общая таблица строк 07. -->
+    <string name="settings_app_icon_error_ok" tools:ignore="UnusedResources">Понятно</string>
     <string name="settings_app_icon_footer">Иконка на рабочем столе сменится через несколько секунд. На некоторых телефонах приложение при этом закроется — просто откройте его снова.</string>
     <string name="settings_app_icon_subtitle">Классическая и ещё три варианта</string>
     <string name="settings_app_icon_title">Иконка приложения</string>
-    <string name="settings_app_icon_unsupported">Смена иконки недоступна на этом устройстве.</string>
+    <string name="settings_app_icon_unsupported" tools:ignore="UnusedResources">Смена иконки недоступна на этом устройстве.</string>
     <string name="settings_appearance_header">Оформление</string>
     <string name="settings_azkar_subtitle">Время азкаров и сброс прогресса</string>
     <string name="settings_azkar_history_footer">По ней строятся календарь азкаров и серия дней подряд. Счётчики разделов не обнуляются.</string>

@@ -27,11 +27,14 @@
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:enableOnBackInvokedCallback="true"
+        tools:ignore="UnusedAttribute"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/Theme.Inabah">
 
+        <!-- Только портрет (решение 2026-10-04): на Android 16+ на больших экранах система это игнорирует,
+             приложение - только для телефона. enableOnBackInvokedCallback выше на API 31-32 просто не действует. -->
         <!-- Запуск из лаунчера — только через алиасы ниже; сама активность открывается явными интентами
              (уведомление плеера). -->
         <activity
@@ -39,7 +42,8 @@
             android:exported="false"
             android:launchMode="singleTop"
             android:screenOrientation="portrait"
-            android:theme="@style/Theme.Inabah.Starting" />
+            android:theme="@style/Theme.Inabah.Starting"
+            tools:ignore="LockedOrientationActivity,DiscouragedApi" />
 
         <!-- Смена иконки (этап 9, docs/android/08): по алиасу на вариант, включён ровно один — его значок
              в лаунчере и на заставке. Имена — AppIconOption.aliasName; переключает PackageManagerAppIconSwitcher. -->
