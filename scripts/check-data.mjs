@@ -24,7 +24,7 @@ const AUDIO_DIR = join(ROOT, 'audio');
 
 const VERBOSE = process.argv.includes('--verbose');
 
-const EXPECTED = { morning: 16, evening: 16, nawawi: 50, qudsi: 42, ajurri: 40 };
+const EXPECTED = { morning: 21, evening: 22, nawawi: 50, qudsi: 42, ajurri: 40 };
 
 const AZKAR_KEYS = ['id', 'arabic', 'max', 'audio', 'translations'];
 const HADITH_KEYS = ['id', 'arabic', 'translations'];
