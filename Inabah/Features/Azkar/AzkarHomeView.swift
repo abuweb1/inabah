@@ -46,6 +46,8 @@ struct AzkarHomeView: View {
             if !reminders.offerAnswered {
                 ReminderOfferCard()
             }
+        } topAction: {
+            QiblaEntryButton()
         } leadingAction: {
             UpdateButton()
         }

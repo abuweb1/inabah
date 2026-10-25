@@ -37,6 +37,8 @@ final class WhatsNew {
 
     /// Изменения текущей версии, пока окно на экране; `nil` — окна нет.
     private(set) var pending: ReleaseNote?
+    /// Проверка закончилась: `pending == nil` до неё не значит «окна не будет» — подсказки ждут этого.
+    private(set) var isChecked = false
 
     @ObservationIgnored private let defaults: UserDefaults
     @ObservationIgnored private let repository: any ContentRepository
@@ -56,8 +58,10 @@ final class WhatsNew {
 
     /// Один раз за запуск. Версия приложения не `X.Y.Z` (отладочная) — ни окна, ни записи.
     func check() async {
-        guard !checked, let current else { return }
+        guard !checked else { return }
         checked = true
+        defer { isChecked = true }
+        guard let current else { return }
         let lastShown = AppVersionNumber(defaults.string(forKey: Self.lastVersionKey))
         let note: ReleaseNote?
         do {

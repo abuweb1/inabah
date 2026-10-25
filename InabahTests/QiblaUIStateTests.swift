@@ -109,6 +109,19 @@ struct QiblaUIStateTests {
         #expect(Self.note(Self.state(access: .precise, location: mecca))?.confirmable == true, "точное у Мекки — можно")
     }
 
+    @Test("Без метки — то же состояние, угол не влияет")
+    func withoutPointer() {
+        let near = Self.state(pointer: Self.pointer(aligned: false))
+        var turned = Self.pointer(aligned: false)
+        turned.offset = 41
+        let far = Self.state(pointer: turned)
+        #expect(near != far, "с меткой состояния разные")
+        #expect(near.withoutPointer == far.withoutPointer, "без метки - одно")
+        #expect(near.withoutPointer.pointer == nil)
+        #expect(near.withoutPointer.guidance == near.guidance)
+        #expect(Self.state(location: .off).withoutPointer == .locationOff)
+    }
+
     @Test("На месте, но координатам нельзя доверить — отдельная подсказка")
     func locationUnconfirmed() {
         let held = QiblaPointer(offset: 1, angle: 1, side: .right, aligned: false, alignedEntries: 0, heldByLocation: true)

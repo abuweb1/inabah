@@ -152,6 +152,26 @@ struct QiblaModelTests {
         await second.value
     }
 
+    @Test("Экран не меняется от нового угла — меняется только метка")
+    func screenIgnoresAngle() async throws {
+        let heading = FakeHeading()
+        let model = QiblaModel(location: FakeLocation([.found(Self.grozny)]), heading: heading, now: { 0 })
+        let task = Task { await model.run(access: .precise) }
+        await waitUntil { heading.listeners == 1 && Self.guidance(model) == .waiting }
+        heading.emit(azimuth: Self.groznyBearing - 120, time: 1)
+        await waitUntil { model.pointer != nil }
+        let screen = model.screen
+        let first = try #require(model.pointer)
+        heading.emit(azimuth: Self.groznyBearing - 110, time: 1.5)
+        await waitUntil { model.pointer != first }
+
+        #expect(model.pointer != first, "метка двинулась")
+        #expect(model.screen == screen, "подсказка та же - экран не перестраивается")
+        #expect(model.screen.pointer == nil)
+        task.cancel()
+        await task.value
+    }
+
     @Test("Устаревшие координаты — на месте, но без подтверждения")
     func staleLocation() async {
         let heading = FakeHeading()

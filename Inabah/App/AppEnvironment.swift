@@ -55,7 +55,7 @@ struct AppEnvironment {
         // Первым: «новая установка» узнаётся до того, как сторы запишут свои ключи.
         whatsNew = WhatsNew(defaults: defaults, repository: repository)
         self.updateSource = updateSource
-        qibla = .system()
+        qibla = .system(defaults: defaults)
         router = AppRouter()
         readingSettings = ReadingSettings(defaults: defaults)
         playlistSettings = PlaylistSettings(defaults: defaults)
@@ -182,6 +182,7 @@ extension View {
             .environment(environment.reminderScheduler)
             .environment(environment.whatsNew)
             .environment(\.updateSource, environment.updateSource)
+            .environment(\.qibla, environment.qibla)
             .modifier(ThemedModifier(
                 settings: environment.appearanceSettings,
                 parchment: environment.parchmentSettings,

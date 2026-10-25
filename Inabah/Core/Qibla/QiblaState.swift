@@ -150,4 +150,31 @@ nonisolated enum QiblaUIState: Hashable, Sendable {
             else { .turn(pointer.side, pointer.amount) }
         return .compass(bearing: bearing, location: note, pointer: pointer, guidance: guidance)
     }
+
+    /// Метка кольца; `nil` — кольца нет или показаний ещё нет.
+    var pointer: QiblaPointer? {
+        if case .compass(_, _, let pointer, _) = self { pointer } else { nil }
+    }
+
+    /// То же состояние без угла метки (Android `withoutPointer`): экран перестраивается только при смене подсказки.
+    var withoutPointer: QiblaUIState {
+        if case .compass(let bearing, let location, .some, let guidance) = self {
+            .compass(bearing: bearing, location: location, pointer: nil, guidance: guidance)
+        } else {
+            self
+        }
+    }
+
+    /// Пометки местоположения — у кольца и у направления числом.
+    var location: LocationNote? {
+        switch self {
+        case .compass(_, let note, _, _), .noCompass(_, let note): note
+        default: nil
+        }
+    }
+
+    /// Подсказка кольца; `nil` — кольца нет.
+    var guidance: QiblaGuidance? {
+        if case .compass(_, _, _, let guidance) = self { guidance } else { nil }
+    }
 }
