@@ -154,6 +154,15 @@ struct QiblaTrackerTests {
         #expect(flags == [true, true, true, true, false, false], "неточен хуже 20°, снова точен лучше 15°")
     }
 
+    @Test("iPhone: обычная оценка 20-40° — не «неточен», хуже 45° — неточен, снова точен лучше 35°")
+    func iPhoneAccuracy() {
+        var tuning = QiblaTuning.iPhone
+        tuning.smoothing = 0
+        var feed = Feed(tracker: QiblaTracker(tuning: tuning))
+        let flags = [25.0, 40, 46, 40, 36, 34].map { feed.next(0, accuracy: $0).lowAccuracy }
+        #expect(flags == [false, false, true, true, true, false])
+    }
+
     @Test("Степень поворота — Поверните, Правее, Немного правее — не мигает у границ")
     func turnAmountHysteresis() {
         var feed = Feed(tracker: QiblaTracker(tuning: Self.instant))

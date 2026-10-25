@@ -30,8 +30,9 @@ struct SlideUpSheet<Content: View>: View {
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+            // На самом слое, не на `GeometryReader`: снаружи выезд не анимировался - панель появлялась резко.
+            .animation(Motion.collapse, value: isPresented)
         }
-        .animation(Motion.collapse, value: isPresented)
     }
 }
 
@@ -51,23 +52,20 @@ private struct SlideUpSheetPanel<Content: View>: View {
 
     @Environment(\.theme) private var theme
     @State private var dragOffset: CGFloat = 0
-    @State private var contentHeight: CGFloat = 0
 
     private typealias Layout = SlideUpSheetLayout
 
     var body: some View {
         VStack(spacing: 0) {
             grabber
-            ScrollView {
-                VStack(alignment: .leading, spacing: Spacing.xs) { content }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.horizontal, Spacing.xxl)
-                    .padding(.top, Spacing.xs)
-                    .padding(.bottom, Spacing.xl)
-                    .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { contentHeight = $0 }
+            // Высота известна сразу, до выезда: содержимое целиком, если помещается, иначе прокрутка. Замер
+            // высоты после появления давал выезд пустой полоски и рывок содержимого следом.
+            ViewThatFits(in: .vertical) {
+                column
+                ScrollView { column }
+                    .scrollBounceBehavior(.basedOnSize)
             }
-            .frame(height: min(contentHeight, max(maxHeight - Layout.grabberStrip, 0)))
-            .scrollBounceBehavior(.basedOnSize)
+            .frame(maxHeight: max(maxHeight - Layout.grabberStrip, 0))
         }
         .frame(maxWidth: .infinity)
         .background {
@@ -87,6 +85,14 @@ private struct SlideUpSheetPanel<Content: View>: View {
         .offset(y: dragOffset)
         .accessibilityAddTraits(.isModal)
         .accessibilityAction(.escape, onDismiss)
+    }
+
+    private var column: some View {
+        VStack(alignment: .leading, spacing: Spacing.xs) { content }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, Spacing.xxl)
+            .padding(.top, Spacing.xs)
+            .padding(.bottom, Spacing.xl)
     }
 
     /// Полоска сверху - за неё панель смахивается вниз (содержимое под ней прокручивается своим жестом).

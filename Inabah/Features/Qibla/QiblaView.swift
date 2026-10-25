@@ -37,7 +37,7 @@ private struct QiblaScreen: View {
 
     init(services: QiblaServices) {
         self.services = services
-        _model = State(initialValue: QiblaModel(location: services.location, heading: services.heading))
+        _model = State(initialValue: QiblaModel(location: services.location, heading: services.heading, tuning: .iPhone))
     }
 
     private var access: LocationAccess { services.access.access }
@@ -59,8 +59,8 @@ private struct QiblaScreen: View {
                 }
             }
             .overlay {
-                SlideUpSheet(isPresented: helpVisible, onDismiss: { helpVisible = false }) {
-                    QiblaHelpContent { helpVisible = false }
+                SlideUpSheet(isPresented: helpVisible, onDismiss: closeHelp) {
+                    QiblaHelpContent(onClose: closeHelp)
                 }
             }
             .animation(Motion.dialog, value: dialogVisible)
@@ -129,7 +129,12 @@ private struct QiblaScreen: View {
     private func openHelp() {
         helpHintVisible = false
         services.hints.markHelpSeen()
-        helpVisible = true
+        // Панель выезжает снизу и уезжает вниз - явной анимацией.
+        withAnimation(Motion.collapse) { helpVisible = true }
+    }
+
+    private func closeHelp() {
+        withAnimation(Motion.collapse) { helpVisible = false }
     }
 
     /// Подсказка у ⓘ - один раз, когда поверх ничего нет: ни нашего окна, ни окна системы.
@@ -193,8 +198,10 @@ private struct QiblaHeaderBar: View {
                 restarts += 1
                 onRestart()
             } label: {
-                Image(systemName: "arrow.clockwise")
-                    .font(.body.weight(.semibold))
+                // Значок Android `ic_replay`.
+                Image(.qiblaReplayIcon)
+                    .resizable()
+                    .frame(width: QiblaTileMetrics.glassSymbol, height: QiblaTileMetrics.glassSymbol)
             }
             .buttonStyle(GlassIconButtonStyle(tint: theme.palette.tabAzkar))
             .accessibilityLabel(Text("qibla.restart"))

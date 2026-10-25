@@ -256,6 +256,8 @@ enum QiblaTileMetrics {
     static let icon: CGFloat = 24
     /// SF-значок в поле `icon` - чуть меньше поля, как значки Material в 24 dp.
     static let symbolShare: CGFloat = 0.85
+    /// Значок в стеклянном круге - как Android `GlassSymbolSize`.
+    static let glassSymbol: CGFloat = 22
 }
 
 /// Местоположение: определено / приблизительное / устарело + «Обновить» / определяем / нет доступа.
@@ -336,8 +338,10 @@ struct QiblaAdviceTile: View {
                 .frame(width: iconSize, height: iconSize)
         } trailing: {
             Button(action: onOpenHelp) {
-                Image(systemName: "info")
-                    .font(.body.weight(.semibold))
+                // Значок Android `ic_info` (Material Symbols «info» в кольце), не SF-буква.
+                Image(.qiblaInfoIcon)
+                    .resizable()
+                    .frame(width: QiblaTileMetrics.glassSymbol, height: QiblaTileMetrics.glassSymbol)
             }
             .buttonStyle(GlassIconButtonStyle(tint: theme.palette.tabAzkar))
             .accessibilityLabel(Text("qibla.help"))

@@ -42,4 +42,15 @@ nonisolated struct QiblaTuning: Hashable, Sendable {
     var locationTimeout: TimeInterval = 30
 
     static let `default` = QiblaTuning()
+
+    /// iPhone: `CLHeading.headingAccuracy` - осторожная оценка, в помещении обычно 20-40° и при исправном
+    /// компасе. С порогом Android (20°/15°; у датчика Xiaomi оценки нет вовсе) «Компас неточен» и приглушённая
+    /// метка держались почти всё время (телефон пользователя, 2026-10-25). Сбитая калибровка
+    /// (`headingAccuracy < 0`) по-прежнему - сразу «неточен» (`QiblaHeadingQuality`).
+    static let iPhone: QiblaTuning = {
+        var tuning = QiblaTuning()
+        tuning.headingAccuracyMaxDegrees = 45
+        tuning.headingAccuracyExitDegrees = 35
+        return tuning
+    }()
 }
