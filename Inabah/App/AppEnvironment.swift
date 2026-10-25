@@ -40,6 +40,8 @@ struct AppEnvironment {
     let whatsNew: WhatsNew
     /// Есть ли новая версия в App Store — в 1.1.1 без сети (`NoUpdateSource`).
     let updateSource: any UpdateSource
+    /// «Къибла»: доступ к местоположению, координаты, компас.
+    let qibla: QiblaServices
 
     init(
         repository: any ContentRepository = BundleContentRepository(),
@@ -53,6 +55,7 @@ struct AppEnvironment {
         // Первым: «новая установка» узнаётся до того, как сторы запишут свои ключи.
         whatsNew = WhatsNew(defaults: defaults, repository: repository)
         self.updateSource = updateSource
+        qibla = .system(defaults: defaults)
         router = AppRouter()
         readingSettings = ReadingSettings(defaults: defaults)
         playlistSettings = PlaylistSettings(defaults: defaults)
@@ -179,6 +182,7 @@ extension View {
             .environment(environment.reminderScheduler)
             .environment(environment.whatsNew)
             .environment(\.updateSource, environment.updateSource)
+            .environment(\.qibla, environment.qibla)
             .modifier(ThemedModifier(
                 settings: environment.appearanceSettings,
                 parchment: environment.parchmentSettings,

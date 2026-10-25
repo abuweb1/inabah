@@ -32,6 +32,7 @@ struct RootTabView: View {
                                 case .list(let section): AzkarListView(section: section)
                                 case .calendar: AzkarCalendarView()
                                 case .composition(let section): AzkarCompositionView(section: section)
+                                case .qibla: QiblaView()
                                 }
                             }
                             .interfaceTextSize()

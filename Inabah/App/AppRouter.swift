@@ -15,6 +15,8 @@ nonisolated enum AzkarRoute: Hashable, Codable, Sendable {
     case calendar
     /// «Состав азкаров» раздела — из кнопки в шапке списка.
     case composition(AzkarSection)
+    /// «Къибла» — из кнопки с Каабой на главной.
+    case qibla
 }
 
 /// Экраны внутри вкладки «Настройки».
