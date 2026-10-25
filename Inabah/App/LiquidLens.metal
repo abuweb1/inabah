@@ -48,12 +48,3 @@ static float roundedBox(float2 p, float2 b, float r) {
     half glow = half((1.0 - t) * (1.0 - t) * haze * progress);
     return c + half4(glow, glow, glow, glow);
 }
-
-// Зерно стекла панели (Android Haze `noiseFactor`): без него размытие выглядит «пластиком». Накладывается
-// на заливку формы (капсулы): каждая точка внутри — чуть светлее или темнее (белый или чёрный с малой прозрачностью).
-[[ stitchable ]] half4 glassGrain(float2 position, half4 color, float amount) {
-    float n = fract(sin(dot(floor(position), float2(12.9898, 78.233))) * 43758.5453) - 0.5;
-    half alpha = half(abs(n) * 2.0 * amount) * color.a;
-    half white = n > 0.0 ? alpha : 0.0h;
-    return half4(white, white, white, alpha);
-}
