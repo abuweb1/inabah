@@ -124,6 +124,16 @@ final class AzkarStore {
         catalogs[section] ?? []
     }
 
+    /// Разделы, где в наборе выбраны не все азкары (не загруженный раздел — не в счёт) — для
+    /// «Добавьте ещё азкаров».
+    func incompleteCompositions() -> [CompositionCount] {
+        AzkarSection.allCases.compactMap { section in
+            let total = catalog(of: section).count
+            let selected = sessions(in: section).count
+            return selected < total ? CompositionCount(section: section, selected: selected, total: total) : nil
+        }
+    }
+
     /// Номера набора раздела по порядку.
     func composition(of section: AzkarSection) -> [Int] {
         sessions(in: section).map(\.zikr.number)
@@ -176,9 +186,19 @@ final class AzkarStore {
         if progressBySection[section] != progress {
             progressBySection[section] = progress
         }
-        if let period = periods[section], period.isWindow, progress.total > 0 {
+        if let period = periods[section], period.isWindow, progress.total > 0,
+           !keepsCompletedDay(of: section, on: period.day, progress: progress) {
             history.record(progress, of: section, on: period.day)
         }
+    }
+
+    /// Раздел в этом окне уже дочитан, а «Состав азкаров» с тех пор поменяли (другое число зикров): день
+    /// остаётся полным, пока не дочитан и новый набор — добавленные засчитываются со следующего раза
+    /// (решение пользователя 2026-10-25: «ОК» в «Добавьте ещё азкаров» не должно рвать серию). Сброс при
+    /// прежнем составе пишется как раньше.
+    private func keepsCompletedDay(of section: AzkarSection, on day: String, progress: SectionProgress) -> Bool {
+        guard let recorded = history.record(of: section, on: day) else { return false }
+        return recorded.isComplete && recorded.total != progress.total && !progress.isFinished
     }
 
     /// Есть ли что сбрасывать: начат хотя бы один зикр. Раздел, который ещё не загружен
@@ -354,6 +374,13 @@ final class AzkarStore {
         guard acknowledgedCompletions.remove(section) != nil else { return }
         save(section)
     }
+}
+
+/// Сколько азкаров раздела в наборе — плашка «Утренние 16 из 21» в «Добавьте ещё азкаров».
+nonisolated struct CompositionCount: Hashable, Sendable {
+    let section: AzkarSection
+    let selected: Int
+    let total: Int
 }
 
 nonisolated struct SectionProgress: Hashable, Sendable {

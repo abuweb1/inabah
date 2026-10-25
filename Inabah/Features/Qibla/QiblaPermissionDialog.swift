@@ -2,11 +2,7 @@ import SwiftUI
 
 /// Пояснение перед окном системы (решение пользователя 2026-10-24): по центру, стекло - размыто только то,
 /// что под окном, экран вокруг лишь чуть притемнён. «Не сейчас» - на экране остаётся «Разрешить».
-/// Касание мимо окна ничего не делает.
-///
-/// Размытие своё, не системное (решение пользователя 2026-10-25: системное делало окно плотным и серым):
-/// под окном лежит размытая копия экрана `backdrop`, вырезанная по форме окна. Копия - тот же экран в том же
-/// месте слоя, поэтому совпадает с ним.
+/// Касание мимо окна ничего не делает. Стекло - общее `GlassDialog` (своё размытие копии экрана `backdrop`).
 struct QiblaPermissionDialog<Backdrop: View>: View {
     let onAllow: () -> Void
     let onLater: () -> Void
@@ -14,33 +10,15 @@ struct QiblaPermissionDialog<Backdrop: View>: View {
 
     @Environment(\.theme) private var theme
     @ScaledMetric(relativeTo: .headline) private var iconSize = QiblaDialogLayout.icon
-    /// Рамка окна в слое - по ней вырезается размытая копия.
-    @State private var cardFrame: CGRect = .zero
 
     private typealias Layout = QiblaDialogLayout
 
     var body: some View {
-        ZStack {
-            theme.palette.shadow.opacity(Layout.scrimOpacity)
-                .ignoresSafeArea()
-                .contentShape(.rect)
-                .onTapGesture {}
-                .accessibilityHidden(true)
-            backdrop
-                .blur(radius: Layout.blurRadius)
-                .mask {
-                    RoundedRectangle(cornerRadius: Layout.cornerRadius)
-                        .frame(width: cardFrame.width, height: cardFrame.height)
-                        .position(x: cardFrame.midX, y: cardFrame.midY)
-                }
-                .allowsHitTesting(false)
-                .accessibilityHidden(true)
+        GlassDialog(style: Layout.style, tint: theme.palette.tabAzkar, rim: theme.palette.onAccent) {
             card
-                .onGeometryChange(for: CGRect.self) { $0.frame(in: .named(Layout.space)) } action: { cardFrame = $0 }
-                .frame(maxWidth: Layout.maxWidth)
-                .padding(Spacing.xxl)
+        } backdrop: {
+            backdrop
         }
-        .coordinateSpace(.named(Layout.space))
     }
 
     private var card: some View {
@@ -78,36 +56,23 @@ struct QiblaPermissionDialog<Backdrop: View>: View {
         .multilineTextAlignment(.center)
         .padding(.horizontal, Spacing.xl)
         .padding(.vertical, Spacing.xxl)
-        .background { background }
         .accessibilityElement(children: .contain)
         .accessibilityAddTraits(.isModal)
         .accessibilityAction(.escape, onLater)
     }
-
-    /// Заливка в тон раздела поверх размытой копии и светлый ободок. Без тени - под стеклом она
-    /// просвечивала бы тёмным пятном.
-    private var background: some View {
-        let shape = RoundedRectangle(cornerRadius: Layout.cornerRadius)
-        let glass = SRGBColor(theme.palette.background).mixed(with: SRGBColor(theme.palette.tabAzkar), by: Layout.tintShare).color
-        return shape
-            .fill(glass.opacity(Layout.fillOpacity))
-            .overlay { shape.strokeBorder(theme.palette.onAccent.opacity(Layout.rimOpacity), lineWidth: Size.hairline) }
-    }
 }
 
 /// Константы окна - вне обобщённого типа (в нём нельзя хранимые статические свойства).
-nonisolated private enum QiblaDialogLayout {
-    static let space = "qiblaDialog"
-    static let maxWidth: CGFloat = 340
-    static let cornerRadius: CGFloat = 28
-    /// Затемнение вокруг лёгкое: сквозь стекло оно тоже видно.
-    static let scrimOpacity = 0.2
-    /// Своё размытие под окном (как Haze на Android).
-    static let blurRadius: CGFloat = 16
-    static let fillOpacity = 0.4
-    static let rimOpacity = 0.35
-    /// Доля цвета раздела в стекле окна.
-    static let tintShare = 0.2
+private enum QiblaDialogLayout {
+    /// Затемнение вокруг лёгкое: сквозь стекло оно тоже видно; доля цвета раздела 0,2, светлый ободок.
+    static let style = GlassDialogStyle(
+        maxWidth: 340,
+        screenMargin: Spacing.xxl,
+        cornerRadius: 28,
+        scrimOpacity: 0.2,
+        tintShare: 0.2,
+        rimOpacity: 0.35
+    )
     static let icon: CGFloat = 34
 }
 

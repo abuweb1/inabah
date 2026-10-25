@@ -5993,6 +5993,129 @@
           }
         }
       }
+    },
+    "azkar.motivation.title" : {
+      "comment" : "«Добавьте ещё азкаров»: окно после «Машаа Аллах!» при серии от 14 дней",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вы держите серию!"
+          }
+        }
+      }
+    },
+    "azkar.motivation.message" : {
+      "comment" : "«Добавьте ещё азкаров»: окно после «Машаа Аллах!» при серии от 14 дней",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Машаа Аллах! Вы уже хорошо закрепились на выбранных азкарах. Может быть, добавите ещё?"
+          }
+        }
+      }
+    },
+    "azkar.motivation.hadith" : {
+      "comment" : "«Добавьте ещё азкаров»: окно после «Машаа Аллах!» при серии от 14 дней",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "«Самые любимые Аллахӏом дела - постоянные, даже если их немного»"
+          }
+        }
+      }
+    },
+    "azkar.motivation.hadith.source" : {
+      "comment" : "«Добавьте ещё азкаров»: окно после «Машаа Аллах!» при серии от 14 дней",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Передаётся от ‘Аиши, да будет доволен ею Аллахӏ · аль-Бухари 6464, Муслим 783"
+          }
+        }
+      }
+    },
+    "azkar.motivation.later" : {
+      "comment" : "«Добавьте ещё азкаров»: окно после «Машаа Аллах!» при серии от 14 дней",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "В другой раз"
+          }
+        }
+      }
+    },
+    "azkar.motivation.ok" : {
+      "comment" : "«Добавьте ещё азкаров»: окно после «Машаа Аллах!» при серии от 14 дней",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ОК"
+          }
+        }
+      }
+    },
+    "azkar.motivation.morning.count %lld %lld" : {
+      "comment" : "«Добавьте ещё азкаров»: окно после «Машаа Аллах!» при серии от 14 дней, плашка раздела (выбрано из всех)",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Утренние %1$lld из %2$lld"
+          }
+        }
+      }
+    },
+    "azkar.motivation.evening.count %lld %lld" : {
+      "comment" : "«Добавьте ещё азкаров»: окно после «Машаа Аллах!» при серии от 14 дней, плашка раздела (выбрано из всех)",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вечерние %1$lld из %2$lld"
+          }
+        }
+      }
+    },
+    "azkar.motivation.days %lld" : {
+      "comment" : "«Добавьте ещё азкаров»: число серии и подпись под ним - первая строка (число) показывается крупно золотом, поэтому перенос строки обязателен",
+      "localizations" : {
+        "ru" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld\nдень подряд"
+                }
+              },
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld\nдня подряд"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld\nдней подряд"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld\nдня подряд"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "version" : "1.0"
