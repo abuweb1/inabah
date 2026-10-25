@@ -654,7 +654,7 @@ class AzkarListScreenTest {
         store: AzkarStore,
         reading: ReadingSettings = defaultReading,
         player: AudioPlayerController = defaultPlayer,
-        onOpenComposition: (() -> Unit)? = null,
+        onOpenComposition: ((AzkarSection) -> Unit)? = null,
     ) {
         InabahTheme {
             AzkarListScreen(

@@ -253,7 +253,8 @@ private fun TabScreens(tab: AppTab, services: AppServices, contentPadding: Paddi
                     onBack = { router.pop(AppTab.Azkar) },
                     onGoHome = { router.popToRoot(AppTab.Azkar) },
                     contentPadding = contentPadding.bottomOnly(),
-                    onOpenComposition = { router.push(AzkarRoute.Composition(route.section)) },
+                    onOpenComposition = { router.push(AzkarRoute.Composition(it)) },
+                    motivation = services.azkarMotivation,
                 )
             }
             entry<AzkarRoute.Composition> { route ->
