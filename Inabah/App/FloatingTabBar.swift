@@ -54,7 +54,6 @@ struct FloatingTabBar: View {
     static let compactAnimation = Animation.interpolatingSpring(mass: 1, stiffness: 400, damping: 34)
 
     private static let pillInset: CGFloat = 4
-    private static let barFillOpacity = 0.07
     private static let barTintOpacity = 0.08
     private static let rimOpacity = 0.45
     private static let pillOpacity = 0.3
@@ -77,9 +76,9 @@ struct FloatingTabBar: View {
     /// Панель при касании подаётся вперёд и насыщается цветом раздела.
     private static let barLiftScale: CGFloat = 0.03
     private static let barGlowOpacity = 0.22
-    /// Стекло — как Android: слабое размытие (6 dp) с зерном, без подкраски.
+    /// Стекло — слабое размытие (как Android Haze 6 dp) без зерна и белой заливки: зерно в точках (3×3 пикселя)
+    /// и белая дымка давали «пыльную» поверхность (проверка на телефоне 2026-10-25).
     private static let blurFraction: CGFloat = 0.2
-    private static let grainAmount: Float = 0.08
     /// Тень выходит за капсулу — маска тени с этим запасом.
     private static let shadowMaskOutset: CGFloat = 40
 
@@ -181,14 +180,10 @@ struct FloatingTabBar: View {
                         .overlay { Capsule().blendMode(.destinationOut) }
                         .compositingGroup()
                 }
-            // Лёгкое размытие содержимого под капсулой и зерно — как Android (Haze 6 dp, шум 0,08).
+            // Лёгкое размытие содержимого под капсулой — как Android (Haze 6 dp).
             BackdropBlur(fraction: Self.blurFraction)
                 .clipShape(Capsule())
-            Capsule()
-                .fill(.white)
-                .colorEffect(ShaderLibrary.glassGrain(.float(Self.grainAmount)))
             Capsule().fill(tint.opacity(Self.barTintOpacity))
-            Capsule().fill(theme.palette.onAccent.opacity(Self.barFillOpacity))
             Capsule().fill(tint.opacity(Self.barGlowOpacity)).opacity(lift)
             Capsule().strokeBorder(tint.opacity(Self.rimOpacity), lineWidth: Size.hairline)
         }
@@ -411,7 +406,8 @@ private struct LiquidLensEffect: ViewModifier, Animatable {
 
 /// Лёгкое размытие содержимого под панелью (как Android Haze 6 dp): у системного размытия радиус не задаётся,
 /// поэтому эффект ставится не целиком — доля `fraction` приостановленного аниматора (публичный API).
-/// Вместе с размытием слабеет и подкраска системного стекла — панель не сереет.
+/// Вместе с размытием слабеет и подкраска системного стекла; стиль — самый тонкий тёмный материал:
+/// у `.regular` подкраска серая, и панель казалась пыльной.
 private struct BackdropBlur: UIViewRepresentable {
     let fraction: CGFloat
 
@@ -446,7 +442,7 @@ private struct BackdropBlur: UIViewRepresentable {
             stop()
             effect = nil
             let animator = UIViewPropertyAnimator(duration: 1, curve: .linear) { [weak self] in
-                self?.effect = UIBlurEffect(style: .regular)
+                self?.effect = UIBlurEffect(style: .systemUltraThinMaterialDark)
             }
             animator.pausesOnCompletion = true
             animator.fractionComplete = fraction
