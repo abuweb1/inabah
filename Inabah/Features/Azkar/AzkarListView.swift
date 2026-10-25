@@ -14,8 +14,33 @@ struct AzkarListView: View {
     @Environment(\.theme) private var theme
 
     @State private var showsCompletion = false
+    /// «Добавьте ещё азкаров»: показанное предложение, пока окно открыто. Запоминается целиком при показе —
+    /// закрытие записывает его, а не день закрытия.
+    @State private var motivationOffer: MotivationOffer?
 
     var body: some View {
+        // Окно прошлого дня (вернулись на экран после конца вечернего окна) не показывается.
+        let offer = motivationOffer.flatMap { $0.day == store.streakDay ? $0 : nil }
+        screen
+            .accessibilityHidden(offer != nil)
+            // Поверх всего экрана с шапкой; панель вкладок не закрывает.
+            .overlay {
+                if let offer {
+                    AzkarMotivationLayer(section: section, offer: offer, settings: settings) {
+                        motivationOffer = nil
+                    }
+                    .transition(.opacity)
+                }
+            }
+            .animation(Motion.dialog, value: offer)
+            .background {
+                AzkarMotivationWatcher(showsCompletion: showsCompletion) { motivationOffer = $0 }
+            }
+            .toolbar(.hidden, for: .navigationBar)
+            .task { await store.load(section) }
+    }
+
+    private var screen: some View {
         content
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background { section.background(in: theme).linear.ignoresSafeArea() }
@@ -37,8 +62,6 @@ struct AzkarListView: View {
             .safeAreaInset(edge: .top, spacing: 0) {
                 AzkarHeaderBar(section: section, settings: settings)
             }
-            .toolbar(.hidden, for: .navigationBar)
-            .task { await store.load(section) }
     }
 
     @ViewBuilder
@@ -289,6 +312,70 @@ private struct CardTopMarker: View {
 
     /// Верх «на экране», только если видна полоса над ним почти целиком.
     private static let visibleShare = 0.9
+}
+
+/// «Добавьте ещё азкаров» (`AzkarMotivation.due`): через 1 с после «Машаа Аллах!», чтобы сначала был виден итог
+/// дня. Проверяется при каждом показе оверлея; закрытое окно запоминается в `AzkarMotivation.offered`, поэтому
+/// повторное прохождение того же дня окна не покажет.
+private struct AzkarMotivationWatcher: View {
+    let showsCompletion: Bool
+    let onShow: (MotivationOffer) -> Void
+
+    @Environment(AzkarStore.self) private var store
+    @Environment(AzkarHistory.self) private var history
+    @Environment(AzkarMotivation.self) private var motivation
+
+    var body: some View {
+        Color.clear
+            .task(id: showsCompletion) {
+                guard showsCompletion else { return }
+                try? await Task.sleep(for: Motion.motivationDelay)
+                guard !Task.isCancelled, let today = store.streakDay else { return }
+                let canAddMore = !store.incompleteCompositions().isEmpty
+                if let offer = motivation.due(days: history.days, today: today, canAddMore: canAddMore) {
+                    onShow(offer)
+                }
+            }
+            .accessibilityHidden(true)
+    }
+}
+
+/// Окно «Добавьте ещё азкаров» над экраном списка. Под стеклом — размытая копия того, что видно под окном:
+/// шапка и «Машаа Аллах!» (ленту под оверлеем не видно — её копировать не нужно).
+private struct AzkarMotivationLayer: View {
+    let section: AzkarSection
+    let offer: MotivationOffer
+    let settings: ReadingSettings
+    let onClose: () -> Void
+
+    @Environment(AzkarStore.self) private var store
+    @Environment(AzkarMotivation.self) private var motivation
+    @Environment(AppRouter.self) private var router
+    @Environment(\.theme) private var theme
+
+    var body: some View {
+        let counts = store.incompleteCompositions()
+        AzkarMotivationDialog(streak: offer.streak, counts: counts) {
+            close()
+            // Раздел, где выбраны не все: этот, иначе другой. Поверх списка — «назад» вернёт в него.
+            let target = counts.first { $0.section == section }?.section ?? counts.first?.section ?? section
+            router.azkarPath.append(.composition(target))
+        } onLater: {
+            close()
+        } backdrop: {
+            AzkarCompletionView(section: section) {}
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .background { section.background(in: theme).linear.ignoresSafeArea() }
+                .safeAreaInset(edge: .top, spacing: 0) {
+                    AzkarHeaderBar(section: section, settings: settings)
+                }
+        }
+    }
+
+    private func close() {
+        motivation.offered(offer)
+        onClose()
+    }
 }
 
 /// Показывает оверлей «Машаа Аллах!» с паузой после выполнения всех зикров раздела.

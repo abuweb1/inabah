@@ -161,6 +161,44 @@ struct AzkarStoreTests {
         #expect(restarted.sessions(in: .morning).map(\.count) == [1, 0])
     }
 
+    @Test("Состав поменяли после того, как раздел дочитан, — день остаётся полным, пока не дочитан новый набор")
+    func addingAfterCompletionKeepsDay() async throws {
+        var berlin = Calendar(identifier: .gregorian)
+        berlin.timeZone = try #require(TimeZone(identifier: "Europe/Berlin"))
+        let now = try #require(berlin.date(from: DateComponents(year: 2026, month: 10, day: 3, hour: 8)))
+        var optional = Self.zikr(3, repetitions: 1)
+        optional.isOptional = true
+        let history = AzkarHistory(defaults: defaults)
+        let store = AzkarStore(
+            repository: InMemoryContentRepository(azkar: [
+                .morning: [Self.zikr(1, repetitions: 1), Self.zikr(2, repetitions: 3), optional],
+            ]),
+            defaults: defaults,
+            history: history,
+            now: { now },
+            calendar: berlin
+        )
+        await store.load(.morning)
+        let day = "2026-10-03"
+        for session in store.sessions(in: .morning) {
+            for _ in 0..<session.zikr.repetitions { session.increment() }
+        }
+        #expect(history.record(of: .morning, on: day) == AzkarDayRecord(completed: 2, total: 2))
+
+        // «ОК» в «Добавьте ещё азкаров» → добавлен 3: прогресс 2 из 3, а день — всё ещё полный.
+        store.applyComposition([1, 2, 3], to: .morning)
+        #expect(store.progress(of: .morning) == SectionProgress(completed: 2, total: 3))
+        #expect(history.record(of: .morning, on: day) == AzkarDayRecord(completed: 2, total: 2))
+
+        // Дочитан и новый — запись с новым числом.
+        store.sessions(in: .morning)[2].increment()
+        #expect(history.record(of: .morning, on: day) == AzkarDayRecord(completed: 3, total: 3))
+
+        // Сброс при прежнем составе — как раньше: день неполный.
+        store.sessions(in: .morning)[2].reset()
+        #expect(history.record(of: .morning, on: day) == AzkarDayRecord(completed: 2, total: 3))
+    }
+
     @Test("Убрали невыполненный — раздел выполнен")
     func removingUnfinishedCompletesSection() async {
         let store = storeWithOptional()

@@ -11,6 +11,8 @@ struct AppEnvironment {
     let playlistSettings: PlaylistSettings
     let azkarWindowSettings: AzkarWindowSettings
     let azkarHistory: AzkarHistory
+    /// «Добавьте ещё азкаров»: когда предлагали последний раз.
+    let azkarMotivation: AzkarMotivation
     let azkarStore: AzkarStore
     let hadithStore: HadithStore
     let hadithProgress: HadithProgress
@@ -61,6 +63,7 @@ struct AppEnvironment {
         playlistSettings = PlaylistSettings(defaults: defaults)
         azkarWindowSettings = AzkarWindowSettings(defaults: defaults)
         azkarHistory = AzkarHistory(defaults: defaults)
+        azkarMotivation = AzkarMotivation(defaults: defaults)
         azkarStore = AzkarStore(
             repository: repository,
             defaults: defaults,
@@ -164,6 +167,7 @@ extension View {
             .environment(environment.playlistSettings)
             .environment(environment.azkarWindowSettings)
             .environment(environment.azkarHistory)
+            .environment(environment.azkarMotivation)
             .environment(environment.azkarStore)
             .environment(environment.hadithStore)
             .environment(environment.hadithProgress)
