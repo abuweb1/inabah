@@ -105,6 +105,14 @@
     <string name="azkar_evening_title">Вечерние азкары</string>
     <string name="azkar_morning_subtitle">После намаза Фаджр</string>
     <string name="azkar_morning_title">Утренние азкары</string>
+    <string name="azkar_motivation_evening_count">Вечерние %1$d из %2$d</string>
+    <string name="azkar_motivation_hadith">«Самые любимые Аллахӏом дела - постоянные, даже если их немного»</string>
+    <string name="azkar_motivation_hadith_source">Передаётся от ‘Аиши, да будет доволен ею Аллахӏ · аль-Бухари 6464, Муслим 783</string>
+    <string name="azkar_motivation_later">В другой раз</string>
+    <string name="azkar_motivation_message">Машаа Аллах! Вы уже хорошо закрепились на выбранных азкарах. Может быть, добавите ещё?</string>
+    <string name="azkar_motivation_morning_count">Утренние %1$d из %2$d</string>
+    <string name="azkar_motivation_ok">ОК</string>
+    <string name="azkar_motivation_title">Вы держите серию!</string>
     <string name="azkar_progress">Выполнено: %1$d из %2$d</string>
     <string name="azkar_qibla_hint">Нажмите, чтобы узнать направление Къиблы</string>
     <string name="azkar_streak_days_max">9999+ дней подряд</string>
@@ -558,6 +566,13 @@
         <item quantity="few">%d зикра · После фаджра</item>
         <item quantity="many">%d зикров · После фаджра</item>
         <item quantity="other">%d зикра · После фаджра</item>
+    </plurals>
+    <!-- Подпись под крупным числом серии в окне «Добавьте ещё азкаров»: само число - отдельной строкой выше. -->
+    <plurals name="azkar_motivation_days" tools:ignore="ImpliedQuantity">
+        <item quantity="one">день подряд</item>
+        <item quantity="few">дня подряд</item>
+        <item quantity="many">дней подряд</item>
+        <item quantity="other">дня подряд</item>
     </plurals>
     <plurals name="azkar_streak_days">
         <item quantity="one">%d день подряд</item>

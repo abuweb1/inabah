@@ -40,6 +40,7 @@ import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
@@ -86,11 +87,16 @@ import app.inabah.android.core.designsystem.components.TopBarSubtitle
 import app.inabah.android.core.designsystem.components.surface
 import app.inabah.android.core.formatting.formatPercent
 import app.inabah.android.core.settings.AzkarHistory
+import app.inabah.android.core.settings.AzkarMotivation
+import app.inabah.android.core.settings.MotivationOffer
 import app.inabah.android.core.settings.AzkarWindowSettings
 import app.inabah.android.core.settings.PlaylistSettings
 import app.inabah.android.core.settings.ReadingSettings
 import app.inabah.android.core.settings.azkarStreak
 import kotlin.math.floor
+import dev.chrisbanes.haze.hazeSource
+import dev.chrisbanes.haze.rememberHazeState
+import java.time.LocalDate
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
@@ -104,6 +110,9 @@ private const val COMPLETION_VERSE = "يَا أَيُّهَا الَّذِينَ
 private const val COMPLETION_LINE_ICON_SIZE = 18
 private const val COMPLETION_TITLE_SIZE = 52f
 private const val COMPLETION_HAMD_SIZE = 24f
+
+/** «Добавьте ещё азкаров» — через секунду после «Машаа Аллах!» (набросок `docs/design/azkar-motivation.html`). */
+private const val MOTIVATION_DELAY_MILLIS = 1_000L
 
 /** Процент шапки: половина — вверх, как `Math.round` прототипа (2 из 16 → 13 %). */
 internal fun headerPercent(progress: SectionProgress): Int = floor(progress.fraction * PERCENT + HALF).toInt()
@@ -128,8 +137,10 @@ fun AzkarListScreen(
     onGoHome: () -> Unit,
     contentPadding: PaddingValues,
     modifier: Modifier = Modifier,
-    /** «Состав азкаров» этого раздела (кнопка «⇅» в шапке); `null` — кнопки нет. */
-    onOpenComposition: (() -> Unit)? = null,
+    /** «Состав азкаров» раздела (кнопка «⇅» в шапке — этого, «ОК» в «Добавьте ещё азкаров» — где выбраны не все); `null` — кнопки нет. */
+    onOpenComposition: ((AzkarSection) -> Unit)? = null,
+    /** «Добавьте ещё азкаров» после «Машаа Аллах!»; `null` — окна нет. */
+    motivation: AzkarMotivation? = null,
 ) {
     val theme = LocalInabahTheme.current
     val state by store.state(section).collectAsStateWithLifecycle()
@@ -147,69 +158,139 @@ fun AzkarListScreen(
     val days by history.days.collectAsStateWithLifecycle()
     val day = today?.let(days::get)
     val streak = today?.let { remember(days, it) { azkarStreak(days, it).current } } ?: 0
-
-    Column(modifier.fillMaxSize().background(section.background(theme))) {
-        InabahTopBar(
-            title = stringResource(section.title),
-            tint = theme.palette.tabAzkar,
-            onBack = onBack,
-            subtitle = { TopBarSubtitle(stringResource(section.subtitle)) },
-            background = section.headerColor(theme),
-            centerTitle = false,
+    // «Добавьте ещё азкаров» (решение пользователя 2026-10-25): показанное предложение, пока окно открыто.
+    // Запоминается целиком при показе — закрытие записывает его, а не день закрытия (ревью 2026-10-25).
+    var motivationOffer by rememberSaveable(stateSaver = MotivationOfferSaver) { mutableStateOf<MotivationOffer?>(null) }
+    if (motivation != null && onOpenComposition != null) {
+        MotivationWatcher(store, history, motivation, showsCompletion, onShow = { motivationOffer = it })
+    }
+    // Восстановленное окно прошлого дня (пересоздание, возврат с другой вкладки после конца окна) — не показывать.
+    val offered = motivationOffer?.takeIf { it.day == today }
+    val backdrop = rememberHazeState()
+    Box(modifier.fillMaxSize()) {
+        Column(
+            Modifier
+                .fillMaxSize()
+                .background(section.background(theme))
+                // Под окном экран размыт (слой записывается, только пока окно открыто) и скрыт от TalkBack.
+                .then(if (offered != null) Modifier.hazeSource(backdrop).clearAndSetSemantics {} else Modifier),
         ) {
-            // «Сделать напоминание» — круглая кнопка как «‹», значок «Поделиться» (решение пользователя 2026-10-06).
-            GlassIconButton(
-                onClick = onRemind,
-                iconRes = R.drawable.ic_share,
-                contentDescription = stringResource(R.string.reminder_action),
+            InabahTopBar(
+                title = stringResource(section.title),
                 tint = theme.palette.tabAzkar,
-            )
-            // «Состав азкаров» — быстрый вход из списка (решение пользователя 2026-10-24).
-            onOpenComposition?.let {
+                onBack = onBack,
+                subtitle = { TopBarSubtitle(stringResource(section.subtitle)) },
+                background = section.headerColor(theme),
+                centerTitle = false,
+            ) {
+                // «Сделать напоминание» — круглая кнопка как «‹», значок «Поделиться» (решение пользователя 2026-10-06).
                 GlassIconButton(
-                    onClick = it,
-                    iconRes = R.drawable.ic_swap_vert,
-                    contentDescription = stringResource(R.string.settings_azkar_composition_header),
+                    onClick = onRemind,
+                    iconRes = R.drawable.ic_share,
+                    contentDescription = stringResource(R.string.reminder_action),
+                    tint = theme.palette.tabAzkar,
+                )
+                // «Состав азкаров» — быстрый вход из списка (решение пользователя 2026-10-24).
+                onOpenComposition?.let { open ->
+                    GlassIconButton(
+                        onClick = { open(section) },
+                        iconRes = R.drawable.ic_swap_vert,
+                        contentDescription = stringResource(R.string.settings_azkar_composition_header),
+                        tint = theme.palette.tabAzkar,
+                    )
+                }
+                FontSizeControls(
+                    canDecrease = ReadingSettings.canDecrease(fontSize),
+                    canIncrease = ReadingSettings.canIncrease(fontSize),
+                    onDecrease = readingSettings::decreaseArabicFontSize,
+                    onIncrease = readingSettings::increaseArabicFontSize,
                     tint = theme.palette.tabAzkar,
                 )
             }
-            FontSizeControls(
-                canDecrease = ReadingSettings.canDecrease(fontSize),
-                canIncrease = ReadingSettings.canIncrease(fontSize),
-                onDecrease = readingSettings::decreaseArabicFontSize,
-                onIncrease = readingSettings::increaseArabicFontSize,
-                tint = theme.palette.tabAzkar,
-            )
-        }
-        Box(Modifier.fillMaxSize()) {
-            when (val current = state) {
-                Loadable.Idle, Loadable.Loading -> CircularProgressIndicator(
-                    color = InabahTheme.palette.onAccent,
-                    modifier = Modifier.align(Alignment.Center),
-                )
-                is Loadable.Failed -> ContentError(
-                    onRetry = { scope.launch { store.load(section) } },
-                    modifier = Modifier.align(Alignment.Center),
-                )
-                // Под оверлеем лента скрыта от TalkBack.
-                is Loadable.Loaded -> Column(
-                    Modifier
-                        .fillMaxSize()
-                        .then(if (showsCompletion) Modifier.clearAndSetSemantics {} else Modifier),
+            Box(Modifier.fillMaxSize()) {
+                when (val current = state) {
+                    Loadable.Idle, Loadable.Loading -> CircularProgressIndicator(
+                        color = InabahTheme.palette.onAccent,
+                        modifier = Modifier.align(Alignment.Center),
+                    )
+                    is Loadable.Failed -> ContentError(
+                        onRetry = { scope.launch { store.load(section) } },
+                        modifier = Modifier.align(Alignment.Center),
+                    )
+                    // Под оверлеем лента скрыта от TalkBack.
+                    is Loadable.Loaded -> Column(
+                        Modifier
+                            .fillMaxSize()
+                            .then(if (showsCompletion) Modifier.clearAndSetSemantics {} else Modifier),
+                    ) {
+                        AzkarTopPanel(store, windowSettings, section)
+                        AzkarFeed(section, current.value, fontSize.toFloat(), player, playlistSettings, contentPadding)
+                    }
+                }
+                // Поверх шапки и ленты, навбар не закрывает (как в iOS). Полное имя — без ColumnScope-варианта.
+                androidx.compose.animation.AnimatedVisibility(
+                    visible = showsCompletion,
+                    enter = fadeIn(Motion.overlay()),
+                    exit = fadeOut(Motion.overlay()),
                 ) {
-                    AzkarTopPanel(store, windowSettings, section)
-                    AzkarFeed(section, current.value, fontSize.toFloat(), player, playlistSettings, contentPadding)
+                    CompletionOverlay(section, section.completionReminder(day), streak, onGoHome, onRemind, contentPadding)
                 }
             }
-            // Поверх шапки и ленты, навбар не закрывает (как в iOS). Полное имя — без ColumnScope-варианта.
-            androidx.compose.animation.AnimatedVisibility(
-                visible = showsCompletion,
-                enter = fadeIn(Motion.overlay()),
-                exit = fadeOut(Motion.overlay()),
-            ) {
-                CompletionOverlay(section, section.completionReminder(day), streak, onGoHome, onRemind, contentPadding)
-            }
         }
+        if (offered != null && motivation != null && onOpenComposition != null) {
+            val counts = remember(offered) { compositionCounts(store) }
+            val onLater = remember(offered) {
+                {
+                    motivation.offered(offered)
+                    motivationOffer = null
+                }
+            }
+            AzkarMotivationDialog(
+                streak = offered.streak,
+                counts = counts,
+                backdrop = backdrop,
+                onOk = {
+                    onLater()
+                    // Раздел, где выбраны не все: этот, иначе другой.
+                    onOpenComposition((counts.firstOrNull { it.section == section } ?: counts.firstOrNull())?.section ?: section)
+                },
+                onLater = onLater,
+            )
+        }
+    }
+}
+
+/** Показанное предложение — через пересоздание активности: начало серии (день эпохи) и день серии. */
+private val MotivationOfferSaver = Saver<MotivationOffer?, List<Long>>(
+    save = { offer -> offer?.let { listOf(it.seriesStart.toEpochDay(), it.streak.toLong()) } },
+    restore = { MotivationOffer(LocalDate.ofEpochDay(it[0]), it[1].toInt()) },
+)
+
+/** Разделы, где в наборе выбраны не все азкары (не загруженный раздел — не в счёт). */
+private fun compositionCounts(store: AzkarStore): List<CompositionCount> = AzkarSection.entries.mapNotNull { section ->
+    val total = store.catalog(section).size
+    val selected = store.sessions(section).size
+    if (selected < total) CompositionCount(section, selected, total) else null
+}
+
+/**
+ * Предложение добавить азкаров ([AzkarMotivation.due]) — после «Машаа Аллах!» с паузой, чтобы сначала был виден
+ * итог дня. Проверяется при каждом показе оверлея; закрытое окно запоминается в [AzkarMotivation.offered].
+ */
+@Composable
+private fun MotivationWatcher(
+    store: AzkarStore,
+    history: AzkarHistory,
+    motivation: AzkarMotivation,
+    showsCompletion: Boolean,
+    onShow: (MotivationOffer) -> Unit,
+) {
+    LaunchedEffect(showsCompletion) {
+        if (!showsCompletion) return@LaunchedEffect
+        delay(MOTIVATION_DELAY_MILLIS)
+        val today = store.streakDay.value ?: return@LaunchedEffect
+        val due = motivation.due(history.days.value, today, canAddMore = compositionCounts(store).isNotEmpty())
+        if (due != null) onShow(due)
     }
 }
 

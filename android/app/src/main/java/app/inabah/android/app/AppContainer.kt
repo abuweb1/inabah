@@ -29,6 +29,7 @@ import app.inabah.android.core.updates.UpdateSource
 import app.inabah.android.core.settings.AppIconSettings
 import app.inabah.android.core.settings.AppearanceSettings
 import app.inabah.android.core.settings.AzkarComposition
+import app.inabah.android.core.settings.AzkarMotivation
 import app.inabah.android.core.settings.AzkarHistory
 import app.inabah.android.core.settings.AzkarWindowSettings
 import app.inabah.android.core.settings.DEBUG_AZKAR_HISTORY_FILE
@@ -68,6 +69,7 @@ class AppServices(
     val azkarWindowSettings: AzkarWindowSettings,
     /** «Состав азкаров»: экран правит, `azkarStore` применяет. */
     val azkarComposition: AzkarComposition,
+    val azkarMotivation: AzkarMotivation,
     val azkarStore: AzkarStore,
     val azkarHistory: AzkarHistory,
     val hadithStore: HadithStore,
@@ -196,6 +198,7 @@ class AppContainer(context: Context) {
             playlistSettings = PlaylistSettings(storage),
             azkarWindowSettings = azkarWindowSettings,
             azkarComposition = azkarComposition,
+            azkarMotivation = AzkarMotivation(storage),
             azkarStore = AzkarStore(
                 repository = repository,
                 storage = storage,

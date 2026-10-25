@@ -260,9 +260,19 @@ class AzkarStore(
         )
         progressBySection.getValue(section).value = progress
         val period = periods[section]
-        if (period != null && period.isWindow && progress.total > 0) {
+        if (period != null && period.isWindow && progress.total > 0 && !keepsCompletedDay(section, period.day, progress)) {
             history.record(progress.completed, progress.total, section, period.day)
         }
+    }
+
+    /**
+     * Раздел в этом окне уже дочитан, а «Состав азкаров» с тех пор поменяли (другое число зикров): день остаётся
+     * полным, пока не дочитан и новый набор — добавленные засчитываются со следующего раза (решение пользователя
+     * 2026-10-25: «ОК» в «Добавьте ещё азкаров» не должно рвать серию). Сброс при прежнем составе пишется как раньше.
+     */
+    private fun keepsCompletedDay(section: AzkarSection, day: LocalDate, progress: SectionProgress): Boolean {
+        val recorded = history.record(section, day) ?: return false
+        return recorded.isComplete && recorded.total != progress.total && !progress.isFinished
     }
 
     private fun scheduleNextRefresh() {

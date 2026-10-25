@@ -3,6 +3,7 @@ package app.inabah.android.feature.azkar
 import app.inabah.android.core.content.InMemoryContentRepository
 import app.inabah.android.core.content.model.AzkarSection
 import app.inabah.android.core.settings.AzkarComposition
+import app.inabah.android.core.settings.AzkarDayRecord
 import app.inabah.android.core.settings.AzkarHistory
 import app.inabah.android.core.settings.AzkarWindowSettings
 import app.inabah.android.core.settings.StoredComposition
@@ -137,6 +138,40 @@ class AzkarCompositionTest {
         )
         again.load(morning)
         assertEquals(listOf(0, 1, 1), again.sessions(morning).map { it.count })
+    }
+
+    @Test
+    fun `Состав поменяли после того, как раздел дочитан - день остаётся полным, пока не дочитан новый набор`() = TestStorage.run { storage ->
+        val composition = AzkarComposition(storage.storage)
+        val history = AzkarHistory(storage.storage) { throw AssertionError(it) }
+        val store = AzkarStore(
+            repository = InMemoryContentRepository(azkar = mapOf(morning to all, AzkarSection.Evening to emptyList())),
+            storage = storage.storage,
+            windowSettings = AzkarWindowSettings(storage.storage),
+            history = history,
+            now = { date(2026, 10, 3, 8) },
+            zone = { berlin },
+            onUnreadableProgress = { section, error -> throw AssertionError("Прогресс $section не читается", error) },
+            composition = composition,
+        )
+        store.load(morning)
+        val day = LocalDate.of(2026, 10, 3)
+        store.sessions(morning).forEach { session -> repeat(session.zikr.repetitions) { session.increment() } }
+        assertEquals(AzkarDayRecord(3, 3), history.record(morning, day))
+
+        // «ОК» в «Добавьте ещё азкаров» → добавлен 5: прогресс 3 из 4, а день - всё ещё полный.
+        composition.set(morning, listOf(1, 2, 3, 5), all)
+        store.applyComposition(morning)
+        assertEquals(SectionProgress(completed = 3, total = 4, isStarted = true), store.progress(morning).value)
+        assertEquals(AzkarDayRecord(3, 3), history.record(morning, day))
+
+        // Дочитан и новый - запись с новым числом.
+        store.sessions(morning).last().increment()
+        assertEquals(AzkarDayRecord(4, 4), history.record(morning, day))
+
+        // Сброс при прежнем составе - как раньше: день неполный.
+        store.sessions(morning).last().reset()
+        assertEquals(AzkarDayRecord(3, 4), history.record(morning, day))
     }
 
     @Test
