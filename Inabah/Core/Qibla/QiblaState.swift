@@ -8,6 +8,8 @@ nonisolated enum LocationAccess: Hashable, Sendable {
     case notGranted
     /// Отказ — только через настройки телефона (на iOS отказ виден сразу, «больше не спрашивать» не нужно угадывать).
     case denied
+    /// Службы геолокации выключены в системе: iOS сообщает их как отказ, но включаются они не в настройках приложения.
+    case servicesOff
     /// Пользователь выключил «Точную геопозицию»: направление верное, пометка в строке.
     case approximate
     case precise
@@ -125,6 +127,7 @@ nonisolated enum QiblaUIState: Hashable, Sendable {
         case .unknown: return .loading
         case .notGranted: return .needsPermission(denied: false)
         case .denied: return .needsPermission(denied: true)
+        case .servicesOff: return .locationOff
         case .approximate, .precise: break
         }
         let fix: LocationFix

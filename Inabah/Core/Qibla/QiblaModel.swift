@@ -37,6 +37,9 @@ final class QiblaModel {
     @ObservationIgnored private var headingStatus = HeadingStatus.waiting
     @ObservationIgnored private var trackerPointer: QiblaPointer?
     @ObservationIgnored private var refreshes: AsyncStream<Void>.Continuation?
+    /// Номер запуска `run`: прежний запуск (↻, смена доступа) заканчивается позже, чем начинается новый, —
+    /// он не должен стирать `refreshes` нового (аудит 2026-10-27).
+    @ObservationIgnored private var runs = 0
 
     /// - Parameter now: монотонные часы — те же, что время в `LocationFix` и `QiblaRawHeading`.
     init(
@@ -67,6 +70,8 @@ final class QiblaModel {
         publish()
 
         let (triggers, continuation) = AsyncStream.makeStream(of: Void.self, bufferingPolicy: .bufferingNewest(1))
+        runs += 1
+        let run = runs
         refreshes = continuation
         continuation.yield()
         await withTaskGroup(of: Void.self) { group in
@@ -75,7 +80,7 @@ final class QiblaModel {
                 group.addTask { await self.followHeading() }
             }
         }
-        refreshes = nil
+        if runs == run { refreshes = nil }
     }
 
     /// «Обновить» / «Повторить»: новый поиск координат.

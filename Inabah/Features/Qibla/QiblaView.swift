@@ -65,6 +65,9 @@ private struct QiblaScreen: View {
             }
             .animation(Motion.dialog, value: dialogVisible)
             .animation(.easeInOut, value: helpHintVisible)
+            // После окон, как у списка азкаров: плейлист можно остановить и отсюда. Не у `content` - он
+            // копируется под окно доступа, а плеер на экране - один.
+            .audioPlayerInset()
             // Источники - пока экран на виду и приложение активно; новый доступ или ↻ - новый запуск.
             .task(id: run) {
                 guard run.active else { return }

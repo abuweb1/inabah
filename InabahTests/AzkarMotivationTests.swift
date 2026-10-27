@@ -70,10 +70,10 @@ struct AzkarMotivationTests {
         let last = MotivationOffer(seriesStart: start, streak: 14)
         // 16 дней, пропуск, новая серия.
         let restart = day(18)
-        var days = series(16).merging(series(from: restart, count: 14)) { first, _ in first }
+        let days = series(16).merging(series(from: restart, count: 14)) { first, _ in first }
+        // В прежней серии на 16-м дне ещё рано (14 + 7), а в новой 14-й день — уже предложение.
+        #expect(due(series(16), day(16), last: last) == nil)
         #expect(due(days, day(14, from: restart), last: last) == 14)
-        days[day(14, from: restart)] = nil
-        #expect(due(days, day(13, from: restart), last: last) == nil)
     }
 
     @Test("Пропущенный 14-й день — на ближайшем полном, следующий через 7 от него")

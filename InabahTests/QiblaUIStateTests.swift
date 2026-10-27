@@ -49,6 +49,8 @@ struct QiblaUIStateTests {
         #expect(Self.state(access: .unknown) == .loading)
         #expect(Self.state(access: .notGranted) == .needsPermission(denied: false))
         #expect(Self.state(access: .denied) == .needsPermission(denied: true))
+        // Выключенные «Службы геолокации» — не отказ: включаются не в настройках приложения.
+        #expect(Self.state(access: .servicesOff) == .locationOff)
     }
 
     @Test("Местоположение — выключено, ищем, не нашлось")

@@ -8,6 +8,9 @@ import SwiftUI
 /// День и серию окно берёт само: экран списка не перерисовывается от истории.
 struct AzkarCompletionView: View {
     let section: AzkarSection
+    /// Пульс каллиграфии; выключен у неподвижной копии под окном «Добавьте ещё азкаров» — иначе размытие
+    /// копии пересчитывалось бы каждый кадр, а пульс не совпадал бы с настоящим (аудит 2026-10-27).
+    var pulses = true
     let onGoHome: () -> Void
 
     @Environment(AzkarStore.self) private var store
@@ -59,7 +62,7 @@ struct AzkarCompletionView: View {
                 alignment: .center
             )
             // При «Уменьшении движения» одна фаза — анимация не запускается вовсе.
-            .phaseAnimator(reduceMotion ? Self.restingPhase : Self.pulsePhases) { content, scale in
+            .phaseAnimator(reduceMotion || !pulses ? Self.restingPhase : Self.pulsePhases) { content, scale in
                 content.scaleEffect(scale)
             } animation: { _ in
                 Motion.pulse

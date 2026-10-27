@@ -78,6 +78,8 @@ private struct AzkarMotivationCard: View {
 
     var body: some View {
         VStack(spacing: Spacing.l) {
+            // Высота по замеру содержимого: `ViewThatFits` здесь выбирал прокрутку при запасе места и мельчил
+            // арабский текст. Первый кадр с высотой 0 скрыт проявлением окна.
             ScrollView {
                 content
                     .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { bodyHeight = $0 }

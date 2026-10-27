@@ -10,6 +10,7 @@ struct SlideUpSheet<Content: View>: View {
     @ViewBuilder let content: Content
 
     @Environment(\.theme) private var theme
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private typealias Layout = SlideUpSheetLayout
 
@@ -26,7 +27,8 @@ struct SlideUpSheet<Content: View>: View {
                     SlideUpSheetPanel(maxHeight: proxy.size.height * Layout.maxHeightShare, onDismiss: onDismiss) {
                         content
                     }
-                    .transition(.move(edge: .bottom))
+                    // «Уменьшение движения» - проявляется на месте, без выезда.
+                    .transition(reduceMotion ? .opacity : .move(edge: .bottom))
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
@@ -83,6 +85,8 @@ private struct SlideUpSheetPanel<Content: View>: View {
         // Касания по панели не доходят до затемнения.
         .contentShape(.rect)
         .offset(y: dragOffset)
+        // Контейнер: иначе признак модального окна расходится по отдельным текстам, а панель им не становится.
+        .accessibilityElement(children: .contain)
         .accessibilityAddTraits(.isModal)
         .accessibilityAction(.escape, onDismiss)
     }
