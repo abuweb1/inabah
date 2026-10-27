@@ -127,11 +127,13 @@ private struct ReminderOfferCard: View {
 /// «Обновить» — слева вверху, только когда в App Store есть новая версия (как на Android, `10d`):
 /// круглая кнопка как «Избранное» у хадисов и золотая точка. Источник — `AppStoreUpdateSource` (раз в сутки);
 /// обновления нет — кнопки нет. Под кнопкой — подсказка «Вышло обновление», один раз на версию, через 0,5 с,
-/// 4 с, после «Что нового» (решение пользователя 2026-10-27, как подсказка у входа в «Къиблу»).
+/// 4 с, после «Что нового» (решение пользователя 2026-10-27, как подсказка у входа в «Къиблу»). Ждала очереди
+/// подсказка «Къиблы» — подсказка обновления в этот раз молчит: на узком экране пузыри накладывались (аудит).
 private struct UpdateButton: View {
     @Environment(\.updateSource) private var updateSource
     @Environment(UpdateHints.self) private var hints
     @Environment(WhatsNew.self) private var whatsNew
+    @Environment(\.qibla) private var qibla
     @Environment(\.openURL) private var openURL
     @Environment(\.theme) private var theme
     @Environment(\.chromeStyle) private var chromeStyle
@@ -139,6 +141,8 @@ private struct UpdateButton: View {
 
     @State private var update: AvailableUpdate?
     @State private var hintVisible = false
+    /// При появлении главной подсказка «Къиблы» ещё не показана — она и займёт этот показ.
+    @State private var qiblaHintPending = false
 
     private static let dotSize: CGFloat = 10
     private static let hintDelay = Duration.milliseconds(500)
@@ -167,7 +171,12 @@ private struct UpdateButton: View {
             }
         }
         .animation(.easeInOut, value: hintVisible)
-        .task { update = await updateSource.availableUpdate() }
+        .onAppear { qiblaHintPending = qibla.map { !$0.hints.entrySeen } ?? false }
+        // И при возврате из фона: запросы ограничивает сам источник (раз в сутки).
+        .task(id: scenePhase == .active) {
+            guard scenePhase == .active else { return }
+            update = await updateSource.availableUpdate()
+        }
         .task(id: HintGate(
             version: update?.version,
             checked: whatsNew.isChecked,
@@ -180,7 +189,7 @@ private struct UpdateButton: View {
     }
 
     private func showHint() async {
-        guard let version = update?.version, hints.shouldHint(version),
+        guard let version = update?.version, hints.shouldHint(version), !qiblaHintPending,
               whatsNew.isChecked, whatsNew.pending == nil, scenePhase == .active else { return }
         try? await Task.sleep(for: Self.hintDelay)
         // Пока ждали, кнопку могли нажать или ушли с главной.

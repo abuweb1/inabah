@@ -17,15 +17,24 @@ struct AppStoreUpdateSourceTests {
         storage = try IsolatedDefaults("AppStoreUpdateSourceTests")
     }
 
-    /// Магазин-подделка: отдаёт заданный ответ и считает запросы.
+    /// Магазин-подделка: отдаёт заданный ответ и считает запросы. `withCountry` — свой ответ на запрос
+    /// со страной (витрина региона), `delay` — запрос «в полёте» какое-то время.
     private actor FakeStore {
         var response: Result<Data, any Error>
+        var withCountry: Result<Data, any Error>?
+        let delay: Duration?
         private(set) var requests: [URL] = []
 
-        init(_ response: Result<Data, any Error>) { self.response = response }
+        init(_ response: Result<Data, any Error>, withCountry: Result<Data, any Error>? = nil, delay: Duration? = nil) {
+            self.response = response
+            self.withCountry = withCountry
+            self.delay = delay
+        }
 
-        func fetch(_ url: URL) throws -> Data {
+        func fetch(_ url: URL) async throws -> Data {
             requests.append(url)
+            if let delay { try await Task.sleep(for: delay) }
+            if let withCountry, url.query?.contains("country=") == true { return try withCountry.get() }
             return try response.get()
         }
 
@@ -116,9 +125,14 @@ struct AppStoreUpdateSourceTests {
     }
 
     @Test("Сбой сети — прежний ответ, а без него — значка нет")
-    func offline() async {
+    func offline() async throws {
+        let other = try IsolatedDefaults("AppStoreUpdateSourceTests.offline")
         let failing = FakeStore(.failure(Offline()))
-        #expect(await source(failing).availableUpdate() == nil)
+        let failed = await AppStoreUpdateSource(
+            currentVersion: "1.2.0", osVersion: "18.5", region: "RU", defaults: Self.open(other.suiteName),
+            now: { Self.start }, fetch: { try await failing.fetch($0) }
+        ).availableUpdate()
+        #expect(failed == nil)
 
         let store = FakeStore(Self.lookup(version: "1.3.0"))
         _ = await source(store).availableUpdate()
@@ -141,6 +155,67 @@ struct AppStoreUpdateSourceTests {
         let store = FakeStore(Self.lookup(version: "1.3.0"))
         #expect(await source(store, current: "1.2.0").availableUpdate() != nil)
         #expect(await source(store, current: "1.3.0", now: Self.start.addingTimeInterval(3600)).availableUpdate() == nil)
+        #expect(await store.requests.count == 1)
+    }
+
+    // MARK: - Аудит 2026-10-27
+
+    @Test("После сбоя — пауза 6 ч, а не запрос при каждом показе главной")
+    func retryPause() async {
+        let store = FakeStore(.failure(Offline()))
+        _ = await source(store).availableUpdate()
+        _ = await source(store, now: Self.start.addingTimeInterval(5 * 3600)).availableUpdate()
+        #expect(await store.requests.count == 2, "со страной и без неё — одна попытка")
+
+        await store.respond(Self.lookup(version: "1.3.0"))
+        let later = await source(store, now: Self.start.addingTimeInterval(6 * 3600)).availableUpdate()
+        #expect(later == AvailableUpdate(version: "1.3.0"))
+    }
+
+    @Test("Часы переведены назад — проверка не застревает")
+    func clockBackwards() async {
+        let store = FakeStore(Self.lookup(version: "1.3.0"))
+        _ = await source(store).availableUpdate()
+        _ = await source(store, now: Self.start.addingTimeInterval(-3600)).availableUpdate()
+        #expect(await store.requests.count == 2)
+    }
+
+    @Test("Витрина региона без приложения или с ошибкой — повтор без страны")
+    func fallbackWithoutCountry() async throws {
+        let store = FakeStore(Self.lookup(version: "1.3.0"), withCountry: .success(Data(#"{"resultCount":0,"results":[]}"#.utf8)))
+        #expect(await source(store).availableUpdate() == AvailableUpdate(version: "1.3.0"))
+        let urls = await store.requests.map(\.absoluteString)
+        #expect(urls == [
+            "https://itunes.apple.com/lookup?id=6819638881&country=ru",
+            "https://itunes.apple.com/lookup?id=6819638881",
+        ])
+
+        let other = try IsolatedDefaults("AppStoreUpdateSourceTests.http")
+        let badRegion = FakeStore(Self.lookup(version: "1.3.0"), withCountry: .failure(URLError(.badServerResponse)))
+        let update = await AppStoreUpdateSource(
+            currentVersion: "1.2.0", osVersion: "18.5", region: "IR", defaults: Self.open(other.suiteName),
+            now: { Self.start }, fetch: { try await badRegion.fetch($0) }
+        ).availableUpdate()
+        #expect(update == AvailableUpdate(version: "1.3.0"), "ответ не 200 со страной — как сбой витрины")
+    }
+
+    @Test("Устаревший ответ магазина не понижает версию — кнопка не пропадает")
+    func noDowngrade() async {
+        let store = FakeStore(Self.lookup(version: "1.4.0"))
+        _ = await source(store).availableUpdate()
+        await store.respond(Self.lookup(version: "1.3.0"))
+        let next = await source(store, now: Self.start.addingTimeInterval(25 * 3600)).availableUpdate()
+        #expect(next == AvailableUpdate(version: "1.4.0"))
+    }
+
+    @Test("Два вызова одновременно — один запрос")
+    func singleFlight() async {
+        let store = FakeStore(Self.lookup(version: "1.3.0"), delay: .milliseconds(100))
+        let source = source(store)
+        async let first = source.availableUpdate()
+        async let second = source.availableUpdate()
+        let results = await [first, second]
+        #expect(results == [AvailableUpdate(version: "1.3.0"), AvailableUpdate(version: "1.3.0")])
         #expect(await store.requests.count == 1)
     }
 }
