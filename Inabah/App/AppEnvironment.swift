@@ -40,8 +40,10 @@ struct AppEnvironment {
     let notificationDelegate: ReminderNotificationDelegate
     /// Окно «Что нового» после обновления.
     let whatsNew: WhatsNew
-    /// Есть ли новая версия в App Store — в 1.1.1 без сети (`NoUpdateSource`).
+    /// Есть ли новая версия в App Store: в приложении — `AppStoreUpdateSource`, в превью и тестах — без сети.
     let updateSource: any UpdateSource
+    /// Подсказка «Вышло обновление» — один раз на версию.
+    let updateHints: UpdateHints
     /// «Къибла»: доступ к местоположению, координаты, компас.
     let qibla: QiblaServices
 
@@ -57,6 +59,7 @@ struct AppEnvironment {
         // Первым: «новая установка» узнаётся до того, как сторы запишут свои ключи.
         whatsNew = WhatsNew(defaults: defaults, repository: repository)
         self.updateSource = updateSource
+        updateHints = UpdateHints(defaults: defaults)
         qibla = .system(defaults: defaults)
         router = AppRouter()
         readingSettings = ReadingSettings(defaults: defaults)
@@ -186,6 +189,7 @@ extension View {
             .environment(environment.reminderScheduler)
             .environment(environment.whatsNew)
             .environment(\.updateSource, environment.updateSource)
+            .environment(environment.updateHints)
             .environment(\.qibla, environment.qibla)
             .modifier(ThemedModifier(
                 settings: environment.appearanceSettings,

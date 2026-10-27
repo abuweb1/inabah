@@ -5,8 +5,8 @@ nonisolated struct AvailableUpdate: Hashable, Sendable {
     let version: String
 }
 
-/// Откуда узнать о новой версии. Заготовка (решение пользователя 2026-10-10): в 1.1.1 приложение
-/// в сеть не ходит — `NoUpdateSource`; запрос к App Store (раз в сутки) и правка `PRIVACY.md` — в 1.2.0.
+/// Откуда узнать о новой версии (решение пользователя 2026-10-10): в приложении — запрос к App Store раз
+/// в сутки (`AppStoreUpdateSource`, с 1.3.0); в превью и тестах — `NoUpdateSource` / `FixedUpdateSource`.
 nonisolated protocol UpdateSource: Sendable {
     func availableUpdate() async -> AvailableUpdate?
 }

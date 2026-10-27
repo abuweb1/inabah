@@ -1,11 +1,21 @@
 import SwiftUI
 
 extension View {
-    /// Пузырь-подсказка у элемента (Android `HintBubble`): правым краем по элементу, уголок — к его центру;
-    /// `below` — под элементом, иначе над ним. Касаний не перехватывает и для VoiceOver не элемент:
-    /// подсказка дублирует подпись кнопки. Появление и исчезновение анимирует вызывающий.
-    func hintBubble(_ text: LocalizedStringResource, isVisible: Bool, tint: Color, textColor: Color, below: Bool) -> some View {
-        modifier(HintBubbleModifier(text: text, isVisible: isVisible, tint: tint, textColor: textColor, below: below))
+    /// Пузырь-подсказка у элемента (Android `HintBubble`): правым краем по элементу (`leading` — левым, для
+    /// кнопки у левого края экрана), уголок — к его центру; `below` — под элементом, иначе над ним. Касаний
+    /// не перехватывает и для VoiceOver не элемент: подсказка дублирует подпись кнопки. Появление
+    /// и исчезновение анимирует вызывающий.
+    func hintBubble(
+        _ text: LocalizedStringResource,
+        isVisible: Bool,
+        tint: Color,
+        textColor: Color,
+        below: Bool,
+        leading: Bool = false
+    ) -> some View {
+        modifier(HintBubbleModifier(
+            text: text, isVisible: isVisible, tint: tint, textColor: textColor, below: below, leading: leading
+        ))
     }
 }
 
@@ -15,6 +25,7 @@ private struct HintBubbleModifier: ViewModifier {
     let tint: Color
     let textColor: Color
     let below: Bool
+    let leading: Bool
 
     @State private var anchor: CGSize = .zero
     @State private var bubbleSize: CGSize = .zero
@@ -30,7 +41,7 @@ private struct HintBubbleModifier: ViewModifier {
     func body(content: Content) -> some View {
         content
             .onGeometryChange(for: CGSize.self) { $0.size } action: { anchor = $0 }
-            .overlay(alignment: .topTrailing) {
+            .overlay(alignment: leading ? .topLeading : .topTrailing) {
                 if isVisible {
                     bubble
                         // Явный сдвиг от верха элемента: под ним - на его высоту, над ним - на свою.
@@ -53,7 +64,7 @@ private struct HintBubbleModifier: ViewModifier {
             .background {
                 PopoverShape(
                     radius: Radius.control,
-                    arrowX: bubbleWidth - anchorWidth / 2,
+                    arrowX: leading ? anchorWidth / 2 : bubbleWidth - anchorWidth / 2,
                     arrowSize: Layout.arrow,
                     pointsUp: below
                 )
