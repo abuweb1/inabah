@@ -54,6 +54,11 @@ private final class HeadingSession: NSObject, CLLocationManagerDelegate {
         manager.headingFilter = kCLHeadingFilterNone
         manager.headingOrientation = .portrait
         manager.startUpdatingHeading()
+        // `trueHeading` действителен, только если у этого же менеджера идут обновления координат
+        // (документация `CLHeading`): иначе после перезагрузки он может быть −1 и держать «Компас неточен».
+        // Точность — километр: нужна лишь поправка на склонение (аудит 2026-10-27).
+        manager.desiredAccuracy = kCLLocationAccuracyKilometer
+        manager.startUpdatingLocation()
         guard motion.isDeviceMotionAvailable else { return }
         motion.deviceMotionUpdateInterval = Self.motionInterval
         motion.startDeviceMotionUpdates(to: .main) { [weak self] data, _ in
@@ -64,6 +69,7 @@ private final class HeadingSession: NSObject, CLLocationManagerDelegate {
 
     func stop() {
         manager.stopUpdatingHeading()
+        manager.stopUpdatingLocation()
         manager.delegate = nil
         motion.stopDeviceMotionUpdates()
     }

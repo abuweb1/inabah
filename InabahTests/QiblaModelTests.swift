@@ -127,6 +127,26 @@ struct QiblaModelTests {
         await task.value
     }
 
+    @Test("↻: новый запуск начался раньше, чем закончился прежний, — «Обновить» всё равно работает")
+    func refreshAfterOverlappingRuns() async {
+        let location = FakeLocation([.found(Self.grozny)])
+        let model = QiblaModel(location: location, heading: FakeHeading(), now: { 0 })
+        let first = Task { await model.run(access: .precise) }
+        await waitUntil { location.searches == 1 }
+
+        // Как `.task(id:)`: прежняя задача отменена, новая стартует, не дожидаясь её конца.
+        first.cancel()
+        let second = Task { await model.run(access: .precise) }
+        await waitUntil { location.searches == 2 }
+        await first.value
+
+        model.refreshLocation()
+        await waitUntil { location.searches == 3 }
+        #expect(location.searches == 3, "прежний запуск не стёр «Обновить» нового")
+        second.cancel()
+        await second.value
+    }
+
     @Test("Каждый запуск — новый трекер: метка без сглаживания, счёт и номер новые")
     func newTrackerPerRun() async throws {
         let heading = FakeHeading()

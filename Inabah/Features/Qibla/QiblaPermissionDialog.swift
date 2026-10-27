@@ -52,6 +52,8 @@ struct QiblaPermissionDialog<Backdrop: View>: View {
                     .contentShape(.rect)
             }
             .buttonStyle(PressDimButtonStyle())
+            // Кнопка - закреплённый текст, как «Разрешить» над ней.
+            .fixedTextSize()
         }
         .multilineTextAlignment(.center)
         .padding(.horizontal, Spacing.xl)

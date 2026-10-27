@@ -299,6 +299,8 @@ struct QiblaLocationTile: View {
                             .contentShape(.rect)
                     }
                     .buttonStyle(PressDimButtonStyle())
+                    // Кнопка - закреплённый текст, как остальные кнопки дизайн-системы.
+                    .fixedTextSize()
                 }
             } else if note?.approximate == true {
                 // У Мекки «приблизительное» - проблема (решение пользователя 2026-10-24), в остальном мире - пометка.
@@ -367,6 +369,11 @@ struct QiblaCompassGlyph: View {
         static let ringRadius: CGFloat = 10.4
         static let ringWidth: CGFloat = 1.5
         static let southOpacity = 0.5
+        /// Стрелка - два треугольника по диагонали: острые концы и узкое место у центра (точки вектора Android).
+        static let northTip = CGPoint(x: 17.3, y: 6.7)
+        static let southTip = CGPoint(x: 6.7, y: 17.3)
+        static let waistUpper = CGPoint(x: 13.15, y: 13.15)
+        static let waistLower = CGPoint(x: 10.85, y: 10.85)
     }
 
     var body: some View {
@@ -380,15 +387,18 @@ struct QiblaCompassGlyph: View {
                 with: .color(color),
                 lineWidth: Layout.ringWidth
             )
-            context.fill(Self.needle([(17.3, 6.7), (13.15, 13.15), (10.85, 10.85)]), with: .color(color))
-            context.fill(Self.needle([(6.7, 17.3), (10.85, 10.85), (13.15, 13.15)]), with: .color(color.opacity(Layout.southOpacity)))
+            context.fill(Self.needle([Layout.northTip, Layout.waistUpper, Layout.waistLower]), with: .color(color))
+            context.fill(
+                Self.needle([Layout.southTip, Layout.waistLower, Layout.waistUpper]),
+                with: .color(color.opacity(Layout.southOpacity))
+            )
         }
         .accessibilityHidden(true)
     }
 
-    private static func needle(_ points: [(CGFloat, CGFloat)]) -> Path {
+    private static func needle(_ points: [CGPoint]) -> Path {
         Path { path in
-            path.addLines(points.map { CGPoint(x: $0.0, y: $0.1) })
+            path.addLines(points)
             path.closeSubpath()
         }
     }

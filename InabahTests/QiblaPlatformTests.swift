@@ -22,6 +22,41 @@ struct QiblaPlatformTests {
         #expect(QiblaLocationAccess.resolve(status: status, accuracy: accuracy) == expected)
     }
 
+    @Test(
+        "Службы геолокации выключены — iOS сообщает отказ, экран — «Геолокация выключена»",
+        arguments: [
+            (CLAuthorizationStatus.denied, LocationAccess.servicesOff),
+            (.restricted, .servicesOff),
+            (.notDetermined, .notGranted),
+            (.authorizedWhenInUse, .precise),
+        ]
+    )
+    func servicesOff(status: CLAuthorizationStatus, expected: LocationAccess) {
+        #expect(QiblaLocationAccess.resolve(status: status, accuracy: .fullAccuracy, servicesEnabled: false) == expected)
+    }
+
+    @Test(
+        "Показание компаса: нет истинного азимута — магнитный и «неточен», отрицательная точность — «неточен»",
+        arguments: [
+            // trueHeading, magneticHeading, headingAccuracy → азимут, оценка точности, неточен
+            (120.0, 115.0, 10.0, 120.0, 10.0 as Double?, false),
+            (-1, 115, 10, 115, 10, true),
+            (120, 115, -1, 120, nil, true),
+            (0, 359, 0, 0, 0, false),
+        ]
+    )
+    func rawHeading(
+        trueHeading: Double, magneticHeading: Double, accuracy: Double,
+        azimuth: Double, accuracyDegrees: Double?, low: Bool
+    ) {
+        let sample = QiblaRawHeading(
+            trueHeading: trueHeading, magneticHeading: magneticHeading, headingAccuracy: accuracy, tiltDegrees: 0, time: 1
+        ).sample
+        #expect(sample.trueHeading == azimuth)
+        #expect(sample.accuracyDegrees == accuracyDegrees)
+        #expect(sample.lowAccuracy == low)
+    }
+
     @Test("Время координат — в монотонных часах модели")
     func fixTime() {
         let now = Date(timeIntervalSinceReferenceDate: 1_000_000)

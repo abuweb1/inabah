@@ -8,7 +8,7 @@ struct QiblaDialHost: View {
     let model: QiblaModel
     /// Состояние без метки (`QiblaModel.screen`).
     let screen: QiblaUIState
-    /// Описание кольца без компаса - надпись под ним.
+    /// Описание кольца без компаса или без подтверждения - надпись под ним.
     let fallback: LocalizedStringResource
 
     /// Градусы для VoiceOver - с запасом у границ шага: озвучка не прыгает от дрожания.
@@ -40,9 +40,11 @@ struct QiblaDialHost: View {
         case .turn(let side, _), .tilted(let side, _):
             guard let spokenTurn else { return Text("qibla.dial.waiting") }
             return side == .right ? Text("qibla.dial.right \(spokenTurn)") : Text("qibla.dial.left \(spokenTurn)")
-        case .some:
+        case .waiting:
             return Text("qibla.dial.waiting")
-        case nil:
+        // Компас работает, но подтверждения нет («Компас неточен», «Обновите местоположение») — как надпись,
+        // Android `dialDescription` (аудит 2026-10-27: было «Компас ещё не готов»).
+        case .lowAccuracy, .locationUnconfirmed, nil:
             return Text(fallback)
         }
     }

@@ -14,27 +14,38 @@ struct AzkarListView: View {
     @Environment(\.theme) private var theme
 
     @State private var showsCompletion = false
-    /// «Добавьте ещё азкаров»: показанное предложение, пока окно открыто. Запоминается целиком при показе —
-    /// закрытие записывает его, а не день закрытия.
-    @State private var motivationOffer: MotivationOffer?
+    /// «Добавьте ещё азкаров»: показанное предложение и плашки, пока окно открыто (показ уже записан).
+    @State private var motivation: MotivationPresentation?
+    /// Рамка «Машаа Аллах!» в слое экрана — в неё ставится размытая копия под окном.
+    @State private var completionFrame: CGRect = .zero
+
+    /// Слой экрана: в нём меряется «Машаа Аллах!» и раскладывается окно над ним.
+    nonisolated private static let space = "azkarList"
 
     var body: some View {
-        // Окно прошлого дня (вернулись на экран после конца вечернего окна) не показывается.
-        let offer = motivationOffer.flatMap { $0.day == store.streakDay ? $0 : nil }
+        // Окно прошлого дня (вернулись на экран после конца вечернего окна) и над уже не дочитанным разделом
+        // (сбросили зикр в настройках, пока окно открыто) не показывается.
+        let shown = motivation.flatMap { showsCompletion && $0.offer.day == store.streakDay ? $0 : nil }
         screen
-            .accessibilityHidden(offer != nil)
+            .coordinateSpace(.named(Self.space))
+            .accessibilityHidden(shown != nil)
             // Поверх всего экрана с шапкой; панель вкладок не закрывает.
             .overlay {
-                if let offer {
-                    AzkarMotivationLayer(section: section, offer: offer, settings: settings) {
-                        motivationOffer = nil
+                if let shown {
+                    AzkarMotivationLayer(
+                        section: section,
+                        presentation: shown,
+                        completionFrame: completionFrame,
+                        settings: settings
+                    ) {
+                        motivation = nil
                     }
                     .transition(.opacity)
                 }
             }
-            .animation(Motion.dialog, value: offer)
+            .animation(Motion.dialog, value: shown)
             .background {
-                AzkarMotivationWatcher(showsCompletion: showsCompletion) { motivationOffer = $0 }
+                AzkarMotivationWatcher(showsCompletion: showsCompletion) { motivation = $0 }
             }
             .toolbar(.hidden, for: .navigationBar)
             .task { await store.load(section) }
@@ -47,6 +58,9 @@ struct AzkarListView: View {
             .overlay {
                 if showsCompletion {
                     AzkarCompletionView(section: section) { router.popToRoot(.azkar) }
+                        .onGeometryChange(for: CGRect.self) { $0.frame(in: .named(Self.space)) } action: {
+                            completionFrame = $0
+                        }
                         .transition(.opacity)
                         .accessibilityAddTraits(.isModal)
                 }
@@ -314,12 +328,18 @@ private struct CardTopMarker: View {
     private static let visibleShare = 0.9
 }
 
+/// Показанное «Добавьте ещё азкаров»: предложение и плашки на момент показа (как `remember(offered)` Android).
+private nonisolated struct MotivationPresentation: Hashable {
+    let offer: MotivationOffer
+    let counts: [CompositionCount]
+}
+
 /// «Добавьте ещё азкаров» (`AzkarMotivation.due`): через 1 с после «Машаа Аллах!», чтобы сначала был виден итог
-/// дня. Проверяется при каждом показе оверлея; закрытое окно запоминается в `AzkarMotivation.offered`, поэтому
-/// повторное прохождение того же дня окна не покажет.
+/// дня. Показ записывается сразу (`AzkarMotivation.offered`), а не при закрытии: уход свайпом «назад» или
+/// повторным нажатием вкладки его не теряет (аудит 2026-10-27); повторное прохождение дня окна не покажет.
 private struct AzkarMotivationWatcher: View {
     let showsCompletion: Bool
-    let onShow: (MotivationOffer) -> Void
+    let onShow: (MotivationPresentation) -> Void
 
     @Environment(AzkarStore.self) private var store
     @Environment(AzkarHistory.self) private var history
@@ -331,9 +351,10 @@ private struct AzkarMotivationWatcher: View {
                 guard showsCompletion else { return }
                 try? await Task.sleep(for: Motion.motivationDelay)
                 guard !Task.isCancelled, let today = store.streakDay else { return }
-                let canAddMore = !store.incompleteCompositions().isEmpty
-                if let offer = motivation.due(days: history.days, today: today, canAddMore: canAddMore) {
-                    onShow(offer)
+                let counts = store.incompleteCompositions()
+                if let offer = motivation.due(days: history.days, today: today, canAddMore: !counts.isEmpty) {
+                    motivation.offered(offer)
+                    onShow(MotivationPresentation(offer: offer, counts: counts))
                 }
             }
             .accessibilityHidden(true)
@@ -341,40 +362,39 @@ private struct AzkarMotivationWatcher: View {
 }
 
 /// Окно «Добавьте ещё азкаров» над экраном списка. Под стеклом — размытая копия того, что видно под окном:
-/// шапка и «Машаа Аллах!» (ленту под оверлеем не видно — её копировать не нужно).
+/// шапка и «Машаа Аллах!» в той же рамке, что настоящий (с мини-плеером он выше), без пульса. Ленту под
+/// оверлеем не видно — её копировать не нужно.
 private struct AzkarMotivationLayer: View {
     let section: AzkarSection
-    let offer: MotivationOffer
+    let presentation: MotivationPresentation
+    let completionFrame: CGRect
     let settings: ReadingSettings
     let onClose: () -> Void
 
-    @Environment(AzkarStore.self) private var store
-    @Environment(AzkarMotivation.self) private var motivation
     @Environment(AppRouter.self) private var router
     @Environment(\.theme) private var theme
 
     var body: some View {
-        let counts = store.incompleteCompositions()
-        AzkarMotivationDialog(streak: offer.streak, counts: counts) {
-            close()
+        let counts = presentation.counts
+        AzkarMotivationDialog(streak: presentation.offer.streak, counts: counts) {
+            onClose()
             // Раздел, где выбраны не все: этот, иначе другой. Поверх списка — «назад» вернёт в него.
             let target = counts.first { $0.section == section }?.section ?? counts.first?.section ?? section
             router.azkarPath.append(.composition(target))
         } onLater: {
-            close()
+            onClose()
         } backdrop: {
-            AzkarCompletionView(section: section) {}
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .background { section.background(in: theme).linear.ignoresSafeArea() }
+            Color.clear
                 .safeAreaInset(edge: .top, spacing: 0) {
                     AzkarHeaderBar(section: section, settings: settings)
                 }
+                .overlay(alignment: .topLeading) {
+                    AzkarCompletionView(section: section, pulses: false) {}
+                        .frame(width: completionFrame.width, height: completionFrame.height)
+                        .offset(x: completionFrame.minX, y: completionFrame.minY)
+                }
+                .background { section.background(in: theme).linear.ignoresSafeArea() }
         }
-    }
-
-    private func close() {
-        motivation.offered(offer)
-        onClose()
     }
 }
 
