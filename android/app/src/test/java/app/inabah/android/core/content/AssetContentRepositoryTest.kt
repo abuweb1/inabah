@@ -39,29 +39,27 @@ class AssetContentRepositoryTest {
 
             assertEquals((1..expected.getValue(section)).toList(), azkar.map { it.number }, "раздел $section")
             // Набор по умолчанию - прежние 16, добавленные - по желанию («Состав азкаров»).
-            assertEquals((RECORDED_AZKAR + 1..expected.getValue(section)).toList(), azkar.filter { it.optional }.map { it.number })
+            assertEquals((DEFAULT_AZKAR + 1..expected.getValue(section)).toList(), azkar.filter { it.optional }.map { it.number })
             assertTrue(azkar.all { it.section == section })
             assertTrue(azkar.all { it.translation?.language == ContentLanguage.Base })
             assertTrue(azkar.all { it.repetitions >= 1 })
         }
     }
 
-    // Свои записи (2026-10-12, docs/process/audio.md): у первых 16 зикров раздела — файл в assets/audio/;
-    // зикры, добавленные 2026-10-24, пока без записи (кнопка ▶ - «Аудио скоро»).
+    // Свои записи (2026-10-12, docs/process/audio.md; зикры, добавленные 2026-10-24, записаны 2026-10-27):
+    // у каждого зикра — файл в assets/audio/.
     @Test
-    fun `Записи азкаров - у первых 16 зикров есть файл в ассетах, новые без записи, 20 файлов азкаров, все m4a`() = runTest {
+    fun `Записи азкаров - у каждого зикра есть файл в ассетах, 29 файлов азкаров, все m4a`() = runTest {
         val repository = repository(dispatcher = StandardTestDispatcher(testScheduler))
         val bundled = File(assetsDir, "audio").listFiles().orEmpty().map { it.name }.toSet()
         for (section in AzkarSection.entries) {
-            val (recorded, added) = repository.azkar(section).partition { it.number <= RECORDED_AZKAR }
-            for (zikr in recorded) {
+            for (zikr in repository.azkar(section)) {
                 assertTrue(zikr.audioFileName in bundled, "$section ${zikr.number}: нет файла ${zikr.audioFileName}")
             }
-            assertTrue(added.none { it.hasAudio }, "$section: у новых зикров записи ещё нет")
         }
         // Записи курса «Учимся читать» (reading_*) лежат рядом - считаются отдельно.
         val azkar = bundled.filter { it.startsWith("morning_") || it.startsWith("evening_") }
-        assertEquals(20, azkar.size)
+        assertEquals(29, azkar.size)
         assertTrue(bundled.all { it.endsWith(".m4a") }, "только .m4a: $bundled")
     }
 
@@ -73,15 +71,15 @@ class AssetContentRepositoryTest {
         val all = AzkarSection.entries.flatMap { repository.azkar(it) }
         val shared = all.filter { it.hasAudio }.groupBy { it.audioFileName }.filterValues { it.size > 1 }
 
-        assertEquals(12, shared.size)
+        assertEquals(14, shared.size)
         for ((file, azkar) in shared) {
             assertEquals(1, azkar.map { bareArabic(it.arabic) }.toSet().size, "$file: разный арабский текст")
         }
     }
 
     private companion object {
-        /** Зикров со своими записями в каждом разделе (2026-10-12). */
-        const val RECORDED_AZKAR = 16
+        /** Зикров в наборе по умолчанию в каждом разделе: дальше - `optional` (2026-10-24). */
+        const val DEFAULT_AZKAR = 16
     }
 
     /** Арабский без огласовок и пробелов — для сравнения текстов. */
