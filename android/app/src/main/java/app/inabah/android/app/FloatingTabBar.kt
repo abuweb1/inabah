@@ -48,6 +48,7 @@ import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.input.pointer.positionChange
 import androidx.compose.ui.input.pointer.util.VelocityTracker
@@ -63,6 +64,7 @@ import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import app.inabah.android.core.designsystem.InabahType
 import app.inabah.android.core.designsystem.LocalInabahTheme
@@ -170,6 +172,9 @@ private const val STRETCH_SQUASH = 0.45f
 private const val STRETCH_SMOOTHING = 0.35f
 private val StretchWobble = spring<Float>(dampingRatio = 0.4f, stiffness = Spring.StiffnessMediumLow)
 private val LensRimWidth = 1.2.dp
+
+/** Запас слоя линзы со всех сторон: больше, чем капля выходит за панель (по ширине - до ~22 dp у крайней вкладки при ведении). */
+private val LensOverflow = 24.dp
 private const val LENS_RIM_BRIGHT = 0.85f
 private const val LENS_RIM_DIM = 0.15f
 
@@ -287,18 +292,32 @@ fun FloatingTabBar(
                 Box(
                     Modifier
                         .fillMaxSize()
+                        // Слой линзы шире и выше панели на [LensOverflow]: капля целиком внутри слоя, края слоя
+                        // прозрачны. На части устройств с Android 13 (Redmi Note 11 Pro 5G) результат эффекта
+                        // не обрезается, и крайние строки слоя растягиваются до краёв экрана - были бы полосой.
+                        .layout { measurable, constraints ->
+                            val overflow = LensOverflow.roundToPx()
+                            val placeable = measurable.measure(
+                                Constraints.fixed(constraints.maxWidth + overflow * 2, constraints.maxHeight + overflow * 2),
+                            )
+                            layout(constraints.maxWidth, constraints.maxHeight) { placeable.place(-overflow, -overflow) }
+                        }
                         .graphicsLayer {
                             // Преломление содержимого под линзой (Android 13+).
+                            clip = true
                             val l = lift.value
                             renderEffect = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && lensShader != null && l > 0.001f) {
+                                val overflow = LensOverflow.roundToPx().toFloat()
                                 val s = stretch()
                                 val halfW = itemWidthPx / 2 * (1f + LENS_SCALE_X * l) * (1f + s)
-                                val halfH = size.height / 2 * (1f + LENS_SCALE_Y * l) * (1f - STRETCH_SQUASH * s)
-                                lensShader.effect((position.value + 0.5f) * itemWidthPx, size.height / 2, halfW, halfH, l.coerceIn(0f, 1f), tint)
+                                val halfH = (size.height / 2 - overflow) * (1f + LENS_SCALE_Y * l) * (1f - STRETCH_SQUASH * s)
+                                val centerX = overflow + (position.value + 0.5f) * itemWidthPx
+                                lensShader.effect(centerX, size.height / 2, halfW, halfH, l.coerceIn(0f, 1f), tint)
                             } else {
                                 null
                             }
-                        },
+                        }
+                        .padding(LensOverflow),
                 ) {
                     // Цветная пилюля выбранной вкладки — гаснет, пока раскрыта линза.
                     Box(
