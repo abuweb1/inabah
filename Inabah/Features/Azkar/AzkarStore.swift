@@ -19,8 +19,12 @@ final class AzkarStore {
     @ObservationIgnored private let defaults: UserDefaults
     @ObservationIgnored private let windowSettings: AzkarWindowSettings
     @ObservationIgnored private let history: AzkarHistory
+    @ObservationIgnored private let composition: AzkarComposition
     @ObservationIgnored private let now: () -> Date
+    /// Сессии набора раздела («Состав азкаров») в его порядке.
     private(set) var sections: [AzkarSection: Loadable<[ZikrSession]>] = [:]
+    /// Все зикры раздела из данных — для «Состава азкаров». Меняется только при загрузке.
+    private var catalogs: [AzkarSection: [Zikr]] = [:]
     /// Выполнение разделов. Хранится, а не вычисляется из сессий: читатели (главная, шапка
     /// списка) зависят только от него и не перерисовываются на каждое нажатие счётчика —
     /// значение меняется, лишь когда зикр выполнен или сброшен.
@@ -43,6 +47,7 @@ final class AzkarStore {
         defaults: UserDefaults = .standard,
         windowSettings: AzkarWindowSettings? = nil,
         history: AzkarHistory? = nil,
+        composition: AzkarComposition? = nil,
         now: @escaping () -> Date = Date.init,
         calendar: Calendar = .autoupdatingCurrent
     ) {
@@ -50,6 +55,7 @@ final class AzkarStore {
         self.defaults = defaults
         self.windowSettings = windowSettings ?? AzkarWindowSettings(defaults: defaults)
         self.history = history ?? AzkarHistory(defaults: defaults)
+        self.composition = composition ?? AzkarComposition(defaults: defaults)
         self.now = now
         self.calendar = calendar
         observeSystemTimeChanges()
@@ -75,11 +81,10 @@ final class AzkarStore {
         do {
             let azkar = try await repository.azkar(in: section)
             let restored = restoredProgress(of: section)
-            let sessions = azkar.map {
-                ZikrSession(zikr: $0, count: restored.counts[$0.id.number] ?? 0) { [weak self] in
-                    self?.countDidChange(in: section)
-                }
+            let sessions = Self.zikrs(composition.numbers(for: section, catalog: azkar), in: azkar).map {
+                makeSession($0, count: restored.counts[$0.id.number] ?? 0, in: section)
             }
+            catalogs[section] = azkar
             adopt(restored.period, for: section)
             if restored.completionShown {
                 acknowledgedCompletions.insert(section)
@@ -99,6 +104,64 @@ final class AzkarStore {
         for section in AzkarSection.allCases {
             await load(section)
         }
+    }
+
+    private func makeSession(_ zikr: Zikr, count: Int, in section: AzkarSection) -> ZikrSession {
+        ZikrSession(zikr: zikr, count: count) { [weak self] in
+            self?.countDidChange(in: section)
+        }
+    }
+
+    private static func zikrs(_ numbers: [Int], in catalog: [Zikr]) -> [Zikr] {
+        let byNumber = Dictionary(catalog.map { ($0.number, $0) }, uniquingKeysWith: { first, _ in first })
+        return numbers.compactMap { byNumber[$0] }
+    }
+
+    // MARK: - Состав азкаров
+
+    /// Все зикры раздела из данных; пусто, пока раздел не загружен.
+    func catalog(of section: AzkarSection) -> [Zikr] {
+        catalogs[section] ?? []
+    }
+
+    /// Разделы, где в наборе выбраны не все азкары (не загруженный раздел — не в счёт) — для
+    /// «Добавьте ещё азкаров».
+    func incompleteCompositions() -> [CompositionCount] {
+        AzkarSection.allCases.compactMap { section in
+            let total = catalog(of: section).count
+            let selected = sessions(in: section).count
+            return selected < total ? CompositionCount(section: section, selected: selected, total: total) : nil
+        }
+    }
+
+    /// Номера набора раздела по порядку.
+    func composition(of section: AzkarSection) -> [Int] {
+        sessions(in: section).map(\.zikr.number)
+    }
+
+    /// Набор по умолчанию — зикры без `optional`, в порядке данных.
+    func defaultComposition(of section: AzkarSection) -> [Int] {
+        AzkarComposition.defaultNumbers(in: catalog(of: section))
+    }
+
+    /// Сохранить и применить набор: у оставшихся зикров счёт сохраняется, добавленные — с нуля,
+    /// у убранных счёт уходит. Выполнение, кольцо, история дня (с новым числом зикров) — по набору.
+    func applyComposition(_ numbers: [Int], to section: AzkarSection) {
+        guard let catalog = catalogs[section] else { return }
+        composition.set(numbers, for: section, catalog: catalog)
+        let resolved = composition.numbers(for: section, catalog: catalog)
+        guard resolved != composition(of: section) else { return }
+        let existing = Dictionary(
+            sessions(in: section).map { ($0.zikr.number, $0) },
+            uniquingKeysWith: { first, _ in first }
+        )
+        let sessions = Self.zikrs(resolved, in: catalog).map { existing[$0.number] ?? makeSession($0, count: 0, in: section) }
+        sections[section] = .loaded(sessions)
+        updateProgress(of: section)
+        if !progress(of: section).isFinished {
+            acknowledgedCompletions.remove(section)
+        }
+        save(section)
     }
 
     func progress(of section: AzkarSection) -> SectionProgress {
@@ -123,9 +186,19 @@ final class AzkarStore {
         if progressBySection[section] != progress {
             progressBySection[section] = progress
         }
-        if let period = periods[section], period.isWindow, progress.total > 0 {
+        if let period = periods[section], period.isWindow, progress.total > 0,
+           !keepsCompletedDay(of: section, on: period.day, progress: progress) {
             history.record(progress, of: section, on: period.day)
         }
+    }
+
+    /// Раздел в этом окне уже дочитан, а «Состав азкаров» с тех пор поменяли (другое число зикров): день
+    /// остаётся полным, пока не дочитан и новый набор — добавленные засчитываются со следующего раза
+    /// (решение пользователя 2026-10-25: «ОК» в «Добавьте ещё азкаров» не должно рвать серию). Сброс при
+    /// прежнем составе пишется как раньше.
+    private func keepsCompletedDay(of section: AzkarSection, on day: String, progress: SectionProgress) -> Bool {
+        guard let recorded = history.record(of: section, on: day) else { return false }
+        return recorded.isComplete && recorded.total != progress.total && !progress.isFinished
     }
 
     /// Есть ли что сбрасывать: начат хотя бы один зикр. Раздел, который ещё не загружен
@@ -301,6 +374,13 @@ final class AzkarStore {
         guard acknowledgedCompletions.remove(section) != nil else { return }
         save(section)
     }
+}
+
+/// Сколько азкаров раздела в наборе — плашка «Утренние 16 из 21» в «Добавьте ещё азкаров».
+nonisolated struct CompositionCount: Hashable, Sendable {
+    let section: AzkarSection
+    let selected: Int
+    let total: Int
 }
 
 nonisolated struct SectionProgress: Hashable, Sendable {

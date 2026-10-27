@@ -89,7 +89,7 @@ class RemindersTest {
     @Test
     fun offerEnableTurnsOnMorningAndEveningAndHidesCard() {
         compose.setContent {
-            InabahTheme { AzkarHomeScreen(azkarStore(), AzkarHistory(storage) { throw AssertionError(it) }, windows, reminders, NoUpdateSource, onOpenSection = {}, onOpenCalendar = {}, contentPadding = PaddingValues()) }
+            InabahTheme { AzkarHomeScreen(azkarStore(), AzkarHistory(storage) { throw AssertionError(it) }, windows, reminders, NoUpdateSource, onOpenSection = {}, onOpenCalendar = {}, onOpenQibla = {}, contentPadding = PaddingValues()) }
         }
         compose.onNodeWithText("Включить").performScrollTo().performClick()
 
@@ -103,7 +103,7 @@ class RemindersTest {
     @Test
     fun offerLaterHidesCardWithoutEnabling() {
         compose.setContent {
-            InabahTheme { AzkarHomeScreen(azkarStore(), AzkarHistory(storage) { throw AssertionError(it) }, windows, reminders, NoUpdateSource, onOpenSection = {}, onOpenCalendar = {}, contentPadding = PaddingValues()) }
+            InabahTheme { AzkarHomeScreen(azkarStore(), AzkarHistory(storage) { throw AssertionError(it) }, windows, reminders, NoUpdateSource, onOpenSection = {}, onOpenCalendar = {}, onOpenQibla = {}, contentPadding = PaddingValues()) }
         }
         compose.onNodeWithText("Не сейчас").performScrollTo().performClick()
 

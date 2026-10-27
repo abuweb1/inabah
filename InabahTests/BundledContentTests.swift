@@ -1,4 +1,5 @@
 import AVFoundation
+import CoreText
 import Foundation
 import Testing
 @testable import Inabah
@@ -9,8 +10,8 @@ struct BundledContentTests {
     let repository = BundleContentRepository(languages: ContentLanguagePriority(languages: [.base]))
 
     @Test("Азкары раздела загружаются", arguments: [
-        (AzkarSection.morning, 16),
-        (AzkarSection.evening, 16),
+        (AzkarSection.morning, 21),
+        (AzkarSection.evening, 22),
     ])
     func azkarLoad(section: AzkarSection, expectedCount: Int) async throws {
         let azkar = try await repository.azkar(in: section)
@@ -22,7 +23,7 @@ struct BundledContentTests {
         #expect(azkar.allSatisfy { $0.repetitions >= 1 })
     }
 
-    /// Свои записи (2026-10-12, `docs/process/audio.md`): у каждого зикра — файл в Bundle.
+    /// Свои записи (2026-10-12, `docs/process/audio.md`; новые зикры записаны 2026-10-27): файл в Bundle у каждого.
     @Test("Записи азкаров: у каждого зикра есть файл в Bundle", arguments: AzkarSection.allCases)
     @MainActor
     func everyZikrHasAudio(section: AzkarSection) async throws {
@@ -38,21 +39,67 @@ struct BundledContentTests {
     @Test("Общая запись утреннего и вечернего — только при одинаковом арабском")
     func sharedAudioMatchesText() async throws {
         let all = try await repository.azkar(in: .morning) + repository.azkar(in: .evening)
-        let shared = Dictionary(grouping: all) { $0.audioFileName ?? "" }.filter { $0.value.count > 1 }
+        let recorded = all.filter(\.hasAudio)
+        let shared = Dictionary(grouping: recorded) { $0.audioFileName ?? "" }.filter { $0.value.count > 1 }
 
-        #expect(shared.count == 12)
+        // 12 прежних и вечерние 17-18 = утренние 17-18 (2026-10-27).
+        #expect(shared.count == 14)
         for (file, azkar) in shared {
             #expect(Set(azkar.map { Self.bare($0.arabic) }).count == 1, "\(file): разный арабский текст")
         }
     }
 
-    @Test("Все записи — AAC .m4a и читаются плеером; MP3 нет; азкаров — 20")
+    /// Суры и аяты Корана (`quran: true`, 2026-10-25): аль-Ихлас, аль-Фалак, ан-Нас, аят аль-Курси, «Амана-р-расулю».
+    @Test("Суры и аяты Корана отмечены, обычные зикры — нет")
+    func quranAzkarMarked() async throws {
+        let morning = try await repository.azkar(in: .morning)
+        let evening = try await repository.azkar(in: .evening)
+
+        #expect(morning.filter(\.isQuran).map(\.number) == [14, 15, 16, 17])
+        #expect(evening.filter(\.isQuran).map(\.number) == [13, 14, 15, 16, 17])
+    }
+
+    /// Набор по умолчанию — прежние 16 + 16 (2026-10-24): новые зикры добавляются в «Составе азкаров».
+    @Test("Новые зикры — не в наборе по умолчанию")
+    func newAzkarOptional() async throws {
+        let morning = try await repository.azkar(in: .morning)
+        let evening = try await repository.azkar(in: .evening)
+
+        #expect(morning.filter(\.isOptional).map(\.number) == Array(17...21))
+        #expect(evening.filter(\.isOptional).map(\.number) == Array(17...22))
+    }
+
+    /// Карточка рисует их шрифтом мусхафа: символа без глифа там быть не должно — иначе подставится
+    /// системный шрифт посреди аята. Неразрывный пробел перед номером аята (так в тексте QPC) в Hafs
+    /// не нарисован, но он невидимый — как на Android (`FontCoverageTest`).
+    @Test("Суры и аяты Корана покрыты шрифтом мусхафа")
+    func quranAzkarCoveredByMushafFont() async throws {
+        AppFont.registerBundledFonts()
+        let font = CTFontCreateWithName(AppFont.mushaf as CFString, 20, nil)
+        #expect(CTFontCopyPostScriptName(font) as String == AppFont.mushaf)
+
+        let azkar = try await repository.azkar(in: .morning) + repository.azkar(in: .evening)
+        let text = azkar.filter(\.isQuran).map(\.arabic).joined(separator: "\n")
+        #expect(!text.isEmpty)
+
+        let scalars = Set(text.unicodeScalars).filter {
+            !$0.properties.isWhitespace && $0.properties.generalCategory != .format
+        }
+        let missing = scalars.filter { scalar in
+            var units = Array(String(scalar).utf16)
+            var glyphs = [CGGlyph](repeating: 0, count: units.count)
+            return !CTFontGetGlyphsForCharacters(font, &units, &glyphs, units.count)
+        }
+        #expect(missing.isEmpty, "нет в Hafs: \(missing.map { String(format: "U+%04X", $0.value) }.sorted())")
+    }
+
+    @Test("Все записи — AAC .m4a и читаются плеером; MP3 нет; азкаров — 29")
     func audioFilesPlay() throws {
         let files = Bundle.main.urls(forResourcesWithExtension: "m4a", subdirectory: nil) ?? []
         // Записи курса «Учимся читать» (`reading_*`) - в том же Bundle, но не азкары.
         let azkar = files.filter { url in ["morning_", "evening_"].contains { url.lastPathComponent.hasPrefix($0) } }
 
-        #expect(azkar.count == 20)
+        #expect(azkar.count == 29)
         #expect(Bundle.main.urls(forResourcesWithExtension: "mp3", subdirectory: nil) ?? [] == [])
         for url in files {
             let player = try AVAudioPlayer(contentsOf: url)

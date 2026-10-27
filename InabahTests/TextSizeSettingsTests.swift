@@ -89,7 +89,8 @@ struct TextSizeSettingsTests {
 
     @Test("Переводы азкаров и хадисов — общие базовые размеры", arguments: [
         (ContentTextStyle.translation, 17.0),
-        (.transliteration, 15),
+        (.transliteration, 16),
+        (.footnote, 15),
         (.note, 13),
     ])
     func contentBaseSizes(style: ContentTextStyle, size: Double) {

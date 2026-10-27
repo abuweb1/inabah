@@ -9,6 +9,9 @@
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<!-- Фоновый звук: «Прослушать все» продолжает играть на заблокированном экране (свои записи — 2026-10-12). -->
+	<!-- «Къибла»: только пока экран открыт; перевод на другие языки — InfoPlist.xcstrings. -->
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Чтобы рассчитать направление на Каабу, нужно знать, где вы находитесь. Координаты остаются на телефоне и никуда не отправляются.</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>audio</string>

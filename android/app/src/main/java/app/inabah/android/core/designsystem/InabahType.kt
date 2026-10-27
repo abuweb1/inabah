@@ -37,18 +37,24 @@ object InabahType {
      */
     private const val INTER_SCALE = 0.92f
 
-    // Переводы (категория П, 10-typography.md): база 17 / 15 курсив / 13 × шаг переводов, не зависит
+    // Переводы (категория П, 10-typography.md): база 17 / 16 курсив (транскрипция; сноски хадиса - 15) / 13 × шаг переводов, не зависит
     // ни от системы, ни от шага интерфейса (`fixedSp`). Тот же Inter — тот же множитель 0,92.
 
     val contentTranslation: TextStyle @Composable @ReadOnlyComposable get() = content(TRANSLATION_SIZE, lineSpacing = true)
+    /** Транскрипция зикра - на шаг крупнее сносок (решение пользователя 2026-10-24, было 15). */
     val contentTransliteration: TextStyle
         @Composable @ReadOnlyComposable get() = content(TRANSLITERATION_SIZE).copy(fontStyle = FontStyle.Italic)
+
+    /** Сноски хадиса - курсив прежнего размера транскрипции. */
+    val contentFootnote: TextStyle
+        @Composable @ReadOnlyComposable get() = content(FOOTNOTE_SIZE).copy(fontStyle = FontStyle.Italic)
 
     /** Источник и «Передал:». */
     val contentNote: TextStyle @Composable @ReadOnlyComposable get() = content(NOTE_SIZE)
 
     private const val TRANSLATION_SIZE = 17f
-    private const val TRANSLITERATION_SIZE = 15f
+    private const val TRANSLITERATION_SIZE = 16f
+    private const val FOOTNOTE_SIZE = 15f
     private const val NOTE_SIZE = 13f
 
     /** Добавочный межстрочный интервал перевода, pt × шаг (iOS `lineSpacing(4 × шаг)`). */

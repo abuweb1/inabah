@@ -79,6 +79,15 @@ class ContentMappingTest {
     }
 
     @Test
+    fun `Зикр с optional — не в наборе по умолчанию, без поля — в наборе`() = runTest {
+        val json = """{ "morning": [
+            { "id": 1, "arabic": "سُبْحَانَ اللَّهِ", "max": 1, "translations": { "ru": { "text": "а" } } },
+            { "id": 2, "arabic": "سُبْحَانَ اللَّهِ", "max": 1, "optional": true, "translations": { "ru": { "text": "б" } } } ], "evening": [] }"""
+        val azkar = repository(mapOf("azkar.json" to json), StandardTestDispatcher(testScheduler)).azkar(AzkarSection.Morning)
+        assertEquals(listOf(false, true), azkar.map { it.optional })
+    }
+
+    @Test
     fun `Хадис — пустой передатчик и источник становятся отсутствующими`() = runTest {
         val nawawi = """[ { "id": 1, "arabic": "إِنَّمَا", "translations": { "ru": { "text": "Перевод", "rawi": " ", "source": "" } } } ]"""
         val hadith = repository(mapOf("nawawi.json" to nawawi), StandardTestDispatcher(testScheduler))

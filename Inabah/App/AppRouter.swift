@@ -13,11 +13,17 @@ nonisolated enum AzkarRoute: Hashable, Codable, Sendable {
     case list(AzkarSection)
     /// «Календарь азкаров» — из капсулы серии на главной.
     case calendar
+    /// «Состав азкаров» раздела — из кнопки в шапке списка.
+    case composition(AzkarSection)
+    /// «Къибла» — из кнопки с Каабой на главной.
+    case qibla
 }
 
 /// Экраны внутри вкладки «Настройки».
 nonisolated enum SettingsRoute: Hashable, Codable, Sendable {
     case azkar
+    /// «Состав азкаров» раздела (из настроек азкаров).
+    case azkarComposition(AzkarSection)
     case hadith
     /// Порядок сборников на главной хадисов (из настроек хадисов).
     case hadithOrder
@@ -82,6 +88,17 @@ final class AppRouter {
     var hadithPath: [HadithRoute] = []
     var makharijPath: [MakharijRoute] = []
     var settingsPath: [SettingsRoute] = []
+
+    /// Выбранная вкладка на своём главном экране (стек пуст) — панель вкладок полная; на внутреннем экране
+    /// она компактная (Android-first 2026-10-24, `AppRouter.isOnTabRoot`).
+    var isOnTabRoot: Bool {
+        switch selectedTab {
+        case .azkar: azkarPath.isEmpty
+        case .hadith: hadithPath.isEmpty
+        case .makharij: makharijPath.isEmpty
+        case .settings: settingsPath.isEmpty
+        }
+    }
 
     /// Выбор вкладки из таб-бара. Повторный выбор активной вкладки возвращает к её корню.
     /// `TabView` вызывает установку выбора и во время отрисовки (при запуске) — поэтому

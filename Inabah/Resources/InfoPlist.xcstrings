@@ -1,0 +1,18 @@
+{
+  "sourceLanguage" : "ru",
+  "strings" : {
+    "NSLocationWhenInUseUsageDescription" : {
+      "comment" : "Къибла: пояснение в окне системы с запросом доступа к местоположению",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Чтобы рассчитать направление на Каабу, нужно знать, где вы находитесь. Координаты остаются на телефоне и никуда не отправляются."
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

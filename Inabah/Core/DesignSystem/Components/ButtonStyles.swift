@@ -114,6 +114,44 @@ struct BareIconButtonStyle: ButtonStyle {
     }
 }
 
+/// Кнопки окна-стекла в ряд (Android `PopoverActionButton` и `GoldActionButton`, «Добавьте ещё азкаров»):
+/// капсула высоты основной кнопки, текст полужирный; высота растягивается до соседней (ряду нужен
+/// `fixedSize(vertical:)`). `gold` — градиент кнопки счётчика, тень `goldButton`, текст `parchmentInk`;
+/// иначе — светлая капсула `onAccent` 10 % с текстом `onAccent`.
+struct DialogActionButtonStyle: ButtonStyle {
+    var gold = false
+
+    @Environment(\.theme) private var theme
+
+    private static let lightFillOpacity = 0.1
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(.body.weight(.semibold))
+            .multilineTextAlignment(.center)
+            .foregroundStyle(gold ? theme.palette.parchmentInk : theme.palette.onAccent)
+            .padding(.horizontal, Spacing.m)
+            .frame(maxWidth: .infinity, minHeight: Size.primaryButtonHeight, maxHeight: .infinity)
+            .background { fill }
+            .contentShape(.capsule)
+            .scaleEffect(configuration.isPressed ? PressFeedback.wideScale : 1)
+            .animation(Motion.press, value: configuration.isPressed)
+            .fixedTextSize()
+    }
+
+    /// Тень — у фоновой фигуры (правило теней дизайн-системы).
+    @ViewBuilder private var fill: some View {
+        if gold {
+            let shadow = ShadowToken.goldButton(theme.palette)
+            Capsule()
+                .fill(theme.gradients.counterButton.linear)
+                .shadow(color: shadow.color, radius: shadow.radius, y: shadow.y)
+        } else {
+            Capsule().fill(theme.palette.onAccent.opacity(Self.lightFillOpacity))
+        }
+    }
+}
+
 /// Крупная круглая золотая кнопка (плей/пауза плеера).
 struct ProminentRoundButtonStyle: ButtonStyle {
     @Environment(\.theme) private var theme

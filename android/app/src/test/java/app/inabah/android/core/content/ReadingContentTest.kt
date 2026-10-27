@@ -253,8 +253,8 @@ class ReadingContentTest {
         val equal = step.blocks.filterIsInstance<ReadingBlock.Formulas>().single()
         assertEquals(9, equal.items.size)
         assertEquals(listOf("ъабба", "джиддан", "роббун"), listOf(0, 6, 8).map { equal.items[it].transliteration })
-        // Записи примеров (решение пользователя 2026-10-20) - пока не записаны: место под них есть, файла нет.
-        assertTrue(equal.items.all { it.audio == null })
+        // Записи примеров (решение пользователя 2026-10-20) - свои записи с 2026-10-22, по файлу на пример.
+        assertEquals((1..9).map { "reading_s09_%02d.m4a".format(it) }, equal.items.map { it.audio })
         val words = step.quiz.filterIsInstance<ReadingQuestion.Word>()
         assertEquals(step.quiz.size, words.size)
         assertEquals("شَكُّ", words.first().arabic)

@@ -78,9 +78,10 @@ fun Modifier.translationBubble(fill: Color, stripe: Color): Modifier = this
 
 /**
  * Блок перевода зикра и хадиса (решение пользователя 2026-10-10, `docs/analysis/2026-10-10-shared-translation-block.md`):
- * вступление `rawi` как есть, без «Передал:» ([narrator]), транскрипция, перевод, [belowText] (сноски хадиса), источник и справа от него —
+ * транскрипция, вступление `rawi` как есть, без «Передал:» ([narrator]) - сразу перед переводом (решение пользователя 2026-10-24),
+ * перевод, [belowText] (сноски хадиса), источник и справа от него —
  * [sourceTrailing] (действия хадиса) на уровне последней строки. Перевод — в пузыре ([bubble], как у зикра) или
- * просто текстом (у хадиса: пузырь — только у сносок); [narratorDivider] — линия между вступлением и текстом.
+ * просто текстом (у хадиса: пузырь — только у сносок); [narratorDivider] — линия между вступлением и текстом; между транскрипцией и вступлением линия есть всегда.
  * Сворачивает блок не он, а экран. Язык текста — язык перевода (переносы); стили — переводов (растут с «Размером переводов»).
  */
 @Composable
@@ -98,12 +99,14 @@ fun TranslationBlock(
     narratorDivider: Boolean = false,
 ) {
     Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
-        narrator?.let {
-            Text(it, color = colors.lead, style = InabahType.contentNote.copy(fontWeight = FontWeight.SemiBold, localeList = locale))
-            if (narratorDivider) Box(Modifier.fillMaxWidth().height(Size.hairline).background(InabahTheme.palette.hairline))
-        }
         transliteration?.let {
             Text(it, color = colors.lead, style = InabahType.contentTransliteration.copy(localeList = locale))
+        }
+        narrator?.let {
+            // Линия под транскрипцией - видно, где она кончается (решение пользователя 2026-10-24).
+            if (transliteration != null) Hairline()
+            Text(it, color = colors.lead, style = InabahType.contentNote.copy(fontWeight = FontWeight.SemiBold, localeList = locale))
+            if (narratorDivider) Hairline()
         }
         Text(
             text,
@@ -118,6 +121,9 @@ fun TranslationBlock(
         }
     }
 }
+
+@Composable
+private fun Hairline() = Box(Modifier.fillMaxWidth().height(Size.hairline).background(InabahTheme.palette.hairline))
 
 /** Источник и справа [trailing] — середина значков на середине строчных букв последней строки источника. */
 @Composable

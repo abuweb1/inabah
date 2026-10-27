@@ -21,6 +21,24 @@ class AppRouterTest {
     }
 
     @Test
+    fun `Главный экран - только при пустом стеке выбранной вкладки`() {
+        val router = AppRouter()
+        assertTrue(router.isOnTabRoot)
+
+        router.open(AzkarRoute.SectionList(AzkarSection.Morning))
+        assertFalse(router.isOnTabRoot, "внутренний экран азкаров")
+
+        router.select(AppTab.Hadith)
+        assertTrue(router.isOnTabRoot, "у хадисов стек пуст, хотя у азкаров - нет")
+
+        router.select(AppTab.Azkar)
+        assertFalse(router.isOnTabRoot, "вернулись на азкары - их экран на месте")
+
+        router.select(AppTab.Azkar)
+        assertTrue(router.isOnTabRoot, "повторный выбор вернул к корню")
+    }
+
+    @Test
     fun `Выбор другой вкладки не трогает путь`() {
         val router = AppRouter()
         router.open(AzkarRoute.SectionList(AzkarSection.Evening))

@@ -3,6 +3,7 @@ package app.inabah.android.feature.azkar
 import android.text.format.DateFormat
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
@@ -23,6 +24,7 @@ import androidx.compose.ui.test.onAllNodesWithText
 import app.inabah.android.core.audio.AudioPlayerController
 import app.inabah.android.core.audio.TestAudioEngine
 import app.inabah.android.core.audio.ui.AudioPlayerHost
+import app.inabah.android.core.settings.OnceFlag
 import app.inabah.android.core.settings.PlaylistSettings
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -72,6 +74,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 
+private const val QIBLA_HINT = "Нажмите, чтобы узнать направление Къиблы"
 private const val TIMEOUT_MILLIS = 5_000L
 private const val LONG_ZIKR_REPEATS = 80
 private const val NEXT_ZIKR_ARABIC = "لَا إِلَٰهَ إِلَّا اللَّهُ"
@@ -148,6 +151,16 @@ class AzkarListScreenTest {
             }
         }
         compose.waitUntil(TIMEOUT_MILLIS) { counters().fetchSemanticsNodes().isNotEmpty() }
+    }
+
+    @Test
+    fun compositionButtonInTopBarOpensComposition() {
+        var opened = 0
+        val store = store(1, 3)
+        compose.setContent { Screen(store, onOpenComposition = { opened++ }) }
+
+        compose.onNodeWithContentDescription("Состав азкаров").performClick()
+        compose.runOnIdle { check(opened == 1) }
     }
 
     @Test
@@ -313,7 +326,7 @@ class AzkarListScreenTest {
         val store = store(1, 3)
         compose.runOnIdle { runBlocking { store.loadAll() } }
         compose.setContent {
-            InabahTheme { AzkarHomeScreen(store, AzkarHistory(storage) { throw AssertionError(it) }, windowSettings, ReminderSettings(storage), NoUpdateSource, onOpenSection = {}, onOpenCalendar = {}, contentPadding = PaddingValues()) }
+            InabahTheme { AzkarHomeScreen(store, AzkarHistory(storage) { throw AssertionError(it) }, windowSettings, ReminderSettings(storage), NoUpdateSource, onOpenSection = {}, onOpenCalendar = {}, onOpenQibla = {}, contentPadding = PaddingValues()) }
         }
 
         // 13:00 — вне окна оба раздела: у утренних время окна (в любом формате системы есть «12:00»),
@@ -324,13 +337,66 @@ class AzkarListScreenTest {
         compose.onAllNodesWithContentDescription("Выполнено на", substring = true).assertCountEquals(0)
     }
 
+    // «Къибла» (1.3.0): круглая кнопка с Каабой справа вверху открывает экран направления.
+    @Test
+    fun homeQiblaButtonOpensQibla() {
+        val store = store(1, 3)
+        var opened = 0
+        compose.setContent {
+            InabahTheme { AzkarHomeScreen(store, AzkarHistory(storage) { throw AssertionError(it) }, windowSettings, ReminderSettings(storage), NoUpdateSource, onOpenSection = {}, onOpenCalendar = {}, onOpenQibla = { opened++ }, contentPadding = PaddingValues()) }
+        }
+        compose.onNodeWithContentDescription("Къибла").assertHasClickAction().performClick()
+        compose.runOnIdle { check(opened == 1) }
+    }
+
+    // Подсказка у «Къиблы» (2026-10-24): ждёт, пока закроют «Что нового», показывается один раз.
+    @Test
+    fun homeQiblaHintWaitsForOverlayAndShowsOnce() {
+        val store = store(1, 3)
+        val hint = OnceFlag(storage, OnceFlag.QIBLA_ENTRY_HINT)
+        var blocked by mutableStateOf(true)
+        compose.setContent {
+            InabahTheme {
+                AzkarHomeScreen(
+                    store, AzkarHistory(storage) { throw AssertionError(it) }, windowSettings, ReminderSettings(storage), NoUpdateSource,
+                    onOpenSection = {}, onOpenCalendar = {}, onOpenQibla = {}, contentPadding = PaddingValues(),
+                    qiblaHint = hint, hintBlocked = blocked,
+                )
+            }
+        }
+        compose.mainClock.advanceTimeBy(1_500)
+        compose.onAllNodesWithText(QIBLA_HINT).assertCountEquals(0)
+        compose.runOnIdle { check(!hint.isSet) { "под окном подсказка не тратится" } }
+
+        blocked = false
+        compose.waitUntil(TIMEOUT_MILLIS) { compose.onAllNodesWithText(QIBLA_HINT).fetchSemanticsNodes().isNotEmpty() }
+        compose.runOnIdle { check(hint.isSet) }
+    }
+
+    @Test
+    fun homeQiblaHintNotRepeatedOnceSeen() {
+        val store = store(1, 3)
+        val hint = OnceFlag(storage, OnceFlag.QIBLA_ENTRY_HINT).apply { set() }
+        compose.setContent {
+            InabahTheme {
+                AzkarHomeScreen(
+                    store, AzkarHistory(storage) { throw AssertionError(it) }, windowSettings, ReminderSettings(storage), NoUpdateSource,
+                    onOpenSection = {}, onOpenCalendar = {}, onOpenQibla = {}, contentPadding = PaddingValues(),
+                    qiblaHint = hint,
+                )
+            }
+        }
+        compose.mainClock.advanceTimeBy(1_500)
+        compose.onAllNodesWithText(QIBLA_HINT).assertCountEquals(0)
+    }
+
     // «Обновить» (2026-10-10): в релизе обновления нет — значка нет; есть (подделка) — значок с номером для TalkBack.
     @Test
     fun homeShowsUpdateButtonOnlyWhenUpdateIsAvailable() {
         val store = store(1, 3)
         var source by mutableStateOf<UpdateSource>(NoUpdateSource)
         compose.setContent {
-            InabahTheme { AzkarHomeScreen(store, AzkarHistory(storage) { throw AssertionError(it) }, windowSettings, ReminderSettings(storage), source, onOpenSection = {}, onOpenCalendar = {}, contentPadding = PaddingValues()) }
+            InabahTheme { AzkarHomeScreen(store, AzkarHistory(storage) { throw AssertionError(it) }, windowSettings, ReminderSettings(storage), source, onOpenSection = {}, onOpenCalendar = {}, onOpenQibla = {}, contentPadding = PaddingValues()) }
         }
         compose.waitForIdle()
         compose.onAllNodesWithContentDescription("Доступна версия", substring = true).assertCountEquals(0)
@@ -544,18 +610,21 @@ class AzkarListScreenTest {
             }
         }
 
-        // «Утренние азкары» — и в строке времени, и в строке сброса: нужна строка-кнопка.
-        val resetRow = compose.onNode(hasText("Утренние азкары") and hasClickAction() and SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Button))
+        // «Утренние азкары» — в строке времени, в строке состава («2 из 2») и в строке сброса: нужна кнопка сброса.
+        val resetRow = compose.onNode(
+            hasText("Утренние азкары") and hasClickAction() and SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Button) and
+                !hasText("из", substring = true),
+        )
 
-        // Закрыли подтверждение «Назад» — прогресс на месте.
-        resetRow.performClick()
+        // Закрыли подтверждение «Назад» — прогресс на месте. Строка сброса — ниже «Состава азкаров», за краем экрана.
+        resetRow.performScrollTo().performClick()
         compose.onNodeWithText("Сбросить").assertExists()
         Espresso.pressBack()
         compose.onNodeWithText("Сбросить").assertDoesNotExist()
         compose.runOnIdle { check(store.hasProgress(AzkarSection.Morning)) }
 
         // Подтвердили — счёт обнулён, строка выключена.
-        resetRow.performClick()
+        resetRow.performScrollTo().performClick()
         compose.onNodeWithText("Сбросить").performClick()
         compose.runOnIdle { check(!store.hasProgress(AzkarSection.Morning)) }
         resetRow.assertIsNotEnabled()
@@ -585,6 +654,7 @@ class AzkarListScreenTest {
         store: AzkarStore,
         reading: ReadingSettings = defaultReading,
         player: AudioPlayerController = defaultPlayer,
+        onOpenComposition: ((AzkarSection) -> Unit)? = null,
     ) {
         InabahTheme {
             AzkarListScreen(
@@ -598,6 +668,7 @@ class AzkarListScreenTest {
                 onBack = {},
                 onGoHome = {},
                 contentPadding = PaddingValues(),
+                onOpenComposition = onOpenComposition,
             )
         }
     }

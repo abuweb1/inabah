@@ -7,7 +7,7 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Без рекламы, регистрации и сбора данных. Приложение работает без интернета."
+            "value" : "Без рекламы, регистрации и сбора данных. Интернет нужен, только чтобы узнать о новой версии."
           }
         }
       }
@@ -52,6 +52,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Material Symbols"
+          }
+        }
+      }
+    },
+    "about.license.mushaf.subtitle" : {
+      "comment" : "О приложении: лицензия шрифта мусхафа — подпись",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Суры и аяты Корана · Комплекс имени короля Фахда по изданию Корана · свободное распространение"
+          }
+        }
+      }
+    },
+    "about.license.mushaf.title" : {
+      "comment" : "О приложении: лицензия шрифта мусхафа — заголовок",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "KFGQPC Uthmanic Script HAFS"
           }
         }
       }
@@ -880,6 +902,138 @@
         }
       }
     },
+    "azkar.composition.add" : {
+      "comment" : "Состав азкаров: кнопка «+» и действие VoiceOver",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Добавить"
+          }
+        }
+      }
+    },
+    "azkar.composition.available %lld" : {
+      "comment" : "Состав азкаров: заголовок группы зикров, которые можно добавить",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Можно добавить · %lld"
+          }
+        }
+      }
+    },
+    "azkar.composition.hint" : {
+      "comment" : "Состав азкаров: подпись под набором",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Уберите лишние зикры и добавьте нужные из списка ниже. Порядок - перетаскиванием за ручку справа. Изменения применятся, когда вы уйдёте с экрана."
+          }
+        }
+      }
+    },
+    "azkar.composition.inSet %lld" : {
+      "comment" : "Состав азкаров: заголовок группы набора с числом зикров",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "В наборе · %lld"
+          }
+        }
+      }
+    },
+    "azkar.composition.moveDown" : {
+      "comment" : "Состав азкаров: действие VoiceOver - ниже",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ниже"
+          }
+        }
+      }
+    },
+    "azkar.composition.moveUp" : {
+      "comment" : "Состав азкаров: действие VoiceOver - выше",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Выше"
+          }
+        }
+      }
+    },
+    "azkar.composition.remove" : {
+      "comment" : "Состав азкаров: кнопка «−» и действие VoiceOver",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Убрать"
+          }
+        }
+      }
+    },
+    "azkar.composition.repetitions %lld" : {
+      "comment" : "Состав азкаров: сколько раз читать зикр",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "×%lld"
+          }
+        }
+      }
+    },
+    "azkar.composition.restore" : {
+      "comment" : "Состав азкаров: кнопка «↺» в навбаре (VoiceOver)",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вернуть набор по умолчанию"
+          }
+        }
+      }
+    },
+    "azkar.composition.restore.action" : {
+      "comment" : "Состав азкаров: подтверждение «↺» - кнопка",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вернуть"
+          }
+        }
+      }
+    },
+    "azkar.composition.restore.message" : {
+      "comment" : "Состав азкаров: подтверждение «↺» - пояснение",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Набор и порядок зикров станут такими, как изначально."
+          }
+        }
+      }
+    },
+    "azkar.composition.restore.title" : {
+      "comment" : "Состав азкаров: подтверждение «↺» - заголовок",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вернуть набор по умолчанию?"
+          }
+        }
+      }
+    },
     "azkar.evening.meta %lld" : {
       "comment" : "Подпись карточки вечерних азкаров",
       "localizations" : {
@@ -999,6 +1153,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Выполнено: %1$lld из %2$lld"
+          }
+        }
+      }
+    },
+    "azkar.qibla.hint" : {
+      "comment" : "Къибла: Android azkar_qibla_hint",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Нажмите, чтобы узнать направление Къиблы"
           }
         }
       }
@@ -3188,6 +3353,743 @@
         }
       }
     },
+    "qibla.advice.metal" : {
+      "comment" : "Къибла: Android qibla_advice_metal",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вдали от металлических предметов"
+          }
+        }
+      }
+    },
+    "qibla.denied.hint" : {
+      "comment" : "Къибла: Android qibla_denied_hint",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Разрешите его в настройках телефона"
+          }
+        }
+      }
+    },
+    "qibla.denied.title" : {
+      "comment" : "Къибла: Android qibla_denied_title",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Доступ не разрешён"
+          }
+        }
+      }
+    },
+    "qibla.dial.left %lld" : {
+      "comment" : "Къибла: Android qibla_dial_left",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Къибла слева, поверните на %lld°"
+          }
+        }
+      }
+    },
+    "qibla.dial.right %lld" : {
+      "comment" : "Къибла: Android qibla_dial_right",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Къибла справа, поверните на %lld°"
+          }
+        }
+      }
+    },
+    "qibla.dial.waiting" : {
+      "comment" : "Къибла: Android qibla_dial_waiting",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Компас ещё не готов"
+          }
+        }
+      }
+    },
+    "qibla.dialog.later" : {
+      "comment" : "Къибла: Android qibla_dialog_later",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не сейчас"
+          }
+        }
+      }
+    },
+    "qibla.dialog.privacy" : {
+      "comment" : "Къибла: Android qibla_dialog_privacy",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Координаты остаются на телефоне и никуда не отправляются."
+          }
+        }
+      }
+    },
+    "qibla.dialog.purpose" : {
+      "comment" : "Къибла: Android qibla_dialog_purpose",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Чтобы рассчитать направление на Каабу, нужно знать, где вы находитесь."
+          }
+        }
+      }
+    },
+    "qibla.dialog.title" : {
+      "comment" : "Къибла: Android qibla_dialog_title",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Доступ к местоположению"
+          }
+        }
+      }
+    },
+    "qibla.failed.hint" : {
+      "comment" : "Къибла: Android qibla_failed_hint",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Выйдите на улицу или подойдите к окну"
+          }
+        }
+      }
+    },
+    "qibla.failed.title" : {
+      "comment" : "Къибла: Android qibla_failed_title",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Местоположение не найдено"
+          }
+        }
+      }
+    },
+    "qibla.found" : {
+      "comment" : "Къибла: Android qibla_found",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Направление найдено"
+          }
+        }
+      }
+    },
+    "qibla.found.hint" : {
+      "comment" : "Къибла: Android qibla_found_hint",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вы направлены к Къибле"
+          }
+        }
+      }
+    },
+    "qibla.help" : {
+      "comment" : "Къибла: Android qibla_help",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Как повысить точность"
+          }
+        }
+      }
+    },
+    "qibla.help.close" : {
+      "comment" : "Къибла: Android qibla_help_close",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Понятно"
+          }
+        }
+      }
+    },
+    "qibla.help.error.text" : {
+      "comment" : "Къибла: Android qibla_help_error_text",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Компас телефона ошибается на несколько градусов даже в хороших условиях, а рядом с металлом - на десятки. Поэтому «Направление найдено» загорается в пределах нескольких градусов. Для намаза этого достаточно, но при возможности сверьтесь с направлением в мечети."
+          }
+        }
+      }
+    },
+    "qibla.help.error.title" : {
+      "comment" : "Къибла: Android qibla_help_error_title",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Почему есть погрешность"
+          }
+        }
+      }
+    },
+    "qibla.help.hold.text" : {
+      "comment" : "Къибла: Android qibla_help_hold_text",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Положите телефон на ладонь экраном вверх, верхним краем от себя. Поворачивайтесь всем телом, а не только рукой."
+          }
+        }
+      }
+    },
+    "qibla.help.hold.title" : {
+      "comment" : "Къибла: Android qibla_help_hold_title",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Держите телефон ровно"
+          }
+        }
+      }
+    },
+    "qibla.help.interference.text" : {
+      "comment" : "Къибла: Android qibla_help_interference_text",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Компас телефона - магнитный датчик. Его сбивают металл и магниты рядом: стол или перила, машина, колонки, ноутбук, чехлы с магнитной застёжкой или держателем. Отойдите на пару шагов или снимите чехол."
+          }
+        }
+      }
+    },
+    "qibla.help.interference.title" : {
+      "comment" : "Къибла: Android qibla_help_interference_title",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Уберите помехи"
+          }
+        }
+      }
+    },
+    "qibla.help.unstable.calibrate" : {
+      "comment" : "Къибла: Android qibla_help_unstable_calibrate",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Плавно поводите телефоном в воздухе восьмёркой несколько раз - так телефон сам откалибрует компас."
+          }
+        }
+      }
+    },
+    "qibla.help.unstable.precise" : {
+      "comment" : "Къибла: Android qibla_help_unstable_precise",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Проверьте, что в настройках телефона включены геолокация и точное местоположение."
+          }
+        }
+      }
+    },
+    "qibla.help.unstable.restart" : {
+      "comment" : "Къибла: Android qibla_help_unstable_restart",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Если не помогло - закройте экран «Къибла» и откройте снова."
+          }
+        }
+      }
+    },
+    "qibla.help.unstable.title" : {
+      "comment" : "Къибла: Android qibla_help_unstable_title",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Если метка скачет"
+          }
+        }
+      }
+    },
+    "qibla.hold.flat" : {
+      "comment" : "Къибла: Android qibla_hold_flat",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Держите телефон ровно, экраном вверх"
+          }
+        }
+      }
+    },
+    "qibla.loading" : {
+      "comment" : "Къибла: Android qibla_loading",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Подготовка"
+          }
+        }
+      }
+    },
+    "qibla.loading.hint" : {
+      "comment" : "Къибла: Android qibla_loading_hint",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Проверяем доступ к местоположению"
+          }
+        }
+      }
+    },
+    "qibla.locating.hint" : {
+      "comment" : "Къибла: Android qibla_locating_hint",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Метка появится через несколько секунд"
+          }
+        }
+      }
+    },
+    "qibla.locating.title" : {
+      "comment" : "Къибла: Android qibla_locating_title",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ищем, где вы…"
+          }
+        }
+      }
+    },
+    "qibla.location.approximate" : {
+      "comment" : "Къибла: Android qibla_location_approximate",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Местоположение приблизительное"
+          }
+        }
+      }
+    },
+    "qibla.location.found" : {
+      "comment" : "Къибла: Android qibla_location_found",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Местоположение определено"
+          }
+        }
+      }
+    },
+    "qibla.location.none" : {
+      "comment" : "Къибла: Android qibla_location_none",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Нет доступа к местоположению"
+          }
+        }
+      }
+    },
+    "qibla.location.off.hint" : {
+      "comment" : "Къибла: Android qibla_location_off_hint",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Включите её в настройках телефона"
+          }
+        }
+      }
+    },
+    "qibla.location.off.row" : {
+      "comment" : "Къибла: Android qibla_location_off_row",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Геолокация выключена"
+          }
+        }
+      }
+    },
+    "qibla.location.off.title" : {
+      "comment" : "Къибла: Android qibla_location_off_title",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Геолокация выключена"
+          }
+        }
+      }
+    },
+    "qibla.location.refresh" : {
+      "comment" : "Къибла: Android qibla_location_refresh",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Обновить"
+          }
+        }
+      }
+    },
+    "qibla.location.searching" : {
+      "comment" : "Къибла: Android qibla_location_searching",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Определяем местоположение…"
+          }
+        }
+      }
+    },
+    "qibla.location.stale" : {
+      "comment" : "Къибла: Android qibla_location_stale",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Местоположение устарело"
+          }
+        }
+      }
+    },
+    "qibla.low.accuracy.hint" : {
+      "comment" : "Къибла: Android qibla_low_accuracy_hint",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Поводите телефоном восьмёркой, вдали от металла"
+          }
+        }
+      }
+    },
+    "qibla.low.accuracy.title" : {
+      "comment" : "Къибла: Android qibla_low_accuracy_title",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Компас неточен"
+          }
+        }
+      }
+    },
+    "qibla.near.kaaba.hint" : {
+      "comment" : "Къибла: Android qibla_near_kaaba_hint",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Рядом с Каабой приблизительные координаты сдвигают направление"
+          }
+        }
+      }
+    },
+    "qibla.near.kaaba.title" : {
+      "comment" : "Къибла: Android qibla_near_kaaba_title",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Нужно точное местоположение"
+          }
+        }
+      }
+    },
+    "qibla.no.compass.hint %lld" : {
+      "comment" : "Къибла: Android qibla_no_compass_hint",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Къибла - %lld° по часовой стрелке от севера"
+          }
+        }
+      }
+    },
+    "qibla.no.compass.title" : {
+      "comment" : "Къибла: Android qibla_no_compass_title",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Компаса нет"
+          }
+        }
+      }
+    },
+    "qibla.open.settings" : {
+      "comment" : "Къибла: Android qibla_open_settings",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Открыть настройки"
+          }
+        }
+      }
+    },
+    "qibla.permission.allow" : {
+      "comment" : "Къибла: Android qibla_permission_allow",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Разрешить"
+          }
+        }
+      }
+    },
+    "qibla.permission.hint" : {
+      "comment" : "Къибла: Android qibla_permission_hint",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Без него направление не рассчитать"
+          }
+        }
+      }
+    },
+    "qibla.permission.title" : {
+      "comment" : "Къибла: Android qibla_permission_title",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Нет доступа к местоположению"
+          }
+        }
+      }
+    },
+    "qibla.restart" : {
+      "comment" : "Къибла: Android qibla_restart",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перезапустить компас"
+          }
+        }
+      }
+    },
+    "qibla.retry" : {
+      "comment" : "Къибла: Android qibla_retry",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Повторить"
+          }
+        }
+      }
+    },
+    "qibla.stale.hint" : {
+      "comment" : "Къибла: Android qibla_stale_hint",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Координаты устарели - направление может быть неточным"
+          }
+        }
+      }
+    },
+    "qibla.stale.title" : {
+      "comment" : "Къибла: Android qibla_stale_title",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Обновите местоположение"
+          }
+        }
+      }
+    },
+    "qibla.subtitle" : {
+      "comment" : "Къибла: Android qibla_subtitle",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Направление молитвы"
+          }
+        }
+      }
+    },
+    "qibla.tilted" : {
+      "comment" : "Къибла: Android qibla_tilted",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Телефон наклонён - положите его ровно, экраном вверх"
+          }
+        }
+      }
+    },
+    "qibla.tilted.hint" : {
+      "comment" : "Къибла: Android qibla_tilted_hint",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сначала положите телефон ровно"
+          }
+        }
+      }
+    },
+    "qibla.title" : {
+      "comment" : "Къибла: Android qibla_title",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Къибла"
+          }
+        }
+      }
+    },
+    "qibla.turn.hint" : {
+      "comment" : "Къибла: Android qibla_turn_hint",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Совместите метку с указателем"
+          }
+        }
+      }
+    },
+    "qibla.turn.left" : {
+      "comment" : "Къибла: Android qibla_turn_left",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Поверните налево"
+          }
+        }
+      }
+    },
+    "qibla.turn.left.mid" : {
+      "comment" : "Къибла: Android qibla_turn_left_mid",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Левее"
+          }
+        }
+      }
+    },
+    "qibla.turn.left.near" : {
+      "comment" : "Къибла: Android qibla_turn_left_near",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Немного левее"
+          }
+        }
+      }
+    },
+    "qibla.turn.right" : {
+      "comment" : "Къибла: Android qibla_turn_right",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Поверните направо"
+          }
+        }
+      }
+    },
+    "qibla.turn.right.mid" : {
+      "comment" : "Къибла: Android qibla_turn_right_mid",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Правее"
+          }
+        }
+      }
+    },
+    "qibla.turn.right.near" : {
+      "comment" : "Къибла: Android qibla_turn_right_near",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Немного правее"
+          }
+        }
+      }
+    },
+    "qibla.waiting" : {
+      "comment" : "Къибла: Android qibla_waiting",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Настраиваем компас"
+          }
+        }
+      }
+    },
+    "qibla.waiting.hint" : {
+      "comment" : "Къибла: Android qibla_waiting_hint",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Несколько секунд"
+          }
+        }
+      }
+    },
     "reading.fontSize.decrease" : {
       "localizations" : {
         "ru" : {
@@ -3406,6 +4308,39 @@
         }
       }
     },
+    "settings.azkar.composition.count %lld %lld" : {
+      "comment" : "Настройки азкаров: в наборе / всего зикров раздела",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld из %2$lld"
+          }
+        }
+      }
+    },
+    "settings.azkar.composition.footer" : {
+      "comment" : "Настройки азкаров: подпись группы «Состав азкаров»",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Какие зикры читать и в каком порядке. По умолчанию - основной набор."
+          }
+        }
+      }
+    },
+    "settings.azkar.composition.header" : {
+      "comment" : "Настройки азкаров: заголовок группы «Состав азкаров»; подпись кнопки в шапке списка азкаров",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Состав азкаров"
+          }
+        }
+      }
+    },
     "settings.azkar.history.footer" : {
       "comment" : "Настройки азкаров: пояснение к сбросу истории",
       "localizations" : {
@@ -3467,7 +4402,7 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Время азкаров и сброс прогресса"
+            "value" : "Время, состав и сброс прогресса"
           }
         }
       }
@@ -5055,6 +5990,140 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Аа"
+          }
+        }
+      }
+    },
+    "azkar.motivation.title" : {
+      "comment" : "«Добавьте ещё азкаров»: окно после «Машаа Аллах!» при серии от 14 дней",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вы держите серию!"
+          }
+        }
+      }
+    },
+    "azkar.motivation.message" : {
+      "comment" : "«Добавьте ещё азкаров»: окно после «Машаа Аллах!» при серии от 14 дней",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Машаа Аллах! Вы уже хорошо закрепились на выбранных азкарах. Может быть, добавите ещё?"
+          }
+        }
+      }
+    },
+    "azkar.motivation.hadith" : {
+      "comment" : "«Добавьте ещё азкаров»: окно после «Машаа Аллах!» при серии от 14 дней",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "«Самые любимые Аллахӏом дела - постоянные, даже если их немного»"
+          }
+        }
+      }
+    },
+    "azkar.motivation.hadith.source" : {
+      "comment" : "«Добавьте ещё азкаров»: окно после «Машаа Аллах!» при серии от 14 дней",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Передаётся от ‘Аиши, да будет доволен ею Аллахӏ · аль-Бухари 6464, Муслим 783"
+          }
+        }
+      }
+    },
+    "azkar.motivation.later" : {
+      "comment" : "«Добавьте ещё азкаров»: окно после «Машаа Аллах!» при серии от 14 дней",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "В другой раз"
+          }
+        }
+      }
+    },
+    "azkar.motivation.ok" : {
+      "comment" : "«Добавьте ещё азкаров»: окно после «Машаа Аллах!» при серии от 14 дней",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ОК"
+          }
+        }
+      }
+    },
+    "azkar.motivation.morning.count %lld %lld" : {
+      "comment" : "«Добавьте ещё азкаров»: окно после «Машаа Аллах!» при серии от 14 дней, плашка раздела (выбрано из всех)",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Утренние %1$lld из %2$lld"
+          }
+        }
+      }
+    },
+    "azkar.motivation.evening.count %lld %lld" : {
+      "comment" : "«Добавьте ещё азкаров»: окно после «Машаа Аллах!» при серии от 14 дней, плашка раздела (выбрано из всех)",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вечерние %1$lld из %2$lld"
+          }
+        }
+      }
+    },
+    "azkar.motivation.days %lld" : {
+      "comment" : "«Добавьте ещё азкаров»: число серии и подпись под ним - первая строка (число) показывается крупно золотом, поэтому перенос строки обязателен",
+      "localizations" : {
+        "ru" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld\nдень подряд"
+                }
+              },
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld\nдня подряд"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld\nдней подряд"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld\nдня подряд"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "update.hint" : {
+      "comment" : "Главная «Азкаров»: подсказка под значком «Обновить», один раз на новую версию",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вышло обновление"
           }
         }
       }

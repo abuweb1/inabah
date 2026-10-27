@@ -45,14 +45,26 @@ class WhatsNew(
     private val _pending = MutableStateFlow<ReleaseNotes?>(null)
     val pending: StateFlow<ReleaseNotes?> = _pending.asStateFlow()
 
+    private val _checked = MutableStateFlow(false)
+
+    /**
+     * [check] закончен: до этого [pending] = `null` ещё не значит «нечего показать» - подсказки ждут
+     * (аудит 2026-10-24: подсказка у «Къиблы» успевала показаться до окна).
+     */
+    val checked: StateFlow<Boolean> = _checked.asStateFlow()
+
     suspend fun check() {
-        val current = AppVersion.parse(currentVersion) ?: return
-        val lastShown = AppVersion.parse(storage.snapshot[KEY])
-        val currentNotes = notes.notes(current)
-        when (whatsNewDecision(lastShown, current, isFreshInstall, hasNotes = currentNotes != null)) {
-            WhatsNewDecision.Show -> _pending.value = currentNotes
-            WhatsNewDecision.RecordSilently -> record(current)
-            WhatsNewDecision.Nothing -> Unit
+        try {
+            val current = AppVersion.parse(currentVersion) ?: return
+            val lastShown = AppVersion.parse(storage.snapshot[KEY])
+            val currentNotes = notes.notes(current)
+            when (whatsNewDecision(lastShown, current, isFreshInstall, hasNotes = currentNotes != null)) {
+                WhatsNewDecision.Show -> _pending.value = currentNotes
+                WhatsNewDecision.RecordSilently -> record(current)
+                WhatsNewDecision.Nothing -> Unit
+            }
+        } finally {
+            _checked.value = true
         }
     }
 

@@ -14,17 +14,53 @@ struct AzkarListView: View {
     @Environment(\.theme) private var theme
 
     @State private var showsCompletion = false
+    /// «Добавьте ещё азкаров»: показанное предложение и плашки, пока окно открыто (показ уже записан).
+    @State private var motivation: MotivationPresentation?
+    /// Рамка «Машаа Аллах!» в слое экрана — в неё ставится размытая копия под окном.
+    @State private var completionFrame: CGRect = .zero
 
-    private static let reminderIconSize: CGFloat = 20
-    private static let titleSize: CGFloat = 16
+    /// Слой экрана: в нём меряется «Машаа Аллах!» и раскладывается окно над ним.
+    nonisolated private static let space = "azkarList"
 
     var body: some View {
+        // Окно прошлого дня (вернулись на экран после конца вечернего окна) и над уже не дочитанным разделом
+        // (сбросили зикр в настройках, пока окно открыто) не показывается.
+        let shown = motivation.flatMap { showsCompletion && $0.offer.day == store.streakDay ? $0 : nil }
+        screen
+            .coordinateSpace(.named(Self.space))
+            .accessibilityHidden(shown != nil)
+            // Поверх всего экрана с шапкой; панель вкладок не закрывает.
+            .overlay {
+                if let shown {
+                    AzkarMotivationLayer(
+                        section: section,
+                        presentation: shown,
+                        completionFrame: completionFrame,
+                        settings: settings
+                    ) {
+                        motivation = nil
+                    }
+                    .transition(.opacity)
+                }
+            }
+            .animation(Motion.dialog, value: shown)
+            .background {
+                AzkarMotivationWatcher(showsCompletion: showsCompletion) { motivation = $0 }
+            }
+            .toolbar(.hidden, for: .navigationBar)
+            .task { await store.load(section) }
+    }
+
+    private var screen: some View {
         content
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background { section.background(in: theme).linear.ignoresSafeArea() }
             .overlay {
                 if showsCompletion {
                     AzkarCompletionView(section: section) { router.popToRoot(.azkar) }
+                        .onGeometryChange(for: CGRect.self) { $0.frame(in: .named(Self.space)) } action: {
+                            completionFrame = $0
+                        }
                         .transition(.opacity)
                         .accessibilityAddTraits(.isModal)
                 }
@@ -34,41 +70,12 @@ struct AzkarListView: View {
             // плейлиста может ещё звучать.
             .audioPlayerInset()
             .background { AzkarCompletionWatcher(section: section, showsCompletion: $showsCompletion) }
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbarBackground(section.headerColor(in: theme), for: .navigationBar)
-            .toolbarBackgroundVisibility(.visible, for: .navigationBar)
-            .toolbarColorScheme(.dark, for: .navigationBar)
-            .toolbar {
-                // Заголовок — слева, сразу за «назад» (решение пользователя 2026-10-04, как в Android):
-                // по центру между «назад» и А−/А+ ему тесно. Без стеклянной подложки элемента.
-                if #available(iOS 26, *) {
-                    ToolbarItem(placement: .topBarLeading) { titleView }
-                        .sharedBackgroundVisibility(.hidden)
-                } else {
-                    ToolbarItem(placement: .topBarLeading) { titleView }
-                }
-                // «Сделать напоминание» — отдельной круглой кнопкой слева от «А− А+» (решение
-                // пользователя 2026-10-06). Чтобы на узких iPhone (390 pt) «А− А+» не уходили
-                // в меню «…», их капсула компактная, а заголовок — чуть меньше `headline`.
-                ToolbarItem(placement: .topBarTrailing) {
-                    ShareButton(title: "reminder.action", iconSize: Self.reminderIconSize) {
-                        section.reminderText
-                    }
-                    .headerIconButtonStyle(tint: theme.palette.tabAzkar, header: section.headerColor(in: theme))
-                    .fixedTextSize()
-                }
-                if #available(iOS 26, *) {
-                    ToolbarSpacer(.fixed, placement: .topBarTrailing)
-                }
-                FontSizeControls(
-                    settings: settings,
-                    compact: true,
-                    tint: theme.palette.tabAzkar,
-                    header: section.headerColor(in: theme)
-                )
+            // Шапка своя на всех iOS, как Android `InabahTopBar` (решение пользователя 2026-10-25): в системном
+            // навбаре iOS 26–27 сливал кнопки в одну капсулу и уводил их в меню «…», а не обрезал заголовок.
+            // Свайп «назад» от края работает и без навбара (`UINavigationController` в `GlassBackButton.swift`).
+            .safeAreaInset(edge: .top, spacing: 0) {
+                AzkarHeaderBar(section: section, settings: settings)
             }
-            .glassBackButton(tint: theme.palette.tabAzkar, header: section.headerColor(in: theme))
-            .task { await store.load(section) }
     }
 
     @ViewBuilder
@@ -95,22 +102,86 @@ struct AzkarListView: View {
                 }
         }
     }
+}
+
+/// Шапка списка азкаров — как Android `InabahTopBar` (`centerTitle = false`): «‹», заголовок с подзаголовком
+/// (не хватает места — многоточие) и справа «Сделать напоминание» (решение пользователя 2026-10-06),
+/// «Состав азкаров» (2026-10-24) и «А− А+» — стеклянные круги и капсула своего размера.
+private struct AzkarHeaderBar: View {
+    let section: AzkarSection
+    let settings: ReadingSettings
+
+    @Environment(\.theme) private var theme
+    @Environment(\.dismiss) private var dismiss
+
+    /// Как Android: строка 56, круги и капсула 40.
+    private static let barHeight: CGFloat = 56
+    private static let diameter = GlassIconButtonStyle.screenDiameter
+    private static let reminderIconSize: CGFloat = 20
+    private static let compositionIconSize: CGFloat = 20
+    private static let titleSize: CGFloat = 16
+
+    var body: some View {
+        HStack(spacing: Spacing.s) {
+            Button {
+                dismiss()
+            } label: {
+                Image(systemName: "chevron.backward")
+                    .font(.body.weight(.semibold))
+            }
+            .buttonStyle(glass)
+            .accessibilityLabel(Text("navigation.back"))
+            titleView
+                .frame(maxWidth: .infinity, alignment: .leading)
+            actions
+                .fixedSize()
+        }
+        .padding(.horizontal, Spacing.xl)
+        .frame(height: Self.barHeight)
+        .background { section.headerColor(in: theme).ignoresSafeArea(edges: .top) }
+        // Шапка не меняется с размером интерфейса.
+        .fixedTextSize()
+    }
+
+    private var glass: GlassIconButtonStyle {
+        GlassIconButtonStyle(tint: theme.palette.tabAzkar, header: section.headerColor(in: theme), diameter: Self.diameter)
+    }
+
+    private var actions: some View {
+        // Зона касания 44 у круга 40 даёт зазор 4 — добавка до видимых 12 (решение пользователя 2026-10-25).
+        HStack(spacing: Spacing.s) {
+            ShareButton(title: "reminder.action", iconSize: Self.reminderIconSize) {
+                section.reminderText
+            }
+            .buttonStyle(glass)
+            NavigationLink(value: AzkarRoute.composition(section)) {
+                Image(.compositionIcon)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: Self.compositionIconSize, height: Self.compositionIconSize)
+            }
+            .buttonStyle(glass)
+            .accessibilityLabel(Text("settings.azkar.composition.header"))
+            GlassFontSizeCapsule(
+                settings: settings,
+                tint: theme.palette.tabAzkar,
+                header: section.headerColor(in: theme),
+                height: Self.diameter
+            )
+        }
+    }
 
     private var titleView: some View {
         VStack(alignment: .leading, spacing: 0) {
-            // Чуть меньше `headline` (17): рядом с «Сделать напоминание» и «А− А+» на узких
-            // iPhone (390 pt) иначе «А− А+» уходят в меню «…» (решение пользователя 2026-10-06).
             Text(section.title)
                 .font(.system(size: Self.titleSize, weight: .semibold))
+                .lineLimit(1)
             Text(section.subtitle)
                 .font(.caption2)
                 .foregroundStyle(theme.palette.onAccentSecondary)
+                .lineLimit(1)
         }
         .foregroundStyle(theme.palette.onAccent)
-        // Элемент слева навбар сжимает до многоточия — заголовку нужна его натуральная ширина.
-        .fixedSize()
-        // Заголовок экрана не меняется с размером интерфейса.
-        .fixedTextSize()
         .accessibilityElement(children: .combine)
         .accessibilityAddTraits(.isHeader)
     }
@@ -255,6 +326,76 @@ private struct CardTopMarker: View {
 
     /// Верх «на экране», только если видна полоса над ним почти целиком.
     private static let visibleShare = 0.9
+}
+
+/// Показанное «Добавьте ещё азкаров»: предложение и плашки на момент показа (как `remember(offered)` Android).
+private nonisolated struct MotivationPresentation: Hashable {
+    let offer: MotivationOffer
+    let counts: [CompositionCount]
+}
+
+/// «Добавьте ещё азкаров» (`AzkarMotivation.due`): через 1 с после «Машаа Аллах!», чтобы сначала был виден итог
+/// дня. Показ записывается сразу (`AzkarMotivation.offered`), а не при закрытии: уход свайпом «назад» или
+/// повторным нажатием вкладки его не теряет (аудит 2026-10-27); повторное прохождение дня окна не покажет.
+private struct AzkarMotivationWatcher: View {
+    let showsCompletion: Bool
+    let onShow: (MotivationPresentation) -> Void
+
+    @Environment(AzkarStore.self) private var store
+    @Environment(AzkarHistory.self) private var history
+    @Environment(AzkarMotivation.self) private var motivation
+
+    var body: some View {
+        Color.clear
+            .task(id: showsCompletion) {
+                guard showsCompletion else { return }
+                try? await Task.sleep(for: Motion.motivationDelay)
+                guard !Task.isCancelled, let today = store.streakDay else { return }
+                let counts = store.incompleteCompositions()
+                if let offer = motivation.due(days: history.days, today: today, canAddMore: !counts.isEmpty) {
+                    motivation.offered(offer)
+                    onShow(MotivationPresentation(offer: offer, counts: counts))
+                }
+            }
+            .accessibilityHidden(true)
+    }
+}
+
+/// Окно «Добавьте ещё азкаров» над экраном списка. Под стеклом — размытая копия того, что видно под окном:
+/// шапка и «Машаа Аллах!» в той же рамке, что настоящий (с мини-плеером он выше), без пульса. Ленту под
+/// оверлеем не видно — её копировать не нужно.
+private struct AzkarMotivationLayer: View {
+    let section: AzkarSection
+    let presentation: MotivationPresentation
+    let completionFrame: CGRect
+    let settings: ReadingSettings
+    let onClose: () -> Void
+
+    @Environment(AppRouter.self) private var router
+    @Environment(\.theme) private var theme
+
+    var body: some View {
+        let counts = presentation.counts
+        AzkarMotivationDialog(streak: presentation.offer.streak, counts: counts) {
+            onClose()
+            // Раздел, где выбраны не все: этот, иначе другой. Поверх списка — «назад» вернёт в него.
+            let target = counts.first { $0.section == section }?.section ?? counts.first?.section ?? section
+            router.azkarPath.append(.composition(target))
+        } onLater: {
+            onClose()
+        } backdrop: {
+            Color.clear
+                .safeAreaInset(edge: .top, spacing: 0) {
+                    AzkarHeaderBar(section: section, settings: settings)
+                }
+                .overlay(alignment: .topLeading) {
+                    AzkarCompletionView(section: section, pulses: false) {}
+                        .frame(width: completionFrame.width, height: completionFrame.height)
+                        .offset(x: completionFrame.minX, y: completionFrame.minY)
+                }
+                .background { section.background(in: theme).linear.ignoresSafeArea() }
+        }
+    }
 }
 
 /// Показывает оверлей «Машаа Аллах!» с паузой после выполнения всех зикров раздела.

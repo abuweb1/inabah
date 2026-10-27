@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import app.inabah.android.core.designsystem.InabahTheme
 import app.inabah.android.core.designsystem.InabahType
 import app.inabah.android.core.designsystem.PressFeedback
+import app.inabah.android.core.designsystem.ShadowToken
 import app.inabah.android.core.designsystem.Size
 import app.inabah.android.core.designsystem.Spacing
 import app.inabah.android.core.formatting.isSystem24HourFormat
@@ -93,6 +94,28 @@ fun PopoverActionButton(label: String, color: Color, onClick: () -> Unit, modifi
             .pressFeedback(interaction, opacity = PressFeedback.ROW_OPACITY),
     ) {
         Text(label, color = color, style = InabahType.body.copy(fontWeight = FontWeight.SemiBold))
+    }
+}
+
+/**
+ * Главное действие окна рядом с [PopoverActionButton] («ОК» в «Добавьте ещё азкаров»): та же капсула,
+ * золотой градиент и тень, как у главной кнопки плеера; текст — `parchmentInk`.
+ */
+@Composable
+fun GoldActionButton(label: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val palette = InabahTheme.palette
+    val interaction = remember { MutableInteractionSource() }
+    val shape = RoundedCornerShape(percent = 50)
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = modifier
+            .fillMaxWidth()
+            .heightIn(min = Size.primaryButtonHeight)
+            .clickable(interaction, indication = null, role = Role.Button, onClick = onClick)
+            .pressFeedback(interaction, scale = PressFeedback.WIDE_SCALE, opacity = PressFeedback.WIDE_OPACITY)
+            .surface(InabahTheme.gradients.counterButton, shape, shadow = ShadowToken.goldButton(palette)),
+    ) {
+        Text(label, color = palette.parchmentInk, style = InabahType.body.copy(fontWeight = FontWeight.SemiBold))
     }
 }
 

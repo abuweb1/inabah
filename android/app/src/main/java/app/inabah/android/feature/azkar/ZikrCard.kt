@@ -202,9 +202,9 @@ private fun ZikrFullContent(
     isUnderHeader: Boolean,
     isAudioActive: Boolean,
     onPlay: () -> Unit,
-    translationModifier: Modifier,
     onHideTranslation: () -> Unit,
     modifier: Modifier = Modifier,
+    translationModifier: Modifier = Modifier,
 ) {
     val palette = InabahTheme.palette
     val zikr = session.zikr
@@ -212,7 +212,8 @@ private fun ZikrFullContent(
         // Под свёрнутым заголовком верхние углы прямые — меняются сразу, без анимации.
         ParchmentPanel(topCornerRadius = if (isUnderHeader) 0.dp else Radius.card) {
             Column(verticalArrangement = Arrangement.spacedBy(Spacing.m)) {
-                ArabicText(zikr.arabic, arabicFontSize, palette.parchmentText)
+                // Суры и аяты Корана — шрифтом мусхафа (решение пользователя 2026-10-25).
+                ArabicText(zikr.arabic, arabicFontSize, palette.parchmentText, mushaf = zikr.quran)
                 RepetitionsBadge(zikr.repetitions)
             }
         }

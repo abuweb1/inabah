@@ -19,6 +19,8 @@ private struct GlassBody<S: InsettableShape>: ViewModifier {
     let shape: S
     let isPressed: Bool
     let pressedScale: CGFloat
+    /// `false` — картинка (Кааба на главной): при нажатии светится только подложка, содержимое как есть.
+    var recolorsContent = true
 
     func body(content: Content) -> some View {
         content
@@ -27,7 +29,7 @@ private struct GlassBody<S: InsettableShape>: ViewModifier {
             .overlay {
                 Rectangle()
                     .fill(colors.pressedIcon.color)
-                    .opacity(isPressed ? 1 : 0)
+                    .opacity(isPressed && recolorsContent ? 1 : 0)
                     .blendMode(.sourceAtop)
                     .allowsHitTesting(false)
             }
@@ -70,6 +72,8 @@ struct GlassIconButtonStyle: ButtonStyle {
     let tint: Color
     var header: Color?
     var diameter: CGFloat = Self.screenDiameter
+    /// `false` — в круге картинка, а не значок: при нажатии меняется только подложка.
+    var recolorsContent = true
 
     /// Как на Android (`GlassButtonSize`).
     static let screenDiameter: CGFloat = 40
@@ -90,7 +94,8 @@ struct GlassIconButtonStyle: ButtonStyle {
                 colors: colors,
                 shape: Circle(),
                 isPressed: configuration.isPressed,
-                pressedScale: GlassMetrics.circlePressScale
+                pressedScale: GlassMetrics.circlePressScale,
+                recolorsContent: recolorsContent
             ))
             .frame(width: Size.minTapTarget, height: Size.minTapTarget)
             .contentShape(.rect)

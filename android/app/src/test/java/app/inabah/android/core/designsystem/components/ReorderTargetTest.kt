@@ -1,9 +1,9 @@
-package app.inabah.android.feature.settings
+package app.inabah.android.core.designsystem.components
 
 import kotlin.test.assertEquals
 import org.junit.Test
 
-/** Перестановка сборников: место строки при перетаскивании. */
+/** Перестановка строк («Порядок сборников», «Состав азкаров»): место строки при перетаскивании. */
 class ReorderTargetTest {
     // Строки по 100 px, три строки.
     private fun target(index: Int, offset: Float) = reorderTarget(index, offset, step = 100f, count = 3)

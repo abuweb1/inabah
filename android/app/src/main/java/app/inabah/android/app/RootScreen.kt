@@ -6,6 +6,9 @@ import androidx.compose.animation.Crossfade
 import app.inabah.android.core.designsystem.Motion
 import androidx.compose.animation.ContentTransform
 import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -25,6 +28,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.scene.Scene
@@ -38,6 +42,7 @@ import app.inabah.android.core.designsystem.InterfaceTextScale
 import app.inabah.android.core.designsystem.LocalInabahTheme
 import app.inabah.android.core.designsystem.components.bottomOnly
 import app.inabah.android.core.audio.ui.AudioPlayerHost
+import app.inabah.android.feature.qibla.QiblaScreen
 import app.inabah.android.feature.azkar.AzkarCalendarScreen
 import app.inabah.android.feature.azkar.AzkarHomeScreen
 import app.inabah.android.feature.azkar.AzkarListScreen
@@ -60,6 +65,7 @@ import app.inabah.android.feature.settings.AboutScreen
 import app.inabah.android.feature.settings.AppIconSettingsScreen
 import app.inabah.android.feature.settings.LicenseScreen
 import app.inabah.android.feature.settings.LicensesScreen
+import app.inabah.android.feature.settings.AzkarCompositionScreen
 import app.inabah.android.feature.settings.AzkarSettingsScreen
 import app.inabah.android.feature.settings.HadithOrderSettingsScreen
 import app.inabah.android.feature.settings.HadithSettingsScreen
@@ -85,6 +91,7 @@ fun RootScreen(services: AppServices, modifier: Modifier = Modifier) {
     RootContent(
         selectedTab = router.selectedTab,
         canGoBack = router.canGoBack,
+        compactTabBar = !router.isOnTabRoot,
         onSelectTab = router::select,
         onBack = { router.goBack() },
         modifier = modifier,
@@ -114,6 +121,8 @@ fun RootContent(
     onSelectTab: (AppTab) -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
+    /** Внутренний экран вкладки: панель вкладок компактная, мини-плеер опускается вместе с ней. */
+    compactTabBar: Boolean = false,
     /** Мини-плеер над панелью вкладок; его высота входит в нижний отступ содержимого. */
     player: @Composable () -> Unit = {},
     /**
@@ -129,6 +138,7 @@ fun RootContent(
     val tabStates = rememberSaveableStateHolder()
     // Экран вкладки (вместе с фоном) — источник размытия под панелью вкладок, как стекло iOS.
     val backdrop = rememberHazeState()
+    val compactness = animateFloatAsState(if (compactTabBar) 1f else 0f, TabBarCompactSpring, label = "compactTabBar")
     Box(modifier.fillMaxSize()) {
         Scaffold(
             modifier = if (overlay != null) Modifier.clearAndSetSemantics {} else Modifier,
@@ -136,8 +146,15 @@ fun RootContent(
             bottomBar = {
                 // Панель вкладок — после плеера: рисуется поверх, плеер при скрытии уезжает под неё.
                 Column {
-                    player()
-                    FloatingTabBar(selectedTab = selectedTab, onSelect = onSelectTab, backdrop = backdrop)
+                    Box(Modifier.graphicsLayer { translationY = CompactBarDrop.toPx() * compactness.value }) {
+                        player()
+                    }
+                    FloatingTabBar(
+                        selectedTab = selectedTab,
+                        onSelect = onSelectTab,
+                        backdrop = backdrop,
+                        compactness = { compactness.value },
+                    )
                 }
             },
         ) { innerPadding ->
@@ -159,6 +176,9 @@ fun RootContent(
         overlay?.invoke(backdrop)
     }
 }
+
+/** Сжатие и возврат панели вкладок - мягкая пружина без отскока. */
+private val TabBarCompactSpring = spring<Float>(dampingRatio = 0.85f, stiffness = Spring.StiffnessMediumLow)
 
 /**
  * Экраны, где горизонтальный свайп листает содержимое (страницы хадисов, группы слов, буквы группы,
@@ -196,7 +216,12 @@ private fun TabScreens(tab: AppTab, services: AppServices, contentPadding: Paddi
                     services.updateSource,
                     onOpenSection = { router.push(AzkarRoute.SectionList(it)) },
                     onOpenCalendar = { router.push(AzkarRoute.Calendar) },
+                    onOpenQibla = { router.push(AzkarRoute.Qibla) },
                     contentPadding = contentPadding,
+                    qiblaHint = services.qiblaEntryHint,
+                    // Подсказка у «Къиблы» ждёт, пока закроют «Что нового» (после обновления до 1.3.0 оно первое).
+                    hintBlocked = !services.whatsNew.checked.collectAsStateWithLifecycle().value ||
+                        services.whatsNew.pending.collectAsStateWithLifecycle().value != null,
                 )
             }
             entry<AzkarRoute.Calendar> {
@@ -205,6 +230,15 @@ private fun TabScreens(tab: AppTab, services: AppServices, contentPadding: Paddi
                     store = services.azkarStore,
                     onBack = { router.pop(AppTab.Azkar) },
                     contentPadding = contentPadding.bottomOnly(),
+                )
+            }
+            entry<AzkarRoute.Qibla> {
+                QiblaScreen(
+                    model = services.qibla,
+                    onBack = { router.pop(AppTab.Azkar) },
+                    contentPadding = contentPadding.bottomOnly(),
+                    helpHint = services.qiblaHelpHint,
+                    locationAsked = services.qiblaLocationAsked,
                 )
             }
             entry<AzkarRoute.SectionList> { route ->
@@ -218,6 +252,17 @@ private fun TabScreens(tab: AppTab, services: AppServices, contentPadding: Paddi
                     playlistSettings = services.playlistSettings,
                     onBack = { router.pop(AppTab.Azkar) },
                     onGoHome = { router.popToRoot(AppTab.Azkar) },
+                    contentPadding = contentPadding.bottomOnly(),
+                    onOpenComposition = { router.push(AzkarRoute.Composition(it)) },
+                    motivation = services.azkarMotivation,
+                )
+            }
+            entry<AzkarRoute.Composition> { route ->
+                AzkarCompositionScreen(
+                    section = route.section,
+                    store = services.azkarStore,
+                    composition = services.azkarComposition,
+                    onBack = { router.pop(AppTab.Azkar) },
                     contentPadding = contentPadding.bottomOnly(),
                 )
             }
@@ -416,6 +461,16 @@ private fun TabScreens(tab: AppTab, services: AppServices, contentPadding: Paddi
                     history = services.azkarHistory,
                     windowSettings = services.azkarWindowSettings,
                     reminderSettings = services.reminderSettings,
+                    onBack = { router.pop(AppTab.Settings) },
+                    contentPadding = contentPadding.bottomOnly(),
+                    onOpenComposition = { router.push(SettingsRoute.AzkarComposition(it)) },
+                )
+            }
+            entry<SettingsRoute.AzkarComposition> { route ->
+                AzkarCompositionScreen(
+                    section = route.section,
+                    store = services.azkarStore,
+                    composition = services.azkarComposition,
                     onBack = { router.pop(AppTab.Settings) },
                     contentPadding = contentPadding.bottomOnly(),
                 )

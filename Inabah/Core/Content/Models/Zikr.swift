@@ -22,6 +22,10 @@ nonisolated struct Zikr: Identifiable, Hashable, Sendable {
     /// зикра, с 2026-10-06; на карточке — «Аудио скоро»).
     var audioFileName: String? = nil
     let translation: ZikrTranslation?
+    /// Сура или аят Корана (текст QPC Hafs) — полный текст на карточке шрифтом мусхафа (2026-10-25).
+    var isQuran = false
+    /// Не входит в набор по умолчанию — добавляется в «Составе азкаров» (2026-10-24).
+    var isOptional = false
 
     var section: AzkarSection { id.section }
     var number: Int { id.number }

@@ -41,7 +41,11 @@ class PlaybackService : MediaSessionService() {
             .build()
         exoPlayer.addListener(SingleTrackInterruptionListener(exoPlayer))
         setMediaNotificationProvider(
-            DefaultMediaNotificationProvider.Builder(this).build().apply { setSmallIcon(R.drawable.ic_notification) },
+            // Своё имя канала (видно в настройках уведомлений системы) вместо английского по умолчанию Media3.
+            DefaultMediaNotificationProvider.Builder(this)
+                .setChannelName(R.string.playback_notification_channel)
+                .build()
+                .apply { setSmallIcon(R.drawable.ic_notification) },
         )
         session = MediaSession.Builder(this, ZikrNavigationPlayer(exoPlayer))
             .setSessionActivity(openPlayerIntent())

@@ -142,6 +142,8 @@ enum Motion {
     static let collapseDelay = Duration.milliseconds(550)
     /// Пауза перед показом оверлея «Машаа Аллах!» после последнего зикра.
     static let completionDelay = Duration.milliseconds(600)
+    /// Пауза перед «Добавьте ещё азкаров» после «Машаа Аллах!» — сначала виден итог дня (Android 1 с).
+    static let motivationDelay = Duration.seconds(1)
     /// Период обновления позиции воспроизведения. Бегунок интерполирует движение
     /// между отсчётами анимацией той же длительности — без скачков.
     static let progressTick = Duration.milliseconds(250)

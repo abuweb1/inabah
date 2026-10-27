@@ -7,6 +7,8 @@ import androidx.datastore.core.handlers.ReplaceFileCorruptionHandler
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.preferencesDataStoreFile
+import app.inabah.android.core.qibla.QiblaModel
+import app.inabah.android.core.qibla.QiblaTuning
 import app.inabah.android.core.audio.AudioPlayerController
 import app.inabah.android.core.audio.ClipPlayer
 import app.inabah.android.core.audio.MediaControllerEngine
@@ -26,6 +28,8 @@ import app.inabah.android.core.updates.NoUpdateSource
 import app.inabah.android.core.updates.UpdateSource
 import app.inabah.android.core.settings.AppIconSettings
 import app.inabah.android.core.settings.AppearanceSettings
+import app.inabah.android.core.settings.AzkarComposition
+import app.inabah.android.core.settings.AzkarMotivation
 import app.inabah.android.core.settings.AzkarHistory
 import app.inabah.android.core.settings.AzkarWindowSettings
 import app.inabah.android.core.settings.DEBUG_AZKAR_HISTORY_FILE
@@ -36,6 +40,7 @@ import app.inabah.android.core.settings.PackageManagerAppIconSwitcher
 import app.inabah.android.core.settings.ParchmentSettings
 import app.inabah.android.core.settings.PlaylistSettings
 import app.inabah.android.core.settings.PreferencesStorage
+import app.inabah.android.core.settings.OnceFlag
 import app.inabah.android.core.settings.ReadingProgress
 import app.inabah.android.core.settings.ReadingSettings
 import app.inabah.android.core.settings.ReminderSettings
@@ -62,6 +67,9 @@ class AppServices(
     val readingSettings: ReadingSettings,
     val playlistSettings: PlaylistSettings,
     val azkarWindowSettings: AzkarWindowSettings,
+    /** «Состав азкаров»: экран правит, `azkarStore` применяет. */
+    val azkarComposition: AzkarComposition,
+    val azkarMotivation: AzkarMotivation,
     val azkarStore: AzkarStore,
     val azkarHistory: AzkarHistory,
     val hadithStore: HadithStore,
@@ -83,6 +91,10 @@ class AppServices(
     val releaseNotes: ReleaseNotesSource,
     val whatsNew: WhatsNew,
     val updateSource: UpdateSource,
+    val qibla: QiblaModel,
+    val qiblaEntryHint: OnceFlag,
+    val qiblaHelpHint: OnceFlag,
+    val qiblaLocationAsked: OnceFlag,
 )
 
 /**
@@ -164,6 +176,7 @@ class AppContainer(context: Context) {
     // Порядок — как в iOS AppEnvironment: настройки, затем сторы, которые от них зависят.
     private fun createServices(): AppServices {
         val azkarWindowSettings = AzkarWindowSettings(storage)
+        val azkarComposition = AzkarComposition(storage)
         // Одна история на сторы и напоминания: «ещё не прочитаны» смотрит то, что записал AzkarStore.
         val azkarHistory = AzkarHistory(storage) { error ->
             Log.w(TAG, "История азкаров не читается — начата заново (первая испорченная — в azkar.history.corrupt)", error)
@@ -184,6 +197,8 @@ class AppContainer(context: Context) {
             readingSettings = ReadingSettings(storage),
             playlistSettings = PlaylistSettings(storage),
             azkarWindowSettings = azkarWindowSettings,
+            azkarComposition = azkarComposition,
+            azkarMotivation = AzkarMotivation(storage),
             azkarStore = AzkarStore(
                 repository = repository,
                 storage = storage,
@@ -194,6 +209,7 @@ class AppContainer(context: Context) {
                 onUnreadableProgress = { section, error ->
                     Log.w(TAG, "Прогресс «${section.key}» не читается — отрезок заново", error)
                 },
+                composition = azkarComposition,
             ),
             azkarHistory = azkarHistory,
             hadithStore = hadithStore,
@@ -241,6 +257,15 @@ class AppContainer(context: Context) {
             } else {
                 NoUpdateSource
             },
+            qibla = QiblaModel(
+                location = AndroidLocationSource(appContext, QiblaTuning.Default.locationTimeoutMillis),
+                heading = AndroidHeadingSource(appContext),
+                magnetic = AndroidMagneticModel,
+                now = ::qiblaClock,
+            ),
+            qiblaEntryHint = OnceFlag(storage, OnceFlag.QIBLA_ENTRY_HINT),
+            qiblaHelpHint = OnceFlag(storage, OnceFlag.QIBLA_HELP_HINT),
+            qiblaLocationAsked = OnceFlag(storage, OnceFlag.QIBLA_LOCATION_ASKED),
         )
     }
 

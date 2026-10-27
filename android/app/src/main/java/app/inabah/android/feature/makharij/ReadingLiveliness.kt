@@ -13,10 +13,10 @@ import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.Indication
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ripple
-import androidx.compose.material3.Text
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -24,15 +24,12 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.State
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Rect
@@ -46,21 +43,12 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.boundsInRoot
-import androidx.compose.ui.layout.layout
 import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalViewConfiguration
-import androidx.compose.ui.semantics.LiveRegionMode
-import androidx.compose.ui.semantics.liveRegion
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.lerp
-import app.inabah.android.core.designsystem.InabahType
 import app.inabah.android.core.designsystem.Radius
-import app.inabah.android.core.designsystem.Spacing
-import app.inabah.android.core.designsystem.components.surface
 import app.inabah.android.core.settings.ReadingSettings
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.combine
@@ -269,43 +257,11 @@ private fun HintLayer(intro: TapIntro) {
     }
 }
 
-/**
- * Пузырь подсказки над ячейкой (нет места сверху - под ней), правым краем к правому краю ячейки; стрелка - к её
- * середине (вниз, если пузырь сверху).
- */
+/** Пузырь подсказки над ячейкой - общий [app.inabah.android.core.designsystem.components.HintBubble] цвета курса. */
 @Composable
 private fun HintBubble(hint: TapHint, host: Rect) {
     val colors = readingColors
-    val gap = with(LocalDensity.current) { HINT_GAP.toPx() }
-    // Где стрелка (x в пузыре) и вниз ли она - считает раскладка, читает отрисовка.
-    val arrow = remember { floatArrayOf(0f, 1f) }
-    Text(
-        hint.text,
-        color = colors.onTint,
-        style = InabahType.footnote,
-        modifier = Modifier
-            .layout { measurable, constraints ->
-                val placeable = measurable.measure(constraints.copy(minWidth = 0, minHeight = 0))
-                layout(placeable.width, placeable.height) {
-                    val x = (hint.target.right - host.left - placeable.width).coerceIn(0f, (host.width - placeable.width).coerceAtLeast(0f))
-                    val above = hint.target.top - host.top - placeable.height - gap
-                    val y = if (above >= 0f) above else hint.target.bottom - host.top + gap
-                    arrow[0] = (hint.target.center.x - host.left - x).coerceIn(0f, placeable.width.toFloat())
-                    arrow[1] = if (above >= 0f) 1f else 0f
-                    placeable.place(IntOffset(x.roundToInt(), y.roundToInt()))
-                }
-            }
-            .drawBehind {
-                val half = HINT_ARROW.toPx()
-                val (cx, down) = arrow[0].coerceIn(half + Radius.control.toPx(), size.width - half - Radius.control.toPx()) to (arrow[1] > 0f)
-                val base = if (down) size.height else 0f
-                val tip = if (down) size.height + half else -half
-                drawPath(Path().apply { moveTo(cx - half, base); lineTo(cx + half, base); lineTo(cx, tip); close() }, colors.tint)
-            }
-            .semantics { liveRegion = LiveRegionMode.Polite }
-            .surface(colors.tint, Radius.control)
-            .padding(horizontal = Spacing.m, vertical = Spacing.xs),
-    )
+    app.inabah.android.core.designsystem.components.HintBubble(hint.text, hint.target, host, colors.tint, colors.onTint)
 }
 
 /**
@@ -500,8 +456,6 @@ internal const val HINT_MILLIS = 4_000L
 internal const val IDLE_MILLIS = 6_000L
 internal const val IDLE_CALLS = 3
 private const val HINT_FADE_MILLIS = 300
-private val HINT_GAP = 9.dp
-private val HINT_ARROW = 6.dp
 private const val WIGGLE_MILLIS = 900
 private val WIGGLE_TIMES = floatArrayOf(0f, 0.15f, 0.3f, 0.45f, 0.6f, 0.75f, 1f)
 private val WIGGLE_ANGLES = floatArrayOf(0f, -4f, 4f, -3f, 2f, 0f, 0f)

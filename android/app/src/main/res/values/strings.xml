@@ -1,9 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Строки интерфейса (ru — язык по умолчанию). Источник: docs/android/07-resources.md ← iOS Localizable.xcstrings. -->
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <string name="about_app_footer">Без рекламы, регистрации и сбора данных. Приложение работает без интернета.</string>
     <string name="about_app_header">Приложение</string>
     <string name="about_app_name">Inabah</string>
+    <string name="about_license_mushaf_subtitle">Суры и аяты Корана · Комплекс имени короля Фахда по изданию Корана · свободное распространение</string>
+    <string name="about_license_mushaf_title">KFGQPC Uthmanic Script HAFS</string>
     <string name="about_license_inter_subtitle">Шрифт интерфейса · Rasmus Andersson · SIL Open Font License 1.1</string>
     <string name="about_license_inter_title">Inter</string>
     <!-- Своё значение на Android (в iOS «Значки вкладок»): здесь Material Symbols — почти все значки приложения. -->
@@ -86,11 +88,33 @@
     <string name="azkar_completion_title">Машаа Аллах!</string>
     <string name="azkar_completion_verse_reference">Къуран · аль-Ахзаб 33:41–42</string>
     <string name="azkar_completion_verse_translation">«О те, которые уверовали! Поминайте Аллаха (сердцем, устами и в делах) многократным поминанием, и восславляйте Его по утрам и по вечерам!»</string>
+    <!-- «Состав азкаров» (Android-first 2026-10-24): docs/android/06-screens.md, «Состав азкаров». -->
+    <string name="azkar_composition_add">Добавить</string>
+    <string name="azkar_composition_available">Можно добавить · %1$d</string>
+    <string name="azkar_composition_hint">Уберите лишние зикры и добавьте нужные из списка ниже. Порядок - перетаскиванием за ручку справа. Изменения применятся, когда вы уйдёте с экрана.</string>
+    <string name="azkar_composition_in_set">В наборе · %1$d</string>
+    <string name="azkar_composition_move_down">Ниже</string>
+    <string name="azkar_composition_move_up">Выше</string>
+    <string name="azkar_composition_remove">Убрать</string>
+    <string name="azkar_composition_repetitions">×%1$d</string>
+    <string name="azkar_composition_restore">Вернуть набор по умолчанию</string>
+    <string name="azkar_composition_restore_action">Вернуть</string>
+    <string name="azkar_composition_restore_message">Набор и порядок зикров станут такими, как изначально.</string>
+    <string name="azkar_composition_restore_title">Вернуть набор по умолчанию?</string>
     <string name="azkar_evening_subtitle">После намаза Аср</string>
     <string name="azkar_evening_title">Вечерние азкары</string>
     <string name="azkar_morning_subtitle">После намаза Фаджр</string>
     <string name="azkar_morning_title">Утренние азкары</string>
+    <string name="azkar_motivation_evening_count">Вечерние %1$d из %2$d</string>
+    <string name="azkar_motivation_hadith">«Самые любимые Аллахӏом дела - постоянные, даже если их немного»</string>
+    <string name="azkar_motivation_hadith_source">Передаётся от ‘Аиши, да будет доволен ею Аллахӏ · аль-Бухари 6464, Муслим 783</string>
+    <string name="azkar_motivation_later">В другой раз</string>
+    <string name="azkar_motivation_message">Машаа Аллах! Вы уже хорошо закрепились на выбранных азкарах. Может быть, добавите ещё?</string>
+    <string name="azkar_motivation_morning_count">Утренние %1$d из %2$d</string>
+    <string name="azkar_motivation_ok">ОК</string>
+    <string name="azkar_motivation_title">Вы держите серию!</string>
     <string name="azkar_progress">Выполнено: %1$d из %2$d</string>
+    <string name="azkar_qibla_hint">Нажмите, чтобы узнать направление Къиблы</string>
     <string name="azkar_streak_days_max">9999+ дней подряд</string>
     <string name="azkar_streak_number_max">9999+</string>
     <string name="azkar_streak_start">Начните серию сегодня</string>
@@ -276,9 +300,76 @@
     <string name="parchment_night">Ночной</string>
     <string name="parchment_sepia">Сепия</string>
     <string name="parchment_smoky">Дымчатый</string>
-    <string name="placeholder_soon">Скоро</string>
     <string name="playback_notification_channel">Воспроизведение</string>
     <string name="progress_fraction">%1$d/%2$d</string>
+    <!-- «Къибла» (1.3.0, Android-first 2026-10-24): docs/android/06-screens.md, «Къибла». -->
+    <string name="qibla_title">Къибла</string>
+    <string name="qibla_subtitle">Направление молитвы</string>
+    <string name="qibla_turn_right">Поверните направо</string>
+    <string name="qibla_turn_left">Поверните налево</string>
+    <string name="qibla_turn_hint">Совместите метку с указателем</string>
+    <string name="qibla_turn_right_mid">Правее</string>
+    <string name="qibla_turn_left_mid">Левее</string>
+    <string name="qibla_turn_right_near">Немного правее</string>
+    <string name="qibla_turn_left_near">Немного левее</string>
+    <string name="qibla_advice_metal">Вдали от металлических предметов</string>
+    <string name="qibla_tilted_hint">Сначала положите телефон ровно</string>
+    <string name="qibla_found">Направление найдено</string>
+    <string name="qibla_stale_title">Обновите местоположение</string>
+    <string name="qibla_stale_hint">Координаты устарели - направление может быть неточным</string>
+    <string name="qibla_near_kaaba_title">Нужно точное местоположение</string>
+    <string name="qibla_near_kaaba_hint">Рядом с Каабой приблизительные координаты сдвигают направление</string>
+    <string name="qibla_found_hint">Вы направлены к Къибле</string>
+    <string name="qibla_loading">Подготовка</string>
+    <string name="qibla_loading_hint">Проверяем доступ к местоположению</string>
+    <string name="qibla_waiting">Настраиваем компас</string>
+    <string name="qibla_waiting_hint">Несколько секунд</string>
+    <string name="qibla_permission_title">Нет доступа к местоположению</string>
+    <string name="qibla_permission_hint">Без него направление не рассчитать</string>
+    <string name="qibla_permission_allow">Разрешить</string>
+    <string name="qibla_denied_title">Доступ не разрешён</string>
+    <string name="qibla_denied_hint">Разрешите его в настройках телефона</string>
+    <string name="qibla_open_settings">Открыть настройки</string>
+    <string name="qibla_location_off_title">Геолокация выключена</string>
+    <string name="qibla_location_off_hint">Включите её в настройках телефона</string>
+    <string name="qibla_locating_title">Ищем, где вы…</string>
+    <string name="qibla_locating_hint">Метка появится через несколько секунд</string>
+    <string name="qibla_failed_title">Местоположение не найдено</string>
+    <string name="qibla_failed_hint">Выйдите на улицу или подойдите к окну</string>
+    <string name="qibla_retry">Повторить</string>
+    <string name="qibla_restart">Перезапустить компас</string>
+    <string name="qibla_low_accuracy_title">Компас неточен</string>
+    <string name="qibla_low_accuracy_hint">Поводите телефоном восьмёркой, вдали от металла</string>
+    <string name="qibla_no_compass_title">Компаса нет</string>
+    <string name="qibla_no_compass_hint">Къибла - %1$d° по часовой стрелке от севера</string>
+    <string name="qibla_location_found">Местоположение определено</string>
+    <string name="qibla_location_approximate">Местоположение приблизительное</string>
+    <string name="qibla_location_stale">Местоположение устарело</string>
+    <string name="qibla_location_refresh">Обновить</string>
+    <string name="qibla_location_searching">Определяем местоположение…</string>
+    <string name="qibla_location_none">Нет доступа к местоположению</string>
+    <string name="qibla_location_off_row">Геолокация выключена</string>
+    <string name="qibla_hold_flat">Держите телефон ровно, экраном вверх</string>
+    <string name="qibla_tilted">Телефон наклонён - положите его ровно, экраном вверх</string>
+    <string name="qibla_help">Как повысить точность</string>
+    <string name="qibla_dialog_title">Доступ к местоположению</string>
+    <string name="qibla_dialog_purpose">Чтобы рассчитать направление на Каабу, нужно знать, где вы находитесь.</string>
+    <string name="qibla_dialog_privacy">Координаты остаются на телефоне и никуда не отправляются.</string>
+    <string name="qibla_dialog_later">Не сейчас</string>
+    <string name="qibla_help_hold_title">Держите телефон ровно</string>
+    <string name="qibla_help_hold_text">Положите телефон на ладонь экраном вверх, верхним краем от себя. Поворачивайтесь всем телом, а не только рукой.</string>
+    <string name="qibla_help_interference_title">Уберите помехи</string>
+    <string name="qibla_help_interference_text">Компас телефона - магнитный датчик. Его сбивают металл и магниты рядом: стол или перила, машина, колонки, ноутбук, чехлы с магнитной застёжкой или держателем. Отойдите на пару шагов или снимите чехол.</string>
+    <string name="qibla_help_unstable_title">Если метка скачет</string>
+    <string name="qibla_help_unstable_calibrate">Плавно поводите телефоном в воздухе восьмёркой несколько раз - так телефон сам откалибрует компас.</string>
+    <string name="qibla_help_unstable_precise">Проверьте, что в настройках телефона включены геолокация и точное местоположение.</string>
+    <string name="qibla_help_unstable_restart">Если не помогло - закройте экран «Къибла» и откройте снова.</string>
+    <string name="qibla_help_error_title">Почему есть погрешность</string>
+    <string name="qibla_help_error_text">Компас телефона ошибается на несколько градусов даже в хороших условиях, а рядом с металлом - на десятки. Поэтому «Направление найдено» загорается в пределах нескольких градусов. Для намаза этого достаточно, но при возможности сверьтесь с направлением в мечети.</string>
+    <string name="qibla_help_close">Понятно</string>
+    <string name="qibla_dial_right">Къибла справа, поверните на %1$d°</string>
+    <string name="qibla_dial_left">Къибла слева, поверните на %1$d°</string>
+    <string name="qibla_dial_waiting">Компас ещё не готов</string>
     <string name="reading_font_size_decrease">Уменьшить арабский шрифт</string>
     <string name="reading_font_size_decrease_short">А−</string>
     <string name="reading_font_size_increase">Увеличить арабский шрифт</string>
@@ -288,13 +379,17 @@
     <string name="section_progress_percent">Выполнено на %d %%</string>
     <string name="settings_about_footer">Inabah %1$s · О приложении</string>
     <string name="settings_app_icon_error">Не удалось сменить иконку</string>
-    <string name="settings_app_icon_error_ok">Понятно</string>
+    <!-- Только iOS (там у смены иконки окно ошибки и проверка поддержки); общая таблица строк 07. -->
+    <string name="settings_app_icon_error_ok" tools:ignore="UnusedResources">Понятно</string>
     <string name="settings_app_icon_footer">Иконка на рабочем столе сменится через несколько секунд. На некоторых телефонах приложение при этом закроется — просто откройте его снова.</string>
     <string name="settings_app_icon_subtitle">Классическая и ещё три варианта</string>
     <string name="settings_app_icon_title">Иконка приложения</string>
-    <string name="settings_app_icon_unsupported">Смена иконки недоступна на этом устройстве.</string>
+    <string name="settings_app_icon_unsupported" tools:ignore="UnusedResources">Смена иконки недоступна на этом устройстве.</string>
     <string name="settings_appearance_header">Оформление</string>
-    <string name="settings_azkar_subtitle">Время азкаров и сброс прогресса</string>
+    <string name="settings_azkar_subtitle">Время, состав и сброс прогресса</string>
+    <string name="settings_azkar_composition_count">%1$d из %2$d</string>
+    <string name="settings_azkar_composition_footer">Какие зикры читать и в каком порядке. По умолчанию - основной набор.</string>
+    <string name="settings_azkar_composition_header">Состав азкаров</string>
     <string name="settings_azkar_history_footer">По ней строятся календарь азкаров и серия дней подряд. Счётчики разделов не обнуляются.</string>
     <string name="settings_azkar_history_header">История азкаров</string>
     <string name="settings_azkar_history_reset">Сбросить историю</string>
@@ -471,6 +566,13 @@
         <item quantity="few">%d зикра · После фаджра</item>
         <item quantity="many">%d зикров · После фаджра</item>
         <item quantity="other">%d зикра · После фаджра</item>
+    </plurals>
+    <!-- Подпись под крупным числом серии в окне «Добавьте ещё азкаров»: само число - отдельной строкой выше. -->
+    <plurals name="azkar_motivation_days" tools:ignore="ImpliedQuantity">
+        <item quantity="one">день подряд</item>
+        <item quantity="few">дня подряд</item>
+        <item quantity="many">дней подряд</item>
+        <item quantity="other">дня подряд</item>
     </plurals>
     <plurals name="azkar_streak_days">
         <item quantity="one">%d день подряд</item>

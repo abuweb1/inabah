@@ -5,6 +5,8 @@ import app.inabah.android.core.content.ContentError
 import app.inabah.android.core.content.ContentRepository
 import app.inabah.android.core.content.Loadable
 import app.inabah.android.core.content.model.AzkarSection
+import app.inabah.android.core.content.model.Zikr
+import app.inabah.android.core.settings.AzkarComposition
 import app.inabah.android.core.settings.AzkarHistory
 import app.inabah.android.core.settings.AzkarPeriod
 import app.inabah.android.core.settings.AzkarWindowSchedule
@@ -51,6 +53,8 @@ class AzkarStore(
     private val zone: () -> ZoneId,
     /** Сохранённый прогресс испорчен — раздел начинает отрезок заново; сообщить в лог. */
     private val onUnreadableProgress: (AzkarSection, Exception) -> Unit,
+    /** Какие зикры раздела читать и в каком порядке; в приложении — общий экземпляр из `AppContainer`. */
+    private val composition: AzkarComposition = AzkarComposition(storage),
 ) {
     private val sections = AzkarSection.entries.associateWith {
         MutableStateFlow<Loadable<List<ZikrSession>>>(Loadable.Idle)
@@ -64,6 +68,9 @@ class AzkarStore(
     private val stateViews = sections.mapValues { (_, flow) -> flow.asStateFlow() }
     private val progressViews = progressBySection.mapValues { (_, flow) -> flow.asStateFlow() }
     private val inWindowViews = inWindowBySection.mapValues { (_, flow) -> flow.asStateFlow() }
+
+    /** Все зикры раздела из данных, загруженного, — для набора и экрана «Состав азкаров». */
+    private val catalogs = mutableMapOf<AzkarSection, List<Zikr>>()
 
     /** Раздел загружен — у него есть отрезок. */
     private val periods = mutableMapOf<AzkarSection, AzkarPeriod>()
@@ -81,6 +88,9 @@ class AzkarStore(
 
     fun sessions(section: AzkarSection): List<ZikrSession> =
         (sections.getValue(section).value as? Loadable.Loaded)?.value.orEmpty()
+
+    /** Все зикры раздела в порядке данных (и не вошедшие в набор); раздел не загружен — пусто. */
+    fun catalog(section: AzkarSection): List<Zikr> = catalogs[section].orEmpty()
 
     /** Меняется при выполнении или сбросе зикра и при первом нажатии в разделе, а не на каждое нажатие. */
     fun progress(section: AzkarSection): StateFlow<SectionProgress> = progressViews.getValue(section)
@@ -111,7 +121,9 @@ class AzkarStore(
             throw cancellation
         }
         val restored = restoredProgress(section)
-        val sessions = azkar.map { zikr ->
+        catalogs[section] = azkar
+        val byNumber = azkar.associateBy { it.number }
+        val sessions = composition.numbers(section, azkar).mapNotNull { byNumber[it] }.map { zikr ->
             ZikrSession(zikr, count = restored.counts[zikr.number] ?: 0) { countDidChange(section) }
         }
         adopt(restored.period, section)
@@ -133,6 +145,25 @@ class AzkarStore(
         } else {
             readStored(section)?.counts?.isNotEmpty() == true
         }
+
+    /**
+     * Применить «Состав азкаров» к загруженному разделу: оставшиеся зикры — те же сессии (счёт на месте), добавленные —
+     * с нуля, у убранных счёт уходит; прогресс и запись дня в истории — с новым числом. Не загружен — применит `load`.
+     */
+    fun applyComposition(section: AzkarSection) {
+        if (section !in periods) return
+        val all = catalogs[section] ?: return
+        val current = sessions(section)
+        val kept = current.associateBy { it.id.number }
+        val byNumber = all.associateBy { it.number }
+        val next = composition.numbers(section, all).mapNotNull { number ->
+            kept[number] ?: byNumber[number]?.let { ZikrSession(it) { countDidChange(section) } }
+        }
+        if (next == current) return
+        sections.getValue(section).value = Loadable.Loaded(next)
+        updateProgress(section)
+        save(section)
+    }
 
     /** Ручной сброс из настроек: загруженный — обнулить и сохранить (отрезок тот же), иначе забыть сохранённое. */
     fun resetProgress(section: AzkarSection) {
@@ -229,9 +260,19 @@ class AzkarStore(
         )
         progressBySection.getValue(section).value = progress
         val period = periods[section]
-        if (period != null && period.isWindow && progress.total > 0) {
+        if (period != null && period.isWindow && progress.total > 0 && !keepsCompletedDay(section, period.day, progress)) {
             history.record(progress.completed, progress.total, section, period.day)
         }
+    }
+
+    /**
+     * Раздел в этом окне уже дочитан, а «Состав азкаров» с тех пор поменяли (другое число зикров): день остаётся
+     * полным, пока не дочитан и новый набор — добавленные засчитываются со следующего раза (решение пользователя
+     * 2026-10-25: «ОК» в «Добавьте ещё азкаров» не должно рвать серию). Сброс при прежнем составе пишется как раньше.
+     */
+    private fun keepsCompletedDay(section: AzkarSection, day: LocalDate, progress: SectionProgress): Boolean {
+        val recorded = history.record(section, day) ?: return false
+        return recorded.isComplete && recorded.total != progress.total && !progress.isFinished
     }
 
     private fun scheduleNextRefresh() {

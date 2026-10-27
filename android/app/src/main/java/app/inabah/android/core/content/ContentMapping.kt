@@ -25,6 +25,8 @@ internal fun ZikrDto.toZikr(section: AzkarSection, priority: ContentLanguagePrio
         arabic = arabic,
         repetitions = max.coerceAtLeast(1),
         audioFileName = audio,
+        optional = optional,
+        quran = quran,
         translation = selected?.let { (language, dto) ->
             ZikrTranslation(
                 language = language,

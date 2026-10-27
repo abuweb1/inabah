@@ -6,7 +6,8 @@ import Testing
 /// в симуляторе не копятся plist-файлы прошлых прогонов.
 final class IsolatedDefaults {
     let defaults: UserDefaults
-    private let suiteName: String
+    /// Имя набора — чтобы открыть его заново (новый экземпляр для актора).
+    let suiteName: String
 
     init(_ name: String) throws {
         suiteName = "\(name).\(UUID().uuidString)"
