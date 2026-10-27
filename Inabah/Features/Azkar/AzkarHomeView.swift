@@ -125,16 +125,24 @@ private struct ReminderOfferCard: View {
 }
 
 /// «Обновить» — слева вверху, только когда в App Store есть новая версия (как на Android, `10d`):
-/// круглая кнопка как «Избранное» у хадисов и золотая точка. В 1.1.1 источник без сети — значка нет.
+/// круглая кнопка как «Избранное» у хадисов и золотая точка. Источник — `AppStoreUpdateSource` (раз в сутки);
+/// обновления нет — кнопки нет. Под кнопкой — подсказка «Вышло обновление», один раз на версию, через 0,5 с,
+/// 4 с, после «Что нового» (решение пользователя 2026-10-27, как подсказка у входа в «Къиблу»).
 private struct UpdateButton: View {
     @Environment(\.updateSource) private var updateSource
+    @Environment(UpdateHints.self) private var hints
+    @Environment(WhatsNew.self) private var whatsNew
     @Environment(\.openURL) private var openURL
     @Environment(\.theme) private var theme
     @Environment(\.chromeStyle) private var chromeStyle
+    @Environment(\.scenePhase) private var scenePhase
 
     @State private var update: AvailableUpdate?
+    @State private var hintVisible = false
 
     private static let dotSize: CGFloat = 10
+    private static let hintDelay = Duration.milliseconds(500)
+    private static let hintDuration = Duration.seconds(4)
 
     var body: some View {
         // ZStack, не Group: у пустой группы `.task` не запустился бы — вопрос не задавался бы вовсе.
@@ -148,9 +156,47 @@ private struct UpdateButton: View {
                             .accessibilityHidden(true)
                     }
                     .accessibilityLabel(Text("update.available \(update.version)"))
+                    .hintBubble(
+                        "update.hint",
+                        isVisible: hintVisible,
+                        tint: theme.palette.tabAzkar,
+                        textColor: theme.palette.background,
+                        below: true,
+                        leading: true
+                    )
             }
         }
+        .animation(.easeInOut, value: hintVisible)
         .task { update = await updateSource.availableUpdate() }
+        .task(id: HintGate(
+            version: update?.version,
+            checked: whatsNew.isChecked,
+            blocked: whatsNew.pending != nil,
+            active: scenePhase == .active
+        )) {
+            await showHint()
+        }
+        .onDisappear { hintVisible = false }
+    }
+
+    private func showHint() async {
+        guard let version = update?.version, hints.shouldHint(version),
+              whatsNew.isChecked, whatsNew.pending == nil, scenePhase == .active else { return }
+        try? await Task.sleep(for: Self.hintDelay)
+        // Пока ждали, кнопку могли нажать или ушли с главной.
+        guard !Task.isCancelled, hints.shouldHint(version) else { return }
+        hints.markHinted(version)
+        hintVisible = true
+        try? await Task.sleep(for: Self.hintDuration)
+        hintVisible = false
+    }
+
+    /// Когда подсказке можно появиться: есть обновление, «Что нового» проверено и закрыто, приложение активно.
+    private struct HintGate: Equatable {
+        let version: String?
+        let checked: Bool
+        let blocked: Bool
+        let active: Bool
     }
 
     @ViewBuilder
@@ -168,6 +214,8 @@ private struct UpdateButton: View {
 
     private var button: some View {
         Button {
+            hintVisible = false
+            if let version = update?.version { hints.markHinted(version) }
             openURL(AboutLinks.appStore)
         } label: {
             Image(systemName: "square.and.arrow.down")

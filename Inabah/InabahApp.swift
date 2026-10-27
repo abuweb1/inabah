@@ -8,7 +8,7 @@ struct InabahApp: App {
         AppFont.registerBundledFonts()
         TabBarAppearance.apply()
         NavigationBarAppearance.apply(.current)
-        let environment = AppEnvironment()
+        let environment = AppEnvironment(updateSource: AppStoreUpdateSource())
         // До первого уведомления: нажатие на напоминание при холодном запуске тоже откроет нужный экран.
         environment.installNotificationDelegate()
         _environment = State(initialValue: environment)
